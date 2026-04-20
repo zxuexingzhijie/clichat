@@ -1,1 +1,4 @@
 claude-code-main/
+node_modules/
+.cursor/
+.DS_Store
