@@ -41,3 +41,178 @@
   item_type: armor
   value: 8
   armor_value: 3
+
+- id: item_wooden_staff
+  name: 木杖
+  type: item
+  tags:
+    - weapon
+    - common
+    - melee
+    - magic
+  description: 经过特殊处理的硬木杖，杖身刻有淡淡的符文，是法师入门的标配。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  item_type: weapon
+  value: 6
+  base_damage: 3
+
+- id: item_cloth_robe
+  name: 布袍
+  type: item
+  tags:
+    - armor
+    - common
+    - light
+    - magic
+  description: 柔软透气的棉布袍子，内衬有微弱的防护符文，聊胜于无。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  item_type: armor
+  value: 4
+  armor_value: 1
+
+- id: item_mana_potion
+  name: 魔力药水
+  type: item
+  tags:
+    - consumable
+    - common
+    - magic
+  description: 蓝色透明液体，散发着微弱的光芒，饮下后能恢复魔力。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  item_type: consumable
+  value: 8
+  effect: 恢复 5 MP
+
+- id: item_healing_potion
+  name: 治疗药水
+  type: item
+  tags:
+    - consumable
+    - common
+  description: 红色粘稠液体，味道苦涩但效果显著，是冒险者的救命之物。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  item_type: consumable
+  value: 5
+  effect: 恢复 10 HP
+
+- id: item_short_bow
+  name: 短弓
+  type: item
+  tags:
+    - weapon
+    - common
+    - ranged
+  description: 轻便灵活的短弓，适合在林间使用，射程虽短但上弦迅速。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  item_type: weapon
+  value: 12
+  base_damage: 4
+
+- id: item_lockpick_set
+  name: 开锁工具
+  type: item
+  tags:
+    - tool
+    - uncommon
+  description: 一套精巧的金属工具，包括各种形状的撬片和张力扳手，懂行的人能用它打开大多数锁。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  item_type: misc
+  value: 15
+  effect: 可以尝试开锁
+
+- id: item_wolf_pelt
+  name: 灰狼皮
+  type: item
+  tags:
+    - loot
+    - common
+    - material
+  description: 从灰狼身上剥下的毛皮，质地粗糙但保暖性好，可以卖给皮匠。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  item_type: misc
+  value: 3
+
+- id: item_herb_bundle
+  name: 草药包
+  type: item
+  tags:
+    - consumable
+    - common
+    - natural
+  description: 用布包裹的几味常见草药，嚼碎敷在伤口上能止血消炎。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  item_type: consumable
+  value: 4
+  effect: 恢复 5 HP

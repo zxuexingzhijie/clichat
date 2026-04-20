@@ -46,3 +46,28 @@
     - darkvision
     - nature_affinity
   lore: 精灵是最古老的种族之一，他们的文明在人类出现前就已繁荣。
+
+- id: race_dwarf
+  name: 矮人
+  type: race
+  tags:
+    - playable
+    - mountain
+  description: 身材矮壮但力量惊人的种族，擅长锻造和采矿，对石头和金属有天然的感知力。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  traits:
+    - sturdy
+    - craftsman
+  abilities:
+    - stone_sense
+    - poison_resistance
+  lore: 矮人居于群山之中，建造了大陆上最坚固的堡垒和最精密的锻炉。他们与地脉相通，据说能听到岩石的低语。

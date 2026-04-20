@@ -55,3 +55,286 @@
     - stay_neutral
   backstory: 继承了父亲的酒馆，经营已有二十年。与镇上几乎所有人都有交情，包括暗影行会的人。
   initial_disposition: 0.3
+
+- id: npc_blacksmith
+  name: 铁匠·老赵
+  type: npc
+  tags:
+    - craftsman
+    - 黑松镇
+  description: 镇上唯一的铁匠，粗壮的手臂上满是烫伤疤痕，但打出的每一把刀都锋利无比。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  location_id: loc_smithy
+  personality_tags:
+    - gruff
+    - honest
+    - hardworking
+  goals:
+    - fulfill_orders
+    - find_good_ore
+  backstory: 老赵在黑松镇打了三十年铁，手艺远近闻名。近来矿路被封，好铁越来越难找，他整日为此发愁。听说北林深处有座废弃矿洞，但谁也不敢去。
+  initial_disposition: 0.1
+
+- id: npc_herbalist
+  name: 药师·林婆婆
+  type: npc
+  tags:
+    - healer
+    - 黑松镇
+  description: 满头银发的老妇人，总是带着草药的清香，眼神中藏着比年龄更深的智慧。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  location_id: loc_herb_shop
+  personality_tags:
+    - wise
+    - patient
+    - mysterious
+  goals:
+    - heal_the_sick
+    - protect_forest_secrets
+  backstory: 林婆婆在黑松镇行医四十余年，救人无数。她对北林的草药分布了如指掌，却从不愿谈起林中深处的事。有人说她年轻时曾是某个秘密组织的成员。
+  initial_disposition: 0.2
+
+- id: npc_captain
+  name: 守卫队长·陈铁柱
+  type: npc
+  tags:
+    - military
+    - 黑松镇
+  description: 身披铁甲的壮汉，方脸浓眉，说话声如洪钟，是黑松镇守卫队的灵魂人物。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  location_id: loc_guard_post
+  personality_tags:
+    - stern
+    - dutiful
+    - protective
+  goals:
+    - protect_town
+    - investigate_disappearances
+  backstory: 陈铁柱原是王都禁军，因得罪上官被调至边镇。他对黑松镇已有感情，但近来连续有猎人和旅客失踪，让他寝食难安。他怀疑北林中有异变。
+  initial_disposition: 0.0
+
+- id: npc_merchant_afu
+  name: 杂货商·阿福
+  type: npc
+  tags:
+    - merchant
+    - 黑松镇
+  description: 圆脸胖子，笑起来眼睛眯成一条线，嘴巴比他的货架还杂。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  location_id: loc_market
+  personality_tags:
+    - cheerful
+    - talkative
+    - opportunistic
+  goals:
+    - make_profit
+    - expand_business
+  backstory: 阿福从南方来黑松镇做生意已有十年，什么都卖什么都收。他消息灵通，但每条消息的价格都不一样。据说他和好几个行商帮派都有来往。
+  initial_disposition: 0.3
+
+- id: npc_priestess
+  name: 祭司·月华
+  type: npc
+  tags:
+    - clergy
+    - 黑松镇
+  description: 身着素白祭袍的年轻女子，面容宁静如水，但偶尔眼中会闪过不属于这个年纪的忧虑。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  location_id: loc_temple
+  personality_tags:
+    - serene
+    - compassionate
+    - secretive
+  goals:
+    - maintain_shrine
+    - guard_ancient_knowledge
+  backstory: 月华三年前从远方的神殿来到黑松镇，接管了荒废已久的小神殿。她从不提起自己的来历，但她对古代符文的了解远超常人。镇民们敬她却也畏她。
+  initial_disposition: 0.2
+
+- id: npc_hunter
+  name: 猎人·阿虎
+  type: npc
+  tags:
+    - hunter
+    - 黑松镇
+  description: 沉默寡言的精壮汉子，皮肤被风霜晒成古铜色，永远背着一把磨得发亮的猎弓。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  location_id: loc_north_gate
+  personality_tags:
+    - taciturn
+    - observant
+    - reliable
+  goals:
+    - track_wolf_pack
+    - provide_for_family
+  backstory: 阿虎是镇上最好的猎人，对北林的每条小路都了如指掌。近来狼群异常活跃，他已经连续三周没有打到像样的猎物。他怀疑有什么东西在驱赶狼群南下。
+  initial_disposition: -0.1
+
+- id: npc_innkeeper
+  name: 旅店老板娘·红姐
+  type: npc
+  tags:
+    - innkeeper
+    - 黑松镇
+  description: 爽朗泼辣的中年妇人，一头红发是她的招牌，酒量比镇上大多数男人都好。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  location_id: loc_inn
+  personality_tags:
+    - warm
+    - gossipy
+    - protective
+  goals:
+    - run_inn
+    - protect_staff
+  backstory: 红姐的旅店是过路人歇脚的首选。她待人热情，但对欺负她手下伙计的人绝不客气。她丈夫五年前在狼灾中丧生，之后她一个人撑起了整间旅店。
+  initial_disposition: 0.4
+
+- id: npc_beggar
+  name: 老乞丐·瞎子孙
+  type: npc
+  tags:
+    - beggar
+    - 黑松镇
+  description: 蜷缩在集市角落的瘦小老人，双目浑浊看似失明，但总能准确地叫出每个路人的名字。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  location_id: loc_market
+  personality_tags:
+    - cunning
+    - perceptive
+    - pitiful
+  goals:
+    - survive
+    - gather_information
+  backstory: 没人知道瞎子孙是什么时候来到黑松镇的。他自称双目失明，但对镇上的一切动静了如指掌。有人说他以前是个大人物，也有人说他只是个疯老头。
+  initial_disposition: -0.2
+
+- id: npc_shadow_contact
+  name: 暗影行会联络人·阿鬼
+  type: npc
+  tags:
+    - underworld
+    - 黑松镇
+    - shadow_guild
+  description: 面容模糊难辨的瘦削身影，总是坐在酒馆最暗的角落，低头喝着不知道第几杯酒。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: hidden
+    confidence: 1.0
+    source_type: authorial
+    known_by:
+      - npc_bartender
+    contradicts: []
+    volatility: stable
+  location_id: loc_tavern
+  personality_tags:
+    - secretive
+    - calculating
+    - dangerous
+  goals:
+    - recruit_operatives
+    - maintain_secrecy
+  backstory: 阿鬼是暗影行会在黑松镇的联络人，表面上只是个酒鬼，实际上掌握着地下世界的情报网络。只有酒馆老板老陈知道他的真实身份。他最近接到上面的命令，在物色新的"人才"。
+  initial_disposition: -0.3
+
+- id: npc_elder
+  name: 镇长·王德
+  type: npc
+  tags:
+    - official
+    - 黑松镇
+  description: 花白胡须的矮胖老人，说话慢条斯理，总是笑眯眯的，但没人敢小看他的城府。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  location_id: loc_town_hall
+  personality_tags:
+    - diplomatic
+    - cautious
+    - authoritative
+  goals:
+    - maintain_order
+    - secure_trade_routes
+    - hide_town_secret
+  backstory: 王德做了二十年镇长，把黑松镇从一个穷乡僻壤治理成繁忙的贸易中转站。但他守着一个秘密——五年前的狼灾并非天灾，而是有人蓄意引来的，而他知道是谁。
+  initial_disposition: 0.1

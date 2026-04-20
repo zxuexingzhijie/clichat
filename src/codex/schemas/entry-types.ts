@@ -82,6 +82,34 @@ export const HistoryEventSchema = z.object({
   era: z.string(),
 });
 
+export const EnemySchema = z.object({
+  ...baseFields,
+  type: z.literal("enemy"),
+  hp: z.number().int().min(1),
+  maxHp: z.number().int().min(1),
+  attack: z.number().int(),
+  defense: z.number().int(),
+  dc: z.number().int().min(1),
+  damage_base: z.number().int().min(0),
+  abilities: z.array(z.string()),
+  loot: z.array(z.string()).optional(),
+  danger_level: z.number().min(0).max(10),
+});
+
+export const BackgroundSchema = z.object({
+  ...baseFields,
+  type: z.literal("background"),
+  question: z.string(),
+  attribute_bias: z.object({
+    physique: z.number().optional(),
+    finesse: z.number().optional(),
+    mind: z.number().optional(),
+  }),
+  starting_tags: z.array(z.string()),
+  world_state_effects: z.array(z.string()),
+  narrative_hook: z.string(),
+});
+
 export const CodexEntrySchema = z.discriminatedUnion("type", [
   RaceSchema,
   ProfessionSchema,
@@ -91,6 +119,8 @@ export const CodexEntrySchema = z.discriminatedUnion("type", [
   SpellSchema,
   ItemSchema,
   HistoryEventSchema,
+  EnemySchema,
+  BackgroundSchema,
 ]);
 
 export type Race = z.infer<typeof RaceSchema>;
@@ -101,4 +131,6 @@ export type Npc = z.infer<typeof NpcSchema>;
 export type Spell = z.infer<typeof SpellSchema>;
 export type Item = z.infer<typeof ItemSchema>;
 export type HistoryEvent = z.infer<typeof HistoryEventSchema>;
+export type Enemy = z.infer<typeof EnemySchema>;
+export type Background = z.infer<typeof BackgroundSchema>;
 export type CodexEntry = z.infer<typeof CodexEntrySchema>;

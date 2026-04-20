@@ -1,0 +1,153 @@
+- id: enemy_wolf
+  name: 灰狼
+  type: enemy
+  tags:
+    - beast
+    - common
+    - north_forest
+  description: 北林中最常见的野兽，灰色毛皮，体型比家犬大一倍，成群出没极为危险。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  hp: 20
+  maxHp: 20
+  attack: 2
+  defense: 2
+  dc: 12
+  damage_base: 4
+  abilities:
+    - bite
+    - pack_tactics
+  loot:
+    - item_wolf_pelt
+  danger_level: 2
+
+- id: enemy_wolf_alpha
+  name: 头狼
+  type: enemy
+  tags:
+    - beast
+    - uncommon
+    - north_forest
+    - boss
+  description: 狼群的领袖，体型远大于普通灰狼，伤痕累累的身躯散发着压迫感。它的嚎叫能召唤整个狼群。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  hp: 35
+  maxHp: 35
+  attack: 4
+  defense: 3
+  dc: 14
+  damage_base: 6
+  abilities:
+    - bite
+    - howl
+    - pack_leader
+  loot:
+    - item_wolf_pelt
+  danger_level: 4
+
+- id: enemy_bandit
+  name: 山贼
+  type: enemy
+  tags:
+    - humanoid
+    - common
+    - outlaw
+  description: 潜伏在山路附近的劫匪，装备简陋但凶狠狡猾，专挑落单旅人下手。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  hp: 25
+  maxHp: 25
+  attack: 3
+  defense: 3
+  dc: 13
+  damage_base: 5
+  abilities:
+    - slash
+    - dirty_trick
+  danger_level: 3
+
+- id: enemy_bandit_archer
+  name: 山贼弓手
+  type: enemy
+  tags:
+    - humanoid
+    - common
+    - outlaw
+    - ranged
+  description: 山贼中负责远程攻击的弓手，躲在暗处放冷箭，一旦被近身就会后撤。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  hp: 18
+  maxHp: 18
+  attack: 4
+  defense: 1
+  dc: 14
+  damage_base: 5
+  abilities:
+    - ranged_shot
+    - retreat
+  danger_level: 3
+
+- id: enemy_shadow_assassin
+  name: 暗影刺客
+  type: enemy
+  tags:
+    - humanoid
+    - rare
+    - shadow_guild
+    - stealth
+  description: 暗影行会训练出的精锐杀手，无声无息地接近目标，一击毙命后消失在黑暗中。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  hp: 22
+  maxHp: 22
+  attack: 5
+  defense: 2
+  dc: 15
+  damage_base: 7
+  abilities:
+    - backstab
+    - vanish
+    - poison_blade
+  danger_level: 5
