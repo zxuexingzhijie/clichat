@@ -8,6 +8,7 @@ import { gameStore } from './state/game-store';
 import { eventBus } from './events/event-bus';
 import type { GameAction } from './types/game-action';
 import type { CheckResult } from './types/common';
+import type { SceneManager } from './engine/scene-manager';
 
 export interface GameLoop {
   readonly processInput: (input: string, options?: RouteInputOptions) => Promise<ProcessResult>;
@@ -37,9 +38,15 @@ const HELP_COMMANDS: readonly string[] = [
 
 const PASSTHROUGH_ACTIONS = new Set(['look', 'help']);
 
-export function createGameLoop(options?: { readonly rng?: () => number }): GameLoop {
+export type GameLoopOptions = {
+  readonly rng?: () => number;
+  readonly sceneManager?: SceneManager;
+};
+
+export function createGameLoop(options?: GameLoopOptions): GameLoop {
   const commandParser = createCommandParser();
   const rng = options?.rng;
+  const sceneManager = options?.sceneManager;
 
   async function processInput(input: string, routeOptions?: RouteInputOptions): Promise<ProcessResult> {
     const sceneContext = sceneStore.getState().narrationLines.join(' ');
@@ -59,11 +66,34 @@ export function createGameLoop(options?: { readonly rng?: () => number }): GameL
     }
 
     if (action.type === 'look') {
+      if (sceneManager) {
+        const result = await sceneManager.handleLook(action.target);
+        if (result.status === 'success') {
+          return { status: 'action_executed', action, narration: result.narration };
+        }
+        return { status: 'error', message: result.message };
+      }
       return {
         status: 'action_executed',
         action,
         narration: sceneStore.getState().narrationLines,
       };
+    }
+
+    if (action.type === 'inspect' && sceneManager) {
+      const result = await sceneManager.handleInspect(action.target ?? '');
+      if (result.status === 'success') {
+        return { status: 'action_executed', action, narration: result.narration };
+      }
+      return { status: 'error', message: result.message };
+    }
+
+    if (action.type === 'move' && sceneManager) {
+      const result = await sceneManager.handleGo(action.target ?? '');
+      if (result.status === 'success') {
+        return { status: 'action_executed', action, narration: result.narration };
+      }
+      return { status: 'error', message: result.message };
     }
 
     const checkResult = adjudicate(action);
