@@ -1,0 +1,43 @@
+- id: item_iron_sword
+  name: 铁剑
+  type: item
+  tags:
+    - weapon
+    - common
+    - melee
+  description: 普通的铁制长剑，锋利耐用，是冒险者的基本装备。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  item_type: weapon
+  value: 10
+  base_damage: 5
+
+- id: item_leather_armor
+  name: 皮甲
+  type: item
+  tags:
+    - armor
+    - common
+    - light
+  description: 经过硬化处理的皮革制成的轻型护甲，兼顾防护和灵活性。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  item_type: armor
+  value: 8
+  armor_value: 3

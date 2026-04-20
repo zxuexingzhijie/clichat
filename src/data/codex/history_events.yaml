@@ -1,0 +1,53 @@
+- id: event_wolf_disaster
+  name: 黑松镇狼灾
+  type: history_event
+  tags:
+    - disaster
+    - 黑松镇
+    - canonical
+  description: 五年前，一群异常凶猛的狼群袭击了黑松镇，造成数十人伤亡。守卫队和民兵联合击退了狼群，但镇子至今仍未完全恢复。
+  epistemic:
+    authority: established_canon
+    truth_status: "true"
+    scope: regional
+    visibility: public
+    confidence: 1.0
+    source_type: official_record
+    known_by: []
+    contradicts: []
+    volatility: stable
+  date: 五年前
+  participants:
+    - wolves
+    - faction_guard
+    - militia
+  impact: 镇民对外来者更加警惕，守卫队扩编，北门加固
+  era: 近代
+
+- id: event_wolf_disaster_rumor
+  name: 黑松镇狼灾隐情
+  type: history_event
+  tags:
+    - conspiracy
+    - 黑松镇
+    - rumor
+  description: 据酒馆里的老人说，那场狼灾并非天灾。有人在森林深处发现过奇怪的符文石，狼群可能是被人为驱使的。
+  epistemic:
+    authority: street_rumor
+    truth_status: partially_true
+    scope: local
+    visibility: hidden
+    confidence: 0.3
+    source_type: oral_history
+    source_bias: anti-authority
+    known_by:
+      - npc_bartender
+    contradicts:
+      - event_wolf_disaster
+    volatility: evolving
+  date: 五年前
+  participants:
+    - unknown_mage
+    - wolves
+  impact: 若属实，说明黑松镇有隐藏的敌人
+  era: 近代

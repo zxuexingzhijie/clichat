@@ -1,0 +1,56 @@
+- id: loc_north_gate
+  name: 黑松镇·北门
+  type: location
+  tags:
+    - town_entrance
+    - 黑松镇
+  description: 黑松镇的北面入口，石砌的城门两侧各立一盏油灯。守卫日夜值守，偶有商队和旅人进出。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: regional
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  region: 黑松镇
+  danger_level: 2
+  exits:
+    - loc_main_street
+    - loc_forest_road
+  notable_npcs:
+    - npc_guard
+  objects:
+    - notice_board
+    - oil_lamp
+
+- id: loc_tavern
+  name: 黑松镇·酒馆
+  type: location
+  tags:
+    - building
+    - social
+    - 黑松镇
+  description: 镇上唯一的酒馆，名为"松木桶"。温暖的炉火、嘈杂的人声，是冒险者歇脚和打听消息的好去处。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  region: 黑松镇
+  danger_level: 0
+  exits:
+    - loc_main_street
+  notable_npcs:
+    - npc_bartender
+  objects:
+    - fireplace
+    - notice_board_tavern
+    - barrel
