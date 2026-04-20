@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 1 complete
-last_updated: "2026-04-20T06:30:00.000Z"
-last_activity: 2026-04-20 -- Phase 1 execution complete (all 6 plans done)
+stopped_at: Phase 2 planning complete
+last_updated: "2026-04-21T00:00:00.000Z"
+last_activity: 2026-04-21 -- Phase 2 planning complete
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 6
+  total_plans: 13
   completed_plans: 6
-  percent: 20
+  percent: 46
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-20)
 
 **Core value:** The player must feel they are in a persistent, consistent world that remembers them -- not a chatbot that reinvents the universe every turn.
-**Current focus:** Phase 1: Foundation — COMPLETE. Ready for Phase 2.
+**Current focus:** Phase 2: Core Gameplay — Planning complete, ready for execution.
 
 ## Current Position
 
-Phase: 1 of 5 (Foundation) — COMPLETE
-Plan: 6 of 6 in current phase
-Status: Phase 1 verified. All requirements met.
-Last activity: 2026-04-20 -- Phase 1 execution complete
+Phase: 2 of 5 (Core Gameplay) — PLANNING COMPLETE
+Plan: 0 of 7 in current phase
+Status: 7 plans created across 4 waves. Ready for `/gsd-execute-phase 02`.
+Last activity: 2026-04-21 -- Phase 2 planning complete
 
-Progress: [██........] 20%
+Progress: [██........] 46%
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ Recent decisions affecting current work:
 - [Roadmap]: Start with single LLM provider; multi-provider routing deferred to Phase 5
 - [01-06]: Object.assign(draft, data) for store restore with immer
 - [01-06]: Game loop dc=12 placeholder until Phase 2 encounter system
+- [02-CONTEXT]: 18 implementation decisions (D-01 through D-18) for character creation, AI narration, NPC dialogue, and combat
 
 ### Pending Todos
 
@@ -88,6 +89,17 @@ None.
 | CLI-01 | PASS | terminal UI implementation (visual) |
 | WORLD-01 | PASS | loader.test.ts + e2e verification |
 
+## Phase 2 Plan Structure
+
+**7 plans across 4 waves:**
+
+| Wave | Plans | Focus |
+|------|-------|-------|
+| 1 | 02-01, 02-02 | AI infra + stores, content data expansion |
+| 2 | 02-03, 02-04 | Character creation wizard, AI role implementations |
+| 3 | 02-05, 02-06 | Scene exploration, NPC dialogue |
+| 4 | 02-07 | Turn-based combat |
+
 ## Deferred Items
 
 Items acknowledged and carried forward from previous milestone close:
@@ -98,6 +110,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-20T06:30:00.000Z
-Stopped at: Phase 1 complete
-Resume file: .planning/phases/01-foundation/01-06-SUMMARY.md
+Last session: --stopped-at
+Stopped at: Phase 2 planning complete
+Resume file: --resume-file
