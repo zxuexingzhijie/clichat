@@ -12,7 +12,7 @@ Chronicle delivers an AI-driven CLI text RPG where a deterministic Rules Engine 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Rules Engine, CLI layout, state management, World Codex schema, and command parsing
+- [x] **Phase 1: Foundation** - Rules Engine, CLI layout, state management, World Codex schema, and command parsing
 - [ ] **Phase 2: Core Gameplay** - Character creation, scene exploration, NPC dialogue, combat, and AI narration
 - [ ] **Phase 3: Persistence & World** - Save/load, NPC memory, quest system, relationship tracking, and content packs
 - [ ] **Phase 4: Differentiation** - Story branching, ASCII map, codex browser, keyboard shortcuts, and epistemic separation
@@ -37,8 +37,8 @@ Plans:
 - [x] 01-02-PLAN.md — Rules Engine: D20 dice, adjudication modes, damage calculation
 - [x] 01-03-PLAN.md — World Codex: schemas, YAML loader, query engine, example data
 - [x] 01-04-PLAN.md — CLI terminal UI: four-panel layout, title screen, interaction
-- [ ] 01-05-PLAN.md — Command parsing + NL intent classification
-- [ ] 01-06-PLAN.md — Integration wiring, state serialization, end-to-end verification
+- [x] 01-05-PLAN.md — Command parsing + NL intent classification
+- [x] 01-06-PLAN.md — Integration wiring, state serialization, end-to-end verification
 
 ### Phase 2: Core Gameplay
 **Goal**: A player can create a character, explore scenes, talk to NPCs with AI-generated personality-driven dialogue, and fight enemies -- the core gameplay loop (create -> explore -> interact -> fight) is playable end-to-end
