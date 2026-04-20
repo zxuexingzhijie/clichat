@@ -100,7 +100,11 @@ export const BackgroundSchema = z.object({
   ...baseFields,
   type: z.literal("background"),
   question: z.string(),
-  attribute_bias: z.record(z.enum(["physique", "finesse", "mind"]), z.number()),
+  attribute_bias: z.object({
+    physique: z.number().optional(),
+    finesse: z.number().optional(),
+    mind: z.number().optional(),
+  }),
   starting_tags: z.array(z.string()),
   world_state_effects: z.array(z.string()),
   narrative_hook: z.string(),

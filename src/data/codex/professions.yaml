@@ -49,3 +49,29 @@
     - cloth_robe
     - mana_potion
   primary_attribute: mind
+
+- id: prof_rogue
+  name: 游侠
+  type: profession
+  tags:
+    - stealth
+    - ranged
+  description: 敏捷而狡猾的人，擅长潜行、开锁和远程射击。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  abilities:
+    - stealth
+    - lockpicking
+  starting_equipment:
+    - item_short_bow
+    - item_leather_armor
+    - item_lockpick_set
+  primary_attribute: finesse
