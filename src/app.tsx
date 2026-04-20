@@ -5,6 +5,7 @@ import { playerStore, type PlayerState } from './state/player-store';
 import { sceneStore, type SceneState } from './state/scene-store';
 import { TitleScreen } from './ui/screens/title-screen';
 import { GameScreen } from './ui/screens/game-screen';
+import { CharacterCreationScreen } from './ui/screens/character-creation-screen';
 import { SizeGuard } from './ui/components/size-guard';
 
 const GameStoreCtx = createStoreContext<GameState>();
@@ -23,12 +24,29 @@ function AppInner(): React.ReactNode {
 
   const handleStart = useCallback(() => {
     setGameState((draft) => {
+      draft.phase = 'character_creation';
+    });
+  }, [setGameState]);
+
+  const handleCharacterCreated = useCallback((newPlayerState: PlayerState) => {
+    playerStore.setState((draft) => {
+      Object.assign(draft, newPlayerState);
+    });
+    setGameState((draft) => {
       draft.phase = 'game';
     });
   }, [setGameState]);
 
   if (phase === 'title') {
     return <TitleScreen onStart={handleStart} />;
+  }
+
+  if (phase === 'character_creation') {
+    return (
+      <SizeGuard>
+        <CharacterCreationScreen onComplete={handleCharacterCreated} />
+      </SizeGuard>
+    );
   }
 
   return (
