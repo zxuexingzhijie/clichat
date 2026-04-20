@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: 7 plans created across 4 waves. Ready for `/gsd-execute-phase 02`.
-stopped_at: Phase 2 planning complete
-last_updated: "2026-04-20T17:25:15.567Z"
-last_activity: 2026-04-21 -- Phase 2 planning complete
+status: "Phase 2 executing — 5/7 plans complete. Resume with `/gsd-execute-phase 2`."
+stopped_at: "Phase 2 Wave 3 complete — 02-06, 02-07 remain"
+last_updated: "2026-04-21T12:00:00.000Z"
+last_activity: 2026-04-21 -- Phase 2 Waves 1-3 executed (5/7 plans)
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 13
-  completed_plans: 7
-  percent: 54
+  completed_plans: 11
+  percent: 85
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-20)
 
 **Core value:** The player must feel they are in a persistent, consistent world that remembers them -- not a chatbot that reinvents the universe every turn.
-**Current focus:** Phase 2: Core Gameplay — Planning complete, ready for execution.
+**Current focus:** Phase 2: Core Gameplay — 5/7 plans executed, 2 remaining (NPC dialogue, combat).
 
 ## Current Position
 
 Phase: 2 of 5 (Core Gameplay) — EXECUTING
-Plan: 1 of 7 in current phase (02-01 complete)
-Status: Executing Phase 2
-Last activity: 2026-04-20 -- 02-01 AI Infrastructure & State Stores complete
+Plan: 5 of 7 in current phase (02-01 through 02-05 complete)
+Status: Phase 2 executing — 5/7 plans complete. Resume with `/gsd-execute-phase 2`.
+Last activity: 2026-04-21 -- Phase 2 Waves 1-3 executed (5/7 plans)
 
-Progress: [███.......] 54%
+Progress: [████████░░] 85%
 
 ## Performance Metrics
 
