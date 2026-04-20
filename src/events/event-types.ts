@@ -20,4 +20,22 @@ export type DomainEvents = {
 
   state_snapshot_requested: undefined;
   state_restored: undefined;
+
+  dialogue_started: { npcId: string; npcName: string; mode: 'inline' | 'full' };
+  dialogue_ended: { npcId: string };
+  dialogue_response_selected: { npcId: string; responseIndex: number };
+
+  npc_memory_written: { npcId: string; event: string; turnNumber: number };
+
+  character_creation_started: undefined;
+  character_creation_step_changed: { step: number; totalSteps: number };
+  character_created: { name: string; race: string; profession: string };
+
+  combat_action_resolved: { actorId: string; action: string; checkResult: CheckResult };
+  combat_turn_advanced: { currentActorId: string; roundNumber: number };
+
+  narration_streaming_started: { sceneType: string };
+  narration_streaming_completed: { charCount: number };
+
+  ai_call_failed: { role: string; error: string };
 };

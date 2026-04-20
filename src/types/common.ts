@@ -78,3 +78,6 @@ export const TIME_OF_DAY_LABELS: Record<TimeOfDay, string> = {
   night: '夜晚',
   midnight: '深夜',
 };
+
+export const SceneTypeSchema = z.enum(['exploration', 'combat', 'dialogue', 'lore', 'horror', 'check_result']);
+export type SceneType = z.infer<typeof SceneTypeSchema>;

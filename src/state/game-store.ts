@@ -3,7 +3,7 @@ import { createStore } from './create-store';
 import { eventBus } from '../events/event-bus';
 import { TimeOfDaySchema } from '../types/common';
 
-export const GamePhaseSchema = z.enum(['title', 'game', 'combat', 'dialogue']);
+export const GamePhaseSchema = z.enum(['title', 'character_creation', 'game', 'combat', 'dialogue']);
 
 export const GameStateSchema = z.object({
   day: z.number().int().min(1),
