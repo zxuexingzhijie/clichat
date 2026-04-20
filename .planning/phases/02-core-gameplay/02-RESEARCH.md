@@ -520,27 +520,27 @@ export const RetrievalPlanSchema = z.object({
 | A5 | Enemies need a separate `enemies.yaml` codex file | Project Structure | Medium -- enemies could be defined as NPC codex entries with additional combat stats, but a dedicated file is cleaner for Phase 2 combat |
 | A6 | Promptfoo eval suite runs separately from bun test | Validation Architecture | Low -- standard practice; AI evals are slow and require API keys, shouldn't block unit tests |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **API Key Configuration Strategy**
    - What we know: No API keys are currently set in the environment. AI-SPEC mandates Google Gemini as primary model.
-   - What's unclear: Which provider should be the development default? Should there be a "mock AI" mode for development without keys?
-   - Recommendation: Implement a mock provider that returns canned responses for testing/development. Real provider is configurable. Tests always use mocks.
+
+   - RESOLVED: Mock provider for testing/dev. Real provider configurable via env vars. Tests always use mocks (mock.module pattern). Plan 01 providers.ts + Plan 04 tests implement this.
 
 2. **Background Hook Data Design**
    - What we know: D-02 specifies 4 narrative questions. D-03 says choices imply attribute bias. D-05 says hooks write into world state.
-   - What's unclear: Exact mapping from narrative choices to attribute distribution. How many background options per question?
-   - Recommendation: 3-4 options per question. Each option tags 1-2 attributes with +1 modifier. Total attribute budget of +3 distributed across 3 questions. Claude's discretion per CONTEXT.md.
+
+   - RESOLVED: 3-4 options per question, each +1 to 1-2 attributes. Plan 02 creates backgrounds.yaml (7 entries). Plan 03 character-creation.ts implements attribute calculation.
 
 3. **NPC Content Scale for Phase 2**
    - What we know: CONT-04 requires 10-15 named NPCs. Currently only 2 exist (guard, bartender).
-   - What's unclear: Should all 10-15 NPCs have full AI dialogue capability immediately, or should some be simpler "background" NPCs?
-   - Recommendation: 5-6 fully AI-dialogue-capable NPCs in 黑松镇, rest are background NPCs with simpler responses. Full NPC dialogue requires backstory + personality tags + goals + memory seeds.
+
+   - RESOLVED: 12 NPCs (2 existing + 10 new) in Plan 02. 5-6 fully AI-dialogue-capable, rest background NPCs with inline responses. Plan 06 dialogue-manager handles mode detection.
 
 4. **Scene Transition Mechanics**
    - What we know: Locations have exits linking to other locations. `/go <direction>` moves between them.
-   - What's unclear: What triggers scene re-narration? Does `/look` re-generate AI narration or show cached version?
-   - Recommendation: Scene entry generates AI narration (once per visit or on significant state change). `/look` shows cached narration. `/look <target>` generates new inspection narration.
+
+   - RESOLVED: Scene entry generates AI narration once. /look shows cached. /look <target> generates fresh. Plan 05 scene-manager.ts implements via loadScene() and handleLook(target?).
 
 ## Environment Availability
 
