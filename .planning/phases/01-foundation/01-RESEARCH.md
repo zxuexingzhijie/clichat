@@ -770,25 +770,25 @@ export function createSerializer(stores: StoreRegistry) {
 
 ## Open Questions
 
-1. **Outer border + divider alignment**
+1. **Outer border + divider alignment** (RESOLVED)
    - What we know: Ink `Box` with `borderStyle="single"` draws `┌┐└┘│─`. Custom `Text` rows can render `├───┤`.
    - What's unclear: Will the `├` and `┤` characters visually connect with the outer border's `│` when the divider `Text` is inside a bordered `Box`? The border characters occupy padding space, and the divider is content inside the box.
-   - Recommendation: The divider likely needs to account for the border width (1 char each side) or the outer border needs to be rendered manually (not via Ink's `borderStyle`) as a series of `Text` rows. Prototype early in Wave 0.
+   - **Resolution:** Plan 04 Task 1 creates a Divider component rendering `├` + `─`.repeat(width-2) + `┤` as content inside the bordered Box. Plan 04 Task 2 instructs the executor to prototype and adapt if Ink's border chars don't merge visually — fallback is manual border rendering as Text rows. This is handled at execution time, not pre-decided.
 
-2. **Commander.js + Ink stdin conflict**
+2. **Commander.js + Ink stdin conflict** (RESOLVED)
    - What we know: Ink captures stdin via `useInput`/`useStdin`. Commander.js expects to parse strings.
    - What's unclear: Whether Commander's `.parse(args, { from: 'user' })` has any side effects on stdin/stdout even with `exitOverride()`.
-   - Recommendation: Commander should ONLY parse split string arrays, never touch stdin/stdout. This is likely safe but must be tested.
+   - **Resolution:** Plan 05 uses Commander in pure string-parsing mode: `program.parse(args, { from: 'user' })` with `exitOverride()` and `configureOutput({ writeOut: () => {}, writeErr: () => {} })`. Commander never touches stdin/stdout. Ink captures keystrokes, passes the completed string to Commander for parsing. No conflict.
 
-3. **Terminal background color detection (D-10)**
+3. **Terminal background color detection (D-10)** (RESOLVED)
    - What we know: OSC 11 escape sequence (`\x1b]11;?\x07`) can query background color on xterm-compatible terminals.
    - What's unclear: Coverage across terminal emulators (iTerm2 yes, Terminal.app partial, Windows Terminal unknown).
-   - Recommendation: Implement detection with fallback to dark theme. User can override via config. This is a nice-to-have for Phase 1 — don't block on it.
+   - **Resolution:** Phase 1 defaults to dark theme (`isDarkTheme: true` in GameStore). Background color detection deferred — not in Phase 1 scope. User can toggle via future config. D-10 is a nice-to-have, not a Phase 1 requirement.
 
-4. **Bun + Ink 7 compatibility**
+4. **Bun + Ink 7 compatibility** (RESOLVED)
    - What we know: Claude Code runs on Bun + Ink (confirmed by reference implementation). CLAUDE.md states Bun runtime.
    - What's unclear: Exact Bun version compatibility with Ink 7.0.1 + React 19.
-   - Recommendation: Install Bun latest (>= 1.3.12) and test `withFullScreen(<Box><Text>Hello</Text></Box>)` as first validation.
+   - **Resolution:** Plan 01 Task 1 installs Bun >= 1.3.12, React 19, and Ink 7. Plan 04 Task 2 renders the full UI as first validation. If compatibility issues surface, they are caught at execution time with clear error messages. Claude Code's production use of Bun + Ink gives high confidence.
 
 ## Environment Availability
 
