@@ -10,8 +10,8 @@ progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 13
-  completed_plans: 6
-  percent: 46
+  completed_plans: 7
+  percent: 54
 ---
 
 # Project State
@@ -25,26 +25,27 @@ See: .planning/PROJECT.md (updated 2026-04-20)
 
 ## Current Position
 
-Phase: 2 of 5 (Core Gameplay) — PLANNING COMPLETE
-Plan: 0 of 7 in current phase
-Status: 7 plans created across 4 waves. Ready for `/gsd-execute-phase 02`.
-Last activity: 2026-04-21 -- Phase 2 planning complete
+Phase: 2 of 5 (Core Gameplay) — EXECUTING
+Plan: 1 of 7 in current phase (02-01 complete)
+Status: Executing Phase 2
+Last activity: 2026-04-20 -- 02-01 AI Infrastructure & State Stores complete
 
-Progress: [██........] 46%
+Progress: [███.......] 54%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 6
-- Average duration: ~15min
-- Total execution time: ~1.5 hours
+- Total plans completed: 7
+- Average duration: ~13min
+- Total execution time: ~1.6 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-Foundation | 6 | ~1.5h | ~15min |
+| 02-Core Gameplay | 1 | ~4m | ~4m |
 
 **Recent Trend:**
 
@@ -66,6 +67,8 @@ Recent decisions affecting current work:
 - [01-06]: Object.assign(draft, data) for store restore with immer
 - [01-06]: Game loop dc=12 placeholder until Phase 2 encounter system
 - [02-CONTEXT]: 18 implementation decisions (D-01 through D-18) for character creation, AI narration, NPC dialogue, and combat
+- [02-01]: All 6 AI roles use google gemini-2.0-flash as placeholder; summarizer/quest-planner switch later
+- [02-01]: Model constructors lazy (function calls) per threat mitigation T-02-01
 
 ### Pending Todos
 
@@ -110,8 +113,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 2 planning complete
-Resume file: --resume-file
+Last session: 2026-04-20T17:37:27Z
+Stopped at: 02-01 AI Infrastructure & State Stores complete
+Resume file: .planning/phases/02-core-gameplay/02-02-PLAN.md
 
 **Planned Phase:** 2 (Core Gameplay) — 7 plans — 2026-04-20T17:25:15.557Z

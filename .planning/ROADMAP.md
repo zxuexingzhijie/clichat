@@ -53,7 +53,7 @@ Plans:
 **Plans:** 7 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — AI infrastructure, output schemas, state stores, type extensions
+- [x] 02-01-PLAN.md — AI infrastructure, output schemas, state stores, type extensions
 - [ ] 02-02-PLAN.md — World Codex content expansion (races, professions, backgrounds, NPCs, enemies, items)
 - [ ] 02-03-PLAN.md — Character creation wizard (engine + UI + app routing)
 - [ ] 02-04-PLAN.md — AI role implementations (Narrative Director, NPC Actor, Retrieval Planner, Safety Filter)
@@ -108,7 +108,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 6/6 | Complete | - |
-| 2. Core Gameplay | 0/7 | Planning complete | - |
+| 2. Core Gameplay | 1/7 | Executing | - |
 | 3. Persistence & World | 0/TBD | Not started | - |
 | 4. Differentiation | 0/TBD | Not started | - |
 | 5. Polish & Optimization | 0/TBD | Not started | - |
