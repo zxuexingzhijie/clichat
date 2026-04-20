@@ -1,0 +1,94 @@
+import type { Command } from 'commander';
+import type { GameAction } from '../types/game-action';
+
+export function registerCommands(
+  program: Command,
+  setResult: (action: GameAction) => void,
+): void {
+  program
+    .command('look')
+    .argument('[target]', 'what to look at')
+    .action((target?: string) => {
+      setResult({ type: 'look', target: target ?? null, modifiers: {}, source: 'command' });
+    });
+
+  program
+    .command('go')
+    .argument('<direction>', 'direction to move')
+    .action((direction: string) => {
+      setResult({ type: 'move', target: direction, modifiers: {}, source: 'command' });
+    });
+
+  program
+    .command('talk')
+    .argument('<npc>', 'NPC to talk to')
+    .action((npc: string) => {
+      setResult({ type: 'talk', target: npc, modifiers: {}, source: 'command' });
+    });
+
+  program
+    .command('attack')
+    .argument('<target>', 'target to attack')
+    .action((target: string) => {
+      setResult({ type: 'attack', target, modifiers: {}, source: 'command' });
+    });
+
+  program
+    .command('inspect')
+    .argument('<target>', 'object to inspect')
+    .action((target: string) => {
+      setResult({ type: 'inspect', target, modifiers: {}, source: 'command' });
+    });
+
+  program
+    .command('use_item')
+    .argument('<item>', 'item to use')
+    .action((item: string) => {
+      setResult({ type: 'use_item', target: item, modifiers: {}, source: 'command' });
+    });
+
+  program
+    .command('cast')
+    .argument('<spell>', 'spell to cast')
+    .argument('[target]', 'target of spell')
+    .action((spell: string, target?: string) => {
+      setResult({
+        type: 'cast',
+        target: spell,
+        modifiers: target ? { target } : {},
+        source: 'command',
+      });
+    });
+
+  program
+    .command('guard')
+    .action(() => {
+      setResult({ type: 'guard', target: null, modifiers: {}, source: 'command' });
+    });
+
+  program
+    .command('flee')
+    .action(() => {
+      setResult({ type: 'flee', target: null, modifiers: {}, source: 'command' });
+    });
+
+  program
+    .command('trade')
+    .argument('<npc>', 'NPC to trade with')
+    .action((npc: string) => {
+      setResult({ type: 'trade', target: npc, modifiers: {}, source: 'command' });
+    });
+
+  program
+    .command('help')
+    .action(() => {
+      setResult({ type: 'help', target: null, modifiers: {}, source: 'command' });
+    });
+
+  program
+    .command('save')
+    .argument('[name]', 'save name')
+    .action((name?: string) => {
+      setResult({ type: 'save', target: name ?? null, modifiers: {}, source: 'command' });
+    });
+}
