@@ -34,9 +34,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md — Project bootstrap, type system, store infrastructure, event bus
-- [ ] 01-02-PLAN.md — Rules Engine: D20 dice, adjudication modes, damage calculation
+- [x] 01-02-PLAN.md — Rules Engine: D20 dice, adjudication modes, damage calculation
 - [x] 01-03-PLAN.md — World Codex: schemas, YAML loader, query engine, example data
-- [ ] 01-04-PLAN.md — CLI terminal UI: four-panel layout, title screen, interaction
+- [x] 01-04-PLAN.md — CLI terminal UI: four-panel layout, title screen, interaction
 - [ ] 01-05-PLAN.md — Command parsing + NL intent classification
 - [ ] 01-06-PLAN.md — Integration wiring, state serialization, end-to-end verification
 
