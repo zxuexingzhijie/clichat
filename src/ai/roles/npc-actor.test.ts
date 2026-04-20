@@ -3,12 +3,22 @@ import type { NpcDialogue } from '../schemas/npc-dialogue';
 
 const mockGenerateObject = mock(() => Promise.resolve({ object: {} }));
 
-mock.module('ai', () => ({
-  generateObject: mockGenerateObject,
-}));
-
 mock.module('@ai-sdk/google', () => ({
   google: () => 'mock-model',
+}));
+
+mock.module('ai', () => ({
+  generateObject: mockGenerateObject,
+  generateText: mock(() => Promise.resolve({ text: '' })),
+  streamText: mock(() => ({ textStream: (async function* () {})() })),
+}));
+
+mock.module('../providers', () => ({
+  getRoleConfig: () => ({
+    model: () => 'mock-model',
+    temperature: 0.8,
+    maxTokens: 400,
+  }),
 }));
 
 const { generateNpcDialogue } = await import('./npc-actor');

@@ -6,6 +6,8 @@ const mockGenerateObject = mock(() => Promise.resolve({ object: {} as Intent }))
 
 mock.module('ai', () => ({
   generateObject: mockGenerateObject,
+  generateText: mock(() => Promise.resolve({ text: '' })),
+  streamText: mock(() => ({ textStream: (async function* () {})() })),
 }));
 
 mock.module('@ai-sdk/openai', () => ({

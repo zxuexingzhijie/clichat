@@ -8,13 +8,21 @@ const mockStreamText = mock(() => ({
   })(),
 }));
 
+mock.module('@ai-sdk/google', () => ({
+  google: () => 'mock-model',
+}));
+
 mock.module('ai', () => ({
   generateText: mockGenerateText,
   streamText: mockStreamText,
 }));
 
-mock.module('@ai-sdk/google', () => ({
-  google: () => 'mock-model',
+mock.module('../providers', () => ({
+  getRoleConfig: () => ({
+    model: () => 'mock-model',
+    temperature: 0.7,
+    maxTokens: 512,
+  }),
 }));
 
 const { generateNarration, streamNarration } = await import('./narrative-director');

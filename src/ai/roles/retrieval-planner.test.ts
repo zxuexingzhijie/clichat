@@ -3,12 +3,22 @@ import type { RetrievalPlan } from '../schemas/retrieval-plan';
 
 const mockGenerateObject = mock(() => Promise.resolve({ object: {} }));
 
-mock.module('ai', () => ({
-  generateObject: mockGenerateObject,
-}));
-
 mock.module('@ai-sdk/google', () => ({
   google: () => 'mock-model',
+}));
+
+mock.module('ai', () => ({
+  generateObject: mockGenerateObject,
+  generateText: mock(() => Promise.resolve({ text: '' })),
+  streamText: mock(() => ({ textStream: (async function* () {})() })),
+}));
+
+mock.module('../providers', () => ({
+  getRoleConfig: () => ({
+    model: () => 'mock-model',
+    temperature: 0.1,
+    maxTokens: 200,
+  }),
 }));
 
 const { generateRetrievalPlan } = await import('./retrieval-planner');
