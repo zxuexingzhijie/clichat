@@ -59,9 +59,11 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Content
 
 - [ ] **CONT-01**: First region world pack: one region with 8-12 locations (towns, dungeons, wilderness), 3-4 factions, regional lore, danger levels
-- [ ] **CONT-02**: Character system: 3-4 races with traits, 3-4 professions with abilities, 5-6 base stats, starting equipment per profession
+- [x] **CONT-02
+**: Character system: 3-4 races with traits, 3-4 professions with abilities, 5-6 base stats, starting equipment per profession
 - [ ] **CONT-03**: Quest content: one main quest skeleton (5-8 stages) and 5-8 reusable side quest templates with region/NPC/constraint parameters
-- [ ] **CONT-04**: NPC content: 10-15 named NPCs with backstories, goals, relationships, initial memory seeds, and personality tags
+- [x] **CONT-04
+**: NPC content: 10-15 named NPCs with backstories, goals, relationships, initial memory seeds, and personality tags
 
 ## v2 Requirements
 
