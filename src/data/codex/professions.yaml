@@ -1,0 +1,51 @@
+- id: prof_adventurer
+  name: 冒险者
+  type: profession
+  tags:
+    - combat
+    - versatile
+  description: 以冒险为生的人，擅长体能和战斗。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  abilities:
+    - basic_combat
+    - survival
+  starting_equipment:
+    - iron_sword
+    - leather_armor
+    - healing_potion
+  primary_attribute: physique
+
+- id: prof_mage
+  name: 法师
+  type: profession
+  tags:
+    - magic
+    - scholarly
+  description: 研习魔法的学者，以心智驾驭元素之力。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  abilities:
+    - basic_spellcasting
+    - arcane_knowledge
+  starting_equipment:
+    - wooden_staff
+    - cloth_robe
+    - mana_potion
+  primary_attribute: mind

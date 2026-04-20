@@ -1,0 +1,57 @@
+- id: npc_guard
+  name: 北门守卫
+  type: npc
+  tags:
+    - guard
+    - 黑松镇
+  description: 黑松镇北门的守卫，身着皮甲手持长矛，面容严肃但并非不近人情。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  location_id: loc_north_gate
+  personality_tags:
+    - dutiful
+    - cautious
+    - honest
+  goals:
+    - protect_gate
+    - report_suspicious_activity
+  backstory: 从小在黑松镇长大，五年前狼灾后加入守卫队。对镇子有深厚的感情。
+  initial_disposition: 0.0
+
+- id: npc_bartender
+  name: 酒馆老板·老陈
+  type: npc
+  tags:
+    - merchant
+    - information_broker
+    - 黑松镇
+  description: 松木桶酒馆的老板，圆胖的身材，总是笑眯眯的。什么消息都能打听到，但每条消息都有价码。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  location_id: loc_tavern
+  personality_tags:
+    - friendly
+    - shrewd
+    - gossipy
+  goals:
+    - run_business
+    - collect_information
+    - stay_neutral
+  backstory: 继承了父亲的酒馆，经营已有二十年。与镇上几乎所有人都有交情，包括暗影行会的人。
+  initial_disposition: 0.3

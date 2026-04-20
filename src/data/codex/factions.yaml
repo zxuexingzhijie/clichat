@@ -1,0 +1,53 @@
+- id: faction_guard
+  name: 黑松镇守卫
+  type: faction
+  tags:
+    - law_enforcement
+    - 黑松镇
+  description: 维持黑松镇秩序的守卫队，由镇长直接管辖。人数不多但纪律严明。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: regional
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  territory: 黑松镇
+  alignment: lawful_neutral
+  goals:
+    - maintain_order
+    - protect_citizens
+    - patrol_perimeter
+  rivals:
+    - faction_shadow_guild
+
+- id: faction_shadow_guild
+  name: 暗影行会
+  type: faction
+  tags:
+    - criminal
+    - underground
+  description: 活跃在黑松镇暗处的犯罪组织，涉及走私、盗窃和情报交易。
+  epistemic:
+    authority: street_rumor
+    truth_status: "true"
+    scope: local
+    visibility: hidden
+    confidence: 0.6
+    source_type: street_rumor
+    source_bias: anti-establishment
+    known_by:
+      - npc_bartender
+    contradicts: []
+    volatility: evolving
+  territory: 黑松镇地下
+  alignment: chaotic_neutral
+  goals:
+    - expand_influence
+    - acquire_wealth
+    - avoid_detection
+  rivals:
+    - faction_guard

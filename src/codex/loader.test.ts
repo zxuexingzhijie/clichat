@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeAll } from "bun:test";
-import { loadCodexFile, loadAllCodex } from "../loader.ts";
-import { queryByType, queryByTag, queryById, queryRelationships } from "../query.ts";
-import type { CodexEntry } from "../schemas/entry-types.ts";
-import type { RelationshipEdge } from "../schemas/relationship.ts";
+import { loadCodexFile, loadAllCodex } from "./loader.ts";
+import { queryByType, queryByTag, queryById, queryRelationships } from "./query.ts";
+import type { CodexEntry } from "./schemas/entry-types.ts";
+import type { RelationshipEdge } from "./schemas/relationship.ts";
 import { resolve } from "path";
 
-const CODEX_DIR = resolve(import.meta.dir, "../../data/codex");
+const CODEX_DIR = resolve(import.meta.dir, "../data/codex");
 
 describe("loadCodexFile", () => {
   it("loads and validates locations.yaml", async () => {
@@ -188,7 +188,7 @@ describe("queryRelationships", () => {
   let relationships: RelationshipEdge[];
 
   beforeAll(async () => {
-    const { loadRelationships } = await import("../loader.ts");
+    const { loadRelationships } = await import("./loader.ts");
     relationships = await loadRelationships(resolve(CODEX_DIR, "relationships.yaml"));
   });
 
