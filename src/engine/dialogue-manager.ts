@@ -5,9 +5,11 @@ import { npcMemoryStore } from '../state/npc-memory-store';
 import { sceneStore } from '../state/scene-store';
 import { gameStore } from '../state/game-store';
 import { playerStore } from '../state/player-store';
+import { relationStore, getDefaultNpcDisposition } from '../state/relation-store';
 import { generateNpcDialogue } from '../ai/roles/npc-actor';
 import { resolveNormalCheck } from './adjudication';
 import { rollD20 } from './dice';
+import { applyReputationDelta } from './reputation-system';
 import type { CodexEntry, Npc } from '../codex/schemas/entry-types';
 import type { NpcDialogue } from '../ai/schemas/npc-dialogue';
 import type { CheckResult } from '../types/common';
@@ -116,7 +118,12 @@ export function createDialogueManager(
 
     const npc = entry as Npc;
     const memoryRecord = npcMemoryStore.getState().memories[npcId];
-    const memoryStrings = memoryRecord ? memoryRecord.recentMemories.map((m) => m.event) : [];
+    const memoryStrings: string[] = memoryRecord
+      ? [
+          ...memoryRecord.recentMemories.map((m) => m.event),
+          ...memoryRecord.salientMemories.map((m) => m.event),
+        ]
+      : [];
     const scene = sceneStore.getState().narrationLines.join(' ');
 
     const npcProfile = {
@@ -192,7 +199,12 @@ export function createDialogueManager(
     }
 
     const memoryRecord = npcMemoryStore.getState().memories[npcId];
-    const memoryStrings = memoryRecord ? memoryRecord.recentMemories.map((m) => m.event) : [];
+    const memoryStrings: string[] = memoryRecord
+      ? [
+          ...memoryRecord.recentMemories.map((m) => m.event),
+          ...memoryRecord.salientMemories.map((m) => m.event),
+        ]
+      : [];
     const scene = sceneStore.getState().narrationLines.join(' ');
 
     const npcProfile = {
@@ -237,9 +249,19 @@ export function createDialogueManager(
   }
 
   function endDialogue(): void {
+    const npcId = dialogueStore.getState().npcId;
+    const delta = dialogueStore.getState().relationshipValue;
+
     dialogueStore.setState((draft) => {
       Object.assign(draft, getDefaultDialogueState());
     });
+
+    if (npcId && delta !== 0) {
+      relationStore.setState(persistDraft => {
+        const current = persistDraft.npcDispositions[npcId] ?? getDefaultNpcDisposition();
+        persistDraft.npcDispositions[npcId] = applyReputationDelta(current, { value: delta });
+      });
+    }
 
     gameStore.setState((draft) => {
       draft.phase = 'game';
