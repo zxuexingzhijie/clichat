@@ -108,7 +108,7 @@ const mockQuestMain = {
   rewards: {},
 };
 
-const mockCodexEntries = new Map([
+const mockCodexEntries = new Map<string, any>([
   ['quest_side_missing_ore', mockQuestSideOre],
   ['quest_side_overdue_debt', mockQuestOverdueDebt],
   ['quest_main_01', mockQuestMain],

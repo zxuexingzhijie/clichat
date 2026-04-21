@@ -320,8 +320,8 @@ describe('createDialogueManager', () => {
 
     await manager.startDialogue('npc_guard');
 
-    const callArgs = mockGenerateNpcDialogue.mock.calls[0];
-    const memories = callArgs?.[3] as string[];
+    const callArgs = mockGenerateNpcDialogue.mock.calls[0] as unknown as [unknown, unknown, unknown, string[]];
+    const memories = callArgs?.[3];
     expect(memories).toHaveLength(3);
     expect(memories).toContain('最近的记忆1');
     expect(memories).toContain('最近的记忆2');
