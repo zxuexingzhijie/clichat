@@ -5,11 +5,13 @@ import { rollD20 } from './engine/dice';
 import { playerStore } from './state/player-store';
 import { sceneStore } from './state/scene-store';
 import { gameStore } from './state/game-store';
+import { combatStore } from './state/combat-store';
 import { eventBus } from './events/event-bus';
 import type { GameAction } from './types/game-action';
 import type { CheckResult } from './types/common';
 import type { SceneManager } from './engine/scene-manager';
 import type { DialogueManager } from './engine/dialogue-manager';
+import type { CombatLoop } from './engine/combat-loop';
 
 export interface GameLoop {
   readonly processInput: (input: string, options?: RouteInputOptions) => Promise<ProcessResult>;
@@ -43,6 +45,7 @@ export type GameLoopOptions = {
   readonly rng?: () => number;
   readonly sceneManager?: SceneManager;
   readonly dialogueManager?: DialogueManager;
+  readonly combatLoop?: CombatLoop;
 };
 
 export function createGameLoop(options?: GameLoopOptions): GameLoop {
@@ -50,6 +53,7 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
   const rng = options?.rng;
   const sceneManager = options?.sceneManager;
   const dialogueManager = options?.dialogueManager;
+  const combatLoop = options?.combatLoop;
 
   async function processInput(input: string, routeOptions?: RouteInputOptions): Promise<ProcessResult> {
     const sceneContext = sceneStore.getState().narrationLines.join(' ');
@@ -66,6 +70,31 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
 
     if (action.type === 'help') {
       return { status: 'help', commands: HELP_COMMANDS };
+    }
+
+    // Combat routing: when in combat, route combat actions to combatLoop
+    if (combatStore.getState().active && combatLoop) {
+      const COMBAT_ACTIONS = new Set(['attack', 'cast', 'guard', 'flee']);
+      if (COMBAT_ACTIONS.has(action.type)) {
+        const combatResult = await combatLoop.processPlayerAction(
+          action.type as 'attack' | 'cast' | 'guard' | 'flee',
+        );
+        if (combatResult.status === 'error') {
+          return { status: 'error', message: combatResult.message };
+        }
+        await combatLoop.processEnemyTurn();
+        await combatLoop.checkCombatEnd();
+        const narration = combatStore.getState().lastNarration
+          ? [combatStore.getState().lastNarration]
+          : [];
+        return {
+          status: 'action_executed',
+          action,
+          checkResult: combatStore.getState().lastCheckResult ?? undefined,
+          narration,
+        };
+      }
+      return { status: 'error', message: '战斗中只能进行战斗行动！' };
     }
 
     if (action.type === 'look') {

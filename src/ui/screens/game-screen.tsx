@@ -6,7 +6,10 @@ import { TitleBar } from '../panels/title-bar';
 import { ScenePanel } from '../panels/scene-panel';
 import { DialoguePanel } from '../panels/dialogue-panel';
 import { StatusBar } from '../panels/status-bar';
+import { CombatStatusBar } from '../panels/combat-status-bar';
 import { ActionsPanel } from '../panels/actions-panel';
+import { CombatActionsPanel } from '../panels/combat-actions-panel';
+import { CheckResultLine } from '../panels/check-result-line';
 import { InputArea } from '../panels/input-area';
 import { useGameInput } from '../hooks/use-game-input';
 import { TIME_OF_DAY_LABELS } from '../../types/common';
@@ -14,24 +17,32 @@ import type { GameState } from '../../state/game-store';
 import type { PlayerState } from '../../state/player-store';
 import type { SceneState } from '../../state/scene-store';
 import type { DialogueState } from '../../state/dialogue-store';
+import type { CombatState } from '../../state/combat-store';
 import type { DialogueManager } from '../../engine/dialogue-manager';
+import type { CombatLoop, CombatActionType } from '../../engine/combat-loop';
 
 type GameScreenProps = {
   readonly gameState: GameState;
   readonly playerState: PlayerState;
   readonly sceneState: SceneState;
   readonly dialogueState: DialogueState;
+  readonly combatState: CombatState;
   readonly onSetGamePhase: (recipe: (draft: GameState) => void) => void;
   readonly dialogueManager?: DialogueManager;
+  readonly combatLoop?: CombatLoop;
 };
+
+const COMBAT_ACTION_TYPES: readonly CombatActionType[] = ['attack', 'cast', 'guard', 'flee', 'flee'];
 
 export function GameScreen({
   gameState,
   playerState,
   sceneState,
   dialogueState,
+  combatState,
   onSetGamePhase,
   dialogueManager,
+  combatLoop,
 }: GameScreenProps): React.ReactNode {
   const { width, height } = useScreenSize();
   const {
@@ -43,19 +54,20 @@ export function GameScreen({
   } = useGameInput();
 
   const [dialogueSelectedIndex, setDialogueSelectedIndex] = useState(0);
+  const [combatSelectedIndex, setCombatSelectedIndex] = useState(0);
 
   const innerWidth = width - 2;
-
   const timeLabel = TIME_OF_DAY_LABELS[gameState.timeOfDay] ?? gameState.timeOfDay;
 
+  const isInCombat = combatState.active;
+  const isInDialogueMode = dialogueState.active && dialogueState.mode === 'full';
+  const isWide = width >= 100;
+
   const handleActionExecute = useCallback(
-    (index: number) => {
-      const action = sceneState.actions[index];
-      if (action) {
-        // Phase 1: log to console, future phases will route to rules engine
-      }
+    (_index: number) => {
+      // Phase 1 stub: future phases route to rules engine
     },
-    [sceneState.actions],
+    [],
   );
 
   const handleInputSubmit = useCallback(
@@ -82,8 +94,17 @@ export function GameScreen({
     setDialogueSelectedIndex(0);
   }, [dialogueManager]);
 
-  const isWide = width >= 100;
-  const isInDialogueMode = dialogueState.active && dialogueState.mode === 'full';
+  const handleCombatExecute = useCallback(
+    (index: number) => {
+      if (!combatLoop) return;
+      const actionType = index === 3
+        ? 'flee' as CombatActionType
+        : (COMBAT_ACTION_TYPES[index] ?? 'attack');
+      combatLoop.processPlayerAction(actionType).catch(() => {});
+      setCombatSelectedIndex(0);
+    },
+    [combatLoop],
+  );
 
   const inlineDialogueLines = dialogueState.active && dialogueState.mode === 'inline'
     ? [
@@ -97,6 +118,81 @@ export function GameScreen({
   const sceneLines = dialogueState.active && dialogueState.mode === 'inline'
     ? inlineDialogueLines
     : [...sceneState.narrationLines];
+
+  const combatSceneContent = (
+    <Box flexDirection="column" paddingX={1}>
+      {combatState.lastCheckResult && (
+        <CheckResultLine checkResult={combatState.lastCheckResult} />
+      )}
+      {combatState.lastNarration ? (
+        <Text>{combatState.lastNarration}</Text>
+      ) : (
+        <Text bold color="cyan">⚔ 战斗！</Text>
+      )}
+    </Box>
+  );
+
+  const statusBarNode = isInCombat ? (
+    <CombatStatusBar
+      playerHp={playerState.hp}
+      playerMaxHp={playerState.maxHp}
+      playerMp={playerState.mp}
+      playerMaxMp={playerState.maxMp}
+      enemies={combatState.enemies}
+      roundNumber={combatState.roundNumber}
+      isPlayerTurn={combatState.phase === 'player_turn'}
+      width={innerWidth}
+    />
+  ) : (
+    <StatusBar
+      hp={playerState.hp}
+      maxHp={playerState.maxHp}
+      mp={playerState.mp}
+      maxMp={playerState.maxMp}
+      gold={playerState.gold}
+      location={sceneState.locationName}
+      quest={null}
+      width={innerWidth}
+    />
+  );
+
+  const actionsNode = isInCombat ? (
+    <CombatActionsPanel
+      playerMp={playerState.mp}
+      canFlee={true}
+      selectedIndex={combatSelectedIndex}
+      onSelect={setCombatSelectedIndex}
+      onExecute={handleCombatExecute}
+      isActive={!isTyping && combatState.phase === 'player_turn'}
+    />
+  ) : (
+    <ActionsPanel
+      actions={[...sceneState.actions]}
+      selectedIndex={selectedActionIndex}
+      onSelect={setSelectedActionIndex}
+      onExecute={handleActionExecute}
+      isActive={!isTyping && !isInDialogueMode}
+    />
+  );
+
+  const scenePanelNode = isInCombat
+    ? combatSceneContent
+    : isInDialogueMode
+      ? (
+        <DialoguePanel
+          npcName={dialogueState.npcName}
+          dialogueHistory={dialogueState.dialogueHistory}
+          relationshipValue={dialogueState.relationshipValue}
+          emotionHint={dialogueState.emotionHint}
+          responseOptions={dialogueState.availableResponses}
+          selectedIndex={dialogueSelectedIndex}
+          onSelect={setDialogueSelectedIndex}
+          onExecute={handleDialogueExecute}
+          isActive={true}
+          onEscape={handleDialogueEscape}
+        />
+      )
+      : <ScenePanel lines={sceneLines} />;
 
   if (isWide) {
     const sceneWidth = Math.floor(innerWidth * 0.6);
@@ -117,45 +213,15 @@ export function GameScreen({
         <Divider width={innerWidth} />
         <Box flexGrow={1}>
           <Box width={sceneWidth} flexDirection="column">
-            {isInDialogueMode ? (
-              <DialoguePanel
-                npcName={dialogueState.npcName}
-                dialogueHistory={dialogueState.dialogueHistory}
-                relationshipValue={dialogueState.relationshipValue}
-                emotionHint={dialogueState.emotionHint}
-                responseOptions={dialogueState.availableResponses}
-                selectedIndex={dialogueSelectedIndex}
-                onSelect={setDialogueSelectedIndex}
-                onExecute={handleDialogueExecute}
-                isActive={true}
-                onEscape={handleDialogueEscape}
-              />
-            ) : (
-              <ScenePanel lines={sceneLines} />
-            )}
+            {scenePanelNode}
           </Box>
           <Text>{'│'}</Text>
           <Box width={actionsWidth} flexDirection="column">
-            <ActionsPanel
-              actions={[...sceneState.actions]}
-              selectedIndex={selectedActionIndex}
-              onSelect={setSelectedActionIndex}
-              onExecute={handleActionExecute}
-              isActive={!isTyping && !isInDialogueMode}
-            />
+            {actionsNode}
           </Box>
         </Box>
         <Divider width={innerWidth} />
-        <StatusBar
-          hp={playerState.hp}
-          maxHp={playerState.maxHp}
-          mp={playerState.mp}
-          maxMp={playerState.maxMp}
-          gold={playerState.gold}
-          location={sceneState.locationName}
-          quest={null}
-          width={innerWidth}
-        />
+        {statusBarNode}
         <Divider width={innerWidth} />
         <InputArea
           onSubmit={handleInputSubmit}
@@ -179,41 +245,11 @@ export function GameScreen({
         timeOfDay={timeLabel}
       />
       <Divider width={innerWidth} />
-      {isInDialogueMode ? (
-        <DialoguePanel
-          npcName={dialogueState.npcName}
-          dialogueHistory={dialogueState.dialogueHistory}
-          relationshipValue={dialogueState.relationshipValue}
-          emotionHint={dialogueState.emotionHint}
-          responseOptions={dialogueState.availableResponses}
-          selectedIndex={dialogueSelectedIndex}
-          onSelect={setDialogueSelectedIndex}
-          onExecute={handleDialogueExecute}
-          isActive={true}
-          onEscape={handleDialogueEscape}
-        />
-      ) : (
-        <ScenePanel lines={sceneLines} />
-      )}
+      {scenePanelNode}
       <Divider width={innerWidth} />
-      <StatusBar
-        hp={playerState.hp}
-        maxHp={playerState.maxHp}
-        mp={playerState.mp}
-        maxMp={playerState.maxMp}
-        gold={playerState.gold}
-        location={sceneState.locationName}
-        quest={null}
-        width={innerWidth}
-      />
+      {statusBarNode}
       <Divider width={innerWidth} />
-      <ActionsPanel
-        actions={[...sceneState.actions]}
-        selectedIndex={selectedActionIndex}
-        onSelect={setSelectedActionIndex}
-        onExecute={handleActionExecute}
-        isActive={!isTyping && !isInDialogueMode}
-      />
+      {actionsNode}
       <Divider width={innerWidth} />
       <InputArea
         onSubmit={handleInputSubmit}
