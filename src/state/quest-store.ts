@@ -60,6 +60,10 @@ export function resetQuestEventLog(): void {
   questEventLog = [];
 }
 
+export function restoreQuestEventLog(events: QuestEvent[]): void {
+  questEventLog = [...events];
+}
+
 export const questStore = createStore<QuestState>(
   getDefaultQuestState(),
   ({ newState, oldState }) => {
