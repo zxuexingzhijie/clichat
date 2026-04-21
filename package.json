@@ -19,6 +19,7 @@
     "ai": "^5.0.179",
     "chalk": "^5.6.2",
     "commander": "^14.0.3",
+    "env-paths": "^4.0.0",
     "figlet": "^1.11.0",
     "fullscreen-ink": "^0.1.0",
     "gradient-string": "^3.0.0",
