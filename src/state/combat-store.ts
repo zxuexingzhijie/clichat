@@ -44,13 +44,13 @@ export const combatStore = createStore<CombatState>(
       });
     }
     if (!newState.active && oldState.active) {
-      const outcome = newState.phase === 'ended' ? 'ended' : 'victory';
-      eventBus.emit('combat_ended', { outcome });
+      eventBus.emit('combat_ended', { outcome: 'victory' });
     }
     if (newState.currentTurnIndex !== oldState.currentTurnIndex) {
+      const currentActorId = newState.turnOrder[newState.currentTurnIndex] ?? 'player';
       eventBus.emit('combat_turn_advanced', {
-        currentTurnIndex: newState.currentTurnIndex,
-        turnOrder: newState.turnOrder,
+        currentActorId,
+        roundNumber: newState.roundNumber,
       });
     }
   },

@@ -5,13 +5,25 @@ import { combatStore, getDefaultCombatState } from '../state/combat-store';
 import { playerStore, getDefaultPlayerState } from '../state/player-store';
 import type { CodexEntry } from '../codex/schemas/entry-types';
 
+const EPISTEMIC = {
+  authority: 'established_canon' as const,
+  truth_status: 'true' as const,
+  scope: 'global' as const,
+  visibility: 'public' as const,
+  confidence: 1,
+  source_type: 'authorial' as const,
+  known_by: [],
+  contradicts: [],
+  volatility: 'stable' as const,
+};
+
 const GOBLIN_ENTRY: CodexEntry = {
   id: 'goblin',
   name: '哥布林',
   type: 'enemy',
   tags: ['enemy', 'humanoid'],
   description: '小型绿皮生物，性情凶猛',
-  epistemic: { canon_tier: 'established', visibility: 'world_truth', source: 'codex' },
+  epistemic: EPISTEMIC,
   hp: 20,
   maxHp: 20,
   attack: 1,
@@ -82,7 +94,9 @@ describe('createCombatLoop', () => {
     const afterHp = combatStore.getState().enemies[0]!.hp;
     expect(afterHp).toBeLessThan(20);
     expect(result.status).toBe('ok');
-    expect(result.checkResult).toBeDefined();
+    if (result.status === 'ok') {
+      expect(result.checkResult).toBeDefined();
+    }
   });
 
   it('attack with failed roll deals no damage', async () => {
@@ -116,7 +130,9 @@ describe('createCombatLoop', () => {
 
     const result = await loop.processPlayerAction('cast');
     expect(result.status).toBe('error');
-    expect(result.message).toContain('魔力不足');
+    if (result.status === 'error') {
+      expect(result.message).toContain('魔力不足');
+    }
   });
 
   it('guard sets guardActive flag', async () => {
@@ -138,7 +154,9 @@ describe('createCombatLoop', () => {
 
     expect(combatStore.getState().active).toBe(false);
     expect(result.status).toBe('ok');
-    expect(result.outcome).toBe('flee');
+    if (result.status === 'ok') {
+      expect(result.outcome).toBe('flee');
+    }
   });
 
   it('enemy turn deals damage to player on successful hit', async () => {
@@ -195,7 +213,9 @@ describe('createCombatLoop', () => {
 
     const result = await loop.checkCombatEnd();
     expect(result.ended).toBe(true);
-    expect(result.outcome).toBe('victory');
+    if (result.ended) {
+      expect(result.outcome).toBe('victory');
+    }
     expect(combatStore.getState().active).toBe(false);
   });
 
@@ -207,7 +227,9 @@ describe('createCombatLoop', () => {
 
     const result = await loop.checkCombatEnd();
     expect(result.ended).toBe(true);
-    expect(result.outcome).toBe('defeat');
+    if (result.ended) {
+      expect(result.outcome).toBe('defeat');
+    }
     expect(combatStore.getState().active).toBe(false);
   });
 
