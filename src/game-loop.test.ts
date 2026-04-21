@@ -127,4 +127,119 @@ describe('createGameLoop', () => {
     expect(newLines.length).toBe(initialLineCount + 1);
     expect(newLines[newLines.length - 1]).toContain('D20');
   });
+
+  it('/journal sets gameStore.phase to journal', async () => {
+    const loop = createGameLoop({ rng: createSeededRng(42) });
+
+    const result = await loop.processInput('/journal');
+
+    expect(result.status).toBe('action_executed');
+    expect(gameStore.getState().phase).toBe('journal');
+  });
+
+  it('/quest accept quest_main_01 calls questSystem.acceptQuest', async () => {
+    const mockQuestSystem = {
+      acceptQuest: mock(() => ({ status: 'ok' as const })),
+      completeObjective: mock(() => {}),
+      advanceStage: mock(() => {}),
+      failQuest: mock(() => {}),
+    };
+
+    const loop = createGameLoop({ rng: createSeededRng(42), questSystem: mockQuestSystem });
+
+    const result = await loop.processInput('/quest accept quest_main_01');
+
+    expect(mockQuestSystem.acceptQuest).toHaveBeenCalledWith('quest_main_01');
+    expect(result.status).toBe('action_executed');
+  });
+
+  it('/quest accept when questSystem returns gated returns error', async () => {
+    const mockQuestSystem = {
+      acceptQuest: mock(() => ({ status: 'gated' as const, reason: '声望不足' })),
+      completeObjective: mock(() => {}),
+      advanceStage: mock(() => {}),
+      failQuest: mock(() => {}),
+    };
+
+    const loop = createGameLoop({ rng: createSeededRng(42), questSystem: mockQuestSystem });
+
+    const result = await loop.processInput('/quest accept quest_gated');
+
+    expect(result.status).toBe('error');
+    if (result.status === 'error') {
+      expect(result.message).toBe('声望不足');
+    }
+  });
+
+  it('/save with name calls saveGame', async () => {
+    const mockSaveFileManager = {
+      quickSave: mock(() => Promise.resolve('/saves/quicksave.json')),
+      saveGame: mock(() => Promise.resolve('/saves/before-gate.json')),
+      loadGame: mock(() => Promise.resolve()),
+    };
+    const mockSerializer = {
+      snapshot: mock(() => '{}'),
+      restore: mock(() => {}),
+    };
+
+    const loop = createGameLoop({
+      rng: createSeededRng(42),
+      saveFileManager: mockSaveFileManager,
+      serializer: mockSerializer,
+      saveDir: '/saves',
+    });
+
+    const result = await loop.processInput('/save before-gate');
+
+    expect(mockSaveFileManager.saveGame).toHaveBeenCalledWith('before-gate', mockSerializer, '/saves');
+    expect(result.status).toBe('action_executed');
+  });
+
+  it('/save without name calls quickSave', async () => {
+    const mockSaveFileManager = {
+      quickSave: mock(() => Promise.resolve('/saves/quicksave.json')),
+      saveGame: mock(() => Promise.resolve('/saves/test.json')),
+      loadGame: mock(() => Promise.resolve()),
+    };
+    const mockSerializer = {
+      snapshot: mock(() => '{}'),
+      restore: mock(() => {}),
+    };
+
+    const loop = createGameLoop({
+      rng: createSeededRng(42),
+      saveFileManager: mockSaveFileManager,
+      serializer: mockSerializer,
+      saveDir: '/saves',
+    });
+
+    const result = await loop.processInput('/save');
+
+    expect(mockSaveFileManager.quickSave).toHaveBeenCalledWith(mockSerializer, '/saves');
+    expect(result.status).toBe('action_executed');
+  });
+
+  it('/load quicksave calls loadGame with quicksave path', async () => {
+    const mockSaveFileManager = {
+      quickSave: mock(() => Promise.resolve('/saves/quicksave.json')),
+      saveGame: mock(() => Promise.resolve('/saves/test.json')),
+      loadGame: mock(() => Promise.resolve()),
+    };
+    const mockSerializer = {
+      snapshot: mock(() => '{}'),
+      restore: mock(() => {}),
+    };
+
+    const loop = createGameLoop({
+      rng: createSeededRng(42),
+      saveFileManager: mockSaveFileManager,
+      serializer: mockSerializer,
+      saveDir: '/saves',
+    });
+
+    const result = await loop.processInput('/load quicksave.json');
+
+    expect(mockSaveFileManager.loadGame).toHaveBeenCalledWith('/saves/quicksave.json', mockSerializer);
+    expect(result.status).toBe('action_executed');
+  });
 });

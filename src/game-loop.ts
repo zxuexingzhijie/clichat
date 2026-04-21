@@ -12,6 +12,8 @@ import type { CheckResult } from './types/common';
 import type { SceneManager } from './engine/scene-manager';
 import type { DialogueManager } from './engine/dialogue-manager';
 import type { CombatLoop } from './engine/combat-loop';
+import type { Serializer } from './state/serializer';
+import type { QuestSystem } from './engine/quest-system';
 
 export interface GameLoop {
   readonly processInput: (input: string, options?: RouteInputOptions) => Promise<ProcessResult>;
@@ -46,6 +48,14 @@ export type GameLoopOptions = {
   readonly sceneManager?: SceneManager;
   readonly dialogueManager?: DialogueManager;
   readonly combatLoop?: CombatLoop;
+  readonly saveFileManager?: {
+    quickSave: (serializer: Serializer, saveDir: string) => Promise<string>;
+    saveGame: (name: string, serializer: Serializer, saveDir: string) => Promise<string>;
+    loadGame: (filePath: string, serializer: Serializer) => Promise<void>;
+  };
+  readonly serializer?: Serializer;
+  readonly saveDir?: string;
+  readonly questSystem?: QuestSystem;
 };
 
 export function createGameLoop(options?: GameLoopOptions): GameLoop {
@@ -54,6 +64,10 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
   const sceneManager = options?.sceneManager;
   const dialogueManager = options?.dialogueManager;
   const combatLoop = options?.combatLoop;
+  const saveFileManager = options?.saveFileManager;
+  const serializer = options?.serializer;
+  const saveDir = options?.saveDir;
+  const questSystem = options?.questSystem;
 
   async function processInput(input: string, routeOptions?: RouteInputOptions): Promise<ProcessResult> {
     const sceneContext = sceneStore.getState().narrationLines.join(' ');
@@ -99,7 +113,7 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
 
     if (action.type === 'look') {
       if (sceneManager) {
-        const result = await sceneManager.handleLook(action.target);
+        const result = await sceneManager.handleLook(action.target ?? undefined);
         if (result.status === 'success') {
           return { status: 'action_executed', action, narration: result.narration };
         }
@@ -142,6 +156,46 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
         action,
         narration: currentLines,
       };
+    }
+
+    if (action.type === 'save') {
+      if (saveFileManager && serializer && saveDir) {
+        const filePath = action.target
+          ? await saveFileManager.saveGame(action.target, serializer, saveDir)
+          : await saveFileManager.quickSave(serializer, saveDir);
+        return { status: 'action_executed', action, narration: [`游戏已保存: ${filePath}`] };
+      }
+      return { status: 'error', message: '存档系统未初始化' };
+    }
+
+    if (action.type === 'load') {
+      if (saveFileManager && serializer && saveDir) {
+        const fileName = action.target ?? 'quicksave.json';
+        const filePath = fileName.includes('/') ? fileName : `${saveDir}/${fileName}`;
+        await saveFileManager.loadGame(filePath, serializer);
+        return { status: 'action_executed', action, narration: ['游戏已加载。'] };
+      }
+      return { status: 'error', message: '存档系统未初始化' };
+    }
+
+    if (action.type === 'journal') {
+      gameStore.setState(draft => { draft.phase = 'journal'; });
+      return { status: 'action_executed', action, narration: [] };
+    }
+
+    if (action.type === 'quest') {
+      if (action.target === 'accept' && questSystem) {
+        const questId = (action.modifiers as Record<string, string>)['id'] ?? '';
+        const result = questSystem.acceptQuest(questId);
+        if (result.status === 'gated') {
+          return { status: 'error', message: result.reason };
+        }
+        if (result.status === 'error') {
+          return { status: 'error', message: result.reason };
+        }
+        return { status: 'action_executed', action, narration: [`任务已接受: ${questId}`] };
+      }
+      return { status: 'error', message: '未知任务指令' };
     }
 
     const checkResult = adjudicate(action);

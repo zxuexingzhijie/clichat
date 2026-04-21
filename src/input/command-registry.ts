@@ -91,4 +91,30 @@ export function registerCommands(
     .action((name?: string) => {
       setResult({ type: 'save', target: name ?? null, modifiers: {}, source: 'command' });
     });
+
+  program
+    .command('load')
+    .argument('[name]', 'save file name or path')
+    .action((name?: string) => {
+      setResult({ type: 'load', target: name ?? null, modifiers: {}, source: 'command' });
+    });
+
+  program
+    .command('journal')
+    .action(() => {
+      setResult({ type: 'journal', target: null, modifiers: {}, source: 'command' });
+    });
+
+  program
+    .command('quest')
+    .argument('<action>', 'accept|list|abandon')
+    .argument('[id]', 'quest id')
+    .action((action: string, id?: string) => {
+      setResult({
+        type: 'quest',
+        target: action,
+        modifiers: id ? { id } : {},
+        source: 'command',
+      });
+    });
 }
