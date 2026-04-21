@@ -5,6 +5,7 @@ import { Divider } from '../components/divider';
 import { TitleBar } from '../panels/title-bar';
 import { ScenePanel } from '../panels/scene-panel';
 import { DialoguePanel } from '../panels/dialogue-panel';
+import { JournalPanel, type QuestDisplayEntry } from '../panels/journal-panel';
 import { StatusBar } from '../panels/status-bar';
 import { CombatStatusBar } from '../panels/combat-status-bar';
 import { ActionsPanel } from '../panels/actions-panel';
@@ -13,13 +14,15 @@ import { CheckResultLine } from '../panels/check-result-line';
 import { InputArea } from '../panels/input-area';
 import { useGameInput } from '../hooks/use-game-input';
 import { TIME_OF_DAY_LABELS } from '../../types/common';
-import type { GameState } from '../../state/game-store';
+import { gameStore, type GameState } from '../../state/game-store';
 import type { PlayerState } from '../../state/player-store';
 import type { SceneState } from '../../state/scene-store';
 import type { DialogueState } from '../../state/dialogue-store';
 import type { CombatState } from '../../state/combat-store';
 import type { DialogueManager } from '../../engine/dialogue-manager';
 import type { CombatLoop, CombatActionType } from '../../engine/combat-loop';
+import type { QuestState } from '../../state/quest-store';
+import type { QuestTemplate } from '../../codex/schemas/entry-types';
 
 type GameScreenProps = {
   readonly gameState: GameState;
@@ -27,6 +30,8 @@ type GameScreenProps = {
   readonly sceneState: SceneState;
   readonly dialogueState: DialogueState;
   readonly combatState: CombatState;
+  readonly questState: QuestState;
+  readonly questTemplates: ReadonlyMap<string, QuestTemplate>;
   readonly onSetGamePhase: (recipe: (draft: GameState) => void) => void;
   readonly dialogueManager?: DialogueManager;
   readonly combatLoop?: CombatLoop;
@@ -40,6 +45,8 @@ export function GameScreen({
   sceneState,
   dialogueState,
   combatState,
+  questState,
+  questTemplates,
   onSetGamePhase,
   dialogueManager,
   combatLoop,
@@ -61,7 +68,21 @@ export function GameScreen({
 
   const isInCombat = combatState.active;
   const isInDialogueMode = dialogueState.active && dialogueState.mode === 'full';
+  const isInJournal = gameState.phase === 'journal';
   const isWide = width >= 100;
+
+  const allQuestEntries: QuestDisplayEntry[] = Object.entries(questState.quests)
+    .map(([questId, progress]) => {
+      const template = questTemplates.get(questId);
+      return template ? { progress, template } : null;
+    })
+    .filter((e): e is QuestDisplayEntry => e !== null);
+
+  const activeQuests = allQuestEntries.filter(e => e.progress.status === 'active');
+  const completedQuests = allQuestEntries.filter(e => e.progress.status === 'completed');
+  const failedQuests = allQuestEntries.filter(e => e.progress.status === 'failed');
+
+  const activeQuestName = activeQuests[0]?.template.name ?? null;
 
   const handleActionExecute = useCallback(
     (_index: number) => {
@@ -105,6 +126,10 @@ export function GameScreen({
     },
     [combatLoop],
   );
+
+  const handleJournalClose = useCallback(() => {
+    gameStore.setState(draft => { draft.phase = 'game'; });
+  }, []);
 
   const inlineDialogueLines = dialogueState.active && dialogueState.mode === 'inline'
     ? [
@@ -151,7 +176,7 @@ export function GameScreen({
       maxMp={playerState.maxMp}
       gold={playerState.gold}
       location={sceneState.locationName}
-      quest={null}
+      quest={activeQuestName}
       width={innerWidth}
     />
   );
@@ -192,7 +217,16 @@ export function GameScreen({
           onEscape={handleDialogueEscape}
         />
       )
-      : <ScenePanel lines={sceneLines} />;
+      : isInJournal
+        ? (
+          <JournalPanel
+            activeQuests={activeQuests}
+            completedQuests={completedQuests}
+            failedQuests={failedQuests}
+            onClose={handleJournalClose}
+          />
+        )
+        : <ScenePanel lines={sceneLines} />;
 
   if (isWide) {
     const sceneWidth = Math.floor(innerWidth * 0.6);
