@@ -13,7 +13,7 @@ Chronicle delivers an AI-driven CLI text RPG where a deterministic Rules Engine 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Rules Engine, CLI layout, state management, World Codex schema, and command parsing
-- [ ] **Phase 2: Core Gameplay** - Character creation, scene exploration, NPC dialogue, combat, and AI narration
+- [x] **Phase 2: Core Gameplay** - Character creation, scene exploration, NPC dialogue, combat, and AI narration
 - [ ] **Phase 3: Persistence & World** - Save/load, NPC memory, quest system, relationship tracking, and content packs
 - [ ] **Phase 4: Differentiation** - Story branching, ASCII map, codex browser, keyboard shortcuts, and epistemic separation
 - [ ] **Phase 5: Polish & Optimization** - Background summarizer, replay, multi-provider LLM routing, cost tracking, and prompt caching
@@ -54,12 +54,12 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md — AI infrastructure, output schemas, state stores, type extensions
-- [ ] 02-02-PLAN.md — World Codex content expansion (races, professions, backgrounds, NPCs, enemies, items)
-- [ ] 02-03-PLAN.md — Character creation wizard (engine + UI + app routing)
-- [ ] 02-04-PLAN.md — AI role implementations (Narrative Director, NPC Actor, Retrieval Planner, Safety Filter)
-- [ ] 02-05-PLAN.md — Scene exploration system (scene manager, check display, AI narration hook)
-- [ ] 02-06-PLAN.md — NPC dialogue system (dialogue manager, dialogue panel UI)
-- [ ] 02-07-PLAN.md — Turn-based combat system (combat loop, combat UI panels)
+- [x] 02-02-PLAN.md — World Codex content expansion (races, professions, backgrounds, NPCs, enemies, items)
+- [x] 02-03-PLAN.md — Character creation wizard (engine + UI + app routing)
+- [x] 02-04-PLAN.md — AI role implementations (Narrative Director, NPC Actor, Retrieval Planner, Safety Filter)
+- [x] 02-05-PLAN.md — Scene exploration system (scene manager, check display, AI narration hook)
+- [x] 02-06-PLAN.md — NPC dialogue system (dialogue manager, dialogue panel UI)
+- [x] 02-07-PLAN.md — Turn-based combat system (combat loop, combat UI panels)
 
 **UI hint**: yes
 
@@ -108,7 +108,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 6/6 | Complete | - |
-| 2. Core Gameplay | 1/7 | Executing | - |
+| 2. Core Gameplay | 7/7 | Complete | 2026-04-21 |
 | 3. Persistence & World | 0/TBD | Not started | - |
 | 4. Differentiation | 0/TBD | Not started | - |
 | 5. Polish & Optimization | 0/TBD | Not started | - |
