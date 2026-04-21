@@ -20,6 +20,9 @@ import {
   ProfessionSchema,
   HistoryEventSchema,
   CodexEntrySchema,
+  QuestObjectiveSchema,
+  QuestStageSchema,
+  QuestTemplateSchema,
   type CodexEntry,
 } from "./entry-types.ts";
 import {
@@ -500,5 +503,151 @@ describe("CodexEntrySchema discriminated union", () => {
         epistemic: validEpistemic,
       })
     ).toThrow();
+  });
+});
+
+describe("QuestObjectiveSchema", () => {
+  it("parses a valid talk objective", () => {
+    const result = QuestObjectiveSchema.parse({
+      id: "obj_01",
+      type: "talk",
+      targetId: "npc_captain",
+      description: "与守卫队长交谈",
+    });
+    expect(result.id).toBe("obj_01");
+    expect(result.type).toBe("talk");
+    expect(result.targetId).toBe("npc_captain");
+  });
+
+  it("parses a valid defeat_enemy objective without targetId", () => {
+    const result = QuestObjectiveSchema.parse({
+      id: "obj_02",
+      type: "defeat_enemy",
+      description: "击败敌人",
+    });
+    expect(result.type).toBe("defeat_enemy");
+    expect(result.targetId).toBeUndefined();
+  });
+
+  it("rejects invalid objective type", () => {
+    expect(() =>
+      QuestObjectiveSchema.parse({
+        id: "obj_03",
+        type: "invalid_type",
+        description: "invalid",
+      })
+    ).toThrow();
+  });
+});
+
+describe("QuestStageSchema", () => {
+  it("parses a valid stage with objectives", () => {
+    const result = QuestStageSchema.parse({
+      id: "stage_01",
+      description: "调查失踪事件",
+      objectives: [
+        { id: "obj_01", type: "talk", targetId: "npc_captain", description: "问队长" },
+      ],
+      nextStageId: "stage_02",
+    });
+    expect(result.id).toBe("stage_01");
+    expect(result.objectives).toHaveLength(1);
+    expect(result.nextStageId).toBe("stage_02");
+  });
+
+  it("accepts null nextStageId for terminal stage", () => {
+    const result = QuestStageSchema.parse({
+      id: "stage_final",
+      description: "最终阶段",
+      objectives: [],
+      nextStageId: null,
+    });
+    expect(result.nextStageId).toBeNull();
+  });
+});
+
+describe("QuestTemplateSchema", () => {
+  const validQuest = {
+    id: "quest_missing_persons",
+    name: "失踪事件调查",
+    type: "quest" as const,
+    tags: ["main", "investigation"],
+    description: "调查黑松镇的失踪事件",
+    epistemic: validEpistemic,
+    quest_type: "main" as const,
+    region: "黑松镇",
+    stages: [
+      {
+        id: "stage_01",
+        description: "寻找线索",
+        objectives: [
+          { id: "obj_01", type: "talk" as const, targetId: "npc_captain", description: "问队长" },
+        ],
+        nextStageId: null,
+      },
+    ],
+    rewards: {
+      gold: 100,
+      reputation_delta: { faction_guard: 10 },
+    },
+  };
+
+  it("parses a valid quest template", () => {
+    const result = QuestTemplateSchema.parse(validQuest);
+    expect(result.type).toBe("quest");
+    expect(result.quest_type).toBe("main");
+    expect(result.stages).toHaveLength(1);
+    expect(result.rewards.gold).toBe(100);
+  });
+
+  it("accepts optional region and required_npc_id", () => {
+    const result = QuestTemplateSchema.parse({
+      ...validQuest,
+      required_npc_id: "npc_captain",
+    });
+    expect(result.required_npc_id).toBe("npc_captain");
+  });
+
+  it("accepts optional min_reputation", () => {
+    const result = QuestTemplateSchema.parse({
+      ...validQuest,
+      min_reputation: 20,
+    });
+    expect(result.min_reputation).toBe(20);
+  });
+
+  it("rejects invalid quest_type", () => {
+    expect(() =>
+      QuestTemplateSchema.parse({ ...validQuest, quest_type: "invalid" })
+    ).toThrow();
+  });
+
+  it("accepts rewards with items and relation_delta", () => {
+    const result = QuestTemplateSchema.parse({
+      ...validQuest,
+      rewards: {
+        items: ["item_iron_sword"],
+        relation_delta: { npc_captain: 0.2 },
+      },
+    });
+    expect(result.rewards.items).toEqual(["item_iron_sword"]);
+    expect(result.rewards.relation_delta?.["npc_captain"]).toBe(0.2);
+  });
+});
+
+describe("CodexEntrySchema with QuestTemplateSchema", () => {
+  it("routes to QuestTemplateSchema when type is quest", () => {
+    const result = CodexEntrySchema.parse({
+      id: "quest_001",
+      name: "测试任务",
+      type: "quest",
+      tags: ["side"],
+      description: "一个测试任务",
+      epistemic: validEpistemic,
+      quest_type: "side",
+      stages: [],
+      rewards: {},
+    });
+    expect(result.type).toBe("quest");
   });
 });
