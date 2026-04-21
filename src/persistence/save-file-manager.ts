@@ -44,8 +44,14 @@ export async function saveGame(name: string, serializer: Serializer, saveDir: st
   return filePath;
 }
 
-export async function loadGame(filePath: string, serializer: Serializer): Promise<void> {
+export async function loadGame(filePath: string, serializer: Serializer, saveDir?: string): Promise<void> {
   const resolvedPath = path.resolve(filePath);
+  if (saveDir) {
+    const resolvedSaveDir = path.resolve(saveDir);
+    if (!resolvedPath.startsWith(resolvedSaveDir + path.sep) && resolvedPath !== resolvedSaveDir) {
+      throw new Error(`Path traversal detected: ${filePath} is outside save directory`);
+    }
+  }
   const file = Bun.file(resolvedPath);
   const json = await file.text();
   serializer.restore(json);

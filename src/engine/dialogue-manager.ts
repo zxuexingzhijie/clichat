@@ -283,7 +283,7 @@ export function createDialogueManager(
         participants: ['player', npcId],
       };
       if (existing) {
-        existing.recentMemories = [...existing.recentMemories, newEntry];
+        existing.recentMemories.push(newEntry);
         existing.lastUpdated = new Date().toISOString();
       } else {
         draft.memories[npcId] = {
