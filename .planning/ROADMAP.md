@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Rules Engine, CLI layout, state management, World Codex schema, and command parsing
 - [x] **Phase 2: Core Gameplay** - Character creation, scene exploration, NPC dialogue, combat, and AI narration
-- [ ] **Phase 3: Persistence & World** - Save/load, NPC memory, quest system, relationship tracking, and content packs
+- [x] **Phase 3: Persistence & World** - Save/load, NPC memory, quest system, relationship tracking, and content packs
 - [ ] **Phase 4: Differentiation** - Story branching, ASCII map, codex browser, keyboard shortcuts, and epistemic separation
 - [ ] **Phase 5: Polish & Optimization** - Background summarizer, replay, multi-provider LLM routing, cost tracking, and prompt caching
 
@@ -76,14 +76,14 @@ Plans:
 **Plans:** 8 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Type/schema contracts: event types, game actions, NPC memory three-layer schema, QuestTemplateSchema
-- [ ] 03-02-PLAN.md — World content expansion: 9 locations, 4 factions, 15+ NPCs, quests.yaml (CONT-01, CONT-03)
-- [ ] 03-03-PLAN.md — QuestStore + quest event log (TDD)
-- [ ] 03-04-PLAN.md — RelationStore + reputation-system pure functions (TDD)
-- [ ] 03-05-PLAN.md — SaveData v2 schema + serializer upgrade + v1 migration
-- [ ] 03-06-PLAN.md — Save-file-manager (platform paths, named saves) + memory-persistence (async NPC disk write)
-- [ ] 03-07-PLAN.md — QuestSystem engine + dialogue-manager reputation integration + command-registry + game-loop wiring
-- [ ] 03-08-PLAN.md — JournalPanel UI + game-screen integration + GamePhase 'journal'
+- [x] 03-01-PLAN.md — Type/schema contracts: event types, game actions, NPC memory three-layer schema, QuestTemplateSchema
+- [x] 03-02-PLAN.md — World content expansion: 9 locations, 4 factions, 15+ NPCs, quests.yaml (CONT-01, CONT-03)
+- [x] 03-03-PLAN.md — QuestStore + quest event log (TDD)
+- [x] 03-04-PLAN.md — RelationStore + reputation-system pure functions (TDD)
+- [x] 03-05-PLAN.md — SaveData v2 schema + serializer upgrade + v1 migration
+- [x] 03-06-PLAN.md — Save-file-manager (platform paths, named saves) + memory-persistence (async NPC disk write)
+- [x] 03-07-PLAN.md — QuestSystem engine + dialogue-manager reputation integration + command-registry + game-loop wiring
+- [x] 03-08-PLAN.md — JournalPanel UI + game-screen integration + GamePhase 'journal'
 
 **UI hint**: yes
 
@@ -97,7 +97,19 @@ Plans:
   3. Player can view an ASCII/Unicode region map via `/map` showing current location, explored areas, and points of interest
   4. Player can browse discovered lore via `/codex` with search/filter across races, factions, locations, spells, and items
   5. Retrieved context for NPC Actors is tagged with epistemic level (world_truth, npc_belief, player_knowledge) and NPCs only receive information their character would know
-**Plans**: TBD
+**Plans:** 9 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Type contracts: schemas, stores (BranchStore, ExplorationStore, PlayerKnowledgeStore), event types, game phases
+- [ ] 04-02-PLAN.md — Location data extension: SpatialExitSchema, coordinates, map_icon for all 9 locations
+- [ ] 04-03-PLAN.md — Branch engine: SaveDataV3, V2->V3 migration, BranchManager CRUD
+- [ ] 04-04-PLAN.md — Event-driven trackers: ExplorationTracker, KnowledgeTracker
+- [ ] 04-05-PLAN.md — Epistemic separation: NPC Knowledge Filter, Cognitive Context Envelope, context-assembler upgrade
+- [ ] 04-06-PLAN.md — Branch diff engine (6-dimension comparison) + turn log for replay
+- [ ] 04-07-PLAN.md — MapPanel + CodexPanel with sub-components
+- [ ] 04-08-PLAN.md — BranchTreePanel + ComparePanel with DiffLine component
+- [ ] 04-09-PLAN.md — Keyboard shortcuts, command registration, game-screen wiring, game-loop routing
+
 **UI hint**: yes
 
 ### Phase 5: Polish & Optimization
@@ -121,6 +133,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Foundation | 6/6 | Complete | - |
 | 2. Core Gameplay | 7/7 | Complete | 2026-04-21 |
-| 3. Persistence & World | 0/8 | Not started | - |
-| 4. Differentiation | 0/TBD | Not started | - |
+| 3. Persistence & World | 8/8 | Complete | 2026-04-21 |
+| 4. Differentiation | 0/9 | Not started | - |
 | 5. Polish & Optimization | 0/TBD | Not started | - |
