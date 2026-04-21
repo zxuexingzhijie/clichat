@@ -54,3 +54,207 @@
     - fireplace
     - notice_board_tavern
     - barrel
+
+- id: loc_main_street
+  name: 黑松镇·主街
+  type: location
+  tags:
+    - town_center
+    - 黑松镇
+  description: 黑松镇的中心大道，连接各处要地。行人熙攘，叫卖声此起彼伏，是镇上最热闹的地方。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: regional
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  region: 黑松镇
+  danger_level: 1
+  exits:
+    - loc_north_gate
+    - loc_tavern
+    - loc_blacksmith
+    - loc_market
+    - loc_temple
+  notable_npcs: []
+  objects:
+    - signpost
+    - fountain
+
+- id: loc_blacksmith
+  name: 黑松镇·铁匠铺
+  type: location
+  tags:
+    - building
+    - crafting
+    - 黑松镇
+  description: 烟火缭绕的铁匠铺，叮叮当当的锤击声日夜不停。炉膛中燃着橙红的炭火，空气中弥漫着铁锈和炭灰的气息。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  region: 黑松镇
+  danger_level: 0
+  exits:
+    - loc_main_street
+  notable_npcs:
+    - npc_blacksmith
+  objects:
+    - anvil
+    - forge
+    - weapon_rack
+
+- id: loc_market
+  name: 黑松镇·集市广场
+  type: location
+  tags:
+    - trade
+    - social
+    - 黑松镇
+  description: 镇上的集市广场，各类摊贩云集，从食物到工具应有尽有。嘈杂热闹，也是消息流通最快的地方。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: regional
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  region: 黑松镇
+  danger_level: 1
+  exits:
+    - loc_main_street
+  notable_npcs:
+    - npc_merchant_afu
+  objects:
+    - market_stalls
+    - water_well
+    - bulletin_board
+
+- id: loc_temple
+  name: 黑松镇·神殿
+  type: location
+  tags:
+    - building
+    - religious
+    - 黑松镇
+  description: 坐落在镇东角的古老神殿，石壁斑驳，却依然庄严肃穆。殿内常年燃着香火，是镇民祈福和寻求庇护的场所。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  region: 黑松镇
+  danger_level: 0
+  exits:
+    - loc_main_street
+  notable_npcs:
+    - npc_priestess
+  objects:
+    - altar
+    - incense_burner
+    - ancient_relief
+
+- id: loc_forest_road
+  name: 黑松林道
+  type: location
+  tags:
+    - wilderness
+    - road
+    - 黑松林
+  description: 通往黑松林深处的蜿蜒小道，两侧高大的松树遮天蔽日，即便白天也阴暗幽深。偶有野兽出没，旅人须小心戒备。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: regional
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  region: 黑松林
+  danger_level: 4
+  exits:
+    - loc_north_gate
+    - loc_abandoned_camp
+  notable_npcs:
+    - npc_scout
+  objects:
+    - trail_marker
+    - fallen_tree
+
+- id: loc_abandoned_camp
+  name: 废弃营地
+  type: location
+  tags:
+    - wilderness
+    - ruins
+    - 黑松林
+  description: 深藏于黑松林中的废弃营地，残破的帐篷和熄灭的篝火诉说着某段不为人知的往事。空气中隐隐有腐朽的气息。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  region: 黑松林
+  danger_level: 6
+  exits:
+    - loc_forest_road
+    - loc_dark_cave
+  notable_npcs:
+    - npc_deserter
+  objects:
+    - ruined_tent
+    - cold_campfire
+    - abandoned_supplies
+
+- id: loc_dark_cave
+  name: 黑暗洞穴
+  type: location
+  tags:
+    - wilderness
+    - dungeon
+    - 黑松林
+  description: 废弃营地深处的一个幽暗洞穴，入口被杂草和碎石掩盖。洞内黑暗彻底，偶尔传来奇异的回声，令人毛骨悚然。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  region: 黑松林
+  danger_level: 8
+  exits:
+    - loc_abandoned_camp
+  notable_npcs: []
+  objects:
+    - cave_entrance
+    - strange_markings
+    - bone_fragments

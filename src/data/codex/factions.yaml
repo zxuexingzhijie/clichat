@@ -51,3 +51,54 @@
     - avoid_detection
   rivals:
     - faction_guard
+
+- id: faction_merchants
+  name: 黑松商人协会
+  type: faction
+  tags:
+    - trade
+    - 黑松镇
+  description: 黑松镇商人自发组织的同业协会，以维护集市秩序、保护商路利益为宗旨。表面中立，实则在幕后影响镇上的贸易决策。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: regional
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  territory: 黑松镇·集市
+  alignment: neutral
+  goals:
+    - protect_trade_routes
+    - maximize_profit
+    - maintain_market_order
+  rivals:
+    - faction_shadow_guild
+
+- id: faction_temple
+  name: 神殿教团
+  type: faction
+  tags:
+    - religious
+    - 黑松镇
+  description: 驻守黑松镇神殿的宗教团体，奉行古老的秩序信仰。他们提供治愈和庇护，但也守护着某些不为外人所知的秘密。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  territory: 黑松镇·神殿
+  alignment: lawful_good
+  goals:
+    - maintain_order
+    - heal_the_sick
+    - guard_ancient_secrets
+  rivals: []

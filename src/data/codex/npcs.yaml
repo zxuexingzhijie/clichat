@@ -73,7 +73,7 @@
     known_by: []
     contradicts: []
     volatility: stable
-  location_id: loc_smithy
+  location_id: loc_blacksmith
   personality_tags:
     - gruff
     - honest
@@ -101,7 +101,7 @@
     known_by: []
     contradicts: []
     volatility: stable
-  location_id: loc_herb_shop
+  location_id: loc_temple
   personality_tags:
     - wise
     - patient
@@ -129,7 +129,7 @@
     known_by: []
     contradicts: []
     volatility: stable
-  location_id: loc_guard_post
+  location_id: loc_north_gate
   personality_tags:
     - stern
     - dutiful
@@ -241,7 +241,7 @@
     known_by: []
     contradicts: []
     volatility: stable
-  location_id: loc_inn
+  location_id: loc_tavern
   personality_tags:
     - warm
     - gossipy
@@ -327,7 +327,7 @@
     known_by: []
     contradicts: []
     volatility: stable
-  location_id: loc_town_hall
+  location_id: loc_main_street
   personality_tags:
     - diplomatic
     - cautious
