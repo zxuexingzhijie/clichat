@@ -1,5 +1,5 @@
 import envPaths from 'env-paths';
-import { mkdirSync, readdirSync } from 'node:fs';
+import * as nodeFs from 'node:fs';
 import path from 'node:path';
 import type { Serializer } from '../state/serializer';
 import type { SaveMeta } from '../state/serializer';
@@ -9,6 +9,9 @@ export type SaveListEntry = {
   meta: SaveMeta;
 };
 
+// Injected fs — allows tests to override without mock.module
+export const _fs = nodeFs;
+
 export function getSaveDir(opts?: { portable?: boolean; customDir?: string }): string {
   if (opts?.customDir) return path.resolve(opts.customDir);
   if (opts?.portable) return './saves';
@@ -17,7 +20,7 @@ export function getSaveDir(opts?: { portable?: boolean; customDir?: string }): s
 }
 
 export async function ensureSaveDirExists(saveDir: string): Promise<void> {
-  mkdirSync(saveDir, { recursive: true });
+  _fs.mkdirSync(saveDir, { recursive: true });
 }
 
 function formatTimestamp(): string {
@@ -49,7 +52,7 @@ export async function loadGame(filePath: string, serializer: Serializer): Promis
 }
 
 export async function listSaves(saveDir: string): Promise<SaveListEntry[]> {
-  const files = readdirSync(saveDir).filter(f => f.endsWith('.json'));
+  const files = _fs.readdirSync(saveDir).filter((f: string) => f.endsWith('.json'));
   const entries: SaveListEntry[] = [];
 
   for (const fileName of files) {

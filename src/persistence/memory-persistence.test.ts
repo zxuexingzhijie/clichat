@@ -1,30 +1,38 @@
 import { describe, it, expect, mock, beforeEach, afterEach, spyOn } from 'bun:test';
+import { _fs } from './memory-persistence';
+import { eventBus } from '../events/event-bus';
+import { npcMemoryStore } from '../state/npc-memory-store';
+import type { NpcMemoryRecord } from '../state/npc-memory-store';
 
 const mockBunWrite = mock(() => Promise.resolve(0));
-const mockBunFile = mock((filePath: string) => ({
+const mockBunFile = mock((_filePath: string) => ({
   text: mock(() => Promise.resolve('{}')),
   exists: mock(() => Promise.resolve(false)),
 }));
-const mockMkdirSync = mock(() => undefined);
 
-mock.module('node:fs', () => ({
-  mkdirSync: mockMkdirSync,
-  readdirSync: mock(() => []),
-}));
+let mkdirSpy: ReturnType<typeof spyOn>;
+const originalBunWrite = (globalThis as Record<string, unknown>).Bun?.write;
+const originalBunFile = (globalThis as Record<string, unknown>).Bun?.file;
 
 beforeEach(() => {
+  mkdirSpy = spyOn(_fs, 'mkdirSync').mockImplementation(() => undefined as unknown as ReturnType<typeof _fs.mkdirSync>);
   if (typeof Bun !== 'undefined') {
     (Bun as unknown as Record<string, unknown>).write = mockBunWrite;
     (Bun as unknown as Record<string, unknown>).file = mockBunFile;
   }
   mockBunWrite.mockClear();
   mockBunFile.mockClear();
-  mockMkdirSync.mockClear();
 });
 
-import { eventBus } from '../events/event-bus';
-import { npcMemoryStore } from '../state/npc-memory-store';
-import type { NpcMemoryRecord } from '../state/npc-memory-store';
+afterEach(() => {
+  mkdirSpy.mockRestore();
+  if (typeof Bun !== 'undefined' && originalBunWrite) {
+    (Bun as unknown as Record<string, unknown>).write = originalBunWrite;
+  }
+  if (typeof Bun !== 'undefined' && originalBunFile) {
+    (Bun as unknown as Record<string, unknown>).file = originalBunFile;
+  }
+});
 
 function makeRecord(
   npcId: string,
@@ -53,7 +61,6 @@ function makeRecord(
 describe('initMemoryPersistence', () => {
   it('subscribes to npc_memory_written event', async () => {
     const { initMemoryPersistence } = await import('./memory-persistence');
-    const spyOn = mock((handler: unknown) => undefined);
 
     initMemoryPersistence('/tmp/memory');
 

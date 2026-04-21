@@ -1,5 +1,6 @@
-import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect, mock, beforeEach, afterEach, spyOn } from 'bun:test';
 import path from 'node:path';
+import { _fs, getSaveDir, ensureSaveDirExists, quickSave, saveGame, loadGame, listSaves } from './save-file-manager';
 
 const mockBunWrite = mock(() => Promise.resolve(0));
 const mockBunFile = mock((filePath: string) => ({
@@ -14,29 +15,26 @@ const mockBunFile = mock((filePath: string) => ({
   }))),
   exists: mock(() => Promise.resolve(true)),
 }));
-const mockMkdirSync = mock(() => undefined);
-const mockReaddirSync = mock(() => ['quicksave.json', 'hero_2024-01-01T00-00.json', 'notes.txt']);
 
-mock.module('node:fs', () => ({
-  mkdirSync: mockMkdirSync,
-  readdirSync: mockReaddirSync,
-}));
-
+let mkdirSpy: ReturnType<typeof spyOn>;
+let readdirSpy: ReturnType<typeof spyOn>;
 const originalBunWrite = (globalThis as Record<string, unknown>).Bun?.write;
 const originalBunFile = (globalThis as Record<string, unknown>).Bun?.file;
 
 beforeEach(() => {
+  mkdirSpy = spyOn(_fs, 'mkdirSync').mockImplementation(() => undefined as unknown as ReturnType<typeof _fs.mkdirSync>);
+  readdirSpy = spyOn(_fs, 'readdirSync').mockImplementation(() => ['quicksave.json', 'hero_2024-01-01T00-00.json', 'notes.txt'] as unknown as ReturnType<typeof _fs.readdirSync>);
   if (typeof Bun !== 'undefined') {
     (Bun as unknown as Record<string, unknown>).write = mockBunWrite;
     (Bun as unknown as Record<string, unknown>).file = mockBunFile;
   }
   mockBunWrite.mockClear();
   mockBunFile.mockClear();
-  mockMkdirSync.mockClear();
-  mockReaddirSync.mockClear();
 });
 
 afterEach(() => {
+  mkdirSpy.mockRestore();
+  readdirSpy.mockRestore();
   if (typeof Bun !== 'undefined' && originalBunWrite) {
     (Bun as unknown as Record<string, unknown>).write = originalBunWrite;
   }
@@ -44,15 +42,6 @@ afterEach(() => {
     (Bun as unknown as Record<string, unknown>).file = originalBunFile;
   }
 });
-
-import {
-  getSaveDir,
-  ensureSaveDirExists,
-  quickSave,
-  saveGame,
-  loadGame,
-  listSaves,
-} from './save-file-manager';
 
 describe('getSaveDir', () => {
   it('returns platform-aware path ending in /saves', () => {
@@ -77,7 +66,7 @@ describe('getSaveDir', () => {
 describe('ensureSaveDirExists', () => {
   it('calls mkdirSync with recursive: true', async () => {
     await ensureSaveDirExists('/tmp/test-saves');
-    expect(mockMkdirSync).toHaveBeenCalledWith('/tmp/test-saves', { recursive: true });
+    expect(mkdirSpy).toHaveBeenCalledWith('/tmp/test-saves', { recursive: true });
   });
 });
 
@@ -175,7 +164,7 @@ describe('loadGame', () => {
 
 describe('listSaves', () => {
   it('returns an array of SaveListEntry sorted by timestamp desc', async () => {
-    mockReaddirSync.mockReturnValueOnce(['quicksave.json', 'hero_2024-01-01T00-00.json'] as unknown as ReturnType<typeof mockReaddirSync>);
+    readdirSpy.mockImplementation(() => ['quicksave.json', 'hero_2024-01-01T00-00.json'] as unknown as ReturnType<typeof _fs.readdirSync>);
 
     const results = await listSaves('/tmp/saves');
 
@@ -183,7 +172,7 @@ describe('listSaves', () => {
   });
 
   it('reads only .json files (ignores .txt and other extensions)', async () => {
-    mockReaddirSync.mockReturnValueOnce(['save.json', 'readme.txt', 'save2.json'] as unknown as ReturnType<typeof mockReaddirSync>);
+    readdirSpy.mockImplementation(() => ['save.json', 'readme.txt', 'save2.json'] as unknown as ReturnType<typeof _fs.readdirSync>);
 
     await listSaves('/tmp/saves');
 
@@ -191,7 +180,7 @@ describe('listSaves', () => {
   });
 
   it('each entry has filePath and meta fields', async () => {
-    mockReaddirSync.mockReturnValueOnce(['quicksave.json'] as unknown as ReturnType<typeof mockReaddirSync>);
+    readdirSpy.mockImplementation(() => ['quicksave.json'] as unknown as ReturnType<typeof _fs.readdirSync>);
 
     const results = await listSaves('/tmp/saves');
     expect(results.length).toBe(1);
@@ -225,7 +214,7 @@ describe('listSaves', () => {
       exists: mock(() => Promise.resolve(true)),
     };
 
-    mockReaddirSync.mockReturnValueOnce(['old.json', 'new.json'] as unknown as ReturnType<typeof mockReaddirSync>);
+    readdirSpy.mockImplementation(() => ['old.json', 'new.json'] as unknown as ReturnType<typeof _fs.readdirSync>);
     mockBunFile
       .mockReturnValueOnce(fileWithOldTimestamp as unknown as ReturnType<typeof mockBunFile>)
       .mockReturnValueOnce(fileWithNewTimestamp as unknown as ReturnType<typeof mockBunFile>);

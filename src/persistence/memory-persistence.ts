@@ -1,6 +1,9 @@
-import { mkdirSync } from 'node:fs';
+import * as nodeFs from 'node:fs';
 import { eventBus } from '../events/event-bus';
 import { npcMemoryStore, NpcMemoryRecordSchema, type NpcMemoryRecord } from '../state/npc-memory-store';
+
+// Injected fs — allows tests to override without mock.module
+export const _fs = nodeFs;
 
 const DEFAULT_REGION = 'blackpine_town';
 
@@ -40,7 +43,7 @@ async function writeMemoryToDisk(npcId: string, memoryDir: string): Promise<void
   const npcFilePath = `${regionDir}/${npcId}.json`;
   const indexPath = `${memoryDir}/index.json`;
 
-  mkdirSync(regionDir, { recursive: true });
+  _fs.mkdirSync(regionDir, { recursive: true });
 
   const retained = applyRetention(storeRecord);
 
