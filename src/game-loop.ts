@@ -9,6 +9,7 @@ import { eventBus } from './events/event-bus';
 import type { GameAction } from './types/game-action';
 import type { CheckResult } from './types/common';
 import type { SceneManager } from './engine/scene-manager';
+import type { DialogueManager } from './engine/dialogue-manager';
 
 export interface GameLoop {
   readonly processInput: (input: string, options?: RouteInputOptions) => Promise<ProcessResult>;
@@ -41,12 +42,14 @@ const PASSTHROUGH_ACTIONS = new Set(['look', 'help']);
 export type GameLoopOptions = {
   readonly rng?: () => number;
   readonly sceneManager?: SceneManager;
+  readonly dialogueManager?: DialogueManager;
 };
 
 export function createGameLoop(options?: GameLoopOptions): GameLoop {
   const commandParser = createCommandParser();
   const rng = options?.rng;
   const sceneManager = options?.sceneManager;
+  const dialogueManager = options?.dialogueManager;
 
   async function processInput(input: string, routeOptions?: RouteInputOptions): Promise<ProcessResult> {
     const sceneContext = sceneStore.getState().narrationLines.join(' ');
@@ -94,6 +97,22 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
         return { status: 'action_executed', action, narration: result.narration };
       }
       return { status: 'error', message: result.message };
+    }
+
+    if (action.type === 'talk' && dialogueManager) {
+      const dialogueResult = await dialogueManager.startDialogue(action.target ?? '');
+      if (dialogueResult.error) {
+        return { status: 'error', message: dialogueResult.error };
+      }
+      gameStore.setState(draft => {
+        draft.phase = 'dialogue';
+      });
+      const currentLines = sceneStore.getState().narrationLines;
+      return {
+        status: 'action_executed',
+        action,
+        narration: currentLines,
+      };
     }
 
     const checkResult = adjudicate(action);

@@ -1,9 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Box, Text } from 'ink';
 import { useScreenSize } from 'fullscreen-ink';
 import { Divider } from '../components/divider';
 import { TitleBar } from '../panels/title-bar';
 import { ScenePanel } from '../panels/scene-panel';
+import { DialoguePanel } from '../panels/dialogue-panel';
 import { StatusBar } from '../panels/status-bar';
 import { ActionsPanel } from '../panels/actions-panel';
 import { InputArea } from '../panels/input-area';
@@ -12,19 +13,25 @@ import { TIME_OF_DAY_LABELS } from '../../types/common';
 import type { GameState } from '../../state/game-store';
 import type { PlayerState } from '../../state/player-store';
 import type { SceneState } from '../../state/scene-store';
+import type { DialogueState } from '../../state/dialogue-store';
+import type { DialogueManager } from '../../engine/dialogue-manager';
 
 type GameScreenProps = {
   readonly gameState: GameState;
   readonly playerState: PlayerState;
   readonly sceneState: SceneState;
+  readonly dialogueState: DialogueState;
   readonly onSetGamePhase: (recipe: (draft: GameState) => void) => void;
+  readonly dialogueManager?: DialogueManager;
 };
 
 export function GameScreen({
   gameState,
   playerState,
   sceneState,
+  dialogueState,
   onSetGamePhase,
+  dialogueManager,
 }: GameScreenProps): React.ReactNode {
   const { width, height } = useScreenSize();
   const {
@@ -34,6 +41,8 @@ export function GameScreen({
     setSelectedActionIndex,
     isTyping,
   } = useGameInput();
+
+  const [dialogueSelectedIndex, setDialogueSelectedIndex] = useState(0);
 
   const innerWidth = width - 2;
 
@@ -50,22 +59,44 @@ export function GameScreen({
   );
 
   const handleInputSubmit = useCallback(
-    (text: string) => {
+    (_text: string) => {
       setInputMode('action_select');
     },
     [setInputMode],
   );
 
-  const handleSwitchToInput = useCallback(
-    (_input: string, key: { return?: boolean; escape?: boolean }) => {
-      if (key.escape) {
-        setInputMode('action_select');
+  const handleDialogueExecute = useCallback(
+    (index: number) => {
+      if (dialogueManager) {
+        dialogueManager.processPlayerResponse(index).catch(() => {});
+        setDialogueSelectedIndex(0);
       }
     },
-    [setInputMode],
+    [dialogueManager],
   );
 
+  const handleDialogueEscape = useCallback(() => {
+    if (dialogueManager) {
+      dialogueManager.endDialogue();
+    }
+    setDialogueSelectedIndex(0);
+  }, [dialogueManager]);
+
   const isWide = width >= 100;
+  const isInDialogueMode = dialogueState.active && dialogueState.mode === 'full';
+
+  const inlineDialogueLines = dialogueState.active && dialogueState.mode === 'inline'
+    ? [
+        ...sceneState.narrationLines,
+        ...dialogueState.dialogueHistory
+          .filter((e) => e.speaker === 'npc')
+          .map((e) => `${dialogueState.npcName}："${e.text}"`),
+      ]
+    : [...sceneState.narrationLines];
+
+  const sceneLines = dialogueState.active && dialogueState.mode === 'inline'
+    ? inlineDialogueLines
+    : [...sceneState.narrationLines];
 
   if (isWide) {
     const sceneWidth = Math.floor(innerWidth * 0.6);
@@ -86,7 +117,22 @@ export function GameScreen({
         <Divider width={innerWidth} />
         <Box flexGrow={1}>
           <Box width={sceneWidth} flexDirection="column">
-            <ScenePanel lines={[...sceneState.narrationLines]} />
+            {isInDialogueMode ? (
+              <DialoguePanel
+                npcName={dialogueState.npcName}
+                dialogueHistory={dialogueState.dialogueHistory}
+                relationshipValue={dialogueState.relationshipValue}
+                emotionHint={dialogueState.emotionHint}
+                responseOptions={dialogueState.availableResponses}
+                selectedIndex={dialogueSelectedIndex}
+                onSelect={setDialogueSelectedIndex}
+                onExecute={handleDialogueExecute}
+                isActive={true}
+                onEscape={handleDialogueEscape}
+              />
+            ) : (
+              <ScenePanel lines={sceneLines} />
+            )}
           </Box>
           <Text>{'│'}</Text>
           <Box width={actionsWidth} flexDirection="column">
@@ -95,7 +141,7 @@ export function GameScreen({
               selectedIndex={selectedActionIndex}
               onSelect={setSelectedActionIndex}
               onExecute={handleActionExecute}
-              isActive={!isTyping}
+              isActive={!isTyping && !isInDialogueMode}
             />
           </Box>
         </Box>
@@ -113,7 +159,7 @@ export function GameScreen({
         <Divider width={innerWidth} />
         <InputArea
           onSubmit={handleInputSubmit}
-          isActive={isTyping}
+          isActive={isTyping && !isInDialogueMode}
           mode={isTyping ? 'nl' : 'action'}
         />
       </Box>
@@ -133,7 +179,22 @@ export function GameScreen({
         timeOfDay={timeLabel}
       />
       <Divider width={innerWidth} />
-      <ScenePanel lines={[...sceneState.narrationLines]} />
+      {isInDialogueMode ? (
+        <DialoguePanel
+          npcName={dialogueState.npcName}
+          dialogueHistory={dialogueState.dialogueHistory}
+          relationshipValue={dialogueState.relationshipValue}
+          emotionHint={dialogueState.emotionHint}
+          responseOptions={dialogueState.availableResponses}
+          selectedIndex={dialogueSelectedIndex}
+          onSelect={setDialogueSelectedIndex}
+          onExecute={handleDialogueExecute}
+          isActive={true}
+          onEscape={handleDialogueEscape}
+        />
+      ) : (
+        <ScenePanel lines={sceneLines} />
+      )}
       <Divider width={innerWidth} />
       <StatusBar
         hp={playerState.hp}
@@ -151,12 +212,12 @@ export function GameScreen({
         selectedIndex={selectedActionIndex}
         onSelect={setSelectedActionIndex}
         onExecute={handleActionExecute}
-        isActive={!isTyping}
+        isActive={!isTyping && !isInDialogueMode}
       />
       <Divider width={innerWidth} />
       <InputArea
         onSubmit={handleInputSubmit}
-        isActive={isTyping}
+        isActive={isTyping && !isInDialogueMode}
         mode={isTyping ? 'nl' : 'action'}
       />
     </Box>
