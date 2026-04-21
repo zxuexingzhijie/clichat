@@ -73,7 +73,19 @@ Plans:
   3. Player can accept, track, and complete quests, and view them via `/journal`
   4. Relationship/reputation values with NPCs and factions change based on player actions and influence NPC behavior
   5. A complete first region (8-12 locations, 3-4 factions, main quest, side quests) is playable
-**Plans**: TBD
+**Plans:** 8 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Type/schema contracts: event types, game actions, NPC memory three-layer schema, QuestTemplateSchema
+- [ ] 03-02-PLAN.md — World content expansion: 9 locations, 4 factions, 15+ NPCs, quests.yaml (CONT-01, CONT-03)
+- [ ] 03-03-PLAN.md — QuestStore + quest event log (TDD)
+- [ ] 03-04-PLAN.md — RelationStore + reputation-system pure functions (TDD)
+- [ ] 03-05-PLAN.md — SaveData v2 schema + serializer upgrade + v1 migration
+- [ ] 03-06-PLAN.md — Save-file-manager (platform paths, named saves) + memory-persistence (async NPC disk write)
+- [ ] 03-07-PLAN.md — QuestSystem engine + dialogue-manager reputation integration + command-registry + game-loop wiring
+- [ ] 03-08-PLAN.md — JournalPanel UI + game-screen integration + GamePhase 'journal'
+
+**UI hint**: yes
 
 ### Phase 4: Differentiation
 **Goal**: Chronicle's unique features are live -- players can branch storylines like git, view ASCII maps, browse discovered lore, use keyboard shortcuts, and the AI respects epistemic boundaries (NPCs only know what they should know)
@@ -109,6 +121,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Foundation | 6/6 | Complete | - |
 | 2. Core Gameplay | 7/7 | Complete | 2026-04-21 |
-| 3. Persistence & World | 0/TBD | Not started | - |
+| 3. Persistence & World | 0/8 | Not started | - |
 | 4. Differentiation | 0/TBD | Not started | - |
 | 5. Polish & Optimization | 0/TBD | Not started | - |
