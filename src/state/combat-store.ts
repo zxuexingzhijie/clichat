@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createStore } from './create-store';
 import { eventBus } from '../events/event-bus';
+import { CheckResultSchema } from '../types/common';
 
 export const CombatStateSchema = z.object({
   active: z.boolean(),
@@ -13,6 +14,10 @@ export const CombatStateSchema = z.object({
     maxHp: z.number(),
   })),
   roundNumber: z.number(),
+  phase: z.enum(['init', 'player_turn', 'resolving', 'narrating', 'enemy_turn', 'check_end', 'ended']),
+  lastCheckResult: CheckResultSchema.nullable(),
+  lastNarration: z.string(),
+  guardActive: z.boolean(),
 });
 export type CombatState = z.infer<typeof CombatStateSchema>;
 
@@ -23,6 +28,10 @@ export function getDefaultCombatState(): CombatState {
     currentTurnIndex: 0,
     enemies: [],
     roundNumber: 0,
+    phase: 'init',
+    lastCheckResult: null,
+    lastNarration: '',
+    guardActive: false,
   };
 }
 
@@ -35,7 +44,14 @@ export const combatStore = createStore<CombatState>(
       });
     }
     if (!newState.active && oldState.active) {
-      eventBus.emit('combat_ended', { outcome: 'victory' });
+      const outcome = newState.phase === 'ended' ? 'ended' : 'victory';
+      eventBus.emit('combat_ended', { outcome });
+    }
+    if (newState.currentTurnIndex !== oldState.currentTurnIndex) {
+      eventBus.emit('combat_turn_advanced', {
+        currentTurnIndex: newState.currentTurnIndex,
+        turnOrder: newState.turnOrder,
+      });
     }
   },
 );
