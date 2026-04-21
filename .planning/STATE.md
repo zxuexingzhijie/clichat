@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: ""
-last_updated: "2026-04-21T22:10:00.000Z"
-last_activity: 2026-04-21 -- Phase 3 all plans executed (8/8 complete, 418 tests passing)
+status: unknown
+stopped_at: Phase 4 context gathered
+last_updated: "2026-04-21T16:21:57.159Z"
+last_activity: 2026-04-21 -- Phase 3 execution complete, UAT 10/10, code review fixes applied
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 29
+  total_plans: 21
   completed_plans: 21
-  percent: 72
+  percent: 100
 ---
 
 # Project State
@@ -21,24 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-20)
 
 **Core value:** The player must feel they are in a persistent, consistent world that remembers them -- not a chatbot that reinvents the universe every turn.
-**Current focus:** Phase --phase — 03
+**Current focus:** Phase 4 — Differentiation (next)
 
 ## Current Position
 
-Phase: --phase (03) — EXECUTING
-Plan: 1 of --name
-Status: Executing Phase --phase
-Last activity: 2026-04-21 -- Phase --phase execution started
+Phase: 03 (Persistence & World) — COMPLETE
+Next: Phase 04 (Differentiation) — NOT STARTED
+Last activity: 2026-04-21 -- Phase 3 execution complete, UAT 10/10, code review fixes applied
 
-Progress: [██████████] 100%
+Progress: [██████░░░░] 72% (21/29 plans, 3/5 phases)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 7
-- Average duration: ~13min
-- Total execution time: ~1.6 hours
+- Total plans completed: 21
+- Average duration: ~12min
+- Total execution time: ~4.5 hours
 
 **By Phase:**
 
@@ -46,10 +45,11 @@ Progress: [██████████] 100%
 |-------|-------|-------|----------|
 | 01-Foundation | 6 | ~1.5h | ~15min |
 | 02-Core Gameplay | 7 | ~2h | ~17min |
+| 03-Persistence & World | 8 | ~1h | ~8min |
 
 **Recent Trend:**
 
-- Last 5 plans: 02-03, 02-04, 02-05, 02-06, 02-07
+- Last 5 plans: 03-04, 03-05, 03-06, 03-07, 03-08
 - Trend: Stable, all green
 
 *Updated after each plan completion*
@@ -74,6 +74,9 @@ Recent decisions affecting current work:
 - CombatActionResult discriminated union (ok|error) — callers narrow before accessing checkResult/outcome/message
 - processEnemyTurn called sequentially after processPlayerAction in game-loop
 - partial_success counts as hit for both player and enemy attacks in combat
+- [03-01]: NpcMemoryRecordSchema three-layer (recent/salient/archive) replaces flat array
+- [03-01]: QuestTemplateSchema added to CodexEntrySchema union (schema-first, data second)
+- [03-08]: handleJournalClose calls gameStore.setState directly (no prop threading)
 
 ### Pending Todos
 
@@ -83,6 +86,9 @@ None.
 
 - CJK text rendering with Ink 7 Box components needs testing (from research) — partially mitigated by string-width usage in status-bar
 - AI SDK v5 Alibaba provider less battle-tested than OpenAI/Anthropic (from research)
+- [WR-01] Reputation events fire during game load (double-count risk) — documented, no reactive listener yet
+- [WR-03] applyRetention promotes oldest memory, not highest importance — acceptable for MVP
+- [WR-05] endDialogue uses accumulated relationshipValue including initial_disposition as delta — scale mismatch risk
 
 ## Phase 1 Final Verification
 
@@ -108,6 +114,22 @@ None.
 | 3 | 02-05, 02-06 | Scene exploration, NPC dialogue |
 | 4 | 02-07 | Turn-based combat |
 
+## Phase 3 Final Verification
+
+**418 tests, 0 failures** across 34 test files.
+
+| Requirement | Status | Verified By |
+|-------------|--------|-------------|
+| SAVE-01 | PASS | save-file-manager.test.ts + UAT #3 |
+| WORLD-02 | PASS | npc-memory-store.test.ts + UAT #6, #10 |
+| WORLD-03 | PASS | quest-store.test.ts + UAT #1, #5 |
+| WORLD-04 | PASS | relation-store.test.ts + UAT #2 |
+| CONT-01 | PASS | codex loader + UAT #9 (9 locations, 15+ NPCs) |
+| CONT-03 | PASS | quests.yaml + UAT #9 |
+
+**Code Review:** 2 critical fixed (CR-01 path traversal, CR-02 Immer mutation), 6 warnings documented.
+**UAT:** 10/10 passed, 0 gaps.
+
 ## Deferred Items
 
 Items acknowledged and carried forward from previous milestone close:
@@ -118,8 +140,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-21T10:37:40.161Z
-Stopped at: context exhaustion at 93% (2026-04-21)
-Resume file: None
-
-**Planned Phase:** 2 (Core Gameplay) — 7 plans — 2026-04-20T17:25:15.557Z
+Last session: --stopped-at
+Stopped at: Phase 4 context gathered
+Resume file: --resume-file
