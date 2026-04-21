@@ -7,6 +7,9 @@ import { playerStore, getDefaultPlayerState } from '../state/player-store';
 import { sceneStore, getDefaultSceneState } from '../state/scene-store';
 import { combatStore, getDefaultCombatState } from '../state/combat-store';
 import { gameStore, getDefaultGameState } from '../state/game-store';
+import { questStore, questEventLog } from '../state/quest-store';
+import { relationStore } from '../state/relation-store';
+import { npcMemoryStore } from '../state/npc-memory-store';
 import { loadCodexFile } from '../codex/loader';
 import { IntentSchema } from '../types/intent';
 
@@ -135,7 +138,10 @@ describe('Phase 1 Success Criteria', () => {
         scene: sceneStore,
         combat: combatStore,
         game: gameStore,
-      });
+        quest: questStore,
+        relations: relationStore,
+        npcMemory: npcMemoryStore,
+      }, () => questEventLog);
 
       const original = serializer.snapshot();
       const originalHp = playerStore.getState().hp;
@@ -153,12 +159,15 @@ describe('Phase 1 Success Criteria', () => {
         scene: sceneStore,
         combat: combatStore,
         game: gameStore,
-      });
+        quest: questStore,
+        relations: relationStore,
+        npcMemory: npcMemoryStore,
+      }, () => questEventLog);
 
       const snap1 = serializer.snapshot();
       const parsed = JSON.parse(snap1);
 
-      expect(parsed.version).toBe(1);
+      expect(parsed.version).toBe(2);
       expect(parsed.player).toBeDefined();
       expect(parsed.scene).toBeDefined();
       expect(parsed.combat).toBeDefined();
@@ -171,7 +180,10 @@ describe('Phase 1 Success Criteria', () => {
         scene: sceneStore,
         combat: combatStore,
         game: gameStore,
-      });
+        quest: questStore,
+        relations: relationStore,
+        npcMemory: npcMemoryStore,
+      }, () => questEventLog);
 
       expect(() => serializer.restore('not json at all')).toThrow('Invalid save data');
     });
