@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: "Phase 2 executing — 5/7 plans complete. Resume with `/gsd-execute-phase 2`."
-stopped_at: "Phase 2 Wave 3 complete — 02-06, 02-07 remain"
-last_updated: "2026-04-21T12:00:00.000Z"
-last_activity: 2026-04-21 -- Phase 2 Waves 1-3 executed (5/7 plans)
+status: executing
+stopped_at: Completed 02-06 NPC Dialogue System
+last_updated: "2026-04-21T06:25:26.162Z"
+last_activity: 2026-04-21 -- Phase --phase execution started
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 13
-  completed_plans: 11
-  percent: 85
+  completed_plans: 12
+  percent: 92
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-20)
 
 **Core value:** The player must feel they are in a persistent, consistent world that remembers them -- not a chatbot that reinvents the universe every turn.
-**Current focus:** Phase 2: Core Gameplay — 5/7 plans executed, 2 remaining (NPC dialogue, combat).
+**Current focus:** Phase --phase — 02
 
 ## Current Position
 
-Phase: 2 of 5 (Core Gameplay) — EXECUTING
-Plan: 5 of 7 in current phase (02-01 through 02-05 complete)
-Status: Phase 2 executing — 5/7 plans complete. Resume with `/gsd-execute-phase 2`.
-Last activity: 2026-04-21 -- Phase 2 Waves 1-3 executed (5/7 plans)
+Phase: --phase (02) — EXECUTING
+Plan: 1 of --name
+Status: Executing Phase --phase
+Last activity: 2026-04-21 -- Phase --phase execution started
 
-Progress: [████████░░] 85%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [████████░░] 85%
 - Trend: Stable, all green
 
 *Updated after each plan completion*
+| Phase 02 P06 | 423 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,8 @@ Recent decisions affecting current work:
 - [02-CONTEXT]: 18 implementation decisions (D-01 through D-18) for character creation, AI narration, NPC dialogue, and combat
 - [02-01]: All 6 AI roles use google gemini-2.0-flash as placeholder; summarizer/quest-planner switch later
 - [02-01]: Model constructors lazy (function calls) per threat mitigation T-02-01
+- QUEST_GOAL_KEYWORDS excludes 'protect' to avoid false full-mode on routine guard NPCs; uses investigate/find/recruit/discover/locate/uncover
+- Inline dialogue mode appends NPC speech as narration lines in ScenePanel, no layout change
 
 ### Pending Todos
 
@@ -113,8 +116,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-20T17:37:27Z
-Stopped at: 02-01 AI Infrastructure & State Stores complete
-Resume file: .planning/phases/02-core-gameplay/02-02-PLAN.md
+Last session: 2026-04-21T06:25:26.158Z
+Stopped at: Completed 02-06 NPC Dialogue System
+Resume file: None
 
 **Planned Phase:** 2 (Core Gameplay) — 7 plans — 2026-04-20T17:25:15.557Z

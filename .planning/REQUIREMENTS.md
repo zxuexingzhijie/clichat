@@ -17,7 +17,8 @@ Requirements for initial release. Each maps to roadmap phases.
 ### AI System
 
 - [ ] **AI-01**: Narrative Director generates 80–180 character Chinese prose per turn from adjudicated results + retrieved context, without inventing world facts or overriding game state
-- [ ] **AI-02**: NPC Actor generates per-character dialogue informed by NPC identity, goals, current emotions, episodic memory, and scene context — each NPC only knows what they would know
+- [x] **AI-02
+**: NPC Actor generates per-character dialogue informed by NPC identity, goals, current emotions, episodic memory, and scene context — each NPC only knows what they would know
 - [ ] **AI-03**: Retrieval Planner decides which codex entries, NPC memories, and quest states to fetch for each turn, outputting a structured retrieval plan (not a prompt dump)
 - [ ] **AI-04**: Background Summarizer compresses long sessions into chapter summaries and NPC memory notes without blocking interactive gameplay
 
@@ -25,7 +26,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **PLAY-01**: Player can create a character by choosing race, profession, and background, with corresponding base stats and starting equipment
 - [ ] **PLAY-02**: Player can explore scenes with `:look`, `:inspect`, `:scan` — seeing environment description, NPCs present, exits, and interactable objects
-- [ ] **PLAY-03**: Player can engage in NPC dialogue via `:talk` and `:ask` — NPCs respond with personality, memory of past interactions, and emotional state
+- [x] **PLAY-03
+**: Player can engage in NPC dialogue via `:talk` and `:ask` — NPCs respond with personality, memory of past interactions, and emotional state
 - [ ] **PLAY-04**: Player can engage in turn-based combat via `:attack`, `:cast`, `:guard`, `:flee` — with deterministic resolution, HP/MP tracking, and narrated outcomes
 
 ### World Data
