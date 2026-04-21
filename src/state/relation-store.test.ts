@@ -1,13 +1,6 @@
-import { describe, it, expect, beforeEach, mock } from 'bun:test';
-
-// Mock the event bus before importing the store
-const emitMock = mock(() => {});
-mock.module('../events/event-bus', () => ({
-  eventBus: { emit: emitMock, on: mock(() => () => {}) },
-}));
-
-const { NpcDispositionSchema, RelationStateSchema, getDefaultRelationState, relationStore } =
-  await import('./relation-store');
+import { describe, it, expect, beforeEach, afterEach, spyOn } from 'bun:test';
+import { eventBus } from '../events/event-bus';
+import { NpcDispositionSchema, RelationStateSchema, getDefaultRelationState, relationStore } from './relation-store';
 
 describe('NpcDispositionSchema', () => {
   it('validates with all 6 fields in [-100, 100]', () => {
@@ -83,14 +76,19 @@ describe('getDefaultRelationState', () => {
 });
 
 describe('relationStore onChange', () => {
+  let emitSpy: ReturnType<typeof spyOn>;
+
   beforeEach(() => {
-    emitMock.mockClear();
-    // Reset store to default state
+    emitSpy = spyOn(eventBus, 'emit');
     relationStore.setState(draft => {
       draft.npcDispositions = {};
       draft.factionReputations = {};
     });
-    emitMock.mockClear();
+    emitSpy.mockClear();
+  });
+
+  afterEach(() => {
+    emitSpy.mockRestore();
   });
 
   it('emits reputation_changed when npcDispositions value changes (npc_guard delta=30)', () => {
@@ -105,7 +103,7 @@ describe('relationStore onChange', () => {
       };
     });
 
-    expect(emitMock).toHaveBeenCalledWith('reputation_changed', {
+    expect(emitSpy).toHaveBeenCalledWith('reputation_changed', {
       targetId: 'npc_guard',
       targetType: 'npc',
       delta: 30,
@@ -118,7 +116,7 @@ describe('relationStore onChange', () => {
       draft.factionReputations['faction_guard'] = 15;
     });
 
-    expect(emitMock).toHaveBeenCalledWith('reputation_changed', {
+    expect(emitSpy).toHaveBeenCalledWith('reputation_changed', {
       targetId: 'faction_guard',
       targetType: 'faction',
       delta: 15,
@@ -127,7 +125,6 @@ describe('relationStore onChange', () => {
   });
 
   it('does not emit when state does not change', () => {
-    // Set up initial state with npc_guard
     relationStore.setState(draft => {
       draft.npcDispositions['npc_guard'] = {
         value: 30,
@@ -138,9 +135,8 @@ describe('relationStore onChange', () => {
         credibility: 0,
       };
     });
-    emitMock.mockClear();
+    emitSpy.mockClear();
 
-    // Set same value again (no change)
     relationStore.setState(draft => {
       draft.npcDispositions['npc_guard'] = {
         value: 30,
@@ -152,6 +148,6 @@ describe('relationStore onChange', () => {
       };
     });
 
-    expect(emitMock).not.toHaveBeenCalledWith('reputation_changed', expect.anything());
+    expect(emitSpy).not.toHaveBeenCalledWith('reputation_changed', expect.anything());
   });
 });
