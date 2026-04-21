@@ -28,7 +28,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **PLAY-02**: Player can explore scenes with `:look`, `:inspect`, `:scan` — seeing environment description, NPCs present, exits, and interactable objects
 - [x] **PLAY-03
 **: Player can engage in NPC dialogue via `:talk` and `:ask` — NPCs respond with personality, memory of past interactions, and emotional state
-- [ ] **PLAY-04**: Player can engage in turn-based combat via `:attack`, `:cast`, `:guard`, `:flee` — with deterministic resolution, HP/MP tracking, and narrated outcomes
+- [x] **PLAY-04
+**: Player can engage in turn-based combat via `:attack`, `:cast`, `:guard`, `:flee` — with deterministic resolution, HP/MP tracking, and narrated outcomes
 
 ### World Data
 

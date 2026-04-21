@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-06 NPC Dialogue System
-last_updated: "2026-04-21T06:25:26.162Z"
+stopped_at: Completed 02-07 Turn-Based Combat System
+last_updated: "2026-04-21T06:45:31.873Z"
 last_activity: 2026-04-21 -- Phase --phase execution started
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 13
-  completed_plans: 12
-  percent: 92
+  completed_plans: 13
+  percent: 100
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: 1 of --name
 Status: Executing Phase --phase
 Last activity: 2026-04-21 -- Phase --phase execution started
 
-Progress: [█████████░] 92%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [█████████░] 92%
 
 *Updated after each plan completion*
 | Phase 02 P06 | 423 | 2 tasks | 5 files |
+| Phase 02 P07 | 16m | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,9 @@ Recent decisions affecting current work:
 - [02-01]: Model constructors lazy (function calls) per threat mitigation T-02-01
 - QUEST_GOAL_KEYWORDS excludes 'protect' to avoid false full-mode on routine guard NPCs; uses investigate/find/recruit/discover/locate/uncover
 - Inline dialogue mode appends NPC speech as narration lines in ScenePanel, no layout change
+- CombatActionResult discriminated union (ok|error) — callers narrow before accessing checkResult/outcome/message
+- processEnemyTurn called sequentially after processPlayerAction in game-loop
+- partial_success counts as hit for both player and enemy attacks in combat
 
 ### Pending Todos
 
@@ -116,8 +120,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-21T06:25:26.158Z
-Stopped at: Completed 02-06 NPC Dialogue System
+Last session: 2026-04-21T06:45:31.869Z
+Stopped at: Completed 02-07 Turn-Based Combat System
 Resume file: None
 
 **Planned Phase:** 2 (Core Gameplay) — 7 plans — 2026-04-20T17:25:15.557Z
