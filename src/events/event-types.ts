@@ -38,4 +38,15 @@ export type DomainEvents = {
   narration_streaming_completed: { charCount: number };
 
   ai_call_failed: { role: string; error: string };
+
+  quest_started: { questId: string; questTitle: string; turnNumber: number };
+  quest_stage_advanced: { questId: string; newStageId: string; turnNumber: number };
+  quest_objective_completed: { questId: string; objectiveId: string };
+  quest_completed: { questId: string; rewards: unknown };
+  quest_failed: { questId: string; reason: string };
+  reputation_changed: { targetId: string; targetType: 'npc' | 'faction'; delta: number; newValue: number };
+  save_game_requested: { saveName: string | null };
+  save_game_completed: { filePath: string };
+  load_game_requested: { saveName: string | null };
+  load_game_completed: undefined;
 };

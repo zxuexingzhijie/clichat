@@ -115,8 +115,8 @@ export function createDialogueManager(
     }
 
     const npc = entry as Npc;
-    const memories = npcMemoryStore.getState().memories[npcId] ?? [];
-    const memoryStrings = memories.map((m) => m.event);
+    const memoryRecord = npcMemoryStore.getState().memories[npcId];
+    const memoryStrings = memoryRecord ? memoryRecord.recentMemories.map((m) => m.event) : [];
     const scene = sceneStore.getState().narrationLines.join(' ');
 
     const npcProfile = {
@@ -191,8 +191,8 @@ export function createDialogueManager(
       }
     }
 
-    const memories = npcMemoryStore.getState().memories[npcId] ?? [];
-    const memoryStrings = memories.map((m) => m.event);
+    const memoryRecord = npcMemoryStore.getState().memories[npcId];
+    const memoryStrings = memoryRecord ? memoryRecord.recentMemories.map((m) => m.event) : [];
     const scene = sceneStore.getState().narrationLines.join(' ');
 
     const npcProfile = {
@@ -248,21 +248,30 @@ export function createDialogueManager(
 
   function writeMemory(npcId: string, event: string): void {
     const turnNumber = gameStore.getState().turnCount;
-    const existing = npcMemoryStore.getState().memories[npcId] ?? [];
 
     npcMemoryStore.setState((draft) => {
-      draft.memories[npcId] = [
-        ...existing,
-        {
-          id: nanoid(),
+      const existing = draft.memories[npcId];
+      const newEntry = {
+        id: nanoid(),
+        npcId,
+        event,
+        turnNumber,
+        importance: 'medium' as const,
+        emotionalValence: 0,
+        participants: ['player', npcId],
+      };
+      if (existing) {
+        existing.recentMemories = [...existing.recentMemories, newEntry];
+        existing.lastUpdated = new Date().toISOString();
+      } else {
+        draft.memories[npcId] = {
           npcId,
-          event,
-          turnNumber,
-          importance: 'medium',
-          emotionalValence: 0,
-          participants: ['player', npcId],
-        },
-      ];
+          recentMemories: [newEntry],
+          salientMemories: [],
+          archiveSummary: '',
+          lastUpdated: new Date().toISOString(),
+        };
+      }
     });
   }
 

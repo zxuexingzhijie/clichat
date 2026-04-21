@@ -254,8 +254,8 @@ describe('createDialogueManager', () => {
     await manager.startDialogue('npc_captain');
 
     const { npcMemoryStore } = await import('../state/npc-memory-store');
-    const memories = npcMemoryStore.getState().memories['npc_captain'] ?? [];
-    expect(memories.length).toBeGreaterThan(0);
+    const record = npcMemoryStore.getState().memories['npc_captain'];
+    expect(record?.recentMemories.length).toBeGreaterThan(0);
   });
 
   it('startDialogue returns error for unknown NPC', async () => {

@@ -15,8 +15,18 @@ export const NpcMemoryEntrySchema = z.object({
 
 export type NpcMemoryEntry = z.infer<typeof NpcMemoryEntrySchema>;
 
+export const NpcMemoryRecordSchema = z.object({
+  npcId: z.string(),
+  recentMemories: z.array(NpcMemoryEntrySchema).max(15),
+  salientMemories: z.array(NpcMemoryEntrySchema).max(50),
+  archiveSummary: z.string(),
+  lastUpdated: z.string(),
+});
+
+export type NpcMemoryRecord = z.infer<typeof NpcMemoryRecordSchema>;
+
 export const NpcMemoryStateSchema = z.object({
-  memories: z.record(z.string(), z.array(NpcMemoryEntrySchema)),
+  memories: z.record(z.string(), NpcMemoryRecordSchema),
 });
 
 export type NpcMemoryState = z.infer<typeof NpcMemoryStateSchema>;
@@ -29,10 +39,11 @@ export const npcMemoryStore = createStore<NpcMemoryState>(
   getDefaultNpcMemoryState(),
   ({ newState, oldState }) => {
     for (const npcId of Object.keys(newState.memories)) {
-      const newMemories = newState.memories[npcId] ?? [];
-      const oldMemories = oldState.memories[npcId] ?? [];
-      if (newMemories.length > oldMemories.length) {
-        const latest = newMemories[newMemories.length - 1];
+      const newLen = newState.memories[npcId]?.recentMemories.length ?? 0;
+      const oldLen = oldState.memories[npcId]?.recentMemories.length ?? 0;
+      if (newLen > oldLen) {
+        const recentMemories = newState.memories[npcId]!.recentMemories;
+        const latest = recentMemories[recentMemories.length - 1];
         if (latest) {
           eventBus.emit('npc_memory_written', {
             npcId,
