@@ -110,6 +110,37 @@ export const BackgroundSchema = z.object({
   narrative_hook: z.string(),
 });
 
+export const QuestObjectiveSchema = z.object({
+  id: z.string().min(1),
+  type: z.enum(['talk', 'visit_location', 'defeat_enemy', 'find_item', 'check_flag']),
+  targetId: z.string().optional(),
+  description: z.string(),
+});
+
+export const QuestStageSchema = z.object({
+  id: z.string().min(1),
+  description: z.string(),
+  objectives: z.array(QuestObjectiveSchema),
+  nextStageId: z.string().nullable(),
+  completionCondition: z.string().optional(),
+});
+
+export const QuestTemplateSchema = z.object({
+  ...baseFields,
+  type: z.literal('quest'),
+  quest_type: z.enum(['main', 'side', 'faction']),
+  region: z.string().optional(),
+  required_npc_id: z.string().optional(),
+  min_reputation: z.number().optional(),
+  stages: z.array(QuestStageSchema),
+  rewards: z.object({
+    gold: z.number().optional(),
+    items: z.array(z.string()).optional(),
+    reputation_delta: z.record(z.string(), z.number()).optional(),
+    relation_delta: z.record(z.string(), z.number()).optional(),
+  }),
+});
+
 export const CodexEntrySchema = z.discriminatedUnion("type", [
   RaceSchema,
   ProfessionSchema,
@@ -121,6 +152,7 @@ export const CodexEntrySchema = z.discriminatedUnion("type", [
   HistoryEventSchema,
   EnemySchema,
   BackgroundSchema,
+  QuestTemplateSchema,
 ]);
 
 export type Race = z.infer<typeof RaceSchema>;
@@ -133,4 +165,7 @@ export type Item = z.infer<typeof ItemSchema>;
 export type HistoryEvent = z.infer<typeof HistoryEventSchema>;
 export type Enemy = z.infer<typeof EnemySchema>;
 export type Background = z.infer<typeof BackgroundSchema>;
+export type QuestObjective = z.infer<typeof QuestObjectiveSchema>;
+export type QuestStage = z.infer<typeof QuestStageSchema>;
+export type QuestTemplate = z.infer<typeof QuestTemplateSchema>;
 export type CodexEntry = z.infer<typeof CodexEntrySchema>;

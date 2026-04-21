@@ -15,6 +15,7 @@ import {
   getDefaultNpcMemoryState,
   NpcMemoryStateSchema,
   NpcMemoryEntrySchema,
+  NpcMemoryRecordSchema,
 } from './npc-memory-store';
 
 describe('CharacterCreationStore', () => {
@@ -193,33 +194,85 @@ describe('NpcMemoryStore', () => {
     expect(parsed.importance).toBe('medium');
   });
 
-  test('adds memory entry for an NPC', () => {
-    npcMemoryStore.setState(draft => {
-      draft.memories['guard_01'] = [{
-        id: 'mem_001',
-        npcId: 'guard_01',
-        event: 'Player asked about missing persons',
-        turnNumber: 5,
-        importance: 'medium',
-        emotionalValence: 0.2,
-        participants: ['player'],
-      }];
-    });
-    const memories = npcMemoryStore.getState().memories['guard_01'];
-    expect(memories).toHaveLength(1);
-    expect(memories![0].event).toBe('Player asked about missing persons');
+  test('NpcMemoryRecordSchema validates a three-layer record', () => {
+    const record = {
+      npcId: 'guard_01',
+      recentMemories: [],
+      salientMemories: [],
+      archiveSummary: '',
+      lastUpdated: '2026-04-21T10:00:00Z',
+    };
+    const parsed = NpcMemoryRecordSchema.parse(record);
+    expect(parsed.npcId).toBe('guard_01');
+    expect(parsed.recentMemories).toHaveLength(0);
+    expect(parsed.archiveSummary).toBe('');
   });
 
-  test('emits npc_memory_written when new memory added', () => {
+  test('NpcMemoryStateSchema.memories maps npcId to NpcMemoryRecord', () => {
+    const entry = {
+      id: 'mem_001',
+      npcId: 'guard_01',
+      event: 'Player asked about missing persons',
+      turnNumber: 5,
+      importance: 'medium' as const,
+      emotionalValence: 0.2,
+      participants: ['player'],
+    };
+    const state = {
+      memories: {
+        guard_01: {
+          npcId: 'guard_01',
+          recentMemories: [entry],
+          salientMemories: [],
+          archiveSummary: '',
+          lastUpdated: '2026-04-21T10:00:00Z',
+        },
+      },
+    };
+    const parsed = NpcMemoryStateSchema.parse(state);
+    expect(parsed.memories['guard_01']?.recentMemories).toHaveLength(1);
+    expect(parsed.memories['guard_01']?.recentMemories[0].event).toBe('Player asked about missing persons');
+  });
+
+  test('adds memory record for an NPC using three-layer shape', () => {
     npcMemoryStore.setState(draft => {
-      draft.memories['guard_01'] = [];
+      draft.memories['guard_01'] = {
+        npcId: 'guard_01',
+        recentMemories: [{
+          id: 'mem_001',
+          npcId: 'guard_01',
+          event: 'Player asked about missing persons',
+          turnNumber: 5,
+          importance: 'medium',
+          emotionalValence: 0.2,
+          participants: ['player'],
+        }],
+        salientMemories: [],
+        archiveSummary: '',
+        lastUpdated: '2026-04-21T10:00:00Z',
+      };
+    });
+    const record = npcMemoryStore.getState().memories['guard_01'];
+    expect(record?.recentMemories).toHaveLength(1);
+    expect(record?.recentMemories[0].event).toBe('Player asked about missing persons');
+  });
+
+  test('emits npc_memory_written when recentMemories grows', () => {
+    npcMemoryStore.setState(draft => {
+      draft.memories['guard_01'] = {
+        npcId: 'guard_01',
+        recentMemories: [],
+        salientMemories: [],
+        archiveSummary: '',
+        lastUpdated: '2026-04-21T10:00:00Z',
+      };
     });
 
     const handler = mock(() => {});
     eventBus.on('npc_memory_written', handler);
 
     npcMemoryStore.setState(draft => {
-      draft.memories['guard_01'].push({
+      draft.memories['guard_01']!.recentMemories.push({
         id: 'mem_002',
         npcId: 'guard_01',
         event: 'Player helped with patrol',
@@ -242,24 +295,36 @@ describe('NpcMemoryStore', () => {
 
   test('handles multiple NPCs independently', () => {
     npcMemoryStore.setState(draft => {
-      draft.memories['guard_01'] = [{
-        id: 'mem_001',
+      draft.memories['guard_01'] = {
         npcId: 'guard_01',
-        event: 'Met player',
-        turnNumber: 1,
-        importance: 'low',
-        emotionalValence: 0,
-        participants: ['player'],
-      }];
-      draft.memories['merchant_01'] = [{
-        id: 'mem_002',
+        recentMemories: [{
+          id: 'mem_001',
+          npcId: 'guard_01',
+          event: 'Met player',
+          turnNumber: 1,
+          importance: 'low',
+          emotionalValence: 0,
+          participants: ['player'],
+        }],
+        salientMemories: [],
+        archiveSummary: '',
+        lastUpdated: '2026-04-21T10:00:00Z',
+      };
+      draft.memories['merchant_01'] = {
         npcId: 'merchant_01',
-        event: 'Player bought supplies',
-        turnNumber: 2,
-        importance: 'low',
-        emotionalValence: 0.1,
-        participants: ['player'],
-      }];
+        recentMemories: [{
+          id: 'mem_002',
+          npcId: 'merchant_01',
+          event: 'Player bought supplies',
+          turnNumber: 2,
+          importance: 'low',
+          emotionalValence: 0.1,
+          participants: ['player'],
+        }],
+        salientMemories: [],
+        archiveSummary: '',
+        lastUpdated: '2026-04-21T10:00:00Z',
+      };
     });
     expect(Object.keys(npcMemoryStore.getState().memories)).toHaveLength(2);
   });

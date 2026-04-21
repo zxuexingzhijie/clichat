@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const GameActionTypeSchema = z.enum([
   'move', 'look', 'talk', 'attack', 'use_item',
   'cast', 'guard', 'flee', 'inspect', 'trade',
-  'help', 'save', 'unknown',
+  'help', 'save', 'load', 'journal', 'quest', 'unknown',
 ]);
 export type GameActionType = z.infer<typeof GameActionTypeSchema>;
 
