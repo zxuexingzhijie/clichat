@@ -13,6 +13,20 @@ world with long-memory NPCs. v1.0 ships a fully playable Classic Fantasy region.
 The player must feel they are in a **persistent, consistent world that remembers them** — not
 a chatbot that reinvents the universe every turn.
 
+## Current Milestone: v1.1 Playability & Distribution
+
+**Goal:** 修复核心交互 bug、实现流式输出、叙事式角色创建、动画反馈系统，并通过 npm + Homebrew tap 让用户真正可以安装和使用游戏。
+
+**Target features:**
+- [BUG] Enter 确认后不推进 + 无法切换到自定义输入
+- [BUG] 游戏无法退出（无退出快捷键/命令）
+- 流式输出 — 旁白/NPC 对话逐字打印
+- 叙事式角色创建 — 取代菜单，通过守卫拦截场景引导定属性
+- 动画系统 — 开场标题、AI loading、场景转换、战斗打击感、界面反馈
+- npm publish (chronicle-cli) + Homebrew 自建 tap 分发
+
+---
+
 ## Current State (v1.0)
 
 - **Shipped:** 2026-04-22
