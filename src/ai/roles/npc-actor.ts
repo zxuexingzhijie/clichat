@@ -24,14 +24,46 @@ export async function generateNpcDialogue(
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const { object, usage } = await generateObject({
-        model: config.model(),
-        schema: NpcDialogueSchema,
-        temperature: config.temperature,
-        maxOutputTokens: config.maxTokens,
-        system,
-        prompt,
-      });
+      let object: NpcDialogue;
+      let usage: { inputTokens: number | undefined; outputTokens: number | undefined; totalTokens: number | undefined };
+
+      if (config.providerName === 'anthropic') {
+        const result = await generateObject({
+          model: config.model(),
+          schema: NpcDialogueSchema,
+          temperature: config.temperature,
+          maxOutputTokens: config.maxTokens,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: system,
+                  providerOptions: {
+                    anthropic: { cacheControl: { type: 'ephemeral' } },
+                  },
+                },
+                { type: 'text', text: prompt },
+              ],
+            },
+          ],
+        });
+        object = result.object as NpcDialogue;
+        usage = result.usage;
+      } else {
+        const result = await generateObject({
+          model: config.model(),
+          schema: NpcDialogueSchema,
+          temperature: config.temperature,
+          maxOutputTokens: config.maxTokens,
+          system,
+          prompt,
+        });
+        object = result.object as NpcDialogue;
+        usage = result.usage;
+      }
+
       recordUsage('npc-actor', { inputTokens: usage.inputTokens ?? 0, outputTokens: usage.outputTokens ?? 0, totalTokens: usage.totalTokens ?? 0 });
       return object;
     } catch (err) {

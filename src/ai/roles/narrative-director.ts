@@ -33,13 +33,38 @@ export async function* streamNarration(
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const result = streamText({
-        model: config.model(),
-        temperature: config.temperature,
-        maxOutputTokens: config.maxTokens,
-        system,
-        prompt,
-      });
+      let result: ReturnType<typeof streamText>;
+
+      if (config.providerName === 'anthropic') {
+        result = streamText({
+          model: config.model(),
+          temperature: config.temperature,
+          maxOutputTokens: config.maxTokens,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: system,
+                  providerOptions: {
+                    anthropic: { cacheControl: { type: 'ephemeral' } },
+                  },
+                },
+                { type: 'text', text: prompt },
+              ],
+            },
+          ],
+        });
+      } else {
+        result = streamText({
+          model: config.model(),
+          temperature: config.temperature,
+          maxOutputTokens: config.maxTokens,
+          system,
+          prompt,
+        });
+      }
 
       for await (const chunk of result.textStream) {
         yield chunk;
@@ -68,13 +93,44 @@ export async function generateNarration(
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const { text, usage } = await generateText({
-        model: config.model(),
-        temperature: config.temperature,
-        maxOutputTokens: config.maxTokens,
-        system,
-        prompt,
-      });
+      let text: string;
+      let usage: { inputTokens: number | undefined; outputTokens: number | undefined; totalTokens: number | undefined };
+
+      if (config.providerName === 'anthropic') {
+        const result = await generateText({
+          model: config.model(),
+          temperature: config.temperature,
+          maxOutputTokens: config.maxTokens,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: system,
+                  providerOptions: {
+                    anthropic: { cacheControl: { type: 'ephemeral' } },
+                  },
+                },
+                { type: 'text', text: prompt },
+              ],
+            },
+          ],
+        });
+        text = result.text;
+        usage = result.usage;
+      } else {
+        const result = await generateText({
+          model: config.model(),
+          temperature: config.temperature,
+          maxOutputTokens: config.maxTokens,
+          system,
+          prompt,
+        });
+        text = result.text;
+        usage = result.usage;
+      }
+
       recordUsage('narrative-director', { inputTokens: usage.inputTokens ?? 0, outputTokens: usage.outputTokens ?? 0, totalTokens: usage.totalTokens ?? 0 });
 
       if (text.length > 300) {
