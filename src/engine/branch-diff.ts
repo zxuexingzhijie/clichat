@@ -153,11 +153,13 @@ function compareInventory(source: SaveDataV3, target: SaveDataV3, diffs: DiffIte
 
   for (const entry of srcEquipped) {
     if (!tgtEquipped.has(entry)) {
-      const [slot, item] = entry.split(':');
+      const colonIdx = entry.indexOf(':');
+      const slot = entry.slice(0, colonIdx);
+      const item = entry.slice(colonIdx + 1);
       diffs.push({
         category: 'inventory',
         marker: '-',
-        key: item!,
+        key: item,
         description: `${item} (${slot}) removed`,
         isHighImpact: false,
         sourceValue: entry,
@@ -167,11 +169,13 @@ function compareInventory(source: SaveDataV3, target: SaveDataV3, diffs: DiffIte
 
   for (const entry of tgtEquipped) {
     if (!srcEquipped.has(entry)) {
-      const [slot, item] = entry.split(':');
+      const colonIdx = entry.indexOf(':');
+      const slot = entry.slice(0, colonIdx);
+      const item = entry.slice(colonIdx + 1);
       diffs.push({
         category: 'inventory',
         marker: '+',
-        key: item!,
+        key: item,
         description: `${item} (${slot}) added`,
         isHighImpact: false,
         targetValue: entry,
