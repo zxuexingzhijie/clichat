@@ -125,13 +125,13 @@ Plans:
 **Plans:** 7 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Schema contracts: TurnLogEntry.npcDialogue, NpcMemoryRecord.version, GamePhase/GameAction extensions, SaveDataV4 migration
-- [ ] 05-02-PLAN.md — AI config infrastructure: ai-config-schema.ts, ai-config-loader.ts, providers.ts buildRoleConfigs, ai-config.yaml template
-- [ ] 05-03-PLAN.md — Cost session store: CostSessionStore, token capture in narrative-director + npc-actor
-- [ ] 05-04-PLAN.md — Replay panel UI: ReplayPanel scrollable timeline with two-pane layout
-- [ ] 05-05-PLAN.md — Background summarizer: queue, scheduler, worker, memory-summarizer AI role
-- [ ] 05-06-PLAN.md — Game wiring: /cost and /replay routing, ReplayPanel in game-screen, status bar token display
-- [ ] 05-07-PLAN.md — App startup wiring + prompt caching: initRoleConfigs at boot, Anthropic cacheControl, Google prefix ordering
+- [x] 05-01-PLAN.md — Schema contracts: TurnLogEntry.npcDialogue, NpcMemoryRecord.version, GamePhase/GameAction extensions, SaveDataV4 migration
+- [x] 05-02-PLAN.md — AI config infrastructure: ai-config-schema.ts, ai-config-loader.ts, providers.ts buildRoleConfigs, ai-config.yaml template
+- [x] 05-03-PLAN.md — Cost session store: CostSessionStore, token capture in narrative-director + npc-actor
+- [x] 05-04-PLAN.md — Replay panel UI: ReplayPanel scrollable timeline with two-pane layout
+- [x] 05-05-PLAN.md — Background summarizer: queue, scheduler, worker, memory-summarizer AI role
+- [x] 05-06-PLAN.md — Game wiring: /cost and /replay routing, ReplayPanel in game-screen, status bar token display
+- [x] 05-07-PLAN.md — App startup wiring + prompt caching: initRoleConfigs at boot, Anthropic cacheControl, Google prefix ordering
 
 ## Progress
 
