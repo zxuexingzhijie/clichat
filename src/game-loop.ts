@@ -7,6 +7,7 @@ import { sceneStore } from './state/scene-store';
 import { gameStore } from './state/game-store';
 import { combatStore } from './state/combat-store';
 import { eventBus } from './events/event-bus';
+import { getCostSummary } from './state/cost-session-store';
 import type { GameAction } from './types/game-action';
 import type { CheckResult } from './types/common';
 import type { SceneManager } from './engine/scene-manager';
@@ -16,6 +17,12 @@ import type { Serializer } from './state/serializer';
 import type { QuestSystem } from './engine/quest-system';
 import type { BranchMeta } from './state/branch-store';
 import type { TurnLogEntry } from './state/serializer';
+
+let lastReplayEntries: readonly TurnLogEntry[] = [];
+
+export function getLastReplayEntries(): readonly TurnLogEntry[] {
+  return lastReplayEntries;
+}
 
 export interface GameLoop {
   readonly processInput: (input: string, options?: RouteInputOptions) => Promise<ProcessResult>;
@@ -257,7 +264,24 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
       const count = parseInt(action.target ?? '10', 10);
       if (!turnLog) return { status: 'error', message: '回放系统未初始化' };
       const entries = turnLog.replayTurns(isNaN(count) ? 10 : count);
-      const lines = entries.flatMap(e => [`[回合 ${e.turnNumber}] ${e.action}`, ...e.narrationLines]);
+      lastReplayEntries = [...entries];
+      gameStore.setState(draft => { draft.phase = 'replay'; });
+      return { status: 'action_executed', action, narration: [] };
+    }
+
+    if (action.type === 'cost') {
+      const summary = getCostSummary();
+      const lines: string[] = [
+        `【本次冒险消耗】`,
+        `  总 Input: ${summary.totalInputTokens} tokens`,
+        `  总 Output: ${summary.totalOutputTokens} tokens`,
+        `  估算费用: $${summary.totalEstimatedCost.toFixed(6)}`,
+        ``,
+        `【各 AI 角色消耗】`,
+        ...Object.entries(summary.byRole).map(([role, entry]) =>
+          entry ? `  ${role}: in=${entry.inputTokens} out=${entry.outputTokens} $${entry.estimatedCost.toFixed(6)}` : ''
+        ).filter(Boolean),
+      ];
       return { status: 'action_executed', action, narration: lines };
     }
 

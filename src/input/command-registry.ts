@@ -172,4 +172,10 @@ export function registerCommands(
         source: 'command',
       });
     });
+
+  program
+    .command('cost')
+    .action(() => {
+      setResult({ type: 'cost', target: null, modifiers: {}, source: 'command' });
+    });
 }
