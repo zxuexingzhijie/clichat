@@ -25,14 +25,23 @@ export const ProfessionSchema = z.object({
   primary_attribute: z.enum(["physique", "finesse", "mind"]),
 });
 
+export const SpatialExitSchema = z.object({
+  direction: z.string(),
+  targetId: z.string(),
+  distance: z.number().optional(),
+  label: z.string().optional(),
+});
+
 export const LocationSchema = z.object({
   ...baseFields,
   type: z.literal("location"),
   region: z.string(),
   danger_level: z.number().min(0).max(10),
-  exits: z.array(z.string()),
+  exits: z.array(z.union([z.string(), SpatialExitSchema])),
   notable_npcs: z.array(z.string()),
   objects: z.array(z.string()),
+  coordinates: z.object({ x: z.number(), y: z.number() }).optional(),
+  map_icon: z.string().optional(),
 });
 
 export const FactionSchema = z.object({
@@ -155,6 +164,7 @@ export const CodexEntrySchema = z.discriminatedUnion("type", [
   QuestTemplateSchema,
 ]);
 
+export type SpatialExit = z.infer<typeof SpatialExitSchema>;
 export type Race = z.infer<typeof RaceSchema>;
 export type Profession = z.infer<typeof ProfessionSchema>;
 export type Location = z.infer<typeof LocationSchema>;

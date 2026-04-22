@@ -18,13 +18,17 @@
   region: 黑松镇
   danger_level: 2
   exits:
-    - loc_main_street
-    - loc_forest_road
+    - direction: south
+      targetId: loc_main_street
+    - direction: north
+      targetId: loc_forest_road
   notable_npcs:
     - npc_guard
   objects:
     - notice_board
     - oil_lamp
+  coordinates: { x: 1, y: 2 }
+  map_icon: "H"
 
 - id: loc_tavern
   name: 黑松镇·酒馆
@@ -47,13 +51,17 @@
   region: 黑松镇
   danger_level: 0
   exits:
-    - loc_main_street
+    - direction: east
+      targetId: loc_main_street
+      label: 主街
   notable_npcs:
     - npc_bartender
   objects:
     - fireplace
     - notice_board_tavern
     - barrel
+  coordinates: { x: 0, y: 4 }
+  map_icon: "H"
 
 - id: loc_main_street
   name: 黑松镇·主街
@@ -75,15 +83,22 @@
   region: 黑松镇
   danger_level: 1
   exits:
-    - loc_north_gate
-    - loc_tavern
-    - loc_blacksmith
-    - loc_market
-    - loc_temple
+    - direction: north
+      targetId: loc_north_gate
+    - direction: west
+      targetId: loc_tavern
+    - direction: south
+      targetId: loc_blacksmith
+    - direction: east
+      targetId: loc_temple
+    - direction: southeast
+      targetId: loc_market
   notable_npcs: []
   objects:
     - signpost
     - fountain
+  coordinates: { x: 1, y: 3 }
+  map_icon: "H"
 
 - id: loc_blacksmith
   name: 黑松镇·铁匠铺
@@ -106,13 +121,16 @@
   region: 黑松镇
   danger_level: 0
   exits:
-    - loc_main_street
+    - direction: north
+      targetId: loc_main_street
   notable_npcs:
     - npc_blacksmith
   objects:
     - anvil
     - forge
     - weapon_rack
+  coordinates: { x: 1, y: 4 }
+  map_icon: "H"
 
 - id: loc_market
   name: 黑松镇·集市广场
@@ -135,13 +153,16 @@
   region: 黑松镇
   danger_level: 1
   exits:
-    - loc_main_street
+    - direction: northwest
+      targetId: loc_main_street
   notable_npcs:
     - npc_merchant_afu
   objects:
     - market_stalls
     - water_well
     - bulletin_board
+  coordinates: { x: 2, y: 4 }
+  map_icon: "H"
 
 - id: loc_temple
   name: 黑松镇·神殿
@@ -164,13 +185,16 @@
   region: 黑松镇
   danger_level: 0
   exits:
-    - loc_main_street
+    - direction: west
+      targetId: loc_main_street
   notable_npcs:
     - npc_priestess
   objects:
     - altar
     - incense_burner
     - ancient_relief
+  coordinates: { x: 2, y: 3 }
+  map_icon: "T"
 
 - id: loc_forest_road
   name: 黑松林道
@@ -193,13 +217,17 @@
   region: 黑松林
   danger_level: 4
   exits:
-    - loc_north_gate
-    - loc_abandoned_camp
+    - direction: south
+      targetId: loc_north_gate
+    - direction: east
+      targetId: loc_abandoned_camp
   notable_npcs:
     - npc_scout
   objects:
     - trail_marker
     - fallen_tree
+  coordinates: { x: 1, y: 1 }
+  map_icon: "F"
 
 - id: loc_abandoned_camp
   name: 废弃营地
@@ -222,14 +250,18 @@
   region: 黑松林
   danger_level: 6
   exits:
-    - loc_forest_road
-    - loc_dark_cave
+    - direction: west
+      targetId: loc_forest_road
+    - direction: north
+      targetId: loc_dark_cave
   notable_npcs:
     - npc_deserter
   objects:
     - ruined_tent
     - cold_campfire
     - abandoned_supplies
+  coordinates: { x: 3, y: 1 }
+  map_icon: "R"
 
 - id: loc_dark_cave
   name: 黑暗洞穴
@@ -252,9 +284,12 @@
   region: 黑松林
   danger_level: 8
   exits:
-    - loc_abandoned_camp
+    - direction: south
+      targetId: loc_abandoned_camp
   notable_npcs: []
   objects:
     - cave_entrance
     - strange_markings
     - bone_fragments
+  coordinates: { x: 3, y: 0 }
+  map_icon: "D"
