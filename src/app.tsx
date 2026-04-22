@@ -4,6 +4,9 @@ import { createStoreContext } from './ui/hooks/use-store';
 import { gameStore, type GameState } from './state/game-store';
 import { playerStore, type PlayerState } from './state/player-store';
 import { sceneStore, type SceneState } from './state/scene-store';
+import { dialogueStore, type DialogueState } from './state/dialogue-store';
+import { combatStore, type CombatState } from './state/combat-store';
+import { questStore, type QuestState } from './state/quest-store';
 import { TitleScreen } from './ui/screens/title-screen';
 import { GameScreen } from './ui/screens/game-screen';
 import { CharacterCreationScreen } from './ui/screens/character-creation-screen';
@@ -13,6 +16,9 @@ import { initRoleConfigs } from './ai/providers';
 const GameStoreCtx = createStoreContext<GameState>();
 const PlayerStoreCtx = createStoreContext<PlayerState>();
 const SceneStoreCtx = createStoreContext<SceneState>();
+const DialogueStoreCtx = createStoreContext<DialogueState>();
+const CombatStoreCtx = createStoreContext<CombatState>();
+const QuestStoreCtx = createStoreContext<QuestState>();
 
 export { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx };
 
@@ -23,6 +29,9 @@ function AppInner(): React.ReactNode {
   const gameState = GameStoreCtx.useStoreState((s) => s);
   const playerState = PlayerStoreCtx.useStoreState((s) => s);
   const sceneState = SceneStoreCtx.useStoreState((s) => s);
+  const dialogueState = DialogueStoreCtx.useStoreState((s) => s);
+  const combatState = CombatStoreCtx.useStoreState((s) => s);
+  const questState = QuestStoreCtx.useStoreState((s) => s);
 
   const handleStart = useCallback(() => {
     setGameState((draft) => {
@@ -57,6 +66,10 @@ function AppInner(): React.ReactNode {
         gameState={gameState}
         playerState={playerState}
         sceneState={sceneState}
+        dialogueState={dialogueState}
+        combatState={combatState}
+        questState={questState}
+        questTemplates={new Map()}
         onSetGamePhase={setGameState}
       />
     </SizeGuard>
@@ -74,7 +87,13 @@ export function App(): React.ReactNode {
     <GameStoreCtx.Provider store={gameStore}>
       <PlayerStoreCtx.Provider store={playerStore}>
         <SceneStoreCtx.Provider store={sceneStore}>
-          <AppInner />
+          <DialogueStoreCtx.Provider store={dialogueStore}>
+            <CombatStoreCtx.Provider store={combatStore}>
+              <QuestStoreCtx.Provider store={questStore}>
+                <AppInner />
+              </QuestStoreCtx.Provider>
+            </CombatStoreCtx.Provider>
+          </DialogueStoreCtx.Provider>
         </SceneStoreCtx.Provider>
       </PlayerStoreCtx.Provider>
     </GameStoreCtx.Provider>
