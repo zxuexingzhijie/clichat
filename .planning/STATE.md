@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 4 complete
-last_updated: "2026-04-22T15:10:00.000Z"
-last_activity: 2026-04-22 -- Phase 4 execution complete, 571 tests, verification PASS 5/5
+status: unknown
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-04-22T11:15:23.010Z"
+last_activity: 2026-04-22 -- Phase --phase execution started
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 30
-  completed_plans: 30
-  percent: 86
+  total_plans: 37
+  completed_plans: 31
+  percent: 84
 ---
 
 # Project State
@@ -21,15 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-20)
 
 **Core value:** The player must feel they are in a persistent, consistent world that remembers them -- not a chatbot that reinvents the universe every turn.
-**Current focus:** Phase 5 — Polish & Optimization (next)
+**Current focus:** Phase --phase — 05
 
 ## Current Position
 
-Phase: 04 (Differentiation) — COMPLETE
+Phase: --phase (05) — EXECUTING
+Plan: 1 of --name
 Next: Phase 05 (Polish & Optimization) — NOT STARTED
-Last activity: 2026-04-22 -- Phase 4 execution complete, 571 tests, verification PASS 5/5
+Last activity: 2026-04-22 -- Phase --phase execution started
 
-Progress: [████████░░] 86% (30/30 plans, 4/5 phases)
+Progress: [████████░░] 84%
 
 ## Performance Metrics
 
@@ -53,6 +54,7 @@ Progress: [████████░░] 86% (30/30 plans, 4/5 phases)
 - Trend: Stable, all green
 
 *Updated after each plan completion*
+| Phase 05-polish P01 | 5min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -77,6 +79,7 @@ Recent decisions affecting current work:
 - [03-01]: NpcMemoryRecordSchema three-layer (recent/salient/archive) replaces flat array
 - [03-01]: QuestTemplateSchema added to CodexEntrySchema union (schema-first, data second)
 - [03-08]: handleJournalClose calls gameStore.setState directly (no prop threading)
+- V3→V4 is a no-op migration: npcDialogue optional + version .default(0) means no backfill needed
 
 ### Pending Todos
 
@@ -140,8 +143,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 4 UI-SPEC approved
-Resume file: --resume-file
+Last session: 2026-04-22T11:15:23.006Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: None
 
 **Planned Phase:** 04 (differentiation) — 9 plans — 2026-04-21T17:08:15.088Z
