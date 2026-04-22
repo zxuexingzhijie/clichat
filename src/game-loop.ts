@@ -14,6 +14,8 @@ import type { DialogueManager } from './engine/dialogue-manager';
 import type { CombatLoop } from './engine/combat-loop';
 import type { Serializer } from './state/serializer';
 import type { QuestSystem } from './engine/quest-system';
+import type { BranchMeta } from './state/branch-store';
+import type { TurnLogEntry } from './state/serializer';
 
 export interface GameLoop {
   readonly processInput: (input: string, options?: RouteInputOptions) => Promise<ProcessResult>;
@@ -38,6 +40,11 @@ const HELP_COMMANDS: readonly string[] = [
   '/flee — 逃跑',
   '/trade <npc> — 与NPC交易',
   '/save [name] — 保存游戏',
+  '/branch [create|switch|tree|delete] [name] — 分支管理',
+  '/compare [spec] — 对比分支差异',
+  '/map — 查看地图',
+  '/codex [query] — 浏览知识典籍',
+  '/replay [N] — 回放最近N回合',
   '/help — 显示此帮助',
 ];
 
@@ -56,6 +63,14 @@ export type GameLoopOptions = {
   readonly serializer?: Serializer;
   readonly saveDir?: string;
   readonly questSystem?: QuestSystem;
+  readonly branchManager?: {
+    readonly createBranch: (name: string) => BranchMeta;
+    readonly switchBranch: (branchId: string) => void;
+    readonly deleteBranch: (branchId: string) => void;
+  };
+  readonly turnLog?: {
+    readonly replayTurns: (count: number) => readonly TurnLogEntry[];
+  };
 };
 
 export function createGameLoop(options?: GameLoopOptions): GameLoop {
@@ -68,6 +83,8 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
   const serializer = options?.serializer;
   const saveDir = options?.saveDir;
   const questSystem = options?.questSystem;
+  const branchManager = options?.branchManager;
+  const turnLog = options?.turnLog;
 
   async function processInput(input: string, routeOptions?: RouteInputOptions): Promise<ProcessResult> {
     const sceneContext = sceneStore.getState().narrationLines.join(' ');
@@ -181,6 +198,67 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
     if (action.type === 'journal') {
       gameStore.setState(draft => { draft.phase = 'journal'; });
       return { status: 'action_executed', action, narration: [] };
+    }
+
+    if (action.type === 'map') {
+      gameStore.setState(draft => { draft.phase = 'map'; });
+      return { status: 'action_executed', action, narration: [] };
+    }
+
+    if (action.type === 'codex') {
+      gameStore.setState(draft => { draft.phase = 'codex'; });
+      return { status: 'action_executed', action, narration: [] };
+    }
+
+    if (action.type === 'branch') {
+      const subAction = action.target ?? 'tree';
+      if (subAction === 'tree') {
+        gameStore.setState(draft => { draft.phase = 'branch_tree'; });
+        return { status: 'action_executed', action, narration: [] };
+      }
+      if (subAction === 'create') {
+        const name = (action.modifiers as Record<string, string>)['name'];
+        if (!name) return { status: 'error', message: '请指定分支名称。用法: /branch create <name>' };
+        if (!branchManager) return { status: 'error', message: '分支系统未初始化' };
+        const branch = branchManager.createBranch(name);
+        return { status: 'action_executed', action, narration: [`分支「${branch.name}」已创建。当前位于新分支。`] };
+      }
+      if (subAction === 'switch') {
+        const name = (action.modifiers as Record<string, string>)['name'];
+        if (!name) return { status: 'error', message: '请指定分支名称。' };
+        if (!branchManager) return { status: 'error', message: '分支系统未初始化' };
+        try {
+          branchManager.switchBranch(name);
+          return { status: 'action_executed', action, narration: [`已切换至分支「${name}」。`] };
+        } catch (e) {
+          return { status: 'error', message: `分支「${name}」不存在。使用 /branch tree 查看所有分支。` };
+        }
+      }
+      if (subAction === 'delete') {
+        const name = (action.modifiers as Record<string, string>)['name'];
+        if (!name) return { status: 'error', message: '请指定要删除的分支名称。' };
+        if (!branchManager) return { status: 'error', message: '分支系统未初始化' };
+        try {
+          branchManager.deleteBranch(name);
+          return { status: 'action_executed', action, narration: [`分支「${name}」已删除。`] };
+        } catch (e) {
+          return { status: 'error', message: (e as Error).message };
+        }
+      }
+      return { status: 'error', message: '未知分支指令。用法: /branch create|switch|tree|delete <name>' };
+    }
+
+    if (action.type === 'compare') {
+      gameStore.setState(draft => { draft.phase = 'compare'; });
+      return { status: 'action_executed', action, narration: [] };
+    }
+
+    if (action.type === 'replay') {
+      const count = parseInt(action.target ?? '10', 10);
+      if (!turnLog) return { status: 'error', message: '回放系统未初始化' };
+      const entries = turnLog.replayTurns(isNaN(count) ? 10 : count);
+      const lines = entries.flatMap(e => [`[回合 ${e.turnNumber}] ${e.action}`, ...e.narrationLines]);
+      return { status: 'action_executed', action, narration: lines };
     }
 
     if (action.type === 'quest') {
