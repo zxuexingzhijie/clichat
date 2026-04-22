@@ -18,6 +18,21 @@ function buildMetaFromV1(data: Record<string, unknown>): unknown {
   };
 }
 
+export function migrateV2ToV3(raw: unknown): unknown {
+  if (typeof raw !== 'object' || raw === null) return raw;
+  const data = raw as Record<string, unknown>;
+  if (data['version'] !== 2) return raw;
+  return {
+    ...data,
+    version: 3,
+    branchId: 'main',
+    parentSaveId: null,
+    exploration: { locations: {} },
+    playerKnowledge: { entries: {} },
+    turnLog: [],
+  };
+}
+
 export function migrateV1ToV2(raw: unknown): unknown {
   if (typeof raw !== 'object' || raw === null) return raw;
   const data = raw as Record<string, unknown>;

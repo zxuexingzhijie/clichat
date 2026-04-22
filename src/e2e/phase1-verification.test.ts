@@ -10,6 +10,8 @@ import { gameStore, getDefaultGameState } from '../state/game-store';
 import { questStore, questEventLog } from '../state/quest-store';
 import { relationStore } from '../state/relation-store';
 import { npcMemoryStore } from '../state/npc-memory-store';
+import { explorationStore } from '../state/exploration-store';
+import { playerKnowledgeStore } from '../state/player-knowledge-store';
 import { loadCodexFile } from '../codex/loader';
 import { IntentSchema } from '../types/intent';
 
@@ -141,7 +143,9 @@ describe('Phase 1 Success Criteria', () => {
         quest: questStore,
         relations: relationStore,
         npcMemory: npcMemoryStore,
-      }, () => questEventLog);
+        exploration: explorationStore,
+        playerKnowledge: playerKnowledgeStore,
+      }, () => questEventLog, () => [], () => 'main', () => null);
 
       const original = serializer.snapshot();
       const originalHp = playerStore.getState().hp;
@@ -162,12 +166,14 @@ describe('Phase 1 Success Criteria', () => {
         quest: questStore,
         relations: relationStore,
         npcMemory: npcMemoryStore,
-      }, () => questEventLog);
+        exploration: explorationStore,
+        playerKnowledge: playerKnowledgeStore,
+      }, () => questEventLog, () => [], () => 'main', () => null);
 
       const snap1 = serializer.snapshot();
       const parsed = JSON.parse(snap1);
 
-      expect(parsed.version).toBe(2);
+      expect(parsed.version).toBe(3);
       expect(parsed.player).toBeDefined();
       expect(parsed.scene).toBeDefined();
       expect(parsed.combat).toBeDefined();
@@ -183,7 +189,9 @@ describe('Phase 1 Success Criteria', () => {
         quest: questStore,
         relations: relationStore,
         npcMemory: npcMemoryStore,
-      }, () => questEventLog);
+        exploration: explorationStore,
+        playerKnowledge: playerKnowledgeStore,
+      }, () => questEventLog, () => [], () => 'main', () => null);
 
       expect(() => serializer.restore('not json at all')).toThrow('Invalid save data');
     });
