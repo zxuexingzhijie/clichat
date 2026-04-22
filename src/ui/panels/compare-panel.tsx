@@ -128,7 +128,6 @@ export function ComparePanel({
   onClose,
   width = 80,
 }: ComparePanelProps): React.ReactNode {
-  const [scrollOffset, setScrollOffset] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>('unified');
   const isWide = width >= 100;
 
@@ -139,16 +138,10 @@ export function ComparePanel({
 
   useInput(useCallback((_input: string, key: {
     escape: boolean;
-    upArrow: boolean;
-    downArrow: boolean;
     tab: boolean;
   }) => {
     if (key.escape) {
       onClose();
-    } else if (key.upArrow) {
-      setScrollOffset(prev => Math.max(0, prev - 1));
-    } else if (key.downArrow) {
-      setScrollOffset(prev => prev + 1);
     } else if (key.tab && isWide) {
       setViewMode(prev => prev === 'unified' ? 'side-by-side' : 'unified');
     }
