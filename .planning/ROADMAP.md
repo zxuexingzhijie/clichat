@@ -106,8 +106,8 @@ Plans:
 - [x] 04-04-PLAN.md — Event-driven trackers: ExplorationTracker, KnowledgeTracker
 - [x] 04-05-PLAN.md — Epistemic separation: NPC Knowledge Filter, Cognitive Context Envelope, context-assembler upgrade
 - [x] 04-06-PLAN.md — Branch diff engine (6-dimension comparison) + turn log for replay
-- [ ] 04-07-PLAN.md — MapPanel + CodexPanel with sub-components
-- [ ] 04-08-PLAN.md — BranchTreePanel + ComparePanel with DiffLine component
+- [x] 04-07-PLAN.md — MapPanel + CodexPanel with sub-components
+- [x] 04-08-PLAN.md — BranchTreePanel + ComparePanel with DiffLine component
 - [ ] 04-09-PLAN.md — Keyboard shortcuts, command registration, game-screen wiring, game-loop routing
 
 **UI hint**: yes
@@ -134,5 +134,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 1. Foundation | 6/6 | Complete | - |
 | 2. Core Gameplay | 7/7 | Complete | 2026-04-21 |
 | 3. Persistence & World | 8/8 | Complete | 2026-04-21 |
-| 4. Differentiation | 6/9 | In progress | - |
+| 4. Differentiation | 8/9 | In progress | - |
 | 5. Polish & Optimization | 0/TBD | Not started | - |
