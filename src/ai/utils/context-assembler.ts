@@ -1,5 +1,15 @@
 import type { CodexEntry } from '../../codex/schemas/entry-types';
 import type { NpcProfile } from '../prompts/npc-system';
+import {
+  tagContextChunk,
+  buildCognitiveEnvelope,
+  filterForNpcActor,
+  filterForNarrativeDirector,
+  type CognitiveContextEnvelope,
+  type TaggedContextChunk,
+} from './epistemic-tagger';
+import type { NpcFilterContext } from './npc-knowledge-filter';
+import { playerKnowledgeStore } from '../../state/player-knowledge-store';
 
 export type NpcMemory = {
   readonly npcId: string;
@@ -79,4 +89,65 @@ export function assembleNpcContext(
     scene: sceneDescription,
     playerAction,
   };
+}
+
+export function assembleFilteredNpcContext(
+  npcProfile: NpcProfile,
+  npcFilterCtx: NpcFilterContext,
+  memories: readonly NpcMemory[],
+  codexEntries: Map<string, CodexEntry>,
+  sceneDescription: string,
+  playerAction: string,
+): { readonly npcContext: NpcContext; readonly filteredChunks: readonly TaggedContextChunk[] } {
+  const npcContext = assembleNpcContext(npcProfile, memories, sceneDescription, playerAction);
+
+  const chunks: TaggedContextChunk[] = [];
+
+  for (const entry of codexEntries.values()) {
+    chunks.push(tagContextChunk(entry.description, 'world_truth', entry.id, 'codex'));
+  }
+
+  for (const memory of memories.filter(m => m.npcId === npcProfile.name)) {
+    chunks.push(tagContextChunk(memory.content, 'npc_memory', npcProfile.name, 'memory'));
+  }
+
+  chunks.push(tagContextChunk(sceneDescription, 'scene_visible', 'scene', 'scene'));
+
+  const envelope = buildCognitiveEnvelope(chunks);
+  const filteredChunks = filterForNpcActor(envelope, npcFilterCtx.npcId);
+
+  return { npcContext, filteredChunks };
+}
+
+export function assembleNarrativeContextWithEnvelope(
+  retrievalPlan: { readonly codexIds: readonly string[]; readonly npcIds: readonly string[] },
+  codexEntries: Map<string, CodexEntry>,
+  npcMemories: readonly NpcMemory[],
+  sceneState: SceneState,
+  action: string,
+  checkResult?: { readonly display: string },
+): { readonly context: AssembledContext; readonly envelope: CognitiveContextEnvelope } {
+  const context = assembleNarrativeContext(
+    retrievalPlan, codexEntries, npcMemories, sceneState, action, checkResult,
+  );
+
+  const chunks: TaggedContextChunk[] = [];
+
+  for (const entry of context.codexEntries) {
+    chunks.push(tagContextChunk(entry.description, 'world_truth', entry.id, 'codex'));
+  }
+
+  for (const memory of context.npcMemories) {
+    chunks.push(tagContextChunk(memory, 'npc_memory', 'npc', 'memory'));
+  }
+
+  chunks.push(tagContextChunk(sceneState.sceneDescription, 'scene_visible', 'scene', 'scene'));
+
+  const knowledgeEntries = Object.values(playerKnowledgeStore.getState().entries);
+  for (const entry of knowledgeEntries) {
+    chunks.push(tagContextChunk(entry.description, 'player_knowledge', entry.id, 'knowledge'));
+  }
+
+  const envelope = buildCognitiveEnvelope(chunks);
+  return { context, envelope };
 }
