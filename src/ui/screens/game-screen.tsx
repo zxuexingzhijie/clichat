@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { useScreenSize } from 'fullscreen-ink';
 import { Divider } from '../components/divider';
@@ -11,6 +11,7 @@ import { CodexPanel } from '../panels/codex-panel';
 import { BranchTreePanel } from '../panels/branch-tree-panel';
 import { ComparePanel } from '../panels/compare-panel';
 import { ShortcutHelpPanel } from '../panels/shortcut-help-panel';
+import { ReplayPanel } from '../panels/replay-panel';
 import { StatusBar } from '../panels/status-bar';
 import { CombatStatusBar } from '../panels/combat-status-bar';
 import { ActionsPanel } from '../panels/actions-panel';
@@ -20,6 +21,8 @@ import { InputArea } from '../panels/input-area';
 import { useGameInput, getPanelActionForKey } from '../hooks/use-game-input';
 import { TIME_OF_DAY_LABELS } from '../../types/common';
 import { gameStore, type GameState } from '../../state/game-store';
+import { costSessionStore } from '../../state/cost-session-store';
+import { getLastReplayEntries } from '../../game-loop';
 import type { PlayerState } from '../../state/player-store';
 import type { SceneState } from '../../state/scene-store';
 import type { DialogueState } from '../../state/dialogue-store';
@@ -87,6 +90,13 @@ export function GameScreen({
 
   const [dialogueSelectedIndex, setDialogueSelectedIndex] = useState(0);
   const [combatSelectedIndex, setCombatSelectedIndex] = useState(0);
+  const [lastTurnTokens, setLastTurnTokens] = useState(0);
+
+  useEffect(() => {
+    return costSessionStore.subscribe(() => {
+      setLastTurnTokens(costSessionStore.getState().lastTurnTokens);
+    });
+  }, []);
 
   const innerWidth = width - 2;
   const timeLabel = TIME_OF_DAY_LABELS[gameState.timeOfDay] ?? gameState.timeOfDay;
@@ -99,6 +109,7 @@ export function GameScreen({
   const isInBranchTree = gameState.phase === 'branch_tree';
   const isInCompare = gameState.phase === 'compare';
   const isInShortcuts = gameState.phase === 'shortcuts';
+  const isInReplay = gameState.phase === 'replay';
   const isWide = width >= 100;
 
   const allQuestEntries: QuestDisplayEntry[] = Object.entries(questState.quests)
@@ -163,7 +174,7 @@ export function GameScreen({
     gameStore.setState(draft => { draft.phase = 'game'; });
   }, []);
 
-  const isInOverlayPanel = isInMap || isInCodex || isInBranchTree || isInCompare || isInShortcuts;
+  const isInOverlayPanel = isInMap || isInCodex || isInBranchTree || isInCompare || isInShortcuts || isInReplay;
 
   useInput(useCallback((input: string, key: { escape: boolean }) => {
     if (key.escape && isInOverlayPanel) {
@@ -224,6 +235,7 @@ export function GameScreen({
       location={sceneState.locationName}
       quest={activeQuestName}
       width={innerWidth}
+      lastTurnTokens={lastTurnTokens}
     />
   );
 
@@ -314,7 +326,9 @@ export function GameScreen({
                 )
                 : isInShortcuts
                   ? <ShortcutHelpPanel onClose={handlePanelClose} />
-                  : <ScenePanel lines={sceneLines} />;
+                  : isInReplay
+                    ? <ReplayPanel entries={[...getLastReplayEntries()]} onClose={handlePanelClose} />
+                    : <ScenePanel lines={sceneLines} />;
 
   if (isWide) {
     const sceneWidth = Math.floor(innerWidth * 0.6);

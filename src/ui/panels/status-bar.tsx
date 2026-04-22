@@ -11,6 +11,7 @@ type StatusBarProps = {
   readonly location: string;
   readonly quest: string | null;
   readonly width: number;
+  readonly lastTurnTokens?: number;
 };
 
 function truncateLocation(name: string, maxWidth: number): string {
@@ -34,6 +35,7 @@ export function StatusBar({
   location,
   quest,
   width,
+  lastTurnTokens,
 }: StatusBarProps): React.ReactNode {
   const hpRatio = maxHp > 0 ? hp / maxHp : 1;
   const hpColor = hpRatio < 0.1 ? 'red' : hpRatio < 0.25 ? 'yellow' : undefined;
@@ -67,6 +69,10 @@ export function StatusBar({
         {'  Quest: '}{questDisplay}
       </Text>,
     );
+  }
+
+  if (width >= 85 && lastTurnTokens && lastTurnTokens > 0) {
+    fields.push(<Text key="tokens" dimColor>{'  T:'}{lastTurnTokens}</Text>);
   }
 
   return (
