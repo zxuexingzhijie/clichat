@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: context exhaustion at 90% (2026-04-22)
-last_updated: "2026-04-22T13:40:08.400Z"
+stopped_at: Completed 05-polish-06-PLAN.md
+last_updated: "2026-04-22T14:05:45.544Z"
 last_activity: 2026-04-22 -- Phase --phase execution started
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 37
-  completed_plans: 35
-  percent: 95
+  completed_plans: 36
+  percent: 97
 ---
 
 # Project State
@@ -59,6 +59,7 @@ Progress: [█████████░] 92%
 | Phase 05-polish P03 | 5 | 2 tasks | 6 files |
 | Phase 05 P02 | 5min | 2 tasks | 6 files |
 | Phase 05-polish P05 | 7 | 2 tasks | 8 files |
+| Phase 05-polish P06 | 15 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,8 @@ Recent decisions affecting current work:
 - RoleConfig has no pricing field; estimatedCost stays 0 for all current roles until pricing is added to providers.ts
 - Version conflict in applyNpcMemoryCompression marks task failed and does NOT re-queue (preserves original NPC memories per T-05-10)
 - Summarizer scheduler debounce (5s) applies only to interval trigger, not event-driven triggers
+- ReplayPanel wired via module-level getLastReplayEntries() rather than prop threading through app root
+- lastTurnTokens sourced from costSessionStore.subscribe in game-screen.tsx directly — store subscription is cleaner for ephemeral cost state
 
 ### Pending Todos
 
@@ -152,8 +155,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-22T13:40:08.387Z
-Stopped at: context exhaustion at 90% (2026-04-22)
+Last session: 2026-04-22T14:05:45.539Z
+Stopped at: Completed 05-polish-06-PLAN.md
 Resume file: None
 
 **Planned Phase:** 04 (differentiation) — 9 plans — 2026-04-21T17:08:15.088Z
