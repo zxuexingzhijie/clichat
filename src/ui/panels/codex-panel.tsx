@@ -220,12 +220,14 @@ export function CodexPanel({ entries, onClose }: CodexPanelProps): React.ReactNo
 
     if (input === '[' || input === '{') {
       setActiveCategory(prev => {
+        if (categories.length === 0) return prev;
         const next = (prev - 1 + categories.length) % categories.length;
         setSelectedIndex(0);
         return next;
       });
     } else if (input === ']' || input === '}') {
       setActiveCategory(prev => {
+        if (categories.length === 0) return prev;
         const next = (prev + 1) % categories.length;
         setSelectedIndex(0);
         return next;
