@@ -9,7 +9,7 @@ import { getDefaultRelationState, type RelationState } from './relation-store';
 import { getDefaultNpcMemoryState, type NpcMemoryState } from './npc-memory-store';
 import { getDefaultExplorationState, type ExplorationState } from './exploration-store';
 import { getDefaultPlayerKnowledgeState, type PlayerKnowledgeState } from './player-knowledge-store';
-import { createSerializer, SaveDataV2Schema, SaveDataV3Schema, SaveMetaSchema, TurnLogEntrySchema } from './serializer';
+import { createSerializer, SaveDataV2Schema, SaveDataV3Schema, SaveDataV4Schema, SaveMetaSchema, TurnLogEntrySchema } from './serializer';
 
 function freshStores() {
   return {
@@ -259,5 +259,142 @@ describe('SaveMetaSchema', () => {
     };
     const result = SaveMetaSchema.safeParse(meta);
     expect(result.success).toBe(true);
+  });
+});
+
+describe('TurnLogEntrySchema with npcDialogue', () => {
+  const baseTurnEntry = {
+    turnNumber: 1,
+    action: 'look',
+    checkResult: null,
+    narrationLines: ['You see a tavern.'],
+    timestamp: '2026-01-01T00:00:00.000Z',
+  };
+
+  it('accepts entry without npcDialogue (backward compatibility)', () => {
+    const result = TurnLogEntrySchema.safeParse(baseTurnEntry);
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts entry with npcDialogue as string array', () => {
+    const result = TurnLogEntrySchema.safeParse({
+      ...baseTurnEntry,
+      npcDialogue: ['Hello, traveler!', 'What brings you here?'],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.npcDialogue).toEqual(['Hello, traveler!', 'What brings you here?']);
+    }
+  });
+
+  it('accepts entry with npcDialogue as empty array', () => {
+    const result = TurnLogEntrySchema.safeParse({ ...baseTurnEntry, npcDialogue: [] });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects entry with npcDialogue containing non-strings', () => {
+    const result = TurnLogEntrySchema.safeParse({ ...baseTurnEntry, npcDialogue: [42] });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('SaveDataV4Schema', () => {
+  it('validates a v4 save object (version literal 4)', () => {
+    const v4 = {
+      version: 4,
+      meta: {
+        saveName: 'V4 Save',
+        timestamp: '2026-01-01T00:00:00.000Z',
+        character: { name: 'Hero', race: 'Human', profession: 'Warrior' },
+        playtime: 0,
+        locationName: 'town',
+      },
+      branchId: 'main',
+      parentSaveId: null,
+      player: getDefaultPlayerState(),
+      scene: getDefaultSceneState(),
+      combat: getDefaultCombatState(),
+      game: getDefaultGameState(),
+      quest: getDefaultQuestState(),
+      relations: getDefaultRelationState(),
+      npcMemorySnapshot: getDefaultNpcMemoryState(),
+      questEventLog: [],
+      exploration: getDefaultExplorationState(),
+      playerKnowledge: getDefaultPlayerKnowledgeState(),
+      turnLog: [],
+    };
+    const result = SaveDataV4Schema.safeParse(v4);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a v3 object against SaveDataV4Schema', () => {
+    const v3 = {
+      version: 3,
+      meta: {
+        saveName: 'V3 Save',
+        timestamp: '2026-01-01T00:00:00.000Z',
+        character: { name: 'Hero', race: 'Human', profession: 'Warrior' },
+        playtime: 0,
+        locationName: 'town',
+      },
+      branchId: 'main',
+      parentSaveId: null,
+      player: getDefaultPlayerState(),
+      scene: getDefaultSceneState(),
+      combat: getDefaultCombatState(),
+      game: getDefaultGameState(),
+      quest: getDefaultQuestState(),
+      relations: getDefaultRelationState(),
+      npcMemorySnapshot: getDefaultNpcMemoryState(),
+      questEventLog: [],
+      exploration: getDefaultExplorationState(),
+      playerKnowledge: getDefaultPlayerKnowledgeState(),
+      turnLog: [],
+    };
+    const result = SaveDataV4Schema.safeParse(v3);
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('createSerializer v4 migration', () => {
+  beforeEach(() => {
+    resetQuestEventLog();
+  });
+
+  it('snapshot produces JSON with version: 4', () => {
+    const serializer = freshSerializer();
+    const parsed = JSON.parse(serializer.snapshot());
+    expect(parsed).toHaveProperty('version', 4);
+  });
+
+  it('restore accepts a v3 save and migrates it to v4', () => {
+    const v3Json = JSON.stringify({
+      version: 3,
+      meta: {
+        saveName: 'Old Save',
+        timestamp: '2026-01-01T00:00:00.000Z',
+        character: { name: 'Hero', race: 'Human', profession: 'Warrior' },
+        playtime: 0,
+        locationName: 'village_square',
+      },
+      branchId: 'main',
+      parentSaveId: null,
+      player: getDefaultPlayerState(),
+      scene: getDefaultSceneState(),
+      combat: getDefaultCombatState(),
+      game: getDefaultGameState(),
+      quest: getDefaultQuestState(),
+      relations: getDefaultRelationState(),
+      npcMemorySnapshot: getDefaultNpcMemoryState(),
+      questEventLog: [],
+      exploration: getDefaultExplorationState(),
+      playerKnowledge: getDefaultPlayerKnowledgeState(),
+      turnLog: [],
+    });
+
+    const stores = freshStores();
+    const serializer = createSerializer(stores, () => [], () => [], () => 'main', () => null);
+    expect(() => serializer.restore(v3Json)).not.toThrow();
+    expect(stores.player.getState().hp).toBe(30);
   });
 });
