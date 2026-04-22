@@ -79,6 +79,7 @@ export async function* streamNarration(
           role: 'narrative-director',
           error: err instanceof Error ? err.message : String(err),
         });
+        recordUsage('narrative-director', { inputTokens: 0, outputTokens: 0, totalTokens: 0 });
         yield getFallbackNarration(context.sceneType);
         return;
       }
