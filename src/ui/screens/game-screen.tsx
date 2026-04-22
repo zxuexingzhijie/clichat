@@ -171,7 +171,8 @@ export function GameScreen({
       return;
     }
     const panelAction = getPanelActionForKey(input, isTyping);
-    if (panelAction && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
+    const validPhases = new Set<string>(['map', 'journal', 'codex', 'branch_tree', 'compare', 'shortcuts']);
+    if (panelAction && validPhases.has(panelAction) && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
       gameStore.setState(draft => { draft.phase = panelAction as GameState['phase']; });
     }
   }, [isTyping, isInCombat, isInDialogueMode, isInOverlayPanel]));
