@@ -91,6 +91,9 @@ export function markDone(taskId: string): void {
 export function markFailed(taskId: string): void {
   summarizerQueueStore.setState((draft) => {
     const task = draft.tasks.find((t) => t.id === taskId);
-    if (task) task.status = 'failed';
+    if (task) {
+      task.status = 'failed';
+      draft.cooldownUntil = new Date(Date.now() + COOLDOWN_MS).toISOString();
+    }
   });
 }
