@@ -56,7 +56,7 @@ type GameScreenProps = {
   readonly compareBranchNames?: { readonly source: string; readonly target: string };
 };
 
-const COMBAT_ACTION_TYPES: readonly CombatActionType[] = ['attack', 'cast', 'guard', 'flee', 'flee'];
+const COMBAT_ACTION_TYPES: readonly CombatActionType[] = ['attack', 'cast', 'guard', 'flee'];
 
 export function GameScreen({
   gameState,
@@ -148,9 +148,7 @@ export function GameScreen({
   const handleCombatExecute = useCallback(
     (index: number) => {
       if (!combatLoop) return;
-      const actionType = index === 3
-        ? 'flee' as CombatActionType
-        : (COMBAT_ACTION_TYPES[index] ?? 'attack');
+      const actionType = COMBAT_ACTION_TYPES[index] ?? 'attack';
       combatLoop.processPlayerAction(actionType).catch(() => {});
       setCombatSelectedIndex(0);
     },
