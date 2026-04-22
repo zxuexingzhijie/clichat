@@ -151,11 +151,13 @@ None.
 
 ## Deferred Items
 
-Items acknowledged and carried forward from previous milestone close:
+Items acknowledged and deferred at milestone close on 2026-04-22:
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| *(none)* | | | |
+| uat | Phase 05 — live /cost with real token data | deferred | v1.0 close |
+| uat | Phase 05 — /replay N interactive panel | deferred | v1.0 close |
+| uat | Phase 05 — background summarizer live session | deferred | v1.0 close |
 
 ## Session Continuity
 
