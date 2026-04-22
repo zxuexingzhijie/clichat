@@ -272,12 +272,12 @@ Looking at `GamePhaseSchema` (game-store.ts:6), it is a `z.enum([...])`. Adding 
 **2. `/replay N` — interactive scroll**
 - `lastReplayEntries` (module-level in game-loop.ts) must be populated
 - `ReplayPanel` navigation (↑↓, PgUp/PgDn, Enter) must work
-- Validation: programmatically push entries into `lastReplayEntries` equivalents and render `ReplayPanel` in a headless Ink instance, or simply assert that the data flow works end-to-end
+- Validation: call `processInput('look')` to seed at least one turn log entry, then assert `getLastReplayEntries().length > 0`
 
 **3. Background summarizer — at least one trigger**
 - `evaluateTriggers('save_game_completed')` directly enqueues a `chapter_summary` task
-- `summarizerQueueStore.getState().tasks` must have a task with `status: 'done'` after `runSummarizerLoop()` processes it
-- Validation: call `evaluateTriggers('save_game_completed')`, then run `runSummarizerLoop()` for one iteration, then assert task status
+- `runNextTask()` processes the task atomically and returns `true`
+- Validation: call `evaluateTriggers('save_game_completed')`, then `runNextTask()`, assert returns `true`
 
 ### Script structure (CARRY-01 discretion area)
 No `e2e/` or `scripts/` directory exists yet. Create `scripts/validate-live.ts` (or `e2e/validate-live.ts`). These are standalone Bun scripts, not Bun test files, since they require API keys and should not run in CI.
@@ -289,15 +289,14 @@ import { initRoleConfigs } from '../src/ai/providers';
 import { generateNarration } from '../src/ai/roles/narrative-director';
 import { getCostSummary } from '../src/state/cost-session-store';
 import { evaluateTriggers } from '../src/ai/summarizer/summarizer-scheduler';
-import { summarizerQueueStore } from '../src/ai/summarizer/summarizer-queue';
-import { runSummarizerLoop } from '../src/ai/summarizer/summarizer-worker';
+import { runNextTask } from '../src/ai/summarizer/summarizer-worker';
 // ... assertions
 ```
 
 Required env vars: `GOOGLE_GENERATIVE_AI_API_KEY` (default provider is Google Gemini), or whichever provider is configured in `ai-config.yaml`.
 
 ### runSummarizerLoop is an infinite loop
-`runSummarizerLoop()` never returns — it loops with 5s sleep. For validation, call `dispatchTask` / `dequeuePending` / `markRunning` / `markDone` directly, or run the loop with a timeout and abort.
+`runSummarizerLoop()` never returns — it loops with 5s sleep. For validation, use the exported `runNextTask()` helper (Plan 04 Task 1) which processes exactly one task and returns.
 
 ---
 
@@ -414,7 +413,7 @@ GameScreen renders InlineConfirm overlay
 ### Pitfall 6: runSummarizerLoop in validation scripts hangs forever
 **What goes wrong:** Validation script never exits.
 **Why it happens:** `runSummarizerLoop()` is `while (true)` with 5s sleep.
-**How to avoid:** Do not call `runSummarizerLoop()` in validation scripts. Instead call `dequeuePending` + `markRunning` + `dispatchTask` + `markDone` directly, or use `Promise.race` with a timeout.
+**How to avoid:** Do not call `runSummarizerLoop()` in validation scripts. Use `runNextTask()` instead — it processes exactly one queued task and returns.
 
 ### Pitfall 7: processingMode blocks ActionsPanel and InputArea simultaneously
 **What goes wrong:** During `processing`, both panels are inactive. If the AI call hangs indefinitely, the player is stuck with no way to cancel.
@@ -515,8 +514,7 @@ import { initRoleConfigs } from '../src/ai/providers';
 import { generateNarration } from '../src/ai/roles/narrative-director';
 import { getCostSummary } from '../src/state/cost-session-store';
 import { evaluateTriggers } from '../src/ai/summarizer/summarizer-scheduler';
-import { dequeuePending, markRunning, markDone } from '../src/ai/summarizer/summarizer-queue';
-import { dispatchTask } from '../src/ai/summarizer/summarizer-worker'; // internal, may need export
+import { runNextTask } from '../src/ai/summarizer/summarizer-worker';
 
 async function main() {
   await initRoleConfigs('./ai-config.yaml');
@@ -528,38 +526,26 @@ async function main() {
 
   // Validate summarizer trigger
   evaluateTriggers('save_game_completed');
-  const task = dequeuePending();
-  console.assert(task !== null, 'summarizer: no task enqueued after save_game_completed');
-  if (task) {
-    markRunning(task.id);
-    // dispatchTask is not currently exported — may need export or direct call
-    markDone(task.id);
-  }
+  const processed = await runNextTask();
+  console.assert(processed === true, 'summarizer: runNextTask() returned false — no task was enqueued');
 
   console.log('Validation complete');
 }
 main().catch(console.error);
 ```
-Note: `dispatchTask` in `summarizer-worker.ts` is not currently exported (it is module-private). The validation script will need either a new exported wrapper or will need to trigger the worker through `runSummarizerLoop` with a short-circuit.
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Where does gameLoop get created in the app?**
-   - What we know: `createGameLoop()` is called nowhere in the UI layer currently. `app.tsx` renders `GameScreen` with no `gameLoop` prop.
-   - What's unclear: Should `gameLoop` be created in `AppInner` (same level as `dialogueManager`) or is there a different initialization path (e.g., in the game entry point)?
-   - Recommendation: Create it in `AppInner` alongside `dialogueManager` initialization. Pass all three (`gameLoop`, `dialogueManager`, `combatLoop`) as props to `GameScreen`.
+1. **Where does gameLoop get created in the app?** (RESOLVED)
+   - Resolution: Create in `AppInner` via `useMemo(() => createGameLoop(), [])`, same pattern as `dialogueManager`. Pass as prop to `GameScreen`. Plan 01 implements this.
 
-2. **Should AI narration be called from handleActionExecute or let game-loop call it?**
-   - What we know: `game-loop.ts` already calls `sceneManager.handleLook` which calls `generateNarrationFn` internally. But for `action_select` actions (the suggestedActions on the ActionsPanel), the fallback path at lines 303-322 only calls `adjudicate` and appends `checkResult.display` — it does NOT call AI narration.
-   - What's unclear: D-02 says "adjudication first, then AI narration" — this implies AI narration should be called AFTER `processInput` returns, in the UI layer.
-   - Recommendation: Keep game-loop responsible for adjudication only (as designed). The UI layer (`handleActionExecute`) calls `generateNarration` after `processInput` succeeds, using the returned `checkResult` as context. This preserves the "AI writes prose, doesn't decide outcomes" boundary.
+2. **Should AI narration be called from handleActionExecute or let game-loop call it?** (RESOLVED)
+   - Resolution: UI layer (`handleActionExecute`) calls `generateNarration` after `processInput` succeeds. game-loop owns adjudication only. Preserves the "AI writes prose, doesn't decide outcomes" boundary per D-02. Plan 01 implements this.
 
-3. **dispatchTask export for validation scripts**
-   - What we know: `dispatchTask` in `summarizer-worker.ts` is an async module-private function.
-   - What's unclear: Whether to export it or create a new `runOnce()` helper.
-   - Recommendation: Export a `runNextTask()` helper from `summarizer-worker.ts` that calls `dequeuePending` + `markRunning` + `dispatchTask` + `markDone` atomically. Use this in validation scripts.
+3. **dispatchTask export for validation scripts** (RESOLVED)
+   - Resolution: Export `runNextTask()` helper from `summarizer-worker.ts` that calls `dequeuePending` + `markRunning` + `dispatchTask` + `markDone` atomically. Plan 04 Task 1 implements this.
 
 ---
 
