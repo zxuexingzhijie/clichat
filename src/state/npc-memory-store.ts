@@ -21,6 +21,7 @@ export const NpcMemoryRecordSchema = z.object({
   salientMemories: z.array(NpcMemoryEntrySchema).max(50),
   archiveSummary: z.string(),
   lastUpdated: z.string(),
+  version: z.number().int().default(0),
 });
 
 export type NpcMemoryRecord = z.infer<typeof NpcMemoryRecordSchema>;

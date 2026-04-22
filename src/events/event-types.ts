@@ -56,4 +56,6 @@ export type DomainEvents = {
   knowledge_discovered: { entryId: string; codexEntryId: string | null; knowledgeStatus: string; turnNumber: number };
   location_explored: { locationId: string; newLevel: string; previousLevel: string | null };
   location_discovery_level_changed: { locationId: string; oldLevel: string; newLevel: string };
+  token_usage_updated: { lastTurnTokens: number };
+  summarizer_task_completed: { taskId: string; type: string };
 };

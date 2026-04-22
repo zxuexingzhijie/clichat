@@ -9,7 +9,7 @@ import { RelationStateSchema, type RelationState } from './relation-store';
 import { NpcMemoryStateSchema, type NpcMemoryState } from './npc-memory-store';
 import { ExplorationStateSchema, type ExplorationState } from './exploration-store';
 import { PlayerKnowledgeStateSchema, type PlayerKnowledgeState } from './player-knowledge-store';
-import { migrateV1ToV2, migrateV2ToV3 } from '../persistence/save-migrator';
+import { migrateV1ToV2, migrateV2ToV3, migrateV3ToV4 } from '../persistence/save-migrator';
 import { resetTurnLog, restoreTurnLog as restoreTurnLogEntries } from '../engine/turn-log';
 
 export interface Serializer {
@@ -53,6 +53,7 @@ export const TurnLogEntrySchema = z.object({
   action: z.string(),
   checkResult: z.string().nullable(),
   narrationLines: z.array(z.string()),
+  npcDialogue: z.array(z.string()).optional(),
   timestamp: z.string(),
 });
 export type TurnLogEntry = z.infer<typeof TurnLogEntrySchema>;
@@ -79,6 +80,11 @@ export const SaveDataV3Schema = z.object({
   }).optional(),
 });
 export type SaveDataV3 = z.infer<typeof SaveDataV3Schema>;
+
+export const SaveDataV4Schema = SaveDataV3Schema.extend({
+  version: z.literal(4),
+});
+export type SaveDataV4 = z.infer<typeof SaveDataV4Schema>;
 
 export function createSerializer(
   stores: {
@@ -115,8 +121,8 @@ export function createSerializer(
         locationName: scene.sceneId,
       };
 
-      const data: SaveDataV3 = {
-        version: 3,
+      const data: SaveDataV4 = {
+        version: 4,
         meta,
         branchId: getBranchId(),
         parentSaveId: getParentSaveId(),
@@ -143,9 +149,9 @@ export function createSerializer(
         throw new Error('Invalid save data: malformed JSON');
       }
 
-      const migrated = migrateV2ToV3(migrateV1ToV2(raw));
+      const migrated = migrateV3ToV4(migrateV2ToV3(migrateV1ToV2(raw)));
 
-      const result = SaveDataV3Schema.safeParse(migrated);
+      const result = SaveDataV4Schema.safeParse(migrated);
       if (!result.success) {
         const firstIssue = result.error.issues?.[0];
         const detail = firstIssue

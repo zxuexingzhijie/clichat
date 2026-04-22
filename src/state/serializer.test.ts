@@ -34,11 +34,11 @@ describe('createSerializer', () => {
     resetQuestEventLog();
   });
 
-  it('snapshot returns JSON with required v3 keys', () => {
+  it('snapshot returns JSON with required v4 keys', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
 
-    expect(parsed).toHaveProperty('version', 3);
+    expect(parsed).toHaveProperty('version', 4);
     expect(parsed).toHaveProperty('meta');
     expect(parsed).toHaveProperty('branchId');
     expect(parsed).toHaveProperty('parentSaveId');
@@ -176,10 +176,10 @@ describe('createSerializer v2 specific', () => {
     resetQuestEventLog();
   });
 
-  it('snapshot produces JSON parseable to v3 schema', () => {
+  it('snapshot produces JSON parseable to v4 schema', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
-    const result = SaveDataV3Schema.safeParse(parsed);
+    const result = SaveDataV4Schema.safeParse(parsed);
     expect(result.success).toBe(true);
   });
 

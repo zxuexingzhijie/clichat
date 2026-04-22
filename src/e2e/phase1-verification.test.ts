@@ -173,7 +173,7 @@ describe('Phase 1 Success Criteria', () => {
       const snap1 = serializer.snapshot();
       const parsed = JSON.parse(snap1);
 
-      expect(parsed.version).toBe(3);
+      expect(parsed.version).toBe(4);
       expect(parsed.player).toBeDefined();
       expect(parsed.scene).toBeDefined();
       expect(parsed.combat).toBeDefined();

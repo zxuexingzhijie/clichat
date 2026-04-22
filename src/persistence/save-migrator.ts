@@ -33,6 +33,16 @@ export function migrateV2ToV3(raw: unknown): unknown {
   };
 }
 
+export function migrateV3ToV4(raw: unknown): unknown {
+  if (typeof raw !== 'object' || raw === null) return raw;
+  const data = raw as Record<string, unknown>;
+  if (data['version'] !== 3) return raw;
+  return {
+    ...data,
+    version: 4,
+  };
+}
+
 export function migrateV1ToV2(raw: unknown): unknown {
   if (typeof raw !== 'object' || raw === null) return raw;
   const data = raw as Record<string, unknown>;

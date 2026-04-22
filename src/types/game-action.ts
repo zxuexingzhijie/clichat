@@ -4,7 +4,7 @@ export const GameActionTypeSchema = z.enum([
   'move', 'look', 'talk', 'attack', 'use_item',
   'cast', 'guard', 'flee', 'inspect', 'trade',
   'help', 'save', 'load', 'journal', 'quest',
-  'branch', 'compare', 'map', 'codex', 'replay',
+  'branch', 'compare', 'map', 'codex', 'replay', 'cost',
   'unknown',
 ]);
 export type GameActionType = z.infer<typeof GameActionTypeSchema>;
