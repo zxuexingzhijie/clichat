@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 05-02-PLAN.md
-last_updated: "2026-04-22T11:24:09.794Z"
+stopped_at: Completed 05-05-PLAN.md
+last_updated: "2026-04-22T11:35:07.430Z"
 last_activity: 2026-04-22 -- Phase --phase execution started
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 37
-  completed_plans: 34
-  percent: 92
+  completed_plans: 35
+  percent: 95
 ---
 
 # Project State
@@ -58,6 +58,7 @@ Progress: [█████████░] 92%
 | Phase 05 P04 | 102 | 1 tasks | 2 files |
 | Phase 05-polish P03 | 5 | 2 tasks | 6 files |
 | Phase 05 P02 | 5min | 2 tasks | 6 files |
+| Phase 05-polish P05 | 7 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,8 @@ Recent decisions affecting current work:
 - Sliding window uses floor(VISIBLE_COUNT/2) offset to keep selection centered in ReplayPanel
 - CostSessionState is ephemeral (not in SaveData); resets on state_restored to prevent session bleed
 - RoleConfig has no pricing field; estimatedCost stays 0 for all current roles until pricing is added to providers.ts
+- Version conflict in applyNpcMemoryCompression marks task failed and does NOT re-queue (preserves original NPC memories per T-05-10)
+- Summarizer scheduler debounce (5s) applies only to interval trigger, not event-driven triggers
 
 ### Pending Todos
 
@@ -149,8 +152,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-22T11:24:09.790Z
-Stopped at: Completed 05-02-PLAN.md
+Last session: 2026-04-22T11:34:46.998Z
+Stopped at: Completed 05-05-PLAN.md
 Resume file: None
 
 **Planned Phase:** 04 (differentiation) — 9 plans — 2026-04-21T17:08:15.088Z
