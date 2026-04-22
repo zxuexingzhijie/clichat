@@ -50,7 +50,7 @@ export function evaluateTriggers(
 
     if (record.recentMemories.length >= NPC_MEMORY_THRESHOLD) {
       const taskPriority = 2 as const;
-      if (combatActive && taskPriority >= 3) return;
+      if (combatActive && taskPriority >= 2) return;
 
       enqueueTask({
         type: 'npc_memory_compress',
