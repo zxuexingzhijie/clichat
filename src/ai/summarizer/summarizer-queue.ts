@@ -57,8 +57,8 @@ export function enqueueTask(
   };
 
   summarizerQueueStore.setState((draft) => {
-    const inserted = [...draft.tasks, newTask].sort((a, b) => a.priority - b.priority);
-    draft.tasks = inserted as SummarizerTask[];
+    const inserted = ([...draft.tasks, newTask] as SummarizerTask[]).sort((a, b) => a.priority - b.priority);
+    (draft.tasks as SummarizerTask[]).splice(0, draft.tasks.length, ...inserted);
   });
 }
 

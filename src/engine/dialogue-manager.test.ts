@@ -309,6 +309,7 @@ describe('createDialogueManager', () => {
           { id: 's1', npcId: 'npc_guard', event: '重要的记忆1', turnNumber: 0, importance: 'high', emotionalValence: 0.5, participants: ['player', 'npc_guard'] },
         ],
         archiveSummary: '',
+        version: 0,
         lastUpdated: new Date().toISOString(),
       };
     });

@@ -293,6 +293,7 @@ export function createDialogueManager(
           recentMemories: [newEntry],
           salientMemories: [],
           archiveSummary: '',
+          version: 0,
           lastUpdated: new Date().toISOString(),
         };
       }

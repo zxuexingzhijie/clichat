@@ -125,7 +125,7 @@ describe('applyNpcMemoryCompression', () => {
     };
 
     let capturedRecipe: ((draft: unknown) => void) | null = null;
-    mockNpcMemorySetState.mockImplementation((recipe: (draft: unknown) => void) => {
+    mockNpcMemorySetState.mockImplementation((recipe: (_draft: unknown) => void) => {
       capturedRecipe = recipe;
     });
 
@@ -181,7 +181,7 @@ describe('applyNpcMemoryCompression', () => {
     };
 
     let capturedRecipe: ((draft: unknown) => void) | null = null;
-    mockNpcMemorySetState.mockImplementation((recipe: (draft: unknown) => void) => {
+    mockNpcMemorySetState.mockImplementation((recipe: (_draft: unknown) => void) => {
       capturedRecipe = recipe;
     });
 

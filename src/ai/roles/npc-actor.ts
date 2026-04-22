@@ -28,11 +28,11 @@ export async function generateNpcDialogue(
         model: config.model(),
         schema: NpcDialogueSchema,
         temperature: config.temperature,
-        maxTokens: config.maxTokens,
+        maxOutputTokens: config.maxTokens,
         system,
         prompt,
       });
-      recordUsage('npc-actor', usage);
+      recordUsage('npc-actor', { inputTokens: usage.inputTokens ?? 0, outputTokens: usage.outputTokens ?? 0, totalTokens: usage.totalTokens ?? 0 });
       return object;
     } catch (err) {
       lastError = err;

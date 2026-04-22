@@ -29,7 +29,7 @@ export async function generateRetrievalPlan(
         model: config.model(),
         schema: RetrievalPlanSchema,
         temperature: config.temperature,
-        maxTokens: config.maxTokens,
+        maxOutputTokens: config.maxTokens,
         system: RETRIEVAL_PLANNER_SYSTEM,
         prompt,
       });

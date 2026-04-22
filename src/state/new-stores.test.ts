@@ -200,6 +200,7 @@ describe('NpcMemoryStore', () => {
       recentMemories: [],
       salientMemories: [],
       archiveSummary: '',
+      version: 0,
       lastUpdated: '2026-04-21T10:00:00Z',
     };
     const parsed = NpcMemoryRecordSchema.parse(record);
@@ -225,6 +226,7 @@ describe('NpcMemoryStore', () => {
           recentMemories: [entry],
           salientMemories: [],
           archiveSummary: '',
+      version: 0,
           lastUpdated: '2026-04-21T10:00:00Z',
         },
       },
@@ -249,6 +251,7 @@ describe('NpcMemoryStore', () => {
         }],
         salientMemories: [],
         archiveSummary: '',
+      version: 0,
         lastUpdated: '2026-04-21T10:00:00Z',
       };
     });
@@ -264,6 +267,7 @@ describe('NpcMemoryStore', () => {
         recentMemories: [],
         salientMemories: [],
         archiveSummary: '',
+      version: 0,
         lastUpdated: '2026-04-21T10:00:00Z',
       };
     });
@@ -308,6 +312,7 @@ describe('NpcMemoryStore', () => {
         }],
         salientMemories: [],
         archiveSummary: '',
+      version: 0,
         lastUpdated: '2026-04-21T10:00:00Z',
       };
       draft.memories['merchant_01'] = {
@@ -323,6 +328,7 @@ describe('NpcMemoryStore', () => {
         }],
         salientMemories: [],
         archiveSummary: '',
+      version: 0,
         lastUpdated: '2026-04-21T10:00:00Z',
       };
     });

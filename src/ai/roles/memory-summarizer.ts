@@ -18,11 +18,11 @@ export async function generateNpcMemorySummary(
   const { text, usage } = await generateText({
     model: config.model(),
     temperature: config.temperature,
-    maxTokens: config.maxTokens,
+    maxOutputTokens: config.maxTokens,
     system,
     prompt,
   });
-  recordUsage('summarizer', usage);
+  recordUsage('summarizer', { inputTokens: usage.inputTokens ?? 0, outputTokens: usage.outputTokens ?? 0, totalTokens: usage.totalTokens ?? 0 });
   return text;
 }
 
@@ -34,11 +34,11 @@ export async function generateChapterSummary(
   const { text, usage } = await generateText({
     model: config.model(),
     temperature: config.temperature,
-    maxTokens: config.maxTokens,
+    maxOutputTokens: config.maxTokens,
     system,
     prompt,
   });
-  recordUsage('summarizer', usage);
+  recordUsage('summarizer', { inputTokens: usage.inputTokens ?? 0, outputTokens: usage.outputTokens ?? 0, totalTokens: usage.totalTokens ?? 0 });
   return text;
 }
 
@@ -50,10 +50,10 @@ export async function generateTurnLogCompress(
   const { text, usage } = await generateText({
     model: config.model(),
     temperature: config.temperature,
-    maxTokens: config.maxTokens,
+    maxOutputTokens: config.maxTokens,
     system,
     prompt,
   });
-  recordUsage('summarizer', usage);
+  recordUsage('summarizer', { inputTokens: usage.inputTokens ?? 0, outputTokens: usage.outputTokens ?? 0, totalTokens: usage.totalTokens ?? 0 });
   return text;
 }

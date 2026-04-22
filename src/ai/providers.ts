@@ -26,18 +26,18 @@ export type RoleConfig = {
 };
 
 const PROVIDER_FACTORIES: Record<string, (modelId: string) => LanguageModel> = {
-  google: (id) => google(id),
-  openai: (id) => openai(id),
-  anthropic: (id) => anthropic(id),
+  google: (id) => google(id) as unknown as LanguageModel,
+  openai: (id) => openai(id) as unknown as LanguageModel,
+  anthropic: (id) => anthropic(id) as unknown as LanguageModel,
 };
 
 const DEFAULT_ROLE_CONFIGS: Record<AiRole, RoleConfig> = {
-  'narrative-director': { model: () => google('gemini-2.0-flash'), temperature: 0.7, maxTokens: 512 },
-  'npc-actor': { model: () => google('gemini-2.0-flash'), temperature: 0.8, maxTokens: 400 },
-  'retrieval-planner': { model: () => google('gemini-2.0-flash'), temperature: 0.1, maxTokens: 200 },
-  'safety-filter': { model: () => google('gemini-2.0-flash'), temperature: 0.0, maxTokens: 50 },
-  'summarizer': { model: () => google('gemini-2.0-flash'), temperature: 0.3, maxTokens: 800 },
-  'quest-planner': { model: () => google('gemini-2.0-flash'), temperature: 0.6, maxTokens: 2000 },
+  'narrative-director': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.7, maxTokens: 512 },
+  'npc-actor': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.8, maxTokens: 400 },
+  'retrieval-planner': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.1, maxTokens: 200 },
+  'safety-filter': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.0, maxTokens: 50 },
+  'summarizer': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.3, maxTokens: 800 },
+  'quest-planner': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.6, maxTokens: 2000 },
 };
 
 let runtimeRoleConfigs: Record<AiRole, RoleConfig> = { ...DEFAULT_ROLE_CONFIGS };

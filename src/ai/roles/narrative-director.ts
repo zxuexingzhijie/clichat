@@ -36,7 +36,7 @@ export async function* streamNarration(
       const result = streamText({
         model: config.model(),
         temperature: config.temperature,
-        maxTokens: config.maxTokens,
+        maxOutputTokens: config.maxTokens,
         system,
         prompt,
       });
@@ -45,7 +45,7 @@ export async function* streamNarration(
         yield chunk;
       }
       const usage = await result.usage;
-      recordUsage('narrative-director', usage);
+      recordUsage('narrative-director', { inputTokens: usage.inputTokens ?? 0, outputTokens: usage.outputTokens ?? 0, totalTokens: usage.totalTokens ?? 0 });
       return;
     } catch (err) {
       if (attempt === maxRetries) {
@@ -71,11 +71,11 @@ export async function generateNarration(
       const { text, usage } = await generateText({
         model: config.model(),
         temperature: config.temperature,
-        maxTokens: config.maxTokens,
+        maxOutputTokens: config.maxTokens,
         system,
         prompt,
       });
-      recordUsage('narrative-director', usage);
+      recordUsage('narrative-director', { inputTokens: usage.inputTokens ?? 0, outputTokens: usage.outputTokens ?? 0, totalTokens: usage.totalTokens ?? 0 });
 
       if (text.length > 300) {
         return text.slice(0, 300);

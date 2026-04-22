@@ -1,11 +1,11 @@
-import { produce } from 'immer';
+import { produce, type Draft } from 'immer';
 
 type Listener = () => void;
 type OnChange<T> = (args: { newState: T; oldState: T }) => void;
 
 export type Store<T> = {
   getState: () => T;
-  setState: (recipe: (draft: T) => void) => void;
+  setState: (recipe: (draft: Draft<T>) => void) => void;
   subscribe: (listener: Listener) => () => void;
 };
 
@@ -19,7 +19,7 @@ export function createStore<T>(
   return {
     getState: () => state,
 
-    setState: (recipe: (draft: T) => void) => {
+    setState: (recipe: (draft: Draft<T>) => void) => {
       const prev = state;
       const next = produce(prev, recipe);
       if (Object.is(next, prev)) return;

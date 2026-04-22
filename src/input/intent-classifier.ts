@@ -19,7 +19,7 @@ export async function classifyIntent(
   options?: ClassifyIntentOptions,
 ): Promise<Intent> {
   const maxRetries = options?.maxRetries ?? 1;
-  const model = options?.model ?? openai('gpt-4o-mini');
+  const model = (options?.model ?? openai('gpt-4o-mini')) as import('ai').LanguageModel;
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {

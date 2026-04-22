@@ -35,7 +35,7 @@ export async function checkSafety(
         model: config.model(),
         schema: SafetyFilterResultSchema,
         temperature: config.temperature,
-        maxTokens: config.maxTokens,
+        maxOutputTokens: config.maxTokens,
         system: SAFETY_SYSTEM_PROMPT,
         prompt: text,
       });

@@ -55,6 +55,7 @@ function makeRecord(
     salientMemories: Array.from({ length: salientCount }, (_, i) => makeEntry(100 + i)),
     archiveSummary,
     lastUpdated: new Date().toISOString(),
+    version: 0,
   };
 }
 
