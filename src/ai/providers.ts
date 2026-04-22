@@ -22,6 +22,7 @@ export type RoleConfig = {
   readonly model: () => LanguageModel;
   readonly temperature: number;
   readonly maxTokens: number;
+  readonly providerName: string;
   readonly pricing?: ModelPricing;
 };
 
@@ -32,12 +33,12 @@ const PROVIDER_FACTORIES: Record<string, (modelId: string) => LanguageModel> = {
 };
 
 const DEFAULT_ROLE_CONFIGS: Record<AiRole, RoleConfig> = {
-  'narrative-director': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.7, maxTokens: 512 },
-  'npc-actor': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.8, maxTokens: 400 },
-  'retrieval-planner': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.1, maxTokens: 200 },
-  'safety-filter': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.0, maxTokens: 50 },
-  'summarizer': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.3, maxTokens: 800 },
-  'quest-planner': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.6, maxTokens: 2000 },
+  'narrative-director': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.7, maxTokens: 512, providerName: 'google' },
+  'npc-actor': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.8, maxTokens: 400, providerName: 'google' },
+  'retrieval-planner': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.1, maxTokens: 200, providerName: 'google' },
+  'safety-filter': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.0, maxTokens: 50, providerName: 'google' },
+  'summarizer': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.3, maxTokens: 800, providerName: 'google' },
+  'quest-planner': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.6, maxTokens: 2000, providerName: 'google' },
 };
 
 let runtimeRoleConfigs: Record<AiRole, RoleConfig> = { ...DEFAULT_ROLE_CONFIGS };
@@ -65,6 +66,7 @@ export function buildRoleConfigs(config: AiConfig, profile: string): Record<AiRo
           model: () => factory(entry.model),
           temperature: entry.temperature ?? DEFAULT_ROLE_CONFIGS[role]!.temperature,
           maxTokens: entry.maxTokens ?? DEFAULT_ROLE_CONFIGS[role]!.maxTokens,
+          providerName: entry.provider,
           pricing: entry.pricing,
         } satisfies RoleConfig,
       ];

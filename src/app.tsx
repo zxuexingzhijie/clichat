@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
+import path from 'node:path';
 import { createStoreContext } from './ui/hooks/use-store';
 import { gameStore, type GameState } from './state/game-store';
 import { playerStore, type PlayerState } from './state/player-store';
@@ -7,6 +8,7 @@ import { TitleScreen } from './ui/screens/title-screen';
 import { GameScreen } from './ui/screens/game-screen';
 import { CharacterCreationScreen } from './ui/screens/character-creation-screen';
 import { SizeGuard } from './ui/components/size-guard';
+import { initRoleConfigs } from './ai/providers';
 
 const GameStoreCtx = createStoreContext<GameState>();
 const PlayerStoreCtx = createStoreContext<PlayerState>();
@@ -62,6 +64,12 @@ function AppInner(): React.ReactNode {
 }
 
 export function App(): React.ReactNode {
+  useEffect(() => {
+    initRoleConfigs(path.join(process.cwd(), 'ai-config.yaml')).catch((err) => {
+      console.error('[AI Config] Failed to load ai-config.yaml, using defaults:', err instanceof Error ? err.message : String(err));
+    });
+  }, []);
+
   return (
     <GameStoreCtx.Provider store={gameStore}>
       <PlayerStoreCtx.Provider store={playerStore}>

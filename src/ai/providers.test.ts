@@ -19,6 +19,7 @@ describe('AI providers', () => {
       expect(typeof config.temperature).toBe('number');
       expect(typeof config.maxTokens).toBe('number');
       expect(typeof config.model).toBe('function');
+      expect(typeof config.providerName).toBe('string');
     }
   });
 
@@ -106,6 +107,7 @@ describe('buildRoleConfigs', () => {
       expect(typeof configs[role]!.model).toBe('function');
       expect(typeof configs[role]!.temperature).toBe('number');
       expect(typeof configs[role]!.maxTokens).toBe('number');
+      expect(configs[role]!.providerName).toBe('google');
     }
   });
 
