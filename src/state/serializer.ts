@@ -10,6 +10,7 @@ import { NpcMemoryStateSchema, type NpcMemoryState } from './npc-memory-store';
 import { ExplorationStateSchema, type ExplorationState } from './exploration-store';
 import { PlayerKnowledgeStateSchema, type PlayerKnowledgeState } from './player-knowledge-store';
 import { migrateV1ToV2, migrateV2ToV3 } from '../persistence/save-migrator';
+import { resetTurnLog, restoreTurnLog as restoreTurnLogEntries } from '../engine/turn-log';
 
 export interface Serializer {
   snapshot(): string;
@@ -166,6 +167,9 @@ export function createSerializer(
 
       resetQuestEventLog();
       restoreQuestEventLog(data.questEventLog);
+
+      resetTurnLog();
+      restoreTurnLogEntries(data.turnLog);
     },
   };
 }
