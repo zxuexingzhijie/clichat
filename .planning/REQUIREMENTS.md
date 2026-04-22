@@ -60,7 +60,8 @@ Requirements for initial release. Each maps to roadmap phases.
 **: Multi-provider abstraction layer supporting OpenAI, Anthropic, Google, Alibaba Qwen, and DeepSeek — with per-AI-role model routing configuration
 - [x] **LLM-02
 **: Token usage and estimated cost tracked per turn and per session, visible via `:cost` command
-- [ ] **LLM-03**: Static prompt content (world rules, narrative style, character skeletons) cached/prefixed to reduce per-turn token costs
+- [x] **LLM-03
+**: Static prompt content (world rules, narrative style, character skeletons) cached/prefixed to reduce per-turn token costs
 - [ ] **LLM-04**: Retrieved context tagged with epistemic level (world_truth, npc_belief, player_knowledge) — NPC Actors only receive information their character would know
 
 ### Content
