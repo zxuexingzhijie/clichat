@@ -103,6 +103,9 @@ export const EnemySchema = z.object({
   abilities: z.array(z.string()),
   loot: z.array(z.string()).optional(),
   danger_level: z.number().min(0).max(10),
+}).refine(data => data.hp <= data.maxHp, {
+  message: "hp must not exceed maxHp",
+  path: ["hp"],
 });
 
 export const BackgroundSchema = z.object({
