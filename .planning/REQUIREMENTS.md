@@ -89,6 +89,7 @@ Requirements for the Playability & Distribution milestone. Phases continue from 
 | BUG-01 | Phase 6 | Pending |
 | BUG-02 | Phase 6 | Pending |
 | BUG-03 | Phase 6 | Pending |
+| CARRY-01 | Phase 6 | Pending |
 | STREAM-01 | Phase 7 | Pending |
 | STREAM-02 | Phase 7 | Pending |
 | STREAM-03 | Phase 7 | Pending |
@@ -101,13 +102,12 @@ Requirements for the Playability & Distribution milestone. Phases continue from 
 | ANIM-03 | Phase 9 | Pending |
 | ANIM-04 | Phase 9 | Pending |
 | ANIM-05 | Phase 9 | Pending |
+| CARRY-02 | Phase 9 | Pending |
 | DIST-01 | Phase 10 | Pending |
 | DIST-02 | Phase 10 | Pending |
 | DIST-03 | Phase 10 | Pending |
 | DIST-04 | Phase 10 | Pending |
 | DIST-05 | Phase 10 | Pending |
-| CARRY-01 | Phase 6 | Pending |
-| CARRY-02 | Phase 9 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 20 total
@@ -115,4 +115,4 @@ Requirements for the Playability & Distribution milestone. Phases continue from 
 - Unmapped: 0
 
 ---
-*Requirements defined: 2026-04-22*
+*Requirements defined: 2026-04-22 | Traceability updated: 2026-04-23*

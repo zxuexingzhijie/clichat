@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Playability & Distribution
-status: requirements_defined
-stopped_at: Defining requirements
-last_updated: "2026-04-22T00:00:00.000Z"
-last_activity: 2026-04-22 -- Milestone v1.1 started
+status: roadmap_created
+stopped_at: Roadmap created for v1.1 phases 6-10
+last_updated: "2026-04-23T00:00:00.000Z"
+last_activity: 2026-04-23 -- v1.1 roadmap created (5 phases, 20 requirements)
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -25,22 +25,22 @@ See: .planning/PROJECT.md (updated 2026-04-22)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Not started (roadmap defined, ready to plan Phase 6)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-04-22 — Milestone v1.1 started
+Status: Roadmap created
+Last activity: 2026-04-23 — v1.1 roadmap created (phases 6–10, 20 requirements mapped)
 
-Progress: [█████████░] 92%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
-**Velocity:**
+**Velocity (v1.0 reference):**
 
 - Total plans completed: 28
 - Average duration: ~12min
 - Total execution time: ~4.5 hours
 
-**By Phase:**
+**By Phase (v1.0):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
@@ -96,6 +96,10 @@ Recent decisions affecting current work:
 - lastTurnTokens sourced from costSessionStore.subscribe in game-screen.tsx directly — store subscription is cleaner for ephemeral cost state
 - providerName added to RoleConfig; propagated from entry.provider in buildRoleConfigs and hardcoded google in DEFAULT_ROLE_CONFIGS
 - Anthropic caching uses messages array with ephemeral cacheControl on static system content part
+- [v1.1 Roadmap]: Phase 6 must run first — BUG fixes unblock all other phases
+- [v1.1 Roadmap]: Phase 7 and Phase 8 can run in parallel (both depend only on Phase 6)
+- [v1.1 Roadmap]: Phase 9 best after Phase 7 (streaming and animation coordinate on narration delivery)
+- [v1.1 Roadmap]: Phase 10 depends on all prior phases being stable before publish
 
 ### Pending Todos
 
@@ -155,14 +159,15 @@ Items acknowledged and deferred at milestone close on 2026-04-22:
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| uat | Phase 05 — live /cost with real token data | deferred | v1.0 close |
-| uat | Phase 05 — /replay N interactive panel | deferred | v1.0 close |
-| uat | Phase 05 — background summarizer live session | deferred | v1.0 close |
+| uat | Phase 05 — live /cost with real token data | deferred → CARRY-01 Phase 6 | v1.0 close |
+| uat | Phase 05 — /replay N interactive panel | deferred → CARRY-01 Phase 6 | v1.0 close |
+| uat | Phase 05 — background summarizer live session | deferred → CARRY-01 Phase 6 | v1.0 close |
+| ui | Chapter summary display not wired to game-screen UI | deferred → CARRY-02 Phase 9 | v1.0 close |
 
 ## Session Continuity
 
-Last session: 2026-04-22T14:23:53.844Z
-Stopped at: Completed 05-polish-07-PLAN.md
+Last session: 2026-04-23T00:00:00.000Z
+Stopped at: v1.1 roadmap created
 Resume file: None
 
-**Planned Phase:** 04 (differentiation) — 9 plans — 2026-04-21T17:08:15.088Z
+**Next:** `/gsd-plan-phase 6` to plan Phase 6: Bug Fixes & Live Validation
