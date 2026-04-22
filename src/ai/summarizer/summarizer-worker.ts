@@ -1,4 +1,5 @@
 import { npcMemoryStore } from '../../state/npc-memory-store';
+import { sceneStore } from '../../state/scene-store';
 import {
   dequeuePending,
   markRunning,
@@ -59,7 +60,8 @@ async function dispatchTask(task: SummarizerTask): Promise<void> {
   }
 
   if (task.type === 'chapter_summary') {
-    const result = await generateChapterSummary([]);
+    const narrationLines = sceneStore.getState().narrationLines;
+    const result = await generateChapterSummary(narrationLines);
     recentChapterSummaries.push(result);
     return;
   }
