@@ -18,8 +18,8 @@ export function filterCodexForNpc(
     if (ep.known_by.includes(npc.npcId)) return true;
 
     if (ep.visibility === 'forbidden') return false;
-    if (ep.visibility === 'secret' && !ep.known_by.includes(npc.npcId)) return false;
-    if (ep.visibility === 'hidden' && !ep.known_by.includes(npc.npcId)) {
+    if (ep.visibility === 'secret') return false;
+    if (ep.visibility === 'hidden') {
       for (const factionId of npc.npcFactionIds) {
         if (ep.known_by.includes(factionId)) return true;
       }
@@ -32,15 +32,6 @@ export function filterCodexForNpc(
     }
     if (ep.known_by.includes(npc.npcProfession)) return true;
 
-    if (
-      ep.scope === 'regional' ||
-      ep.scope === 'global' ||
-      ep.scope === 'kingdom_wide'
-    ) {
-      if (ep.visibility === 'public') return true;
-    }
-
-    if (ep.visibility === 'public' && ep.authority !== 'canonical_truth') return true;
     if (ep.visibility === 'public') return true;
     if (ep.visibility === 'discovered') return false;
 
