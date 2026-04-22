@@ -79,7 +79,7 @@ export function assembleNpcContext(
   playerAction: string,
 ): NpcContext {
   const filtered = memories
-    .filter((m) => m.npcId === npcProfile.name)
+    .filter((m) => m.npcId === npcProfile.id)
     .slice(0, 3)
     .map((m) => m.content);
 
@@ -107,8 +107,8 @@ export function assembleFilteredNpcContext(
     chunks.push(tagContextChunk(entry.description, 'world_truth', entry.id, 'codex'));
   }
 
-  for (const memory of memories.filter(m => m.npcId === npcProfile.name)) {
-    chunks.push(tagContextChunk(memory.content, 'npc_memory', npcProfile.name, 'memory'));
+  for (const memory of memories.filter(m => m.npcId === npcProfile.id)) {
+    chunks.push(tagContextChunk(memory.content, 'npc_memory', npcProfile.id, 'memory'));
   }
 
   chunks.push(tagContextChunk(sceneDescription, 'scene_visible', 'scene', 'scene'));

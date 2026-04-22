@@ -1,4 +1,5 @@
 export type NpcProfile = {
+  readonly id: string;
   readonly name: string;
   readonly personality_tags: readonly string[];
   readonly goals: readonly string[];

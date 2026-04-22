@@ -29,6 +29,7 @@ describe('generateNpcDialogue', () => {
   });
 
   const npcProfile = {
+    id: 'npc_old_blacksmith',
     name: '老铁匠',
     personality_tags: ['沉默寡言', '固执', '善良'],
     goals: ['守护黑松镇', '传承手艺'],

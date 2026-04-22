@@ -127,6 +127,7 @@ export function createDialogueManager(
     const scene = sceneStore.getState().narrationLines.join(' ');
 
     const npcProfile = {
+      id: npc.id,
       name: npc.name,
       personality_tags: npc.personality_tags,
       goals: npc.goals,
@@ -208,6 +209,7 @@ export function createDialogueManager(
     const scene = sceneStore.getState().narrationLines.join(' ');
 
     const npcProfile = {
+      id: npc.id,
       name: npc.name,
       personality_tags: npc.personality_tags,
       goals: npc.goals,

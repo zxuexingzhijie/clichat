@@ -42,6 +42,7 @@ function makeCodexEntry(id: string, description: string): CodexEntry {
 }
 
 const testNpcProfile: NpcProfile = {
+  id: 'npc_bartender',
   name: 'npc_bartender',
   personality_tags: ['friendly', 'gossip'],
   goals: ['sell drinks', 'gather rumors'],
