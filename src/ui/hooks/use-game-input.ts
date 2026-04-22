@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 
 export type InputMode = 'action_select' | 'input_active' | 'processing';
 
@@ -10,8 +10,6 @@ type UseGameInputReturn = {
   readonly selectedActionIndex: number;
   readonly setSelectedActionIndex: (index: number) => void;
   readonly isTyping: boolean;
-  readonly pendingPanelAction: PanelAction;
-  readonly clearPanelAction: () => void;
 };
 
 export function getPanelActionForKey(input: string, isTyping: boolean): PanelAction {
@@ -30,13 +28,8 @@ export function getPanelActionForKey(input: string, isTyping: boolean): PanelAct
 export function useGameInput(): UseGameInputReturn {
   const [inputMode, setInputMode] = useState<InputMode>('action_select');
   const [selectedActionIndex, setSelectedActionIndex] = useState(0);
-  const [pendingPanelAction, setPendingPanelAction] = useState<PanelAction>(null);
 
   const isTyping = inputMode === 'input_active';
-
-  const clearPanelAction = useCallback(() => {
-    setPendingPanelAction(null);
-  }, []);
 
   return {
     inputMode,
@@ -44,7 +37,5 @@ export function useGameInput(): UseGameInputReturn {
     selectedActionIndex,
     setSelectedActionIndex,
     isTyping,
-    pendingPanelAction,
-    clearPanelAction,
   };
 }
