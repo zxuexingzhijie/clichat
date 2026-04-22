@@ -1,6 +1,7 @@
 import { generateObject } from 'ai';
 import { getRoleConfig } from '../providers';
 import { recordUsage } from '../../state/cost-session-store';
+import { eventBus } from '../../events/event-bus';
 import { NpcDialogueSchema, type NpcDialogue } from '../schemas/npc-dialogue';
 import { buildNpcSystemPrompt, buildNpcUserPrompt, type NpcProfile } from '../prompts/npc-system';
 import { getFallbackDialogue } from '../utils/fallback';
@@ -68,8 +69,15 @@ export async function generateNpcDialogue(
       return object;
     } catch (err) {
       lastError = err;
+      if (attempt === maxRetries) {
+        eventBus.emit('ai_call_failed', {
+          role: 'npc-actor',
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
   }
 
+  void lastError;
   return getFallbackDialogue(npcProfile.name);
 }

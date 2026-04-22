@@ -1,6 +1,7 @@
 import { generateText, streamText } from 'ai';
 import { getRoleConfig } from '../providers';
 import { recordUsage } from '../../state/cost-session-store';
+import { eventBus } from '../../events/event-bus';
 import {
   buildNarrativeSystemPrompt,
   buildNarrativeUserPrompt,
@@ -74,6 +75,10 @@ export async function* streamNarration(
       return;
     } catch (err) {
       if (attempt === maxRetries) {
+        eventBus.emit('ai_call_failed', {
+          role: 'narrative-director',
+          error: err instanceof Error ? err.message : String(err),
+        });
         yield getFallbackNarration(context.sceneType);
         return;
       }
@@ -142,8 +147,15 @@ export async function generateNarration(
       return text;
     } catch (err) {
       lastError = err;
+      if (attempt === maxRetries) {
+        eventBus.emit('ai_call_failed', {
+          role: 'narrative-director',
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
   }
 
+  void lastError;
   return getFallbackNarration(context.sceneType);
 }
