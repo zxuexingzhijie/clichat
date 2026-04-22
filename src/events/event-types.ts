@@ -49,4 +49,11 @@ export type DomainEvents = {
   save_game_completed: { filePath: string };
   load_game_requested: { saveName: string | null };
   load_game_completed: undefined;
+
+  branch_created: { branchId: string; branchName: string; parentBranchId: string | null };
+  branch_switched: { fromBranchId: string; toBranchId: string };
+  branch_deleted: { branchId: string; branchName: string };
+  knowledge_discovered: { entryId: string; codexEntryId: string | null; knowledgeStatus: string; turnNumber: number };
+  location_explored: { locationId: string; newLevel: string; previousLevel: string | null };
+  location_discovery_level_changed: { locationId: string; oldLevel: string; newLevel: string };
 };
