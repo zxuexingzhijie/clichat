@@ -20,7 +20,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **AI-02
 **: NPC Actor generates per-character dialogue informed by NPC identity, goals, current emotions, episodic memory, and scene context — each NPC only knows what they would know
 - [ ] **AI-03**: Retrieval Planner decides which codex entries, NPC memories, and quest states to fetch for each turn, outputting a structured retrieval plan (not a prompt dump)
-- [ ] **AI-04**: Background Summarizer compresses long sessions into chapter summaries and NPC memory notes without blocking interactive gameplay
+- [x] **AI-04
+**: Background Summarizer compresses long sessions into chapter summaries and NPC memory notes without blocking interactive gameplay
 
 ### Gameplay
 
@@ -43,7 +44,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **SAVE-01**: Player can quick save, named save (`:save "before the gate"`), and load any save — full game state serialized/restored
 - [ ] **SAVE-02**: Player can branch storylines (`:branch name`) to explore alternative decisions, with branch tree visualization
 - [ ] **SAVE-03**: Player can compare branches (`:compare main..branch/name`) seeing state differences (quests, relationships, inventory, location) as human-readable summary
-- [ ] **SAVE-04**: Player can replay recent turns (`:replay N`) by reading stored turn log (not re-generating AI output)
+- [x] **SAVE-04
+**: Player can replay recent turns (`:replay N`) by reading stored turn log (not re-generating AI output)
 
 ### CLI UX
 
@@ -54,8 +56,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### LLM Infrastructure
 
-- [ ] **LLM-01**: Multi-provider abstraction layer supporting OpenAI, Anthropic, Google, Alibaba Qwen, and DeepSeek — with per-AI-role model routing configuration
-- [ ] **LLM-02**: Token usage and estimated cost tracked per turn and per session, visible via `:cost` command
+- [x] **LLM-01
+**: Multi-provider abstraction layer supporting OpenAI, Anthropic, Google, Alibaba Qwen, and DeepSeek — with per-AI-role model routing configuration
+- [x] **LLM-02
+**: Token usage and estimated cost tracked per turn and per session, visible via `:cost` command
 - [ ] **LLM-03**: Static prompt content (world rules, narrative style, character skeletons) cached/prefixed to reduce per-turn token costs
 - [ ] **LLM-04**: Retrieved context tagged with epistemic level (world_truth, npc_belief, player_knowledge) — NPC Actors only receive information their character would know
 
