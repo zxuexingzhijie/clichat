@@ -117,4 +117,59 @@ export function registerCommands(
         source: 'command',
       });
     });
+
+  program
+    .command('branch')
+    .argument('[action]', 'create|switch|tree|delete')
+    .argument('[name]', 'branch name')
+    .action((action?: string, name?: string) => {
+      setResult({
+        type: 'branch',
+        target: action ?? 'tree',
+        modifiers: name ? { name } : {},
+        source: 'command',
+      });
+    });
+
+  program
+    .command('compare')
+    .argument('[spec]', 'branch comparison spec e.g. main..rescue')
+    .action((spec?: string) => {
+      setResult({
+        type: 'compare',
+        target: spec ?? null,
+        modifiers: {},
+        source: 'command',
+      });
+    });
+
+  program
+    .command('map')
+    .action(() => {
+      setResult({ type: 'map', target: null, modifiers: {}, source: 'command' });
+    });
+
+  program
+    .command('codex')
+    .argument('[query]', 'search query')
+    .action((query?: string) => {
+      setResult({
+        type: 'codex',
+        target: query ?? null,
+        modifiers: {},
+        source: 'command',
+      });
+    });
+
+  program
+    .command('replay')
+    .argument('[count]', 'number of turns to replay')
+    .action((count?: string) => {
+      setResult({
+        type: 'replay',
+        target: count ?? '10',
+        modifiers: {},
+        source: 'command',
+      });
+    });
 }
