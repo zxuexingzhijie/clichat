@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation** - Rules Engine, CLI layout, state management, World Codex schema, and command parsing
 - [x] **Phase 2: Core Gameplay** - Character creation, scene exploration, NPC dialogue, combat, and AI narration
 - [x] **Phase 3: Persistence & World** - Save/load, NPC memory, quest system, relationship tracking, and content packs
-- [ ] **Phase 4: Differentiation** - Story branching, ASCII map, codex browser, keyboard shortcuts, and epistemic separation
+- [x] **Phase 4: Differentiation** - Story branching, ASCII map, codex browser, keyboard shortcuts, and epistemic separation
 - [ ] **Phase 5: Polish & Optimization** - Background summarizer, replay, multi-provider LLM routing, cost tracking, and prompt caching
 
 ## Phase Details
