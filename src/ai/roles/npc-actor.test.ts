@@ -1,7 +1,8 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import type { NpcDialogue } from '../schemas/npc-dialogue';
 
-const mockGenerateObject = mock(() => Promise.resolve({ object: {} }));
+const mockUsage = { inputTokens: 100, outputTokens: 50, totalTokens: 150 };
+const mockGenerateObject = mock(() => Promise.resolve({ object: {}, usage: mockUsage }));
 
 mock.module('@ai-sdk/google', () => ({
   google: () => 'mock-model',
@@ -43,7 +44,7 @@ describe('generateNpcDialogue', () => {
       shouldRemember: false,
       relationshipDelta: 0,
     };
-    mockGenerateObject.mockResolvedValueOnce({ object: expected });
+    mockGenerateObject.mockResolvedValueOnce({ object: expected, usage: mockUsage });
 
     const result = await generateNpcDialogue(
       npcProfile,
@@ -83,7 +84,7 @@ describe('generateNpcDialogue', () => {
     };
     mockGenerateObject
       .mockRejectedValueOnce(new Error('Schema validation failed'))
-      .mockResolvedValueOnce({ object: expected });
+      .mockResolvedValueOnce({ object: expected, usage: mockUsage });
 
     const result = await generateNpcDialogue(
       npcProfile,

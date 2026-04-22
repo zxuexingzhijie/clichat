@@ -1,5 +1,6 @@
 import { generateObject } from 'ai';
 import { getRoleConfig } from '../providers';
+import { recordUsage } from '../../state/cost-session-store';
 import { NpcDialogueSchema, type NpcDialogue } from '../schemas/npc-dialogue';
 import { buildNpcSystemPrompt, buildNpcUserPrompt, type NpcProfile } from '../prompts/npc-system';
 import { getFallbackDialogue } from '../utils/fallback';
@@ -23,7 +24,7 @@ export async function generateNpcDialogue(
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const { object } = await generateObject({
+      const { object, usage } = await generateObject({
         model: config.model(),
         schema: NpcDialogueSchema,
         temperature: config.temperature,
@@ -31,6 +32,7 @@ export async function generateNpcDialogue(
         system,
         prompt,
       });
+      recordUsage('npc-actor', usage);
       return object;
     } catch (err) {
       lastError = err;

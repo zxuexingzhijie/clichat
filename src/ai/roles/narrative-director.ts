@@ -1,5 +1,6 @@
 import { generateText, streamText } from 'ai';
 import { getRoleConfig } from '../providers';
+import { recordUsage } from '../../state/cost-session-store';
 import {
   buildNarrativeSystemPrompt,
   buildNarrativeUserPrompt,
@@ -43,6 +44,8 @@ export async function* streamNarration(
       for await (const chunk of result.textStream) {
         yield chunk;
       }
+      const usage = await result.usage;
+      recordUsage('narrative-director', usage);
       return;
     } catch (err) {
       if (attempt === maxRetries) {
@@ -65,13 +68,14 @@ export async function generateNarration(
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const { text } = await generateText({
+      const { text, usage } = await generateText({
         model: config.model(),
         temperature: config.temperature,
         maxTokens: config.maxTokens,
         system,
         prompt,
       });
+      recordUsage('narrative-director', usage);
 
       if (text.length > 300) {
         return text.slice(0, 300);

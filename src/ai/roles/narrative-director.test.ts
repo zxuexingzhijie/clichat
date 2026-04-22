@@ -1,11 +1,13 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
 
-const mockGenerateText = mock(() => Promise.resolve({ text: '' }));
+const mockUsage = { inputTokens: 100, outputTokens: 50, totalTokens: 150 };
+const mockGenerateText = mock(() => Promise.resolve({ text: '', usage: mockUsage }));
 const mockStreamText = mock(() => ({
   textStream: (async function* () {
     yield '月光';
     yield '洒落';
   })(),
+  usage: Promise.resolve(mockUsage),
 }));
 
 mock.module('@ai-sdk/google', () => ({
@@ -43,7 +45,7 @@ describe('generateNarration', () => {
 
   it('returns text on success', async () => {
     const narration = '月光从破碎的穹顶洒下，照亮满地的碎石。你踏入北方的小径，感受到夜风的凉意。';
-    mockGenerateText.mockResolvedValueOnce({ text: narration });
+    mockGenerateText.mockResolvedValueOnce({ text: narration, usage: mockUsage });
 
     const result = await generateNarration(baseContext);
     expect(result).toBe(narration);
@@ -63,14 +65,14 @@ describe('generateNarration', () => {
 
   it('truncates text longer than 300 characters', async () => {
     const longText = '这是一段非常长的文本。'.repeat(50);
-    mockGenerateText.mockResolvedValueOnce({ text: longText });
+    mockGenerateText.mockResolvedValueOnce({ text: longText, usage: mockUsage });
 
     const result = await generateNarration(baseContext);
     expect(result.length).toBeLessThanOrEqual(300);
   });
 
   it('returns fallback for text shorter than 10 characters', async () => {
-    mockGenerateText.mockResolvedValueOnce({ text: '短' });
+    mockGenerateText.mockResolvedValueOnce({ text: '短', usage: mockUsage });
 
     const result = await generateNarration(baseContext);
     expect(result).toBe('你环顾四周，一切似乎很平静。');
@@ -97,6 +99,7 @@ describe('streamNarration', () => {
         yield '长剑';
         yield '划过';
       })(),
+      usage: Promise.resolve(mockUsage),
     });
 
     const chunks: string[] = [];
