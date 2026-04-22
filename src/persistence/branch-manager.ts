@@ -64,6 +64,10 @@ export function deleteBranch(branchId: string): void {
   if (branchId === state.currentBranchId) {
     throw new Error('无法删除当前所在分支');
   }
+  const hasChildren = Object.values(state.branches).some(b => b.parentBranchId === branchId);
+  if (hasChildren) {
+    throw new Error('无法删除含有子分支的分支；请先删除或合并子分支');
+  }
   branchStore.setState(draft => {
     delete draft.branches[branchId];
   });
@@ -123,6 +127,11 @@ export async function loadBranchRegistry(saveDir: string): Promise<void> {
     });
   } catch (err) {
     if (err instanceof Error && err.message.startsWith('Invalid branch registry')) {
+      throw err;
+    }
+    const isFileNotFound = err instanceof Error &&
+      (err.message.includes('ENOENT') || err.message.includes('No such file'));
+    if (!isFileNotFound) {
       throw err;
     }
   }
