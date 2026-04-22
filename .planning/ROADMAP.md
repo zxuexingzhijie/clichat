@@ -115,14 +115,23 @@ Plans:
 ### Phase 5: Polish & Optimization
 **Goal**: Long sessions stay fast and affordable -- background summarization compresses history, replay lets players review past turns, multi-provider LLM routing optimizes cost/quality per AI role, and token usage is visible
 **Depends on**: Phase 4
-**Requirements**: AI-04, LLM-01, LLM-02, LLM-03
+**Requirements**: AI-04, LLM-01, LLM-02, LLM-03, SAVE-04
 **Success Criteria** (what must be TRUE):
   1. Background Summarizer compresses long sessions into chapter summaries and NPC memory notes without blocking gameplay
   2. Player can replay recent turns via `/replay N` by reading stored turn log (not re-generating AI output)
   3. Multiple LLM providers (OpenAI, Anthropic, Google, Qwen, DeepSeek) are supported with per-AI-role model routing configuration
   4. Player can view token usage and estimated cost per turn and per session via `/cost`
   5. Static prompt content is cached/prefixed to reduce per-turn token costs
-**Plans**: TBD
+**Plans:** 7 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Schema contracts: TurnLogEntry.npcDialogue, NpcMemoryRecord.version, GamePhase/GameAction extensions, SaveDataV4 migration
+- [ ] 05-02-PLAN.md — AI config infrastructure: ai-config-schema.ts, ai-config-loader.ts, providers.ts buildRoleConfigs, ai-config.yaml template
+- [ ] 05-03-PLAN.md — Cost session store: CostSessionStore, token capture in narrative-director + npc-actor
+- [ ] 05-04-PLAN.md — Replay panel UI: ReplayPanel scrollable timeline with two-pane layout
+- [ ] 05-05-PLAN.md — Background summarizer: queue, scheduler, worker, memory-summarizer AI role
+- [ ] 05-06-PLAN.md — Game wiring: /cost and /replay routing, ReplayPanel in game-screen, status bar token display
+- [ ] 05-07-PLAN.md — App startup wiring + prompt caching: initRoleConfigs at boot, Anthropic cacheControl, Google prefix ordering
 
 ## Progress
 
@@ -135,4 +144,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Core Gameplay | 7/7 | Complete | 2026-04-21 |
 | 3. Persistence & World | 8/8 | Complete | 2026-04-21 |
 | 4. Differentiation | 9/9 | Complete | 2026-04-22 |
-| 5. Polish & Optimization | 0/TBD | Not started | - |
+| 5. Polish & Optimization | 0/7 | Not started | - |
