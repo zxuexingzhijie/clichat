@@ -25,6 +25,7 @@ import { gameStore, type GameState } from '../../state/game-store';
 import { costSessionStore } from '../../state/cost-session-store';
 import { getLastReplayEntries } from '../../game-loop';
 import { useAiNarration } from '../hooks/use-ai-narration';
+import { useNpcDialogue } from '../hooks/use-npc-dialogue';
 import { sceneStore } from '../../state/scene-store';
 import type { PlayerState } from '../../state/player-store';
 import type { SceneState } from '../../state/scene-store';
@@ -105,6 +106,17 @@ export function GameScreen({
     skipToEnd: skipNarration,
     reset: resetNarration,
   } = useAiNarration();
+
+  const {
+    streamingText: npcStreamingText,
+    isStreaming: isNpcStreaming,
+    metadata: npcMetadata,
+    startDialogue: startNpcDialogue,
+    skipToEnd: skipNpcDialogue,
+    reset: resetNpcDialogue,
+  } = useNpcDialogue();
+
+  const isAnyStreaming = isNarrationStreaming || isNpcStreaming;
 
   const [dialogueSelectedIndex, setDialogueSelectedIndex] = useState(0);
   const [combatSelectedIndex, setCombatSelectedIndex] = useState(0);
@@ -202,6 +214,21 @@ export function GameScreen({
     }
   }, [narrationError, resetNarration, setInputMode]);
 
+  useEffect(() => {
+    if (!isNpcStreaming && npcMetadata && npcStreamingText.length > 0) {
+      sceneStore.setState(draft => {
+        draft.narrationLines = [
+          ...draft.narrationLines,
+          `${dialogueState.npcName}\uFF1A\u201C${npcMetadata.dialogue}\u201D`,
+        ];
+      });
+      resetNpcDialogue();
+      if (inputMode === 'processing') {
+        setInputMode('action_select');
+      }
+    }
+  }, [isNpcStreaming, npcMetadata, npcStreamingText, dialogueState.npcName, resetNpcDialogue, inputMode, setInputMode]);
+
   const handleDialogueExecute = useCallback(
     (index: number) => {
       if (dialogueManager) {
@@ -240,8 +267,9 @@ export function GameScreen({
   const isInOverlayPanel = isInMap || isInCodex || isInBranchTree || isInCompare || isInShortcuts || isInReplay;
 
   useInput(useCallback((input: string, key: { escape: boolean; tab?: boolean; return?: boolean }) => {
-    if (inputMode === 'processing' && isNarrationStreaming && (key.return || input === ' ')) {
-      skipNarration();
+    if (inputMode === 'processing' && isAnyStreaming && (key.return || input === ' ')) {
+      if (isNarrationStreaming) skipNarration();
+      if (isNpcStreaming) skipNpcDialogue();
       return;
     }
     if ((input === '/' || key.tab) && !isTyping && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
@@ -265,7 +293,7 @@ export function GameScreen({
     if (panelAction && validPhases.has(panelAction) && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
       gameStore.setState(draft => { draft.phase = panelAction as GameState['phase']; });
     }
-  }, [isTyping, isInCombat, isInDialogueMode, isInOverlayPanel, inputMode, inputValue, setInputValue, setInputMode, isNarrationStreaming, skipNarration]));
+  }, [isTyping, isInCombat, isInDialogueMode, isInOverlayPanel, inputMode, inputValue, setInputValue, setInputMode, isNarrationStreaming, skipNarration, isNpcStreaming, skipNpcDialogue, isAnyStreaming]));
 
   const inlineDialogueLines = dialogueState.active && dialogueState.mode === 'inline'
     ? [
@@ -333,8 +361,8 @@ export function GameScreen({
       selectedIndex={selectedActionIndex}
       onSelect={setSelectedActionIndex}
       onExecute={handleActionExecute}
-      isActive={!isTyping && !isInDialogueMode && !isNarrationStreaming}
-      isStreaming={isNarrationStreaming}
+      isActive={!isTyping && !isInDialogueMode && !isAnyStreaming}
+      isStreaming={isAnyStreaming}
     />
   );
 
@@ -408,7 +436,7 @@ export function GameScreen({
                   ? <ShortcutHelpPanel onClose={handlePanelClose} />
                   : isInReplay
                     ? <ReplayPanel entries={[...getLastReplayEntries()]} onClose={handlePanelClose} />
-                    : <ScenePanel lines={sceneLines} streamingText={isNarrationStreaming ? streamingText : undefined} isStreaming={isNarrationStreaming} />;
+                    : <ScenePanel lines={sceneLines} streamingText={isNarrationStreaming ? streamingText : isNpcStreaming ? `${dialogueState.npcName}\uFF1A\u201C${npcStreamingText}` : undefined} isStreaming={isAnyStreaming} />;
 
   if (isWide) {
     const sceneWidth = Math.floor(innerWidth * 0.6);
