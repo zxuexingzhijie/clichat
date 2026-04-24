@@ -24,8 +24,11 @@ import { TIME_OF_DAY_LABELS } from '../../types/common';
 import { gameStore, type GameState } from '../../state/game-store';
 import { costSessionStore } from '../../state/cost-session-store';
 import { getLastReplayEntries } from '../../game-loop';
+import { generateNarration } from '../../ai/roles/narrative-director';
+import { sceneStore } from '../../state/scene-store';
 import type { PlayerState } from '../../state/player-store';
 import type { SceneState } from '../../state/scene-store';
+import type { GameLoop } from '../../game-loop';
 import type { DialogueState } from '../../state/dialogue-store';
 import type { CombatState } from '../../state/combat-store';
 import type { DialogueManager } from '../../engine/dialogue-manager';
@@ -48,6 +51,7 @@ type GameScreenProps = {
   readonly onSetGamePhase: (recipe: (draft: GameState) => void) => void;
   readonly dialogueManager?: DialogueManager;
   readonly combatLoop?: CombatLoop;
+  readonly gameLoop?: GameLoop;
   readonly mapData?: {
     readonly locations: readonly LocationMapData[];
     readonly currentLocationId: string;
@@ -73,6 +77,7 @@ export function GameScreen({
   onSetGamePhase,
   dialogueManager,
   combatLoop,
+  gameLoop,
   mapData,
   codexEntries,
   branchTree,
@@ -130,10 +135,40 @@ export function GameScreen({
   const activeQuestName = activeQuests[0]?.template.name ?? null;
 
   const handleActionExecute = useCallback(
-    (_index: number) => {
-      // Phase 1 stub: future phases route to rules engine
+    async (index: number) => {
+      const action = sceneState.actions[index];
+      if (!action || !gameLoop) return;
+      setInputMode('processing');
+      try {
+        const result = await gameLoop.processInput(action.label, { source: 'action_select' });
+        if (result.status === 'error') {
+          sceneStore.setState(draft => {
+            draft.narrationLines = [...draft.narrationLines, `[错误] ${result.message ?? '未知错误'}`];
+          });
+          return;
+        }
+        try {
+          const narration = await generateNarration({
+            sceneType: 'exploration',
+            codexEntries: [],
+            playerAction: action.label,
+            recentNarration: sceneState.narrationLines.slice(-3),
+            sceneContext: sceneState.locationName ?? '',
+          });
+          sceneStore.setState(draft => {
+            draft.narrationLines = [...draft.narrationLines, narration];
+          });
+        } catch (narrationErr) {
+          const msg = narrationErr instanceof Error ? narrationErr.message : String(narrationErr);
+          sceneStore.setState(draft => {
+            draft.narrationLines = [...draft.narrationLines, `[叙事错误] ${msg}`];
+          });
+        }
+      } finally {
+        setInputMode('action_select');
+      }
     },
-    [],
+    [sceneState.actions, sceneState.narrationLines, sceneState.locationName, gameLoop, setInputMode],
   );
 
   const handleInputSubmit = useCallback(
@@ -180,7 +215,19 @@ export function GameScreen({
 
   const isInOverlayPanel = isInMap || isInCodex || isInBranchTree || isInCompare || isInShortcuts || isInReplay;
 
-  useInput(useCallback((input: string, key: { escape: boolean }) => {
+  useInput(useCallback((input: string, key: { escape: boolean; tab?: boolean }) => {
+    if ((input === '/' || key.tab) && !isTyping && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
+      setInputMode('input_active');
+      return;
+    }
+    if (key.escape && inputMode === 'input_active' && !isInOverlayPanel) {
+      if (inputValue.trim().length === 0) {
+        setInputMode('action_select');
+      } else {
+        setInputValue('');
+      }
+      return;
+    }
     if (key.escape && isInOverlayPanel) {
       gameStore.setState(draft => { draft.phase = 'game'; });
       return;
@@ -190,7 +237,7 @@ export function GameScreen({
     if (panelAction && validPhases.has(panelAction) && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
       gameStore.setState(draft => { draft.phase = panelAction as GameState['phase']; });
     }
-  }, [isTyping, isInCombat, isInDialogueMode, isInOverlayPanel]));
+  }, [isTyping, isInCombat, isInDialogueMode, isInOverlayPanel, inputMode, inputValue, setInputValue, setInputMode]));
 
   const inlineDialogueLines = dialogueState.active && dialogueState.mode === 'inline'
     ? [
