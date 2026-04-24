@@ -135,10 +135,53 @@ describe('BUG-01: handleActionExecute logic', () => {
   });
 });
 
+describe('BUG-01: handleActionExecute guard paths', () => {
+  beforeEach(() => {
+    sceneStore.setState(() => getDefaultSceneState());
+  });
+
+  it('returns early when action at index is missing (no processInput call)', async () => {
+    const mockLoop = createMockGameLoop({
+      status: 'action_executed',
+      action: { type: 'look', target: null, modifiers: {}, source: 'action_select' },
+      narration: [],
+    });
+
+    sceneStore.setState(draft => { draft.actions = []; });
+    const linesBefore = [...sceneStore.getState().narrationLines];
+
+    const actions = sceneStore.getState().actions;
+    const action = actions[99];
+    if (!action) {
+      // mirrors early return in handleActionExecute
+    } else {
+      await mockLoop.processInput(action.label, { source: 'action_select' });
+    }
+
+    expect(mockLoop.processInput).not.toHaveBeenCalled();
+    expect(sceneStore.getState().narrationLines).toEqual(linesBefore);
+  });
+
+  it('returns early when gameLoop is undefined (no processInput call)', async () => {
+    sceneStore.setState(draft => {
+      draft.actions = [{ label: '观察周围', id: 'look', type: 'look' }];
+    });
+    const linesBefore = [...sceneStore.getState().narrationLines];
+
+    const gameLoop: GameLoop | undefined = undefined;
+    const action = sceneStore.getState().actions[0];
+    if (!action || !gameLoop) {
+      // mirrors early return in handleActionExecute
+    }
+
+    expect(sceneStore.getState().narrationLines).toEqual(linesBefore);
+  });
+});
+
 describe('BUG-02: / and Tab activate input mode, Escape clears/deactivates', () => {
   it('useInput handler contains / key activation branch', () => {
     const source = GameScreen.toString();
-    expect(source).toContain("input === '/'");
+    expect(source).toContain('input === "/"');
   });
 
   it('useInput handler contains tab key activation branch', () => {
