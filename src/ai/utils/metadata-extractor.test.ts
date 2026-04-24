@@ -38,7 +38,7 @@ describe('extractNpcMetadata', () => {
   });
 
   test('returns shouldRemember true for text longer than 50 chars', () => {
-    const longText = '这是一段很长的对话文本，讲述了一个关于远古传说的故事，涉及到许多重要的角色和地点，需要被记住。';
+    const longText = '这是一段很长的对话文本，讲述了一个关于远古传说的故事，涉及到许多重要的角色和地点，需要被牢牢记住才行啊。';
     expect(longText.length).toBeGreaterThan(50);
     const result = extractNpcMetadata(longText);
     expect(result.shouldRemember).toBe(true);
