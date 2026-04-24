@@ -37,6 +37,9 @@ export type DomainEvents = {
   narration_streaming_started: { sceneType: string };
   narration_streaming_completed: { charCount: number };
 
+  npc_dialogue_streaming_started: { npcId: string; npcName: string };
+  npc_dialogue_streaming_completed: { npcId: string; charCount: number };
+
   ai_call_failed: { role: string; error: string };
 
   quest_started: { questId: string; questTitle: string; turnNumber: number };
