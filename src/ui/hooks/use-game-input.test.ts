@@ -1,5 +1,17 @@
 import { describe, it, expect } from 'bun:test';
-import { getPanelActionForKey } from './use-game-input';
+import { getPanelActionForKey, useGameInput } from './use-game-input';
+
+describe('useGameInput', () => {
+  it('is a function', () => {
+    expect(typeof useGameInput).toBe('function');
+  });
+
+  it('returns inputValue and setInputValue in its return object', () => {
+    const source = useGameInput.toString();
+    expect(source).toContain('inputValue');
+    expect(source).toContain('setInputValue');
+  });
+});
 
 describe('getPanelActionForKey', () => {
   it('returns map for m when not typing', () => {

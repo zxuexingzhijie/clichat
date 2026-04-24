@@ -4,12 +4,14 @@ export type InputMode = 'action_select' | 'input_active' | 'processing';
 
 export type PanelAction = 'map' | 'journal' | 'codex' | 'inventory' | 'branch_tree' | 'shortcuts' | null;
 
-type UseGameInputReturn = {
+export type UseGameInputReturn = {
   readonly inputMode: InputMode;
   readonly setInputMode: (mode: InputMode) => void;
   readonly selectedActionIndex: number;
   readonly setSelectedActionIndex: (index: number) => void;
   readonly isTyping: boolean;
+  readonly inputValue: string;
+  readonly setInputValue: (value: string) => void;
 };
 
 export function getPanelActionForKey(input: string, isTyping: boolean): PanelAction {
@@ -28,6 +30,7 @@ export function getPanelActionForKey(input: string, isTyping: boolean): PanelAct
 export function useGameInput(): UseGameInputReturn {
   const [inputMode, setInputMode] = useState<InputMode>('action_select');
   const [selectedActionIndex, setSelectedActionIndex] = useState(0);
+  const [inputValue, setInputValue] = useState('');
 
   const isTyping = inputMode === 'input_active';
 
@@ -37,5 +40,7 @@ export function useGameInput(): UseGameInputReturn {
     selectedActionIndex,
     setSelectedActionIndex,
     isTyping,
+    inputValue,
+    setInputValue,
   };
 }

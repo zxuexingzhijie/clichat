@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useApp } from 'ink';
 import { useScreenSize } from 'fullscreen-ink';
 import { Divider } from '../components/divider';
 import { TitleBar } from '../panels/title-bar';
@@ -18,6 +18,7 @@ import { ActionsPanel } from '../panels/actions-panel';
 import { CombatActionsPanel } from '../panels/combat-actions-panel';
 import { CheckResultLine } from '../panels/check-result-line';
 import { InputArea } from '../panels/input-area';
+import { InlineConfirm } from '../components/inline-confirm';
 import { useGameInput, getPanelActionForKey } from '../hooks/use-game-input';
 import { TIME_OF_DAY_LABELS } from '../../types/common';
 import { gameStore, type GameState } from '../../state/game-store';
@@ -80,12 +81,15 @@ export function GameScreen({
   compareBranchNames,
 }: GameScreenProps): React.ReactNode {
   const { width, height } = useScreenSize();
+  const { exit } = useApp();
   const {
     inputMode,
     setInputMode,
     selectedActionIndex,
     setSelectedActionIndex,
     isTyping,
+    inputValue,
+    setInputValue,
   } = useGameInput();
 
   const [dialogueSelectedIndex, setDialogueSelectedIndex] = useState(0);
@@ -363,7 +367,22 @@ export function GameScreen({
           onSubmit={handleInputSubmit}
           isActive={isTyping && !isInDialogueMode}
           mode={isTyping ? 'nl' : 'action'}
+          value={inputValue}
+          onChange={setInputValue}
         />
+        {gameState.pendingQuit && (
+          <InlineConfirm
+            message="确定要退出吗？"
+            defaultOption="n"
+            onConfirm={(confirmed) => {
+              if (confirmed) {
+                exit();
+              } else {
+                gameStore.setState(draft => { draft.pendingQuit = false; });
+              }
+            }}
+          />
+        )}
       </Box>
     );
   }
@@ -391,7 +410,22 @@ export function GameScreen({
         onSubmit={handleInputSubmit}
         isActive={isTyping && !isInDialogueMode}
         mode={isTyping ? 'nl' : 'action'}
+        value={inputValue}
+        onChange={setInputValue}
       />
+      {gameState.pendingQuit && (
+        <InlineConfirm
+          message="确定要退出吗？"
+          defaultOption="n"
+          onConfirm={(confirmed) => {
+            if (confirmed) {
+              exit();
+            } else {
+              gameStore.setState(draft => { draft.pendingQuit = false; });
+            }
+          }}
+        />
+      )}
     </Box>
   );
 }
