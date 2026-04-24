@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Playability & Distribution
 status: Roadmap created
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-04-24T13:35:31.854Z"
+stopped_at: Completed 06-05-PLAN.md
+last_updated: "2026-04-24T14:00:00.000Z"
 last_activity: 2026-04-23 — v1.1 roadmap created (phases 6–10, 20 requirements mapped)
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
-  percent: 20
+  completed_plans: 5
+  percent: 100
 ---
 
 # Project State
@@ -63,6 +63,8 @@ Progress: [██░░░░░░░░] 20%
 | Phase 05-polish P06 | 15 | 3 tasks | 4 files |
 | Phase 05-polish P07 | 8 | 2 tasks | 5 files |
 | Phase 06 P03 | 5min | 2 tasks | 8 files |
+| Phase 06 P05 | 5min | 1 tasks | 1 files |
+| Phase 06 P02 | 5min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -103,6 +105,7 @@ Recent decisions affecting current work:
 - [v1.1 Roadmap]: Phase 10 depends on all prior phases being stable before publish
 - SIGINT handler uses try/catch with process.exit(0) fallback for startup race (T-06-03-01)
 - InlineConfirm conditionally mounted (unmount removes useInput listener) — no isActive prop needed
+- BUG-02 branches placed BEFORE overlay-panel escape check; Escape+input_active guards with !isInOverlayPanel to prevent double-firing
 
 ### Pending Todos
 
@@ -169,8 +172,8 @@ Items acknowledged and deferred at milestone close on 2026-04-22:
 
 ## Session Continuity
 
-Last session: 2026-04-24T13:35:31.849Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-04-24T14:00:00.000Z
+Stopped at: Completed 06-05-PLAN.md
 Resume file: None
 
 **Next:** `/gsd-plan-phase 6` to plan Phase 6: Bug Fixes & Live Validation
