@@ -24,7 +24,7 @@ import { TIME_OF_DAY_LABELS } from '../../types/common';
 import { gameStore, type GameState } from '../../state/game-store';
 import { costSessionStore } from '../../state/cost-session-store';
 import { getLastReplayEntries } from '../../game-loop';
-import { generateNarration } from '../../ai/roles/narrative-director';
+import { useAiNarration } from '../hooks/use-ai-narration';
 import { sceneStore } from '../../state/scene-store';
 import type { PlayerState } from '../../state/player-store';
 import type { SceneState } from '../../state/scene-store';
@@ -97,6 +97,15 @@ export function GameScreen({
     setInputValue,
   } = useGameInput();
 
+  const {
+    streamingText,
+    isStreaming: isNarrationStreaming,
+    error: narrationError,
+    startNarration,
+    skipToEnd: skipNarration,
+    reset: resetNarration,
+  } = useAiNarration();
+
   const [dialogueSelectedIndex, setDialogueSelectedIndex] = useState(0);
   const [combatSelectedIndex, setCombatSelectedIndex] = useState(0);
   const [lastTurnTokens, setLastTurnTokens] = useState(0);
@@ -145,30 +154,25 @@ export function GameScreen({
           sceneStore.setState(draft => {
             draft.narrationLines = [...draft.narrationLines, `[错误] ${result.message ?? '未知错误'}`];
           });
+          setInputMode('action_select');
           return;
         }
-        try {
-          const narration = await generateNarration({
-            sceneType: 'exploration',
-            codexEntries: [],
-            playerAction: action.label,
-            recentNarration: sceneState.narrationLines.slice(-3),
-            sceneContext: sceneState.locationName ?? '',
-          });
-          sceneStore.setState(draft => {
-            draft.narrationLines = [...draft.narrationLines, narration];
-          });
-        } catch (narrationErr) {
-          const msg = narrationErr instanceof Error ? narrationErr.message : String(narrationErr);
-          sceneStore.setState(draft => {
-            draft.narrationLines = [...draft.narrationLines, `[叙事错误] ${msg}`];
-          });
-        }
-      } finally {
+        startNarration({
+          sceneType: 'exploration',
+          codexEntries: [],
+          playerAction: action.label,
+          recentNarration: sceneState.narrationLines.slice(-3),
+          sceneContext: sceneState.locationName ?? '',
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        sceneStore.setState(draft => {
+          draft.narrationLines = [...draft.narrationLines, `[错误] ${msg}`];
+        });
         setInputMode('action_select');
       }
     },
-    [sceneState.actions, sceneState.narrationLines, sceneState.locationName, gameLoop, setInputMode],
+    [sceneState.actions, sceneState.narrationLines, sceneState.locationName, gameLoop, setInputMode, startNarration],
   );
 
   const handleInputSubmit = useCallback(
@@ -177,6 +181,26 @@ export function GameScreen({
     },
     [setInputMode],
   );
+
+  useEffect(() => {
+    if (!isNarrationStreaming && streamingText.length > 0) {
+      sceneStore.setState(draft => {
+        draft.narrationLines = [...draft.narrationLines, streamingText];
+      });
+      resetNarration();
+      setInputMode('action_select');
+    }
+  }, [isNarrationStreaming, streamingText, resetNarration, setInputMode]);
+
+  useEffect(() => {
+    if (narrationError) {
+      sceneStore.setState(draft => {
+        draft.narrationLines = [...draft.narrationLines, `[叙事错误] ${narrationError.message}`];
+      });
+      resetNarration();
+      setInputMode('action_select');
+    }
+  }, [narrationError, resetNarration, setInputMode]);
 
   const handleDialogueExecute = useCallback(
     (index: number) => {
@@ -215,7 +239,11 @@ export function GameScreen({
 
   const isInOverlayPanel = isInMap || isInCodex || isInBranchTree || isInCompare || isInShortcuts || isInReplay;
 
-  useInput(useCallback((input: string, key: { escape: boolean; tab?: boolean }) => {
+  useInput(useCallback((input: string, key: { escape: boolean; tab?: boolean; return?: boolean }) => {
+    if (inputMode === 'processing' && isNarrationStreaming && (key.return || input === ' ')) {
+      skipNarration();
+      return;
+    }
     if ((input === '/' || key.tab) && !isTyping && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
       setInputMode('input_active');
       return;
@@ -237,7 +265,7 @@ export function GameScreen({
     if (panelAction && validPhases.has(panelAction) && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
       gameStore.setState(draft => { draft.phase = panelAction as GameState['phase']; });
     }
-  }, [isTyping, isInCombat, isInDialogueMode, isInOverlayPanel, inputMode, inputValue, setInputValue, setInputMode]));
+  }, [isTyping, isInCombat, isInDialogueMode, isInOverlayPanel, inputMode, inputValue, setInputValue, setInputMode, isNarrationStreaming, skipNarration]));
 
   const inlineDialogueLines = dialogueState.active && dialogueState.mode === 'inline'
     ? [
@@ -305,7 +333,8 @@ export function GameScreen({
       selectedIndex={selectedActionIndex}
       onSelect={setSelectedActionIndex}
       onExecute={handleActionExecute}
-      isActive={!isTyping && !isInDialogueMode}
+      isActive={!isTyping && !isInDialogueMode && !isNarrationStreaming}
+      isStreaming={isNarrationStreaming}
     />
   );
 
@@ -379,7 +408,7 @@ export function GameScreen({
                   ? <ShortcutHelpPanel onClose={handlePanelClose} />
                   : isInReplay
                     ? <ReplayPanel entries={[...getLastReplayEntries()]} onClose={handlePanelClose} />
-                    : <ScenePanel lines={sceneLines} />;
+                    : <ScenePanel lines={sceneLines} streamingText={isNarrationStreaming ? streamingText : undefined} isStreaming={isNarrationStreaming} />;
 
   if (isWide) {
     const sceneWidth = Math.floor(innerWidth * 0.6);
