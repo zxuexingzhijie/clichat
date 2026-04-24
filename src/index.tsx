@@ -1,6 +1,7 @@
 import React from 'react';
 import { withFullScreen } from 'fullscreen-ink';
 import { App } from './app';
+import { gameStore } from './state/game-store';
 
 process.on('uncaughtException', (err) => {
   console.error('Fatal error:', err);
@@ -8,7 +9,11 @@ process.on('uncaughtException', (err) => {
 });
 
 process.on('SIGINT', () => {
-  process.exit(0);
+  try {
+    gameStore.setState(draft => { draft.pendingQuit = true; });
+  } catch {
+    process.exit(0);
+  }
 });
 
 process.on('SIGTERM', () => {
