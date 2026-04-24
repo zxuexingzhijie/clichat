@@ -43,7 +43,7 @@ Plans:
 - [ ] 06-02-PLAN.md — Focus switching: / and Tab activate input, Escape deactivates (BUG-02)
 - [ ] 06-03-PLAN.md — Quit commands + SIGINT confirmation flow via InlineConfirm (BUG-03)
 - [ ] 06-04-PLAN.md — Export runNextTask + live validation scripts for /cost, /replay, summarizer (CARRY-01)
-- [ ] 06-05-PLAN.md — Complete unit test coverage for BUG-01, BUG-02, BUG-03 fixes
+- [ ] 06-05-PLAN.md — Complete unit test coverage for BUG-01, BUG-02, BUG-03 fixes [DONE]
 **UI hint**: yes
 
 ### Phase 7: Streaming Output
@@ -101,7 +101,7 @@ Plans:
 | 3. Persistence & World | v1.0 | 8/8 | Complete | 2026-04-21 |
 | 4. Differentiation | v1.0 | 9/9 | Complete | 2026-04-22 |
 | 5. Polish & Optimization | v1.0 | 7/7 | Complete | 2026-04-22 |
-| 6. Bug Fixes & Live Validation | v1.1 | 0/5 | Not started | - |
+| 6. Bug Fixes & Live Validation | v1.1 | 3/5 | In progress | - |
 | 7. Streaming Output | v1.1 | 0/? | Not started | - |
 | 8. Narrative Character Creation | v1.1 | 0/? | Not started | - |
 | 9. Animation System | v1.1 | 0/? | Not started | - |
