@@ -13,7 +13,8 @@ Requirements for the Playability & Distribution milestone. Phases continue from 
 
 - [ ] **BUG-01**: Player can press Enter on a suggested action and the game advances (narration updates, world state changes) — currently Enter does nothing after selecting an action
 - [ ] **BUG-02**: Player can switch focus from the suggested-actions list to the free-text input field at the bottom using `/` or Tab, and type a custom action — currently cursor cannot reach the input area
-- [ ] **BUG-03**: Player can quit the game at any time via `Ctrl-C`, `:quit`, or `:exit` — currently no reliable exit path exists
+- [x] **BUG-03
+**: Player can quit the game at any time via `Ctrl-C`, `:quit`, or `:exit` — currently no reliable exit path exists
 
 ---
 

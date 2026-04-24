@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Playability & Distribution
-status: roadmap_created
-stopped_at: Roadmap created for v1.1 phases 6-10
-last_updated: "2026-04-23T00:00:00.000Z"
-last_activity: 2026-04-23 -- v1.1 roadmap created (5 phases, 20 requirements)
+status: Roadmap created
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-04-24T13:35:31.854Z"
+last_activity: 2026-04-23 — v1.1 roadmap created (phases 6–10, 20 requirements mapped)
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 5
+  completed_plans: 1
+  percent: 20
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: —
 Status: Roadmap created
 Last activity: 2026-04-23 — v1.1 roadmap created (phases 6–10, 20 requirements mapped)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 05-polish P05 | 7 | 2 tasks | 8 files |
 | Phase 05-polish P06 | 15 | 3 tasks | 4 files |
 | Phase 05-polish P07 | 8 | 2 tasks | 5 files |
+| Phase 06 P03 | 5min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,8 @@ Recent decisions affecting current work:
 - [v1.1 Roadmap]: Phase 7 and Phase 8 can run in parallel (both depend only on Phase 6)
 - [v1.1 Roadmap]: Phase 9 best after Phase 7 (streaming and animation coordinate on narration delivery)
 - [v1.1 Roadmap]: Phase 10 depends on all prior phases being stable before publish
+- SIGINT handler uses try/catch with process.exit(0) fallback for startup race (T-06-03-01)
+- InlineConfirm conditionally mounted (unmount removes useInput listener) — no isActive prop needed
 
 ### Pending Todos
 
@@ -166,8 +169,8 @@ Items acknowledged and deferred at milestone close on 2026-04-22:
 
 ## Session Continuity
 
-Last session: 2026-04-23T00:00:00.000Z
-Stopped at: v1.1 roadmap created
+Last session: 2026-04-24T13:35:31.849Z
+Stopped at: Completed 06-03-PLAN.md
 Resume file: None
 
 **Next:** `/gsd-plan-phase 6` to plan Phase 6: Bug Fixes & Live Validation
