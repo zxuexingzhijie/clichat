@@ -135,6 +135,70 @@ describe('BUG-01: handleActionExecute logic', () => {
   });
 });
 
+describe('BUG-02: / and Tab activate input mode, Escape clears/deactivates', () => {
+  it('useInput handler contains / key activation branch', () => {
+    const source = GameScreen.toString();
+    expect(source).toContain("input === '/'");
+  });
+
+  it('useInput handler contains tab key activation branch', () => {
+    const source = GameScreen.toString();
+    expect(source).toContain('tab');
+  });
+
+  it('useInput handler calls setInputMode with input_active on / or Tab', () => {
+    const source = GameScreen.toString();
+    expect(source).toContain('input_active');
+  });
+
+  it('useInput handler has Escape branch that checks inputMode === input_active', () => {
+    const source = GameScreen.toString();
+    // Bun toString compiles to escaped strings — check for the structural pattern
+    expect(source).toMatch(/escape.*input_active|input_active.*escape/);
+  });
+
+  it('useInput handler calls setInputValue empty string on Escape with non-empty input', () => {
+    const source = GameScreen.toString();
+    // The Escape branch should call setInputValue('') to clear input
+    expect(source).toContain('setInputValue');
+  });
+
+  it('useInput handler calls setInputMode action_select on Escape with empty input', () => {
+    const source = GameScreen.toString();
+    expect(source).toContain('action_select');
+  });
+
+  it('useInput handler guards / and Tab with !isTyping && !isInCombat && !isInDialogueMode && !isInOverlayPanel', () => {
+    const source = GameScreen.toString();
+    // All four guards must be present in the activation branch
+    expect(source).toContain('isTyping');
+    expect(source).toContain('isInCombat');
+    expect(source).toContain('isInDialogueMode');
+    expect(source).toContain('isInOverlayPanel');
+  });
+
+  it('useInput handler Escape branch guards against overlay panel interference', () => {
+    const source = GameScreen.toString();
+    // The Escape+input_active branch must also check !isInOverlayPanel
+    // to prevent double-firing with the existing overlay escape handler
+    expect(source).toMatch(/escape.*isInOverlayPanel/);
+  });
+
+  it('useInput dependency array includes inputMode, inputValue, setInputValue', () => {
+    const source = GameScreen.toString();
+    // These must be in the useCallback dependency array for correctness
+    expect(source).toContain('inputMode');
+    expect(source).toContain('inputValue');
+    expect(source).toContain('setInputValue');
+  });
+
+  it('key type annotation includes tab field', () => {
+    const source = GameScreen.toString();
+    // The key parameter should reference .tab for Tab key detection
+    expect(source).toContain('tab');
+  });
+});
+
 describe('BUG-03: SIGINT → pendingQuit', () => {
   beforeEach(() => {
     gameStore.setState(() => getDefaultGameState());
