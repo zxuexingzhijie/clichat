@@ -73,6 +73,22 @@ async function dispatchTask(task: SummarizerTask): Promise<void> {
   }
 }
 
+export async function runNextTask(): Promise<boolean> {
+  const task = dequeuePending();
+  if (!task) {
+    return false;
+  }
+
+  markRunning(task.id);
+  try {
+    await dispatchTask(task);
+    markDone(task.id);
+  } catch {
+    markFailed(task.id);
+  }
+  return true;
+}
+
 export async function runSummarizerLoop(): Promise<void> {
   while (true) {
     const task = dequeuePending();
