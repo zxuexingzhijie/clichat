@@ -56,10 +56,10 @@ Plans:
   3. Player presses any key during streaming and the full text appears immediately with no further animation
 **Plans**: 4 plans
 Plans:
-- [ ] 07-01-PLAN.md — Sentence buffer + metadata extractor utilities (TDD)
-- [ ] 07-02-PLAN.md — streamNpcDialogue async generator + NPC streaming events
-- [ ] 07-03-PLAN.md — Wire streaming narration into UI (useAiNarration + ScenePanel + skip-to-end)
-- [ ] 07-04-PLAN.md — Wire NPC dialogue streaming (useNpcDialogue hook + game-screen integration)
+- [x] 07-01-PLAN.md — Sentence buffer + metadata extractor utilities (TDD)
+- [x] 07-02-PLAN.md — streamNpcDialogue async generator + NPC streaming events
+- [x] 07-03-PLAN.md — Wire streaming narration into UI (useAiNarration + ScenePanel + skip-to-end)
+- [x] 07-04-PLAN.md — Wire NPC dialogue streaming (useNpcDialogue hook + game-screen integration)
 
 ### Phase 8: Narrative Character Creation
 **Goal**: The player enters the world directly through a cinematic guard encounter — no character creation menu exists
