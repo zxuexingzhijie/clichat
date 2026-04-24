@@ -300,6 +300,11 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
       return { status: 'error', message: '未知任务指令' };
     }
 
+    if (action.type === 'quit') {
+      gameStore.setState(draft => { draft.pendingQuit = true; });
+      return { status: 'action_executed', action, narration: [] };
+    }
+
     const checkResult = adjudicate(action);
 
     eventBus.emit('action_resolved', { action, result: checkResult });

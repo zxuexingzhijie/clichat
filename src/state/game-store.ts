@@ -11,6 +11,7 @@ export const GameStateSchema = z.object({
   phase: GamePhaseSchema,
   turnCount: z.number().int().min(0),
   isDarkTheme: z.boolean(),
+  pendingQuit: z.boolean(),
 });
 export type GameState = z.infer<typeof GameStateSchema>;
 
@@ -21,6 +22,7 @@ export function getDefaultGameState(): GameState {
     phase: 'title',
     turnCount: 0,
     isDarkTheme: true,
+    pendingQuit: false,
   };
 }
 

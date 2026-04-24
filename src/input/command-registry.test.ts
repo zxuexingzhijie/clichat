@@ -50,3 +50,17 @@ describe('registerCommands — Phase 3 additions', () => {
     expect(action?.modifiers).toEqual({});
   });
 });
+
+describe('registerCommands — Phase 6 BUG-03', () => {
+  it('quit command produces { type: "quit", target: null }', () => {
+    const action = parseCommand('quit');
+    expect(action?.type).toBe('quit');
+    expect(action?.target).toBeNull();
+  });
+
+  it('exit command produces { type: "quit", target: null }', () => {
+    const action = parseCommand('exit');
+    expect(action?.type).toBe('quit');
+    expect(action?.target).toBeNull();
+  });
+});

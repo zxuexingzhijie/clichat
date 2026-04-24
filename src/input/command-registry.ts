@@ -178,4 +178,16 @@ export function registerCommands(
     .action(() => {
       setResult({ type: 'cost', target: null, modifiers: {}, source: 'command' });
     });
+
+  program
+    .command('quit')
+    .action(() => {
+      setResult({ type: 'quit', target: null, modifiers: {}, source: 'command' });
+    });
+
+  program
+    .command('exit')
+    .action(() => {
+      setResult({ type: 'quit', target: null, modifiers: {}, source: 'command' });
+    });
 }
