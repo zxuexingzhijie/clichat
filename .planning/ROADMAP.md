@@ -54,7 +54,12 @@ Plans:
   1. Narration text appears in the scene panel one character at a time rather than all at once after generation completes
   2. NPC dialogue streams to the scene panel with the same typewriter effect as narration
   3. Player presses any key during streaming and the full text appears immediately with no further animation
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 07-01-PLAN.md — Sentence buffer + metadata extractor utilities (TDD)
+- [ ] 07-02-PLAN.md — streamNpcDialogue async generator + NPC streaming events
+- [ ] 07-03-PLAN.md — Wire streaming narration into UI (useAiNarration + ScenePanel + skip-to-end)
+- [ ] 07-04-PLAN.md — Wire NPC dialogue streaming (useNpcDialogue hook + game-screen integration)
 
 ### Phase 8: Narrative Character Creation
 **Goal**: The player enters the world directly through a cinematic guard encounter — no character creation menu exists
@@ -102,7 +107,7 @@ Plans:
 | 4. Differentiation | v1.0 | 9/9 | Complete | 2026-04-22 |
 | 5. Polish & Optimization | v1.0 | 7/7 | Complete | 2026-04-22 |
 | 6. Bug Fixes & Live Validation | v1.1 | 3/5 | In progress | - |
-| 7. Streaming Output | v1.1 | 0/? | Not started | - |
+| 7. Streaming Output | v1.1 | 0/4 | Planned | - |
 | 8. Narrative Character Creation | v1.1 | 0/? | Not started | - |
 | 9. Animation System | v1.1 | 0/? | Not started | - |
 | 10. Distribution | v1.1 | 0/? | Not started | - |
