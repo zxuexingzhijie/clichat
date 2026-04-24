@@ -12,6 +12,7 @@ type ActionsPanelProps = {
   readonly onSelect: (index: number) => void;
   readonly onExecute: (index: number) => void;
   readonly isActive: boolean;
+  readonly isStreaming?: boolean;
 };
 
 export function ActionsPanel({
@@ -20,6 +21,7 @@ export function ActionsPanel({
   onSelect,
   onExecute,
   isActive,
+  isStreaming,
 }: ActionsPanelProps): React.ReactNode {
   const handleInput = useCallback(
     (input: string, key: { upArrow?: boolean; downArrow?: boolean; return?: boolean }) => {
@@ -61,7 +63,9 @@ export function ActionsPanel({
           </Text>
         );
       })}
-      <Text dimColor>↑↓ 选择    Enter 确认    / 输入自定义行动</Text>
+      <Text dimColor>
+        {isStreaming ? 'Enter/Space 跳过动画' : '↑↓ 选择    Enter 确认    / 输入自定义行动'}
+      </Text>
     </Box>
   );
 }

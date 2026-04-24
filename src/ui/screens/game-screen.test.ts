@@ -11,9 +11,10 @@ describe('BUG-01: GameScreen accepts gameLoop prop', () => {
     expect(source).toContain('processInput');
   });
 
-  it('GameScreen function source references generateNarration', () => {
+  it('GameScreen function source references useAiNarration and startNarration', () => {
     const source = GameScreen.toString();
-    expect(source).toContain('generateNarration');
+    expect(source).toContain('useAiNarration');
+    expect(source).toContain('startNarration');
   });
 
   it('GameScreen function source sets processing mode before async work (D-03)', () => {
