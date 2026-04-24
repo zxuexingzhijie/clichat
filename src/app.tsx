@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import path from 'node:path';
 import { createStoreContext } from './ui/hooks/use-store';
 import { gameStore, type GameState } from './state/game-store';
@@ -12,6 +12,7 @@ import { GameScreen } from './ui/screens/game-screen';
 import { CharacterCreationScreen } from './ui/screens/character-creation-screen';
 import { SizeGuard } from './ui/components/size-guard';
 import { initRoleConfigs } from './ai/providers';
+import { createGameLoop } from './game-loop';
 
 const GameStoreCtx = createStoreContext<GameState>();
 const PlayerStoreCtx = createStoreContext<PlayerState>();
@@ -25,6 +26,7 @@ export { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx };
 function AppInner(): React.ReactNode {
   const phase = GameStoreCtx.useStoreState((s) => s.phase);
   const setGameState = GameStoreCtx.useSetState();
+  const gameLoop = useMemo(() => createGameLoop(), []);
 
   const gameState = GameStoreCtx.useStoreState((s) => s);
   const playerState = PlayerStoreCtx.useStoreState((s) => s);
@@ -71,6 +73,7 @@ function AppInner(): React.ReactNode {
         questState={questState}
         questTemplates={new Map()}
         onSetGamePhase={setGameState}
+        gameLoop={gameLoop}
       />
     </SizeGuard>
   );
