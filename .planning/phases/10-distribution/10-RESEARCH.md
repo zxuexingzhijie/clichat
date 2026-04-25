@@ -590,24 +590,24 @@ jobs:
 | A7 | `Bun.embeddedFiles` API works with glob-included files in compile mode | Architecture Patterns | Medium -- verified via Context7 docs but not tested locally with YAML files |
 | A8 | The project license will be MIT | Code Examples | Low -- common choice; easily changed |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **GitHub repository owner/org for release URLs**
+1. **GitHub repository owner/org for release URLs** -- RESOLVED: Using `OWNER` placeholder in all templates (Plan 03, Plan 04). User replaces during final review checkpoint (Plan 05 Task 2).
    - What we know: Formula URLs and GitHub Release URLs need `OWNER/chronicle-cli` format
    - What's unclear: The GitHub username or organization that will own the `chronicle-cli` and `homebrew-chronicle` repositories
    - Recommendation: Use placeholder `OWNER` in templates; replace during execution when user confirms
 
-2. **Embedded file access pattern in compiled binary**
+2. **Embedded file access pattern in compiled binary** -- RESOLVED: Using glob patterns in `bun build --compile` command (Plan 03 release.yml). Runtime reads via standard Bun.file() paths.
    - What we know: `bun build --compile` with glob patterns embeds files; `Bun.embeddedFiles` iterates them; `import ... with { type: "file" }` gives `$bunfs` paths
    - What's unclear: Whether `Bun.file()` with a relative path transparently reads from embedded filesystem in compiled mode, or if code must use `$bunfs` prefix
    - Recommendation: Test locally with a small compiled binary that reads YAML via `Bun.file()`. If it fails, switch to `import with { type: "file" }` + `Bun.file(embeddedPath).text()` pattern
 
-3. **npm `engines` field enforcement**
+3. **npm `engines` field enforcement** -- RESOLVED: Added engines field in package.json (Plan 02) plus runtime Bun check in src/paths.ts (Plan 01).
    - What we know: The bundled JS file uses Bun APIs (`Bun.file()`, `Bun.write()`); it won't work on Node.js
    - What's unclear: Whether `engines: { "bun": ">=1.3.12" }` is respected by `npx` or `npm install -g`
    - Recommendation: Add `engines` field for documentation. Add a runtime check in `cli.ts`: `if (typeof Bun === 'undefined') { console.error('Chronicle requires Bun runtime...'); process.exit(1); }`
 
-4. **Homebrew formula auto-update mechanism**
+4. **Homebrew formula auto-update mechanism** -- RESOLVED: Using repository_dispatch from release.yml to homebrew-chronicle repo (Plan 03 Task 2 + Plan 04 Task 1). PAT via HOMEBREW_TAP_TOKEN.
    - What we know: After CI builds binaries and creates a GitHub Release, the formula in `homebrew-chronicle` must be updated with new version, URLs, and SHA256 hashes
    - What's unclear: Best mechanism -- direct git push to formula repo, or create PR, or use `repository_dispatch` event
    - Recommendation: Direct push via GitHub Actions using a deploy key or PAT. Simpler than PR-based flow for a single-maintainer project.
