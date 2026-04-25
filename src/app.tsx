@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
-import path from 'node:path';
 import { Box, Text } from 'ink';
 import { createStoreContext } from './ui/hooks/use-store';
 import { gameStore, type GameState } from './state/game-store';
@@ -14,6 +13,7 @@ import { SizeGuard } from './ui/components/size-guard';
 import { initRoleConfigs } from './ai/providers';
 import { createGameLoop } from './game-loop';
 import { NarrativeCreationScreen } from './ui/screens/narrative-creation-screen';
+import { resolveDataDir, resolveConfigPath } from './paths';
 
 const GameStoreCtx = createStoreContext<GameState>();
 const PlayerStoreCtx = createStoreContext<PlayerState>();
@@ -82,7 +82,7 @@ function AppInner(): React.ReactNode {
 
 export function App(): React.ReactNode {
   useEffect(() => {
-    initRoleConfigs(path.join(process.cwd(), 'ai-config.yaml')).catch((err) => {
+    initRoleConfigs(resolveConfigPath(process.env.__CHRONICLE_DATA_DIR || resolveDataDir())).catch((err) => {
       console.error('[AI Config] Failed to load ai-config.yaml, using defaults:', err instanceof Error ? err.message : String(err));
     });
   }, []);

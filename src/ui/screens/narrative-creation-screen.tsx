@@ -17,6 +17,7 @@ import type { CodexEntry } from '../../codex/schemas/entry-types';
 import type { PlayerState } from '../../state/player-store';
 import type { NpcProfile } from '../../ai/prompts/npc-system';
 import { eventBus } from '../../events/event-bus';
+import { resolveDataDir } from '../../paths';
 
 type CreationPhase =
   | { readonly type: 'loading' }
@@ -57,7 +58,8 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
     let cancelled = false;
     (async () => {
       try {
-        const codexDir = path.join(process.cwd(), 'src/data/codex');
+        const dataDir = process.env.__CHRONICLE_DATA_DIR || resolveDataDir();
+        const codexDir = path.join(dataDir, 'codex');
         const [codexEntries, guardConfig] = await Promise.all([
           loadAllCodex(codexDir),
           loadGuardDialogue(path.join(codexDir, 'guard-dialogue.yaml')),
