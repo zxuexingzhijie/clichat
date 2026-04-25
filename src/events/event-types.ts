@@ -27,8 +27,9 @@ export type DomainEvents = {
 
   npc_memory_written: { npcId: string; event: string; turnNumber: number };
 
-  character_creation_started: undefined;
-  character_creation_step_changed: { step: number; totalSteps: number };
+  narrative_creation_started: undefined;
+  narrative_creation_round_changed: { round: number; totalRounds: number };
+  narrative_creation_name_entered: { name: string };
   character_created: { name: string; race: string; profession: string };
 
   combat_action_resolved: { actorId: string; action: string; checkResult: CheckResult };

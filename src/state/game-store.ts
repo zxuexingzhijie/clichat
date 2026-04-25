@@ -3,12 +3,15 @@ import { createStore } from './create-store';
 import { eventBus } from '../events/event-bus';
 import { TimeOfDaySchema } from '../types/common';
 
-export const GamePhaseSchema = z.enum(['title', 'character_creation', 'game', 'combat', 'dialogue', 'journal', 'map', 'codex', 'branch_tree', 'compare', 'shortcuts', 'replay', 'cost']);
+export const GamePhaseSchema = z.enum(['title', 'narrative_creation', 'game', 'combat', 'dialogue', 'journal', 'map', 'codex', 'branch_tree', 'compare', 'shortcuts', 'replay', 'cost']);
 
 export const GameStateSchema = z.object({
   day: z.number().int().min(1),
   timeOfDay: TimeOfDaySchema,
-  phase: GamePhaseSchema,
+  phase: z.preprocess(
+    (val) => (val === 'character_creation' ? 'title' : val),
+    GamePhaseSchema,
+  ),
   turnCount: z.number().int().min(0),
   isDarkTheme: z.boolean(),
   pendingQuit: z.boolean(),

@@ -31,9 +31,9 @@ export const characterCreationStore = createStore<CharacterCreationState>(
   getDefaultCharacterCreationState(),
   ({ newState, oldState }) => {
     if (newState.currentStep !== oldState.currentStep) {
-      eventBus.emit('character_creation_step_changed', {
-        step: newState.currentStep,
-        totalSteps: 4,
+      eventBus.emit('narrative_creation_round_changed', {
+        round: newState.currentStep,
+        totalRounds: 4,
       });
     }
     if (newState.isComplete && !oldState.isComplete) {
