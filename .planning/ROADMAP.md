@@ -20,8 +20,8 @@
 
 ### v1.1 Playability & Distribution (Phases 6–10)
 
-- [ ] **Phase 6: Bug Fixes & Live Validation** — Core interaction bugs fixed; Enter advances game, focus switching works, quit is reliable, live UAT confirmed
-- [ ] **Phase 7: Streaming Output** — Narration and NPC dialogue render as typewriter effect; player can skip to end
+- [x] **Phase 6: Bug Fixes & Live Validation** — Core interaction bugs fixed; Enter advances game, focus switching works, quit is reliable, live UAT confirmed
+- [x] **Phase 7: Streaming Output** — Narration and NPC dialogue render as typewriter effect; player can skip to end
 - [ ] **Phase 8: Narrative Character Creation** — No menu on startup; guard intercept scene sets character identity through dialogue
 - [ ] **Phase 9: Animation System** — Title animation, AI loading spinner, scene transitions, combat hit feedback, UI event feedback, chapter summary display
 - [ ] **Phase 10: Distribution** — npm publish, Homebrew tap, GitHub Actions CI pipeline wired
@@ -39,11 +39,11 @@
   4. Live session confirms `/cost` shows real token data, `/replay` panel responds interactively, and background summarizer fires after a real session
 **Plans**: 5 plans
 Plans:
-- [ ] 06-01-PLAN.md — Wire gameLoop to GameScreen + implement handleActionExecute (BUG-01)
-- [ ] 06-02-PLAN.md — Focus switching: / and Tab activate input, Escape deactivates (BUG-02)
-- [ ] 06-03-PLAN.md — Quit commands + SIGINT confirmation flow via InlineConfirm (BUG-03)
-- [ ] 06-04-PLAN.md — Export runNextTask + live validation scripts for /cost, /replay, summarizer (CARRY-01)
-- [ ] 06-05-PLAN.md — Complete unit test coverage for BUG-01, BUG-02, BUG-03 fixes [DONE]
+- [x] 06-01-PLAN.md — Wire gameLoop to GameScreen + implement handleActionExecute (BUG-01)
+- [x] 06-02-PLAN.md — Focus switching: / and Tab activate input, Escape deactivates (BUG-02)
+- [x] 06-03-PLAN.md — Quit commands + SIGINT confirmation flow via InlineConfirm (BUG-03)
+- [x] 06-04-PLAN.md — Export runNextTask + live validation scripts for /cost, /replay, summarizer (CARRY-01)
+- [x] 06-05-PLAN.md — Complete unit test coverage for BUG-01, BUG-02, BUG-03 fixes [DONE]
 **UI hint**: yes
 
 ### Phase 7: Streaming Output
@@ -70,7 +70,12 @@ Plans:
   2. A guard NPC asks questions that surface the character's name, origin, and role through natural dialogue choices
   3. Player's dialogue responses deterministically set race, profession, background, and base stats via the Rules Engine — the character sheet reflects these values immediately
   4. After the guard dialogue ends, the normal game loop begins from 黑松镇北门 with the character fully initialized
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 08-01-PLAN.md — Guard dialogue YAML data + loader + weight resolver engine (TDD)
+- [ ] 08-02-PLAN.md — Phase routing (narrative_creation), guard AI prompts, backward compatibility
+- [ ] 08-03-PLAN.md — NarrativeCreationScreen + GuardDialoguePanel + GuardNameInput + app wiring
+- [ ] 08-04-PLAN.md — Delete old CharacterCreationScreen + character-creation-store cleanup
 **UI hint**: yes
 
 ### Phase 9: Animation System
@@ -106,8 +111,8 @@ Plans:
 | 3. Persistence & World | v1.0 | 8/8 | Complete | 2026-04-21 |
 | 4. Differentiation | v1.0 | 9/9 | Complete | 2026-04-22 |
 | 5. Polish & Optimization | v1.0 | 7/7 | Complete | 2026-04-22 |
-| 6. Bug Fixes & Live Validation | v1.1 | 3/5 | In progress | - |
-| 7. Streaming Output | v1.1 | 0/4 | Planned | - |
-| 8. Narrative Character Creation | v1.1 | 0/? | Not started | - |
+| 6. Bug Fixes & Live Validation | v1.1 | 5/5 | Complete | 2026-04-24 |
+| 7. Streaming Output | v1.1 | 4/4 | Complete | 2026-04-24 |
+| 8. Narrative Character Creation | v1.1 | 0/4 | Planning | - |
 | 9. Animation System | v1.1 | 0/? | Not started | - |
 | 10. Distribution | v1.1 | 0/? | Not started | - |
