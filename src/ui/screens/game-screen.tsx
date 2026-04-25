@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
 import { useScreenSize } from 'fullscreen-ink';
 import { Divider } from '../components/divider';
@@ -12,6 +12,7 @@ import { BranchTreePanel } from '../panels/branch-tree-panel';
 import { ComparePanel } from '../panels/compare-panel';
 import { ShortcutHelpPanel } from '../panels/shortcut-help-panel';
 import { ReplayPanel } from '../panels/replay-panel';
+import { ChapterSummaryPanel } from '../panels/chapter-summary-panel';
 import { StatusBar } from '../panels/status-bar';
 import { CombatStatusBar } from '../panels/combat-status-bar';
 import { ActionsPanel } from '../panels/actions-panel';
@@ -20,6 +21,10 @@ import { CheckResultLine } from '../panels/check-result-line';
 import { InputArea } from '../panels/input-area';
 import { InlineConfirm } from '../components/inline-confirm';
 import { useGameInput, getPanelActionForKey } from '../hooks/use-game-input';
+import { useGameEventToasts } from '../hooks/use-game-event-toasts';
+import { useTimedEffect } from '../hooks/use-timed-effect';
+import { eventBus } from '../../events/event-bus';
+import { getRecentChapterSummaries } from '../../ai/summarizer/summarizer-worker';
 import { TIME_OF_DAY_LABELS } from '../../types/common';
 import { gameStore, type GameState } from '../../state/game-store';
 import { costSessionStore } from '../../state/cost-session-store';
@@ -118,6 +123,47 @@ export function GameScreen({
 
   const isAnyStreaming = isNarrationStreaming || isNpcStreaming;
 
+  const { toast } = useGameEventToasts();
+
+  const { active: isSpinnerDimming, trigger: triggerSpinnerDimout } = useTimedEffect(150);
+  const [spinnerDimoutComplete, setSpinnerDimoutComplete] = useState(false);
+  const wasProcessingRef = useRef(false);
+
+  useEffect(() => {
+    const isProcessing = inputMode === 'processing' && !isAnyStreaming;
+
+    if (wasProcessingRef.current && isAnyStreaming) {
+      triggerSpinnerDimout();
+      setSpinnerDimoutComplete(false);
+    }
+
+    if (!isAnyStreaming && !isProcessing) {
+      setSpinnerDimoutComplete(false);
+    }
+
+    wasProcessingRef.current = isProcessing;
+  }, [inputMode, isAnyStreaming, triggerSpinnerDimout]);
+
+  useEffect(() => {
+    if (!isSpinnerDimming && wasProcessingRef.current === false && isAnyStreaming) {
+      setSpinnerDimoutComplete(true);
+    }
+  }, [isSpinnerDimming, isAnyStreaming]);
+
+  const showSpinner = inputMode === 'processing' && !isAnyStreaming && !spinnerDimoutComplete;
+  const showSpinnerWithDim = showSpinner || (isSpinnerDimming && isAnyStreaming);
+  const spinnerContext = isInCombat ? 'combat' as const
+    : (isInDialogueMode || dialogueState.active) ? 'npc_dialogue' as const
+    : 'narration' as const;
+
+  const { active: isSceneDimmed, trigger: triggerSceneFade } = useTimedEffect(500);
+
+  useEffect(() => {
+    const handler = () => { triggerSceneFade(); };
+    eventBus.on('scene_changed', handler);
+    return () => { eventBus.off('scene_changed', handler); };
+  }, [triggerSceneFade]);
+
   const [dialogueSelectedIndex, setDialogueSelectedIndex] = useState(0);
   const [combatSelectedIndex, setCombatSelectedIndex] = useState(0);
   const [lastTurnTokens, setLastTurnTokens] = useState(0);
@@ -140,6 +186,7 @@ export function GameScreen({
   const isInCompare = gameState.phase === 'compare';
   const isInShortcuts = gameState.phase === 'shortcuts';
   const isInReplay = gameState.phase === 'replay';
+  const isInChapterSummary = gameState.phase === 'chapter_summary';
   const isWide = width >= 100;
 
   const allQuestEntries: QuestDisplayEntry[] = Object.entries(questState.quests)
@@ -264,7 +311,7 @@ export function GameScreen({
     gameStore.setState(draft => { draft.phase = 'game'; });
   }, []);
 
-  const isInOverlayPanel = isInMap || isInCodex || isInBranchTree || isInCompare || isInShortcuts || isInReplay;
+  const isInOverlayPanel = isInMap || isInCodex || isInBranchTree || isInCompare || isInShortcuts || isInReplay || isInChapterSummary;
 
   useInput(useCallback((input: string, key: { escape: boolean; tab?: boolean; return?: boolean }) => {
     if (inputMode === 'processing' && isAnyStreaming && (key.return || input === ' ')) {
@@ -292,6 +339,10 @@ export function GameScreen({
     const validPhases = new Set<string>(['map', 'journal', 'codex', 'branch_tree', 'compare', 'shortcuts']);
     if (panelAction && validPhases.has(panelAction) && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
       gameStore.setState(draft => { draft.phase = panelAction as GameState['phase']; });
+    }
+    if (input === 'S' && !isTyping && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
+      gameStore.setState(draft => { draft.phase = 'chapter_summary'; });
+      return;
     }
   }, [isTyping, isInCombat, isInDialogueMode, isInOverlayPanel, inputMode, inputValue, setInputValue, setInputMode, isNarrationStreaming, skipNarration, isNpcStreaming, skipNpcDialogue, isAnyStreaming]));
 
@@ -436,7 +487,9 @@ export function GameScreen({
                   ? <ShortcutHelpPanel onClose={handlePanelClose} />
                   : isInReplay
                     ? <ReplayPanel entries={[...getLastReplayEntries()]} onClose={handlePanelClose} />
-                    : <ScenePanel lines={sceneLines} streamingText={isNarrationStreaming ? streamingText : isNpcStreaming ? `${dialogueState.npcName}\uFF1A\u201C${npcStreamingText}` : undefined} isStreaming={isAnyStreaming} />;
+                    : isInChapterSummary
+                      ? <ChapterSummaryPanel summaries={[...getRecentChapterSummaries()]} onClose={handlePanelClose} />
+                      : <ScenePanel lines={sceneLines} streamingText={isNarrationStreaming ? streamingText : isNpcStreaming ? `${dialogueState.npcName}\uFF1A\u201C${npcStreamingText}` : undefined} isStreaming={isAnyStreaming} showSpinner={showSpinnerWithDim} spinnerContext={spinnerContext} toast={toast} isDimmed={isSceneDimmed} isSpinnerDimming={isSpinnerDimming} />;
 
   if (isWide) {
     const sceneWidth = Math.floor(innerWidth * 0.6);
