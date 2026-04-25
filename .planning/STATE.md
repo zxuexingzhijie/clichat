@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Playability & Distribution
 status: planning
-stopped_at: Phase 8 UI-SPEC approved
-last_updated: "2026-04-25T04:45:06.491Z"
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-04-25T05:02:02.687Z"
 last_activity: 2026-04-24
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 13
-  completed_plans: 9
-  percent: 69
+  completed_plans: 11
+  percent: 85
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: Not started
 Status: Ready to plan
 Last activity: 2026-04-24
 
-Progress: [██░░░░░░░░] 20%
+Progress: [█████████░] 85%
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 06 P03 | 5min | 2 tasks | 8 files |
 | Phase 06 P05 | 5min | 1 tasks | 1 files |
 | Phase 06 P02 | 5min | 1 tasks | 2 files |
+| Phase 08 P02 | 3min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,8 @@ Recent decisions affecting current work:
 - SIGINT handler uses try/catch with process.exit(0) fallback for startup race (T-06-03-01)
 - InlineConfirm conditionally mounted (unmount removes useInput listener) — no isActive prop needed
 - BUG-02 branches placed BEFORE overlay-panel escape check; Escape+input_active guards with !isInOverlayPanel to prevent double-firing
+- z.preprocess maps old character_creation phase to title for save file backward compat
+- NarrativeCreationPlaceholder is intentional stub replaced by Plan 03
 
 ### Pending Todos
 
@@ -173,9 +176,9 @@ Items acknowledged and deferred at milestone close on 2026-04-22:
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 8 UI-SPEC approved
-Resume file: --resume-file
+Last session: 2026-04-25T05:01:45.496Z
+Stopped at: Completed 08-02-PLAN.md
+Resume file: None
 
 **Next:** `/gsd-plan-phase 6` to plan Phase 6: Bug Fixes & Live Validation
 

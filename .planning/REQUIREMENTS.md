@@ -28,10 +28,12 @@ Requirements for the Playability & Distribution milestone. Phases continue from 
 
 ### Narrative Character Creation (NCC)
 
-- [ ] **NCC-01**: The game begins with the player arriving at 黑松镇北门 in a cinematic scene — no character creation menu appears before entering the world
+- [x] **NCC-01
+**: The game begins with the player arriving at 黑松镇北门 in a cinematic scene — no character creation menu appears before entering the world
 - [ ] **NCC-02**: A guard NPC intercepts the player and asks questions that naturally surface character identity (name, origin, profession/role) through dialogue choices
 - [ ] **NCC-03**: Player's responses to the guard's questions determine starting attributes (race, profession, background, base stats) deterministically via the Rules Engine — not via a separate stats screen
-- [ ] **NCC-04**: After the guard interaction concludes, the player's character sheet is fully initialized and the normal game loop begins from 黑松镇北门
+- [x] **NCC-04
+**: After the guard interaction concludes, the player's character sheet is fully initialized and the normal game loop begins from 黑松镇北门
 
 ---
 
