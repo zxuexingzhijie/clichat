@@ -152,9 +152,6 @@ export function GameScreen({
 
   const showSpinner = inputMode === 'processing' && !isAnyStreaming && !spinnerDimoutComplete;
   const showSpinnerWithDim = showSpinner || (isSpinnerDimming && isAnyStreaming);
-  const spinnerContext = isInCombat ? 'combat' as const
-    : (isInDialogueMode || dialogueState.active) ? 'npc_dialogue' as const
-    : 'narration' as const;
 
   const { active: isSceneDimmed, trigger: triggerSceneFade } = useTimedEffect(500);
 
@@ -179,6 +176,9 @@ export function GameScreen({
 
   const isInCombat = combatState.active;
   const isInDialogueMode = dialogueState.active && dialogueState.mode === 'full';
+  const spinnerContext = isInCombat ? 'combat' as const
+    : (isInDialogueMode || dialogueState.active) ? 'npc_dialogue' as const
+    : 'narration' as const;
   const isInJournal = gameState.phase === 'journal';
   const isInMap = gameState.phase === 'map';
   const isInCodex = gameState.phase === 'codex';

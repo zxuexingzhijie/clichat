@@ -30,9 +30,7 @@ export function ScenePanel({
     <Box flexDirection="column" flexGrow={1} paddingX={1}>
       {toast && <ToastBanner toast={toast} />}
       {showSpinner && !streamingText ? (
-        <Text dimColor={isSpinnerDimming}>
-          <SceneSpinner context={spinnerContext ?? 'narration'} />
-        </Text>
+        <SceneSpinner context={spinnerContext ?? 'narration'} isDimming={isSpinnerDimming} />
       ) : lines.length === 0 && !streamingText ? (
         <Text dimColor>周围一片寂静，什么也没有发生。</Text>
       ) : (
