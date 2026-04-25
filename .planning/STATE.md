@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Playability & Distribution
 status: verifying
-stopped_at: Completed 10-02-PLAN.md
-last_updated: "2026-04-25T16:12:14.435Z"
+stopped_at: Completed 10-04-PLAN.md
+last_updated: "2026-04-25T16:15:33.976Z"
 last_activity: 2026-04-25
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 23
-  completed_plans: 20
-  percent: 87
+  completed_plans: 22
+  percent: 96
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: All 5 plans complete
 Status: Phase 9 executed — pending human visual verification
 Last activity: 2026-04-25
 
-Progress: [█████████░] 87%
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
@@ -75,6 +75,8 @@ Progress: [█████████░] 87%
 | Phase 09 P05 | 2min | 2 tasks | 5 files |
 | Phase 10 P01 | 2min | 2 tasks | 16 files |
 | Phase 10 P02 | 2min | 2 tasks | 6 files |
+| Phase 10 P03 | 1min | 2 tasks | 2 files |
+| Phase 10 P04 | 1min | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -128,6 +130,8 @@ Recent decisions affecting current work:
 - [09-05]: Chapter summary uses uppercase 'S' shortcut to avoid conflict with lowercase shortcuts
 - guardWorldDirPath uses segment splitting (not path.normalize) to detect '..' -- normalize resolves traversal away
 - CLI sets process.env.__CHRONICLE_DATA_DIR before dynamic import -- single env var propagates data dir to all consumers
+- [10-03]: publish-npm and build-binaries run in parallel after quality-gate in release pipeline (fan-out pattern)
+- Workflow uses env: blocks instead of inline GitHub expression interpolation in run: steps to mitigate sed injection (T-10-13)
 
 ### Pending Todos
 
@@ -194,8 +198,8 @@ Items acknowledged and deferred at milestone close on 2026-04-22:
 
 ## Session Continuity
 
-Last session: 2026-04-25T16:12:14.431Z
-Stopped at: Completed 10-02-PLAN.md
+Last session: 2026-04-25T16:15:33.789Z
+Stopped at: Completed 10-04-PLAN.md
 Resume file: None
 
 **Next:** Phase 9 complete. Proceed to Phase 10.

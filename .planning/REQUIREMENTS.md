@@ -60,7 +60,8 @@ Requirements for the Playability & Distribution milestone. Phases continue from 
 **: The game is published to npm as `chronicle-cli` — users can run `npx chronicle-cli` or `npm install -g chronicle-cli` to play
 - [x] **DIST-02
 **: A `bin` entry in package.json and a compiled entry point allow the game to launch via a single CLI command (`chronicle`)
-- [ ] **DIST-03**: A Homebrew tap repository (`homebrew-chronicle`) exists with a Formula that downloads the npm package and wires up the `chronicle` binary
+- [x] **DIST-03
+**: A Homebrew tap repository (`homebrew-chronicle`) exists with a Formula that downloads the npm package and wires up the `chronicle` binary
 - [x] **DIST-04
 **: Users can install via `brew tap <owner>/chronicle && brew install chronicle` and the game launches correctly
 - [ ] **DIST-05**: A GitHub Actions workflow builds and publishes a new npm release + updates the Homebrew formula on every version tag push (`v*`)
