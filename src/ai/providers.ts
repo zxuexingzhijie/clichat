@@ -2,6 +2,7 @@ import type { LanguageModel } from 'ai';
 import { google } from '@ai-sdk/google';
 import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
+import { createDeepSeek } from '@ai-sdk/deepseek';
 import { loadAiConfig } from './config/ai-config-loader';
 import type { AiConfig } from './config/ai-config-schema';
 
@@ -26,10 +27,15 @@ export type RoleConfig = {
   readonly pricing?: ModelPricing;
 };
 
+const deepseek = createDeepSeek({
+  apiKey: process.env.DEEPSEEK_API_KEY,
+});
+
 const PROVIDER_FACTORIES: Record<string, (modelId: string) => LanguageModel> = {
   google: (id) => google(id) as unknown as LanguageModel,
   openai: (id) => openai(id) as unknown as LanguageModel,
   anthropic: (id) => anthropic(id) as unknown as LanguageModel,
+  deepseek: (id) => deepseek(id) as unknown as LanguageModel,
 };
 
 const DEFAULT_ROLE_CONFIGS: Record<AiRole, RoleConfig> = {

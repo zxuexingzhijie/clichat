@@ -1,62 +1,46 @@
 # Chronicle AI Model Configuration
-# Edit this file to change which AI model handles each game role.
-# API keys must be set as environment variables (GOOGLE_GENERATIVE_AI_API_KEY, OPENAI_API_KEY, etc.)
+# API key stored in .env.local (auto-loaded by Bun, no manual export needed)
 #
 # Priority: CLI args > environment variables > this file > built-in defaults
-#
-# Pricing (optional): Set price_per_1k_input_tokens / price_per_1k_output_tokens
-# for each model if you want /cost estimates. Leave blank if not needed.
 
 default_profile: balanced
 
 profiles:
-  # balanced: default production config — quality models for narrative, fast for retrieval
   balanced:
     roles:
       narrative-director:
-        provider: google
-        model: gemini-2.0-flash
+        provider: deepseek
+        model: deepseek-v4-flash
         temperature: 0.7
         maxTokens: 512
-        pricing:
-          price_per_1k_input_tokens: 0.000075
-          price_per_1k_output_tokens: 0.0003
       npc-actor:
-        provider: google
-        model: gemini-2.0-flash
+        provider: deepseek
+        model: deepseek-v4-flash
         temperature: 0.8
         maxTokens: 400
-        pricing:
-          price_per_1k_input_tokens: 0.000075
-          price_per_1k_output_tokens: 0.0003
       retrieval-planner:
-        provider: google
-        model: gemini-2.0-flash
+        provider: deepseek
+        model: deepseek-v4-flash
         temperature: 0.1
         maxTokens: 200
       safety-filter:
-        provider: google
-        model: gemini-2.0-flash
+        provider: deepseek
+        model: deepseek-v4-flash
         temperature: 0.0
         maxTokens: 50
       summarizer:
-        provider: google
-        model: gemini-2.0-flash
+        provider: deepseek
+        model: deepseek-v4-pro
         temperature: 0.3
         maxTokens: 800
-        pricing:
-          price_per_1k_input_tokens: 0.000075
-          price_per_1k_output_tokens: 0.0003
       quest-planner:
-        provider: google
-        model: gemini-2.0-flash
+        provider: deepseek
+        model: deepseek-v4-pro
         temperature: 0.6
         maxTokens: 2000
 
-  # cheap: skeleton — populate to activate cost-saving provider routing (v2)
   cheap:
     roles: {}
 
-  # premium: skeleton — populate with high-quality models for maximum narrative quality (v2)
   premium:
     roles: {}
