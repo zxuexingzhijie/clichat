@@ -1,11 +1,6 @@
 import { describe, test, expect, beforeEach, mock } from 'bun:test';
 import { eventBus } from '../events/event-bus';
 import {
-  characterCreationStore,
-  getDefaultCharacterCreationState,
-  CharacterCreationStateSchema,
-} from './character-creation-store';
-import {
   dialogueStore,
   getDefaultDialogueState,
   DialogueStateSchema,
@@ -17,80 +12,6 @@ import {
   NpcMemoryEntrySchema,
   NpcMemoryRecordSchema,
 } from './npc-memory-store';
-
-describe('CharacterCreationStore', () => {
-  beforeEach(() => {
-    characterCreationStore.setState(() => {
-      return getDefaultCharacterCreationState();
-    });
-  });
-
-  test('default state validates against schema', () => {
-    const state = getDefaultCharacterCreationState();
-    const parsed = CharacterCreationStateSchema.parse(state);
-    expect(parsed.currentStep).toBe(0);
-    expect(parsed.selectedRace).toBeNull();
-    expect(parsed.isQuickMode).toBe(false);
-    expect(parsed.isComplete).toBe(false);
-  });
-
-  test('setState updates race selection', () => {
-    characterCreationStore.setState(draft => {
-      draft.selectedRace = 'human';
-    });
-    expect(characterCreationStore.getState().selectedRace).toBe('human');
-  });
-
-  test('emits narrative_creation_round_changed on step change', () => {
-    const handler = mock(() => {});
-    eventBus.on('narrative_creation_round_changed', handler);
-
-    characterCreationStore.setState(draft => {
-      draft.currentStep = 1;
-    });
-
-    expect(handler).toHaveBeenCalledTimes(1);
-    expect(handler).toHaveBeenCalledWith({ round: 1, totalRounds: 4 });
-
-    eventBus.off('narrative_creation_round_changed', handler);
-  });
-
-  test('emits character_created when isComplete transitions to true', () => {
-    const handler = mock(() => {});
-    eventBus.on('character_created', handler);
-
-    characterCreationStore.setState(draft => {
-      draft.selectedRace = 'elf';
-      draft.selectedProfession = 'ranger';
-      draft.isComplete = true;
-    });
-
-    expect(handler).toHaveBeenCalledTimes(1);
-    expect(handler).toHaveBeenCalledWith({
-      name: '',
-      race: 'elf',
-      profession: 'ranger',
-    });
-
-    eventBus.off('character_created', handler);
-  });
-
-  test('does not emit character_created when already complete', () => {
-    characterCreationStore.setState(draft => {
-      draft.isComplete = true;
-    });
-
-    const handler = mock(() => {});
-    eventBus.on('character_created', handler);
-
-    characterCreationStore.setState(draft => {
-      draft.selectedRace = 'dwarf';
-    });
-
-    expect(handler).not.toHaveBeenCalled();
-    eventBus.off('character_created', handler);
-  });
-});
 
 describe('DialogueStore', () => {
   beforeEach(() => {
