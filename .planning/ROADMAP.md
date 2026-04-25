@@ -88,7 +88,13 @@ Plans:
   3. Entering a new scene plays a brief transition effect (fade-in or header flash) before narration begins rendering
   4. A combat hit on player or enemy HP produces a brief flash or shake on the affected value in the status bar
   5. Key UI events (option selection, skill check result, quest update, item acquired, Codex entry unlocked, chapter summary) trigger distinct visual feedback
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 09-01-PLAN.md — Animation hooks layer (useTimedEffect, useTypewriter, useEventFlash, useToast)
+- [ ] 09-02-PLAN.md — Title screen typewriter animation with progressive gradient
+- [ ] 09-03-PLAN.md — SceneSpinner, ToastBanner, FadeWrapper + ScenePanel integration
+- [ ] 09-04-PLAN.md — StatusBar + CombatStatusBar HP flash + CheckResultLine mount flash
+- [ ] 09-05-PLAN.md — GameScreen wiring + ChapterSummaryPanel overlay + toast event subscriptions
 **UI hint**: yes
 
 ### Phase 10: Distribution
@@ -114,5 +120,5 @@ Plans:
 | 6. Bug Fixes & Live Validation | v1.1 | 5/5 | Complete | 2026-04-24 |
 | 7. Streaming Output | v1.1 | 4/4 | Complete | 2026-04-24 |
 | 8. Narrative Character Creation | v1.1 | 0/4 | Planning | - |
-| 9. Animation System | v1.1 | 0/? | Not started | - |
+| 9. Animation System | v1.1 | 0/5 | Planning | - |
 | 10. Distribution | v1.1 | 0/? | Not started | - |
