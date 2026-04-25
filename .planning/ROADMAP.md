@@ -22,8 +22,8 @@
 
 - [x] **Phase 6: Bug Fixes & Live Validation** — Core interaction bugs fixed; Enter advances game, focus switching works, quit is reliable, live UAT confirmed
 - [x] **Phase 7: Streaming Output** — Narration and NPC dialogue render as typewriter effect; player can skip to end
-- [ ] **Phase 8: Narrative Character Creation** — No menu on startup; guard intercept scene sets character identity through dialogue
-- [ ] **Phase 9: Animation System** — Title animation, AI loading spinner, scene transitions, combat hit feedback, UI event feedback, chapter summary display
+- [x] **Phase 8: Narrative Character Creation** — No menu on startup; guard intercept scene sets character identity through dialogue
+- [x] **Phase 9: Animation System** — Title animation, AI loading spinner, scene transitions, combat hit feedback, UI event feedback, chapter summary display
 - [ ] **Phase 10: Distribution** — npm publish, Homebrew tap, GitHub Actions CI pipeline wired
 
 ## Phase Details
@@ -72,10 +72,10 @@ Plans:
   4. After the guard dialogue ends, the normal game loop begins from 黑松镇北门 with the character fully initialized
 **Plans**: 4 plans
 Plans:
-- [ ] 08-01-PLAN.md — Guard dialogue YAML data + loader + weight resolver engine (TDD)
-- [ ] 08-02-PLAN.md — Phase routing (narrative_creation), guard AI prompts, backward compatibility
-- [ ] 08-03-PLAN.md — NarrativeCreationScreen + GuardDialoguePanel + GuardNameInput + app wiring
-- [ ] 08-04-PLAN.md — Delete old CharacterCreationScreen + character-creation-store cleanup
+- [x] 08-01-PLAN.md — Guard dialogue YAML data + loader + weight resolver engine (TDD)
+- [x] 08-02-PLAN.md — Phase routing (narrative_creation), guard AI prompts, backward compatibility
+- [x] 08-03-PLAN.md — NarrativeCreationScreen + GuardDialoguePanel + GuardNameInput + app wiring
+- [x] 08-04-PLAN.md — Delete old CharacterCreationScreen + character-creation-store cleanup
 **UI hint**: yes
 
 ### Phase 9: Animation System
@@ -90,11 +90,11 @@ Plans:
   5. Key UI events (option selection, skill check result, quest update, item acquired, Codex entry unlocked, chapter summary) trigger distinct visual feedback
 **Plans**: 5 plans
 Plans:
-- [ ] 09-01-PLAN.md — Animation hooks layer (useTimedEffect, useTypewriter, useEventFlash, useToast) [DONE]
-- [ ] 09-02-PLAN.md — Title screen typewriter animation with progressive gradient
-- [ ] 09-03-PLAN.md — SceneSpinner, ToastBanner, FadeWrapper + ScenePanel integration
-- [ ] 09-04-PLAN.md — StatusBar + CombatStatusBar HP flash + CheckResultLine mount flash
-- [ ] 09-05-PLAN.md — GameScreen wiring + ChapterSummaryPanel overlay + toast event subscriptions
+- [x] 09-01-PLAN.md — Animation hooks layer (useTimedEffect, useTypewriter, useEventFlash, useToast)
+- [x] 09-02-PLAN.md — Title screen typewriter animation with progressive gradient
+- [x] 09-03-PLAN.md — SceneSpinner, ToastBanner + ScenePanel integration
+- [x] 09-04-PLAN.md — StatusBar + CombatStatusBar HP flash + CheckResultLine mount flash
+- [x] 09-05-PLAN.md — GameScreen wiring + ChapterSummaryPanel overlay + toast event subscriptions
 **UI hint**: yes
 
 ### Phase 10: Distribution
@@ -119,6 +119,6 @@ Plans:
 | 5. Polish & Optimization | v1.0 | 7/7 | Complete | 2026-04-22 |
 | 6. Bug Fixes & Live Validation | v1.1 | 5/5 | Complete | 2026-04-24 |
 | 7. Streaming Output | v1.1 | 4/4 | Complete | 2026-04-24 |
-| 8. Narrative Character Creation | v1.1 | 0/4 | Planning | - |
-| 9. Animation System | v1.1 | 1/5 | Executing | - |
+| 8. Narrative Character Creation | v1.1 | 4/4 | Complete | 2026-04-25 |
+| 9. Animation System | v1.1 | 5/5 | Complete | 2026-04-25 |
 | 10. Distribution | v1.1 | 0/? | Not started | - |
