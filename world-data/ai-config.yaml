@@ -1,0 +1,46 @@
+# Chronicle AI Model Configuration
+# API key stored in .env.local (auto-loaded by Bun, no manual export needed)
+#
+# Priority: CLI args > environment variables > this file > built-in defaults
+
+default_profile: balanced
+
+profiles:
+  balanced:
+    roles:
+      narrative-director:
+        provider: deepseek
+        model: deepseek-v4-flash
+        temperature: 0.7
+        maxTokens: 512
+      npc-actor:
+        provider: deepseek
+        model: deepseek-v4-flash
+        temperature: 0.8
+        maxTokens: 400
+      retrieval-planner:
+        provider: deepseek
+        model: deepseek-v4-flash
+        temperature: 0.1
+        maxTokens: 200
+      safety-filter:
+        provider: deepseek
+        model: deepseek-v4-flash
+        temperature: 0.0
+        maxTokens: 50
+      summarizer:
+        provider: deepseek
+        model: deepseek-v4-pro
+        temperature: 0.3
+        maxTokens: 800
+      quest-planner:
+        provider: deepseek
+        model: deepseek-v4-pro
+        temperature: 0.6
+        maxTokens: 2000
+
+  cheap:
+    roles: {}
+
+  premium:
+    roles: {}
