@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Box, Text } from 'ink';
 import path from 'node:path';
+import { streamText } from 'ai';
 import { GuardDialoguePanel } from '../components/guard-dialogue-panel';
 import { GuardNameInput } from '../components/guard-name-input';
-import { useNpcDialogue } from '../hooks/use-npc-dialogue';
 import { loadGuardDialogue, type GuardDialogueConfig } from '../../engine/guard-dialogue-loader';
 import {
   createInitialWeights,
@@ -13,9 +13,15 @@ import {
 } from '../../engine/weight-resolver';
 import { createCharacterCreation } from '../../engine/character-creation';
 import { loadAllCodex } from '../../codex/loader';
-import type { CodexEntry } from '../../codex/schemas/entry-types';
 import type { PlayerState } from '../../state/player-store';
 import type { NpcProfile } from '../../ai/prompts/npc-system';
+import {
+  buildGuardCreationSystemPrompt,
+  buildGuardCreationUserPrompt,
+  buildGuardNamePrompt,
+  buildGuardFarewellPrompt,
+} from '../../ai/prompts/guard-creation-prompt';
+import { getModel } from '../../ai/providers';
 import { eventBus } from '../../events/event-bus';
 
 type CreationPhase =
@@ -49,9 +55,40 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
 
   const characterCreationRef = useRef<ReturnType<typeof createCharacterCreation> | null>(null);
   const resolvedPlayerStateRef = useRef<PlayerState | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const npcDialogue = useNpcDialogue();
-  const prevStreamingRef = useRef(false);
+  const [streamingText, setStreamingText] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+
+  const startGuardStream = useCallback(async (system: string, user: string) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setStreamingText('');
+    setIsStreaming(true);
+    try {
+      const result = streamText({
+        model: getModel('npc-actor'),
+        system,
+        prompt: user,
+        maxTokens: 200,
+        abortSignal: controller.signal,
+      });
+      let text = '';
+      for await (const chunk of result.textStream) {
+        if (controller.signal.aborted) break;
+        text += chunk;
+        setStreamingText(text);
+      }
+      setStreamingText(text);
+    } catch (err) {
+      if (!(err instanceof Error && err.name === 'AbortError')) {
+        setStreamingText('[叙事错误] 守卫沉默了片刻…');
+      }
+    } finally {
+      setIsStreaming(false);
+    }
+  }, []);
 
   // Load codex + guard dialogue on mount
   useEffect(() => {
@@ -79,60 +116,46 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
     return () => { cancelled = true; };
   }, []);
 
-  // Trigger streaming when entering round_streaming or name_prompt_streaming or farewell_streaming
+  // Trigger streaming with custom guard prompts
   useEffect(() => {
     if (!dialogueConfig) return;
 
     if (phase.type === 'round_streaming') {
       const roundData = dialogueConfig.rounds[phase.round - 1];
       if (!roundData) return;
-
-      const sceneContext = `黑松镇北门，守卫正在盘问旅人。${roundData.guardPromptHint}`;
-      const playerAction = lastSelectionLabel
-        ? `旅人回答："${lastSelectionLabel}"`
-        : '旅人刚走到城门前';
-
-      npcDialogue.startDialogue({
-        npcProfile: GUARD_PROFILE,
-        scene: sceneContext,
-        playerAction,
-        memories: [],
-      });
+      const ctx = { round: phase.round, totalRounds: TOTAL_ROUNDS, guardPromptHint: roundData.guardPromptHint, playerSelection: lastSelectionLabel };
+      startGuardStream(
+        buildGuardCreationSystemPrompt(GUARD_PROFILE, ctx),
+        buildGuardCreationUserPrompt(ctx),
+      );
     } else if (phase.type === 'name_prompt_streaming') {
-      npcDialogue.startDialogue({
-        npcProfile: GUARD_PROFILE,
-        scene: '黑松镇北门，守卫需要登记旅人的名字。',
-        playerAction: '旅人已经回答完了所有问题，等待登记名字',
-        memories: [],
-      });
+      startGuardStream(
+        buildGuardNamePrompt(GUARD_PROFILE),
+        '守卫准备登记旅人的名字。',
+      );
     } else if (phase.type === 'farewell_streaming') {
       const ps = resolvedPlayerStateRef.current;
-      const summary = ps
-        ? `种族: ${ps.race}, 职业: ${ps.profession}, 名字: ${ps.name}`
-        : '旅人';
-
-      npcDialogue.startDialogue({
-        npcProfile: GUARD_PROFILE,
-        scene: `黑松镇北门，守卫准备放行。旅人的特征：${summary}`,
-        playerAction: '旅人登记完毕，等待放行',
-        memories: [],
-      });
+      const summary = ps ? `种族: ${ps.race}, 职业: ${ps.profession}, 名字: ${ps.name}` : '旅人';
+      startGuardStream(
+        buildGuardFarewellPrompt(GUARD_PROFILE, summary),
+        '旅人登记完毕，等待放行。',
+      );
     }
   }, [phase.type, phase.type === 'round_streaming' ? (phase as { round: number }).round : 0]);
 
   // Detect stream completion
   useEffect(() => {
-    if (prevStreamingRef.current && !npcDialogue.isStreaming) {
-      if (phase.type === 'round_streaming') {
-        setPhase({ type: 'round_selecting', round: (phase as { round: number }).round });
-      } else if (phase.type === 'name_prompt_streaming') {
-        setPhase({ type: 'name_input' });
-      } else if (phase.type === 'farewell_streaming') {
-        setPhase({ type: 'transition_delay' });
-      }
+    if (isStreaming) return;
+    if (!streamingText) return;
+
+    if (phase.type === 'round_streaming') {
+      setPhase({ type: 'round_selecting', round: (phase as { round: number }).round });
+    } else if (phase.type === 'name_prompt_streaming') {
+      setPhase({ type: 'name_input' });
+    } else if (phase.type === 'farewell_streaming') {
+      setPhase({ type: 'transition_delay' });
     }
-    prevStreamingRef.current = npcDialogue.isStreaming;
-  }, [npcDialogue.isStreaming, phase]);
+  }, [isStreaming, streamingText, phase]);
 
   // Transition delay -> onComplete
   useEffect(() => {
@@ -159,7 +182,7 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
 
       eventBus.emit('narrative_creation_round_changed', { round: phase.round, totalRounds: TOTAL_ROUNDS });
 
-      npcDialogue.reset();
+      
 
       if (phase.round < TOTAL_ROUNDS) {
         setPhase({ type: 'round_streaming', round: phase.round + 1 });
@@ -167,7 +190,7 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
         setPhase({ type: 'name_prompt_streaming' });
       }
     },
-    [phase, dialogueConfig, npcDialogue],
+    [phase, dialogueConfig],
   );
 
   const handleNameSubmitted = useCallback(
@@ -196,15 +219,15 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
         profession: playerState.profession,
       });
 
-      npcDialogue.reset();
+      
       setPhase({ type: 'farewell_streaming' });
     },
-    [phase, weights, dialogueConfig, npcDialogue],
+    [phase, weights, dialogueConfig],
   );
 
   const handleSkipStreaming = useCallback(() => {
-    npcDialogue.skipToEnd();
-  }, [npcDialogue]);
+    abortRef.current?.abort();
+  }, []);
 
   if (phase.type === 'loading') {
     return (
@@ -235,8 +258,8 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
         {isRoundPhase && dialogueConfig && (
           <GuardDialoguePanel
             guardName={GUARD_PROFILE.name}
-            streamingText={npcDialogue.streamingText}
-            isStreaming={npcDialogue.isStreaming}
+            streamingText={streamingText}
+            isStreaming={isStreaming}
             options={dialogueConfig.rounds[currentRound - 1]?.options ?? []}
             showOptions={phase.type === 'round_selecting'}
             isActive={phase.type === 'round_selecting'}
@@ -255,8 +278,8 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
         {isNamePhase && dialogueConfig && (
           <GuardNameInput
             guardName={GUARD_PROFILE.name}
-            streamingText={npcDialogue.streamingText}
-            isStreaming={npcDialogue.isStreaming}
+            streamingText={streamingText}
+            isStreaming={isStreaming}
             isNameInputActive={phase.type === 'name_input'}
             namePool={dialogueConfig.namePool}
             onNameSubmitted={handleNameSubmitted}
@@ -274,16 +297,16 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
             <Text bold color="cyan">{'\u3010'}{GUARD_PROFILE.name}{'\u3011'}</Text>
             <Text> </Text>
             <Box flexDirection="column" flexGrow={1}>
-              {npcDialogue.streamingText ? (
+              {streamingText ? (
                 <Text>
-                  {npcDialogue.streamingText}
-                  {npcDialogue.isStreaming ? <Text dimColor>...</Text> : null}
+                  {streamingText}
+                  {isStreaming ? <Text dimColor>...</Text> : null}
                 </Text>
-              ) : npcDialogue.isStreaming ? (
+              ) : isStreaming ? (
                 <Text dimColor>...</Text>
               ) : null}
             </Box>
-            {phase.type === 'farewell_streaming' && npcDialogue.isStreaming && (
+            {phase.type === 'farewell_streaming' && isStreaming && (
               <Text dimColor>Enter/Space 跳过</Text>
             )}
             {phase.type === 'transition_delay' && (
