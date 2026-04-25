@@ -68,7 +68,7 @@ export async function loadRelationships(filePath: string): Promise<RelationshipE
 export async function loadAllCodex(codexDir: string): Promise<Map<string, CodexEntry>> {
   const { readdirSync } = await import("fs");
   const files = readdirSync(codexDir).filter(
-    (f) => f.endsWith(".yaml") && f !== "relationships.yaml"
+    (f) => f.endsWith(".yaml") && f !== "relationships.yaml" && f !== "guard-dialogue.yaml"
   );
 
   const entries = new Map<string, CodexEntry>();

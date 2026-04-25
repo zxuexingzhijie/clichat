@@ -13,6 +13,7 @@ import { GameScreen } from './ui/screens/game-screen';
 import { SizeGuard } from './ui/components/size-guard';
 import { initRoleConfigs } from './ai/providers';
 import { createGameLoop } from './game-loop';
+import { NarrativeCreationScreen } from './ui/screens/narrative-creation-screen';
 
 const GameStoreCtx = createStoreContext<GameState>();
 const PlayerStoreCtx = createStoreContext<PlayerState>();
@@ -22,14 +23,6 @@ const CombatStoreCtx = createStoreContext<CombatState>();
 const QuestStoreCtx = createStoreContext<QuestState>();
 
 export { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx };
-
-function NarrativeCreationPlaceholder({ onComplete: _onComplete }: { readonly onComplete: (ps: PlayerState) => void }) {
-  return (
-    <Box flexGrow={1} justifyContent="center" alignItems="center">
-      <Text dimColor>Narrative creation screen loading...</Text>
-    </Box>
-  );
-}
 
 function AppInner(): React.ReactNode {
   const phase = GameStoreCtx.useStoreState((s) => s.phase);
@@ -65,7 +58,7 @@ function AppInner(): React.ReactNode {
   if (phase === 'narrative_creation') {
     return (
       <SizeGuard>
-        <NarrativeCreationPlaceholder onComplete={handleCharacterCreated} />
+        <NarrativeCreationScreen onComplete={handleCharacterCreated} />
       </SizeGuard>
     );
   }
