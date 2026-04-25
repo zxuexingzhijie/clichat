@@ -1,11 +1,11 @@
 # homebrew-chronicle
 
-Homebrew tap for [Chronicle](https://github.com/OWNER/chronicle-cli) -- AI-driven CLI interactive novel game.
+Homebrew tap for [Chronicle](https://github.com/zxuexingzhijie/clichat) -- AI-driven CLI interactive novel game.
 
 ## Install
 
 ```
-brew tap OWNER/chronicle
+brew tap zxuexingzhijie/chronicle
 brew install chronicle
 ```
 
@@ -27,5 +27,5 @@ brew upgrade chronicle
 
 ```
 brew uninstall chronicle
-brew untap OWNER/chronicle
+brew untap zxuexingzhijie/chronicle
 ```

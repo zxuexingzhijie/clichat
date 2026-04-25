@@ -20,7 +20,7 @@ npx chronicle-cli
 ### via Homebrew (standalone, no runtime needed)
 
 ```bash
-brew tap OWNER/chronicle
+brew tap zxuexingzhijie/chronicle
 brew install chronicle
 chronicle
 ```
