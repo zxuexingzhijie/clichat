@@ -41,7 +41,8 @@ Requirements for the Playability & Distribution milestone. Phases continue from 
 
 ### Animation System (ANIM)
 
-- [ ] **ANIM-01**: Opening title screen displays Chronicle's title with a typewriter or fade-in animation before entering the main menu
+- [x] **ANIM-01
+**: Opening title screen displays Chronicle's title with a typewriter or fade-in animation before entering the main menu
 - [ ] **ANIM-02**: While waiting for an AI response (narration or NPC dialogue), a spinner or "thinking" animation is shown in the scene panel — replaced by streamed output when ready
 - [ ] **ANIM-03**: Entering a new scene plays a brief transition effect (e.g. fade-in, scene header flash) before narration renders
 - [ ] **ANIM-04**: Combat hits (player and enemy) produce a brief flash/shake text effect on the affected HP value in the status bar

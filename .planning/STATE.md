@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Playability & Distribution
 status: executing
-stopped_at: Completed 09-01-PLAN.md
-last_updated: "2026-04-25T13:56:39Z"
+stopped_at: Completed 09-03-PLAN.md
+last_updated: "2026-04-25T14:01:32.237Z"
 last_activity: 2026-04-25
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 18
-  completed_plans: 13
-  percent: 72
+  completed_plans: 15
+  percent: 83
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: 01 complete
 Status: Executing phase 9
 Last activity: 2026-04-25
 
-Progress: [███████░░░] 72%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -69,6 +69,8 @@ Progress: [███████░░░] 72%
 | Phase 08 P02 | 3min | 2 tasks | 7 files |
 | Phase 08 P01 | 215 | 2 tasks | 5 files |
 | Phase 09 P01 | 2min | 2 tasks | 8 files |
+| Phase 09 P03 | 1min | 2 tasks | 4 files |
+| Phase 09 P02 | 1min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -114,6 +116,8 @@ Recent decisions affecting current work:
 - NarrativeCreationPlaceholder is intentional stub replaced by Plan 03
 - Weight resolver uses standalone pure functions (not factory) with 4-layer deterministic tiebreaker
 - [09-01]: Extracted testable pure-logic counterparts (createTimedEffect, createTypewriter, createEventFlash, createToastManager) alongside React hooks for timer-dependent testing without React Testing Library
+- Pre-compute per-character gradient with chalk.hex() instead of gradient-string.multiline() for ANSI-safe column slicing
+- FadeWrapper omitted -- Ink Text dimColor applied directly to ScenePanel lines (Text cannot wrap Box)
 
 ### Pending Todos
 
@@ -180,8 +184,8 @@ Items acknowledged and deferred at milestone close on 2026-04-22:
 
 ## Session Continuity
 
-Last session: 2026-04-25T13:56:39Z
-Stopped at: Completed 09-01-PLAN.md
+Last session: 2026-04-25T14:01:27.430Z
+Stopped at: Completed 09-03-PLAN.md
 Resume file: None
 
 **Next:** Execute 09-02-PLAN.md (title screen typewriter animation)
