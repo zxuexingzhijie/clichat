@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Playability & Distribution
-status: planning
-stopped_at: context exhaustion at 92% (2026-04-25)
-last_updated: "2026-04-25T07:54:03.693Z"
-last_activity: 2026-04-24
+status: executing
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-04-25T13:56:39Z"
+last_activity: 2026-04-25
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 18
-  completed_plans: 12
-  percent: 67
+  completed_plans: 13
+  percent: 72
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-22)
 
 ## Current Position
 
-Phase: 8
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-04-24
+Phase: 9
+Plan: 01 complete
+Status: Executing phase 9
+Last activity: 2026-04-25
 
-Progress: [█████████░] 85%
+Progress: [███████░░░] 72%
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [█████████░] 85%
 | Phase 06 P02 | 5min | 1 tasks | 2 files |
 | Phase 08 P02 | 3min | 2 tasks | 7 files |
 | Phase 08 P01 | 215 | 2 tasks | 5 files |
+| Phase 09 P01 | 2min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -112,6 +113,7 @@ Recent decisions affecting current work:
 - z.preprocess maps old character_creation phase to title for save file backward compat
 - NarrativeCreationPlaceholder is intentional stub replaced by Plan 03
 - Weight resolver uses standalone pure functions (not factory) with 4-layer deterministic tiebreaker
+- [09-01]: Extracted testable pure-logic counterparts (createTimedEffect, createTypewriter, createEventFlash, createToastManager) alongside React hooks for timer-dependent testing without React Testing Library
 
 ### Pending Todos
 
@@ -178,10 +180,10 @@ Items acknowledged and deferred at milestone close on 2026-04-22:
 
 ## Session Continuity
 
-Last session: 2026-04-25T05:48:24.259Z
-Stopped at: context exhaustion at 92% (2026-04-25)
+Last session: 2026-04-25T13:56:39Z
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None
 
-**Next:** `/gsd-plan-phase 6` to plan Phase 6: Bug Fixes & Live Validation
+**Next:** Execute 09-02-PLAN.md (title screen typewriter animation)
 
 **Planned Phase:** 9 (animation-system) — 5 plans — 2026-04-25T07:54:03.684Z
