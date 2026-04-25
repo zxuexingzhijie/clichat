@@ -3,7 +3,7 @@ import { resolve } from "path";
 
 const GUARD_DIALOGUE_PATH = resolve(
   import.meta.dir,
-  "../data/codex/guard-dialogue.yaml",
+  "../../world-data/codex/guard-dialogue.yaml",
 );
 
 describe("guard-dialogue-loader", () => {
@@ -65,7 +65,7 @@ describe("guard-dialogue-loader", () => {
       const { loadGuardDialogue } = await import("./guard-dialogue-loader.ts");
       const tmpPath = resolve(
         import.meta.dir,
-        "../data/codex/__test_invalid_guard.yaml",
+        "../../world-data/codex/__test_invalid_guard.yaml",
       );
       const invalidYaml = `namePool:\n  - test\narchetypePriority:\n  profession: [a]\n  background: [b]\n`;
       await Bun.write(tmpPath, invalidYaml);
@@ -81,7 +81,7 @@ describe("guard-dialogue-loader", () => {
       const { loadGuardDialogue } = await import("./guard-dialogue-loader.ts");
       const tmpPath = resolve(
         import.meta.dir,
-        "../data/codex/__test_bad_option.yaml",
+        "../../world-data/codex/__test_bad_option.yaml",
       );
       const badYaml = `rounds:
   - round: 1

@@ -13,6 +13,7 @@ import { npcMemoryStore } from '../state/npc-memory-store';
 import { explorationStore } from '../state/exploration-store';
 import { playerKnowledgeStore } from '../state/player-knowledge-store';
 import { loadCodexFile } from '../codex/loader';
+import { resolve } from 'node:path';
 import { IntentSchema } from '../types/intent';
 
 describe('Phase 1 Success Criteria', () => {
@@ -199,7 +200,7 @@ describe('Phase 1 Success Criteria', () => {
 
   describe('WORLD-01: YAML codex validates against Zod schemas', () => {
     test('locations codex loads and validates', async () => {
-      const locations = await loadCodexFile('src/data/codex/locations.yaml');
+      const locations = await loadCodexFile(resolve(import.meta.dir, '../../world-data/codex/locations.yaml'));
       expect(locations.length).toBeGreaterThanOrEqual(1);
       expect(locations[0].type).toBe('location');
       expect(locations[0].id).toBeTruthy();

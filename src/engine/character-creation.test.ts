@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from 'bun:test';
+import { resolve } from 'node:path';
 import { loadAllCodex } from '../codex/loader';
 import { createCharacterCreation } from './character-creation';
 import type { CodexEntry } from '../codex/schemas/entry-types';
@@ -7,7 +8,7 @@ let codexEntries: Map<string, CodexEntry>;
 let cc: ReturnType<typeof createCharacterCreation>;
 
 beforeAll(async () => {
-  codexEntries = await loadAllCodex('src/data/codex');
+  codexEntries = await loadAllCodex(resolve(import.meta.dir, '../../world-data/codex'));
   cc = createCharacterCreation(codexEntries);
 });
 

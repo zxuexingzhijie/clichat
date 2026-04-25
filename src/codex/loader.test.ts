@@ -5,7 +5,7 @@ import type { CodexEntry } from "./schemas/entry-types.ts";
 import type { RelationshipEdge } from "./schemas/relationship.ts";
 import { resolve } from "path";
 
-const CODEX_DIR = resolve(import.meta.dir, "../data/codex");
+const CODEX_DIR = resolve(import.meta.dir, "../../world-data/codex");
 
 describe("loadCodexFile", () => {
   it("loads and validates locations.yaml", async () => {
