@@ -8,7 +8,7 @@ describe('GamePhaseSchema', () => {
   });
 
   it("still includes all prior valid phases", () => {
-    for (const phase of ['title', 'character_creation', 'game', 'combat', 'dialogue']) {
+    for (const phase of ['title', 'narrative_creation', 'game', 'combat', 'dialogue']) {
       const result = GamePhaseSchema.safeParse(phase);
       expect(result.success).toBe(true);
     }

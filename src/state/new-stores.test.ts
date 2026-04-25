@@ -41,18 +41,18 @@ describe('CharacterCreationStore', () => {
     expect(characterCreationStore.getState().selectedRace).toBe('human');
   });
 
-  test('emits character_creation_step_changed on step change', () => {
+  test('emits narrative_creation_round_changed on step change', () => {
     const handler = mock(() => {});
-    eventBus.on('character_creation_step_changed', handler);
+    eventBus.on('narrative_creation_round_changed', handler);
 
     characterCreationStore.setState(draft => {
       draft.currentStep = 1;
     });
 
     expect(handler).toHaveBeenCalledTimes(1);
-    expect(handler).toHaveBeenCalledWith({ step: 1, totalSteps: 4 });
+    expect(handler).toHaveBeenCalledWith({ round: 1, totalRounds: 4 });
 
-    eventBus.off('character_creation_step_changed', handler);
+    eventBus.off('narrative_creation_round_changed', handler);
   });
 
   test('emits character_created when isComplete transitions to true', () => {

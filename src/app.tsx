@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import path from 'node:path';
+import { Box, Text } from 'ink';
 import { createStoreContext } from './ui/hooks/use-store';
 import { gameStore, type GameState } from './state/game-store';
 import { playerStore, type PlayerState } from './state/player-store';
@@ -9,7 +10,6 @@ import { combatStore, type CombatState } from './state/combat-store';
 import { questStore, type QuestState } from './state/quest-store';
 import { TitleScreen } from './ui/screens/title-screen';
 import { GameScreen } from './ui/screens/game-screen';
-import { CharacterCreationScreen } from './ui/screens/character-creation-screen';
 import { SizeGuard } from './ui/components/size-guard';
 import { initRoleConfigs } from './ai/providers';
 import { createGameLoop } from './game-loop';
@@ -22,6 +22,14 @@ const CombatStoreCtx = createStoreContext<CombatState>();
 const QuestStoreCtx = createStoreContext<QuestState>();
 
 export { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx };
+
+function NarrativeCreationPlaceholder({ onComplete: _onComplete }: { readonly onComplete: (ps: PlayerState) => void }) {
+  return (
+    <Box flexGrow={1} justifyContent="center" alignItems="center">
+      <Text dimColor>Narrative creation screen loading...</Text>
+    </Box>
+  );
+}
 
 function AppInner(): React.ReactNode {
   const phase = GameStoreCtx.useStoreState((s) => s.phase);
@@ -37,7 +45,7 @@ function AppInner(): React.ReactNode {
 
   const handleStart = useCallback(() => {
     setGameState((draft) => {
-      draft.phase = 'character_creation';
+      draft.phase = 'narrative_creation';
     });
   }, [setGameState]);
 
@@ -54,10 +62,10 @@ function AppInner(): React.ReactNode {
     return <TitleScreen onStart={handleStart} />;
   }
 
-  if (phase === 'character_creation') {
+  if (phase === 'narrative_creation') {
     return (
       <SizeGuard>
-        <CharacterCreationScreen onComplete={handleCharacterCreated} />
+        <NarrativeCreationPlaceholder onComplete={handleCharacterCreated} />
       </SizeGuard>
     );
   }
