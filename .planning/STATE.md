@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Playability & Distribution
 status: executing
-stopped_at: Completed 09-04-PLAN.md
-last_updated: "2026-04-25T14:02:31.476Z"
+stopped_at: Completed 09-05-PLAN.md
+last_updated: "2026-04-25T14:06:21Z"
 last_activity: 2026-04-25
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 18
-  completed_plans: 16
-  percent: 89
+  completed_plans: 17
+  percent: 94
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-22)
 ## Current Position
 
 Phase: 9
-Plan: 01 complete
+Plan: 05 complete
 Status: Executing phase 9
 Last activity: 2026-04-25
 
-Progress: [█████████░] 89%
+Progress: [█████████▌] 94%
 
 ## Performance Metrics
 
@@ -72,6 +72,7 @@ Progress: [█████████░] 89%
 | Phase 09 P03 | 1min | 2 tasks | 4 files |
 | Phase 09 P02 | 1min | 1 tasks | 1 files |
 | Phase 09 P04 | 2min | 2 tasks | 4 files |
+| Phase 09 P05 | 2min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -120,6 +121,9 @@ Recent decisions affecting current work:
 - Pre-compute per-character gradient with chalk.hex() instead of gradient-string.multiline() for ANSI-safe column slicing
 - FadeWrapper omitted -- Ink Text dimColor applied directly to ScenePanel lines (Text cannot wrap Box)
 - [09-04]: Flash scope limited to HP value text only per D-11; Nat20/Nat1 use inverse flash
+- [09-05]: Spinner dimout uses 3-state machine (wasProcessingRef + isSpinnerDimming + spinnerDimoutComplete) for D-07
+- [09-05]: Toast logic extracted to useGameEventToasts hook keeping game-screen.tsx at 588 lines
+- [09-05]: Chapter summary uses uppercase 'S' shortcut to avoid conflict with lowercase shortcuts
 
 ### Pending Todos
 
@@ -182,14 +186,14 @@ Items acknowledged and deferred at milestone close on 2026-04-22:
 | uat | Phase 05 — live /cost with real token data | deferred → CARRY-01 Phase 6 | v1.0 close |
 | uat | Phase 05 — /replay N interactive panel | deferred → CARRY-01 Phase 6 | v1.0 close |
 | uat | Phase 05 — background summarizer live session | deferred → CARRY-01 Phase 6 | v1.0 close |
-| ui | Chapter summary display not wired to game-screen UI | deferred → CARRY-02 Phase 9 | v1.0 close |
+| ui | Chapter summary display not wired to game-screen UI | RESOLVED by 09-05 | v1.0 close |
 
 ## Session Continuity
 
-Last session: 2026-04-25T14:02:31.472Z
-Stopped at: Completed 09-04-PLAN.md
+Last session: 2026-04-25T14:06:21Z
+Stopped at: Completed 09-05-PLAN.md
 Resume file: None
 
-**Next:** Execute 09-02-PLAN.md (title screen typewriter animation)
+**Next:** Phase 9 complete. Proceed to Phase 10.
 
 **Planned Phase:** 9 (animation-system) — 5 plans — 2026-04-25T07:54:03.684Z
