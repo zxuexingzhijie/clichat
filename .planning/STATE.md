@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Playability & Distribution
 status: planning
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-04-25T05:02:02.687Z"
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-04-25T05:02:17.915Z"
 last_activity: 2026-04-24
 progress:
   total_phases: 5
@@ -67,6 +67,7 @@ Progress: [█████████░] 85%
 | Phase 06 P05 | 5min | 1 tasks | 1 files |
 | Phase 06 P02 | 5min | 1 tasks | 2 files |
 | Phase 08 P02 | 3min | 2 tasks | 7 files |
+| Phase 08 P01 | 215 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,7 @@ Recent decisions affecting current work:
 - BUG-02 branches placed BEFORE overlay-panel escape check; Escape+input_active guards with !isInOverlayPanel to prevent double-firing
 - z.preprocess maps old character_creation phase to title for save file backward compat
 - NarrativeCreationPlaceholder is intentional stub replaced by Plan 03
+- Weight resolver uses standalone pure functions (not factory) with 4-layer deterministic tiebreaker
 
 ### Pending Todos
 
@@ -176,8 +178,8 @@ Items acknowledged and deferred at milestone close on 2026-04-22:
 
 ## Session Continuity
 
-Last session: 2026-04-25T05:01:45.496Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-04-25T05:02:17.911Z
+Stopped at: Completed 08-01-PLAN.md
 Resume file: None
 
 **Next:** `/gsd-plan-phase 6` to plan Phase 6: Bug Fixes & Live Validation
