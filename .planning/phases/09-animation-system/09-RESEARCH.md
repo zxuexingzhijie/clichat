@@ -153,11 +153,11 @@ src/
 │   │   ├── use-timed-effect.ts       # NEW: shared animation primitive
 │   │   ├── use-typewriter.ts          # NEW: character-by-character reveal
 │   │   ├── use-event-flash.ts         # NEW: event -> timed flash
-│   │   └── use-toast.ts              # NEW: toast state manager
+│   │   ├── use-toast.ts              # NEW: toast state manager
+│   │   └── use-game-event-toasts.ts  # NEW: event bus -> toast wiring
 │   ├── components/
 │   │   ├── toast-banner.tsx           # NEW: single-line toast display
-│   │   ├── scene-spinner.tsx          # NEW: Spinner wrapper with atmosphere labels
-│   │   └── fade-wrapper.tsx           # NEW: dim/bright transition wrapper
+│   │   └── scene-spinner.tsx          # NEW: Spinner wrapper with atmosphere labels
 │   ├── panels/
 │   │   ├── chapter-summary-panel.tsx  # NEW: overlay panel for CARRY-02
 │   │   ├── scene-panel.tsx            # MODIFY: add spinner slot, toast slot, fade
@@ -168,7 +168,7 @@ src/
 │       ├── title-screen.tsx           # MODIFY: animated typewriter reveal
 │       └── game-screen.tsx            # MODIFY: wire spinner, toast, overlay
 ├── events/
-│   └── event-types.ts                 # MODIFY: add enemy_damaged/enemy_healed if missing
+│   └── event-types.ts                 # MODIFY: add enemy_damaged/enemy_healed/item_acquired
 └── state/
     └── game-store.ts                  # MODIFY: add 'chapter_summary' to GamePhaseSchema
 ```
@@ -571,22 +571,22 @@ function ChapterSummaryPanel({ summary, onClose }: {
 | A3 | blessed is abandoned since 2020 | State of the Art | No impact on this project; informational only |
 | A4 | Column-based typewriter reveal is needed for multi-line figlet | Pitfall #4 | If simple character slice works visually, implementation simplifies; MEDIUM risk -- needs testing |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **ANSI-aware character slicing for gradient typewriter**
    - What we know: `gradient-string.multiline()` produces ANSI escape sequences interspersed with visible characters. Slicing this string at arbitrary positions breaks escape sequences.
    - What's unclear: Whether `strip-ansi` + `slice-ansi` (npm package) or manual per-character gradient computation is more reliable.
-   - Recommendation: Use per-character gradient computation (linear interpolation of hex colors) to avoid ANSI slicing entirely. Apply chalk color per-character during typewriter reveal.
+   - RESOLVED: Use per-character gradient computation (linear interpolation of hex colors between #00FFFF and #FF00FF) to avoid ANSI slicing entirely. Apply `chalk.hex()` color per-character during typewriter reveal. Implemented in Plan 02 Task 1 via `interpolateHex` + `colorizeArt` functions.
 
 2. **Enemy damage/heal events for combat HP flash**
    - What we know: `player_damaged` and `player_healed` events exist. Enemy-side equivalents (`enemy_damaged`, `enemy_healed`) may not exist in `event-types.ts`.
    - What's unclear: Whether the existing `damage_dealt` event covers enemy damage with sufficient data (it has `targetId: string`).
-   - Recommendation: Use `damage_dealt` event and check `targetId` to determine if it's an enemy. Add `enemy_healed` event only if healing of enemies is a game mechanic.
+   - RESOLVED: Add dedicated `enemy_damaged` and `enemy_healed` events to `event-types.ts` (Plan 04 Task 1). Using dedicated events rather than parsing `damage_dealt.targetId` keeps the event-driven flash pattern consistent between player and enemy: `useEventFlash('enemy_damaged')` mirrors `useEventFlash('player_damaged')`.
 
 3. **Spinner dimout timing coordination with first streaming chunk**
    - What we know: D-07 specifies 1-2 frame dimout before streaming appears. D-08 says spinner deactivates when first streaming chunk arrives.
    - What's unclear: Whether the sentence buffer's 500ms timeout (first flush) creates a visible gap between spinner dimout and text appearance.
-   - Recommendation: Start dimout when AI call begins, not when first chunk arrives. The dimout (~150ms) naturally overlaps with the first chunk's network latency. If first chunk arrives during dimout, buffer it and display after dimout completes.
+   - RESOLVED: Use a 3-state machine in GameScreen: `SPINNER_ACTIVE -> SPINNER_DIMMING -> STREAMING`. When first streaming chunk arrives, enter SPINNER_DIMMING state for 150ms (via `useTimedEffect(150)`), then swap to streaming content. If chunk arrives during dimming, buffer it until dimming completes. The 150ms dimout overlaps naturally with network latency. Implemented in Plan 05 Task 2.
 
 ## Environment Availability
 
