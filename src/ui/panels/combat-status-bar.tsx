@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import stringWidth from 'string-width';
+import { useEventFlash } from '../hooks/use-event-flash';
 
 type CombatStatusBarProps = {
   readonly playerHp: number;
@@ -39,6 +40,11 @@ export function CombatStatusBar({
   const hpColor = hpRatio < 0.1 ? 'red' : hpRatio < 0.25 ? 'yellow' : undefined;
   const hpBold = hpRatio < 0.1;
 
+  const isPlayerDamageFlash = useEventFlash('player_damaged', 300);
+  const isPlayerHealFlash = useEventFlash('player_healed', 300);
+  const isEnemyDamageFlash = useEventFlash('enemy_damaged', 300);
+  const isEnemyHealFlash = useEventFlash('enemy_healed', 300);
+
   const primaryEnemy = enemies[0];
   const extraCount = enemies.length - 1;
 
@@ -62,13 +68,18 @@ export function CombatStatusBar({
   const enemyHpColor = enemyHpRatio < 0.1 ? 'red' : enemyHpRatio < 0.25 ? 'yellow' : undefined;
   const enemyHpBold = enemyHpRatio < 0.1;
 
+  const playerFlashColor = isPlayerDamageFlash ? 'red' : isPlayerHealFlash ? 'green' : hpColor;
+  const playerFlashBold = isPlayerDamageFlash || isPlayerHealFlash || hpBold;
+  const enemyFlashColor = isEnemyDamageFlash ? 'red' : isEnemyHealFlash ? 'green' : enemyHpColor;
+  const enemyFlashBold = isEnemyDamageFlash || isEnemyHealFlash || enemyHpBold;
+
   const turnIndicator = isPlayerTurn
     ? <Text color="cyan" bold>你的回合</Text>
     : <Text color="red">{primaryEnemy ? primaryEnemy.name : '敌人'}的回合</Text>;
 
   return (
     <Box paddingX={1}>
-      <Text color={hpColor} bold={hpBold}>
+      <Text color={playerFlashColor} bold={playerFlashBold}>
         ♥ {playerHp}/{playerMaxHp}
       </Text>
       <Text>  ✦ {playerMp}/{playerMaxMp}</Text>
@@ -77,7 +88,7 @@ export function CombatStatusBar({
           <Text dimColor> │ </Text>
           <Text>{enemyDisplay}</Text>
           <Text> </Text>
-          <Text color={enemyHpColor} bold={enemyHpBold}>
+          <Text color={enemyFlashColor} bold={enemyFlashBold}>
             ♥ {enemyHp}/{enemyMaxHp}
           </Text>
         </>

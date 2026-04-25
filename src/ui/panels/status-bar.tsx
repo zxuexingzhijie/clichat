@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import stringWidth from 'string-width';
+import { useEventFlash } from '../hooks/use-event-flash';
 
 type StatusBarProps = {
   readonly hp: number;
@@ -41,10 +42,15 @@ export function StatusBar({
   const hpColor = hpRatio < 0.1 ? 'red' : hpRatio < 0.25 ? 'yellow' : undefined;
   const hpBold = hpRatio < 0.1;
 
+  const isDamageFlash = useEventFlash('player_damaged', 300);
+  const isHealFlash = useEventFlash('player_healed', 300);
+  const flashColor = isDamageFlash ? 'red' : isHealFlash ? 'green' : hpColor;
+  const flashBold = isDamageFlash || isHealFlash || hpBold;
+
   const fields: React.ReactNode[] = [];
 
   fields.push(
-    <Text key="hp" color={hpColor} bold={hpBold}>
+    <Text key="hp" color={flashColor} bold={flashBold}>
       HP {hp}/{maxHp}
     </Text>,
   );

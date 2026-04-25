@@ -13,6 +13,8 @@ export type DomainEvents = {
 
   player_damaged: { amount: number; source: string };
   player_healed: { amount: number; source: string };
+  enemy_damaged: { amount: number; source: string; enemyIndex: number };
+  enemy_healed: { amount: number; source: string; enemyIndex: number };
   gold_changed: { delta: number; newTotal: number };
 
   time_advanced: { day: number; timeOfDay: string };
@@ -42,6 +44,8 @@ export type DomainEvents = {
   npc_dialogue_streaming_completed: { npcId: string; charCount: number };
 
   ai_call_failed: { role: string; error: string };
+
+  item_acquired: { itemId: string; itemName: string; quantity: number };
 
   quest_started: { questId: string; questTitle: string; turnNumber: number };
   quest_stage_advanced: { questId: string; newStageId: string; turnNumber: number };
