@@ -106,7 +106,13 @@ Plans:
   2. The `chronicle` binary is wired via a `bin` entry in package.json and a compiled entry point
   3. `brew tap <owner>/chronicle && brew install chronicle` installs the game and `chronicle` launches it correctly
   4. Pushing a `v*` tag triggers a GitHub Actions workflow that publishes a new npm release and updates the Homebrew formula automatically
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 10-01-PLAN.md — Path resolution utility + world-data directory restructure
+- [ ] 10-02-PLAN.md — CLI entry point + data loader refactor + package.json update
+- [ ] 10-03-PLAN.md — GitHub Actions CI + release workflows
+- [ ] 10-04-PLAN.md — Homebrew formula + tap repository scaffold
+- [ ] 10-05-PLAN.md — Final cleanup: old data removal + test path migration + README/LICENSE + verification
 
 ## Progress
 
@@ -121,4 +127,4 @@ Plans:
 | 7. Streaming Output | v1.1 | 4/4 | Complete | 2026-04-24 |
 | 8. Narrative Character Creation | v1.1 | 4/4 | Complete | 2026-04-25 |
 | 9. Animation System | v1.1 | 5/5 | Complete | 2026-04-25 |
-| 10. Distribution | v1.1 | 0/? | Not started | - |
+| 10. Distribution | v1.1 | 0/5 | Not started | - |
