@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Text } from 'ink';
 import type { CheckResult } from '../../types/common';
 import { GRADE_LABELS, ATTRIBUTE_LABELS } from '../../types/common';
 import type { SuccessGrade, AttributeName } from '../../types/common';
+import { useTimedEffect } from '../hooks/use-timed-effect';
 
 type CheckResultLineProps = {
   readonly checkResult: CheckResult;
@@ -33,13 +34,19 @@ export function CheckResultLine({ checkResult }: CheckResultLineProps): React.Re
   const gradeColor = getGradeColor(grade as SuccessGrade);
   const gradeBold = isGradeBold(grade as SuccessGrade);
 
+  const { active: isFlashing, trigger: triggerFlash } = useTimedEffect(300);
+
+  useEffect(() => {
+    triggerFlash();
+  }, []);
+
   const isNat20 = roll === 20;
   const isNat1 = roll === 1;
 
   if (isNat20) {
     return (
       <Box>
-        <Text color="green" bold>
+        <Text color="green" bold inverse={isFlashing}>
           [D20: {roll}] + {attrLabel} {attributeModifier} = {total} vs DC {dc} → {gradeLabel}（天命所归！）
         </Text>
       </Box>
@@ -49,7 +56,7 @@ export function CheckResultLine({ checkResult }: CheckResultLineProps): React.Re
   if (isNat1) {
     return (
       <Box>
-        <Text color="red" bold>
+        <Text color="red" bold inverse={isFlashing}>
           [D20: {roll}] + {attrLabel} {attributeModifier} = {total} vs DC {dc} → {gradeLabel}（命运弄人...）
         </Text>
       </Box>
@@ -65,7 +72,7 @@ export function CheckResultLine({ checkResult }: CheckResultLineProps): React.Re
       <Text bold>= {total}</Text>
       <Text dimColor> vs DC {dc}</Text>
       <Text> → </Text>
-      <Text color={gradeColor} bold={gradeBold}>{gradeLabel}</Text>
+      <Text color={gradeColor} bold={gradeBold || isFlashing}>{gradeLabel}</Text>
     </Box>
   );
 }
