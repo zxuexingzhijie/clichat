@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Playability & Distribution
 status: verifying
-stopped_at: Completed 10-04-PLAN.md
-last_updated: "2026-04-25T16:15:33.976Z"
+stopped_at: Completed 10-05-PLAN.md
+last_updated: "2026-04-25T16:18:30Z"
 last_activity: 2026-04-25
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 23
-  completed_plans: 22
-  percent: 96
+  completed_plans: 23
+  percent: 100
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-22)
 
 ## Current Position
 
-Phase: 9
+Phase: 10
 Plan: All 5 plans complete
-Status: Phase 9 executed — pending human visual verification
+Status: Phase 10 executed — pending human verification of full distribution setup
 Last activity: 2026-04-25
 
-Progress: [██████████] 96%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -77,6 +77,7 @@ Progress: [██████████] 96%
 | Phase 10 P02 | 2min | 2 tasks | 6 files |
 | Phase 10 P03 | 1min | 2 tasks | 2 files |
 | Phase 10 P04 | 1min | 1 tasks | 3 files |
+| Phase 10 P05 | 2min | 1 tasks | 19 files |
 
 ## Accumulated Context
 
@@ -132,6 +133,9 @@ Recent decisions affecting current work:
 - CLI sets process.env.__CHRONICLE_DATA_DIR before dynamic import -- single env var propagates data dir to all consumers
 - [10-03]: publish-npm and build-binaries run in parallel after quality-gate in release pipeline (fan-out pattern)
 - Workflow uses env: blocks instead of inline GitHub expression interpolation in run: steps to mitigate sed injection (T-10-13)
+
+- All test files use resolve(import.meta.dir, '../../world-data/codex') for portable path resolution
+- src/data/codex/ deleted entirely -- world-data/codex/ is single source of truth
 
 ### Pending Todos
 
@@ -198,10 +202,10 @@ Items acknowledged and deferred at milestone close on 2026-04-22:
 
 ## Session Continuity
 
-Last session: 2026-04-25T16:15:33.789Z
-Stopped at: Completed 10-04-PLAN.md
+Last session: 2026-04-25T16:18:30Z
+Stopped at: Completed 10-05-PLAN.md
 Resume file: None
 
-**Next:** Phase 9 complete. Proceed to Phase 10.
+**Next:** Phase 10 complete. All v1.1 plans executed. Pending human verification of distribution setup.
 
-**Planned Phase:** 10 (Distribution) — 5 plans — 2026-04-25T16:01:53.714Z
+**Planned Phase:** 10 (Distribution) — 5 plans — All complete
