@@ -13,6 +13,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate payload
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+          SHA_DARWIN_ARM64: ${{ github.event.client_payload.darwin_arm64_sha256 }}
+          SHA_DARWIN_X64: ${{ github.event.client_payload.darwin_x64_sha256 }}
+          SHA_LINUX_X64: ${{ github.event.client_payload.linux_x64_sha256 }}
+        run: |
+          for var in VERSION SHA_DARWIN_ARM64 SHA_DARWIN_X64 SHA_LINUX_X64; do
+            if [ -z "${!var}" ]; then
+              echo "::error::Missing required payload field: $var"
+              exit 1
+            fi
+          done
+
       - name: Update formula version and hashes
         env:
           VERSION: ${{ github.event.client_payload.version }}
