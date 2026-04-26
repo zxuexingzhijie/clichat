@@ -143,7 +143,7 @@ describe('playerKnowledgeStore', () => {
     });
 
     expect(handler).toHaveBeenCalledTimes(1);
-    const call = handler.mock.calls[0][0] as { entryId: string; codexEntryId: string | null; knowledgeStatus: string; turnNumber: number };
+    const call = (handler.mock.calls as unknown as unknown[][])[0]![0] as { entryId: string; codexEntryId: string | null; knowledgeStatus: string; turnNumber: number };
     expect(call.entryId).toBe('k_01');
     expect(call.codexEntryId).toBe('codex_secret');
     expect(call.knowledgeStatus).toBe('heard');

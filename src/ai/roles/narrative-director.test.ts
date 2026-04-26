@@ -3,7 +3,7 @@ import { describe, it, expect, mock, beforeEach } from 'bun:test';
 const mockUsage = { inputTokens: 100, outputTokens: 50, totalTokens: 150 };
 const mockGenerateText = mock(() => Promise.resolve({ text: '', usage: mockUsage }));
 const mockStreamText = mock(() => ({
-  textStream: (async function* () {
+  textStream: (async function* (): AsyncGenerator<string> {
     yield '月光';
     yield '洒落';
   })(),

@@ -105,7 +105,7 @@ describe('filterResponsesByReputation', () => {
   });
 
   it('returns locked=false when no minReputation is set', () => {
-    const responses = [{ id: 'r1', text: 'Hello' }];
+    const responses: { id: string; text: string; minReputation?: number }[] = [{ id: 'r1', text: 'Hello' }];
     const result = filterResponsesByReputation(responses, 10);
     expect(result[0]?.locked).toBe(false);
   });

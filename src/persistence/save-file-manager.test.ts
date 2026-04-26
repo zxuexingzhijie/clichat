@@ -18,12 +18,12 @@ const mockBunFile = mock((filePath: string) => ({
 
 let mkdirSpy: ReturnType<typeof spyOn>;
 let readdirSpy: ReturnType<typeof spyOn>;
-const originalBunWrite = (globalThis as Record<string, unknown>).Bun?.write;
-const originalBunFile = (globalThis as Record<string, unknown>).Bun?.file;
+const originalBunWrite = ((globalThis as Record<string, unknown>).Bun as Record<string, unknown> | undefined)?.write;
+const originalBunFile = ((globalThis as Record<string, unknown>).Bun as Record<string, unknown> | undefined)?.file;
 
 beforeEach(() => {
   mkdirSpy = spyOn(_fs, 'mkdirSync').mockImplementation(() => undefined as unknown as ReturnType<typeof _fs.mkdirSync>);
-  readdirSpy = spyOn(_fs, 'readdirSync').mockImplementation(() => ['quicksave.json', 'hero_2024-01-01T00-00.json', 'notes.txt'] as unknown as ReturnType<typeof _fs.readdirSync>);
+  readdirSpy = spyOn(_fs, 'readdirSync').mockImplementation((() => ['quicksave.json', 'hero_2024-01-01T00-00.json', 'notes.txt']) as unknown as typeof _fs.readdirSync);
   if (typeof Bun !== 'undefined') {
     (Bun as unknown as Record<string, unknown>).write = mockBunWrite;
     (Bun as unknown as Record<string, unknown>).file = mockBunFile;
@@ -80,7 +80,7 @@ describe('quickSave', () => {
     await quickSave(mockSerializer, '/tmp/saves');
 
     expect(mockBunWrite).toHaveBeenCalled();
-    const [filePath] = mockBunWrite.mock.calls[0] as [string, string];
+    const [filePath] = (mockBunWrite.mock.calls as unknown as [string, string][])[0]!;
     expect(filePath).toContain('quicksave.json');
   });
 
@@ -93,7 +93,7 @@ describe('quickSave', () => {
 
     await quickSave(mockSerializer, '/tmp/saves');
 
-    const [, content] = mockBunWrite.mock.calls[0] as [string, string];
+    const [, content] = (mockBunWrite.mock.calls as unknown as [string, string][])[0]!;
     expect(content).toBe(snapshotData);
   });
 
@@ -118,7 +118,7 @@ describe('saveGame', () => {
     await saveGame('hero', mockSerializer, '/tmp/saves');
 
     expect(mockBunWrite).toHaveBeenCalled();
-    const [filePath] = mockBunWrite.mock.calls[0] as [string, string];
+    const [filePath] = (mockBunWrite.mock.calls as unknown as [string, string][])[0]!;
     expect(filePath).toMatch(/hero_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}\.json$/);
   });
 
@@ -130,7 +130,7 @@ describe('saveGame', () => {
 
     await saveGame('my save!', mockSerializer, '/tmp/saves');
 
-    const [filePath] = mockBunWrite.mock.calls[0] as [string, string];
+    const [filePath] = (mockBunWrite.mock.calls as unknown as [string, string][])[0]!;
     expect(filePath).not.toContain(' ');
     expect(filePath).not.toContain('!');
   });
@@ -157,14 +157,14 @@ describe('loadGame', () => {
 
     expect(mockBunFile).toHaveBeenCalledWith('/tmp/saves/quicksave.json');
     expect(mockSerializer.restore).toHaveBeenCalled();
-    const restoredJson = mockSerializer.restore.mock.calls[0]?.[0];
+    const restoredJson = (mockSerializer.restore.mock.calls as unknown as unknown[][])[0]?.[0];
     expect(typeof restoredJson).toBe('string');
   });
 });
 
 describe('listSaves', () => {
   it('returns an array of SaveListEntry sorted by timestamp desc', async () => {
-    readdirSpy.mockImplementation(() => ['quicksave.json', 'hero_2024-01-01T00-00.json'] as unknown as ReturnType<typeof _fs.readdirSync>);
+    readdirSpy.mockImplementation((() => ['quicksave.json', 'hero_2024-01-01T00-00.json']) as unknown as typeof _fs.readdirSync);
 
     const results = await listSaves('/tmp/saves');
 
@@ -172,7 +172,7 @@ describe('listSaves', () => {
   });
 
   it('reads only .json files (ignores .txt and other extensions)', async () => {
-    readdirSpy.mockImplementation(() => ['save.json', 'readme.txt', 'save2.json'] as unknown as ReturnType<typeof _fs.readdirSync>);
+    readdirSpy.mockImplementation((() => ['save.json', 'readme.txt', 'save2.json']) as unknown as typeof _fs.readdirSync);
 
     await listSaves('/tmp/saves');
 
@@ -180,7 +180,7 @@ describe('listSaves', () => {
   });
 
   it('each entry has filePath and meta fields', async () => {
-    readdirSpy.mockImplementation(() => ['quicksave.json'] as unknown as ReturnType<typeof _fs.readdirSync>);
+    readdirSpy.mockImplementation((() => ['quicksave.json']) as unknown as typeof _fs.readdirSync);
 
     const results = await listSaves('/tmp/saves');
     expect(results.length).toBe(1);
@@ -214,7 +214,7 @@ describe('listSaves', () => {
       exists: mock(() => Promise.resolve(true)),
     };
 
-    readdirSpy.mockImplementation(() => ['old.json', 'new.json'] as unknown as ReturnType<typeof _fs.readdirSync>);
+    readdirSpy.mockImplementation((() => ['old.json', 'new.json']) as unknown as typeof _fs.readdirSync);
     mockBunFile
       .mockReturnValueOnce(fileWithOldTimestamp as unknown as ReturnType<typeof mockBunFile>)
       .mockReturnValueOnce(fileWithNewTimestamp as unknown as ReturnType<typeof mockBunFile>);

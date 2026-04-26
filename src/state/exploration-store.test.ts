@@ -122,7 +122,7 @@ describe('explorationStore', () => {
     });
 
     expect(handler).toHaveBeenCalledTimes(1);
-    const call = handler.mock.calls[0][0] as { locationId: string; newLevel: string; previousLevel: string | null };
+    const call = (handler.mock.calls as unknown as unknown[][])[0]![0] as { locationId: string; newLevel: string; previousLevel: string | null };
     expect(call.locationId).toBe('loc_01');
     expect(call.newLevel).toBe('rumored');
     expect(call.previousLevel).toBeNull();
@@ -151,7 +151,7 @@ describe('explorationStore', () => {
     });
 
     expect(handler).toHaveBeenCalledTimes(1);
-    const call = handler.mock.calls[0][0] as { locationId: string; oldLevel: string; newLevel: string };
+    const call = (handler.mock.calls as unknown as unknown[][])[0]![0] as { locationId: string; oldLevel: string; newLevel: string };
     expect(call.locationId).toBe('loc_01');
     expect(call.oldLevel).toBe('rumored');
     expect(call.newLevel).toBe('visited');

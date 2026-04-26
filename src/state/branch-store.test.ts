@@ -111,7 +111,7 @@ describe('branchStore', () => {
     });
 
     expect(handler).toHaveBeenCalledTimes(1);
-    const call = handler.mock.calls[0][0] as { branchId: string; branchName: string; parentBranchId: string | null };
+    const call = (handler.mock.calls as unknown as unknown[][])[0]![0] as { branchId: string; branchName: string; parentBranchId: string | null };
     expect(call.branchId).toBe('alt');
     expect(call.branchName).toBe('alternate');
     expect(call.parentBranchId).toBe('main');
@@ -140,7 +140,7 @@ describe('branchStore', () => {
     });
 
     expect(handler).toHaveBeenCalledTimes(1);
-    const call = handler.mock.calls[0][0] as { fromBranchId: string; toBranchId: string };
+    const call = (handler.mock.calls as unknown as unknown[][])[0]![0] as { fromBranchId: string; toBranchId: string };
     expect(call.fromBranchId).toBe('main');
     expect(call.toBranchId).toBe('alt');
 
@@ -168,7 +168,7 @@ describe('branchStore', () => {
     });
 
     expect(handler).toHaveBeenCalledTimes(1);
-    const call = handler.mock.calls[0][0] as { branchId: string; branchName: string };
+    const call = (handler.mock.calls as unknown as unknown[][])[0]![0] as { branchId: string; branchName: string };
     expect(call.branchId).toBe('alt');
     expect(call.branchName).toBe('alternate');
 

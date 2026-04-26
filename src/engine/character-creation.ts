@@ -61,7 +61,7 @@ export function createCharacterCreation(codexEntries: Map<string, CodexEntry>): 
     professionId: string,
     backgroundIds: readonly string[],
   ): Record<string, number> => {
-    const attrs = { ...BASE_ATTRIBUTES };
+    const attrs: Record<string, number> = { ...BASE_ATTRIBUTES };
 
     const profession = queryById(codexEntries, professionId) as Profession | undefined;
     if (profession) {

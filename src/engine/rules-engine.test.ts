@@ -106,7 +106,7 @@ describe("rules-engine facade", () => {
   test("resolveAction returns valid CheckResult", () => {
     const rng = createSeededRng(42);
     const result = resolveAction(
-      { type: "attack", target: "goblin" },
+      { type: "attack", target: "goblin", modifiers: {}, source: "command" as const },
       { attributeName: "physique", attributeModifier: 3, skillModifier: 1, environmentModifier: 0, dc: 12 },
       rng,
     );
@@ -120,8 +120,8 @@ describe("rules-engine facade", () => {
     const rng1 = createSeededRng(99);
     const rng2 = createSeededRng(99);
     const ctx = { attributeName: "finesse" as const, attributeModifier: 2, skillModifier: 0, environmentModifier: 0, dc: 14 };
-    const r1 = resolveAction({ type: "attack", target: "x" }, ctx, rng1);
-    const r2 = resolveAction({ type: "attack", target: "x" }, ctx, rng2);
+    const r1 = resolveAction({ type: "attack", target: "x", modifiers: {}, source: "command" as const }, ctx, rng1);
+    const r2 = resolveAction({ type: "attack", target: "x", modifiers: {}, source: "command" as const }, ctx, rng2);
     expect(r1).toEqual(r2);
   });
 });

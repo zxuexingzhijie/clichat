@@ -160,7 +160,7 @@ describe('questStore', () => {
     });
 
     expect(handler).toHaveBeenCalledTimes(1);
-    const call = handler.mock.calls[0][0] as { questId: string; questTitle: string; turnNumber: number };
+    const call = (handler.mock.calls as unknown as unknown[][])[0]![0] as { questId: string; questTitle: string; turnNumber: number };
     expect(call.questId).toBe('q1');
 
     eventBus.off('quest_started', handler);
@@ -188,7 +188,7 @@ describe('questStore', () => {
     });
 
     expect(handler).toHaveBeenCalledTimes(1);
-    const call = handler.mock.calls[0][0] as { questId: string; rewards: unknown };
+    const call = (handler.mock.calls as unknown as unknown[][])[0]![0] as { questId: string; rewards: unknown };
     expect(call.questId).toBe('q1');
 
     eventBus.off('quest_completed', handler);
@@ -215,7 +215,7 @@ describe('questStore', () => {
     });
 
     expect(handler).toHaveBeenCalledTimes(1);
-    const call = handler.mock.calls[0][0] as { questId: string; reason: string };
+    const call = (handler.mock.calls as unknown as unknown[][])[0]![0] as { questId: string; reason: string };
     expect(call.questId).toBe('q1');
 
     eventBus.off('quest_failed', handler);

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import type { NpcMemoryEntry } from '../../state/npc-memory-store';
 
 const mockNpcMemoryGetState = mock(() => ({ memories: {} }));
-const mockNpcMemorySetState = mock((_recipe: unknown) => {});
+const mockNpcMemorySetState = mock((_recipe: (draft: unknown) => void) => {});
 
 mock.module('../../state/npc-memory-store', () => ({
   npcMemoryStore: {

@@ -1,6 +1,8 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
+import type { NpcDialogue } from '../ai/schemas/npc-dialogue';
+import type { CheckResult } from '../types/common';
 
-const mockGenerateNpcDialogue = mock(() =>
+const mockGenerateNpcDialogue = mock((): Promise<NpcDialogue> =>
   Promise.resolve({
     dialogue: '这里最近发生了些事情，你要小心。',
     emotionTag: 'suspicious',
@@ -9,7 +11,7 @@ const mockGenerateNpcDialogue = mock(() =>
   }),
 );
 
-const mockAdjudicate = mock(() => ({
+const mockAdjudicate = mock((): CheckResult => ({
   roll: 15,
   attributeName: 'mind',
   attributeModifier: 2,
@@ -17,7 +19,7 @@ const mockAdjudicate = mock(() => ({
   environmentModifier: 0,
   total: 17,
   dc: 12,
-  grade: 'success' as const,
+  grade: 'success',
   display: '[D20: 15] + 心智 2 = 17 vs DC 12 -> 成功',
 }));
 
@@ -122,7 +124,7 @@ describe('createDialogueManager', () => {
       environmentModifier: 0,
       total: 17,
       dc: 12,
-      grade: 'success' as const,
+      grade: 'success',
       display: '[D20: 15] + 心智 2 = 17 vs DC 12 -> 成功',
     });
   });
@@ -162,7 +164,7 @@ describe('createDialogueManager', () => {
       })
       .mockResolvedValueOnce({
         dialogue: '你有什么线索吗？',
-        emotionTag: 'hopeful',
+        emotionTag: 'happy',
         shouldRemember: false,
         relationshipDelta: 0.1,
       });
@@ -195,7 +197,7 @@ describe('createDialogueManager', () => {
       environmentModifier: 0,
       total: 20,
       dc: 12,
-      grade: 'success' as const,
+      grade: 'success',
       display: '[D20: 18] + 心智 2 = 20 vs DC 12 -> 成功',
     });
 

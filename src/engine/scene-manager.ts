@@ -57,7 +57,8 @@ function buildSuggestedActions(location: Location, codexEntries: Map<string, Cod
     });
   }
 
-  for (const exitId of location.exits) {
+  for (const exit of location.exits) {
+    const exitId = typeof exit === 'string' ? exit : exit.targetId;
     const exitLocation = queryById(codexEntries, exitId);
     const exitName = exitLocation?.name ?? exitId;
     actions.push({
@@ -91,7 +92,7 @@ export function createSceneManager(
       draft.sceneId = locationId;
       draft.locationName = entry.name;
       draft.npcsPresent = [...entry.notable_npcs];
-      draft.exits = [...entry.exits];
+      draft.exits = entry.exits.map(e => typeof e === 'string' ? e : e.targetId);
       draft.objects = [...entry.objects];
     });
 

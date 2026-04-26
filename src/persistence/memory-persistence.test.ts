@@ -11,8 +11,8 @@ const mockBunFile = mock((_filePath: string) => ({
 }));
 
 let mkdirSpy: ReturnType<typeof spyOn>;
-const originalBunWrite = (globalThis as Record<string, unknown>).Bun?.write;
-const originalBunFile = (globalThis as Record<string, unknown>).Bun?.file;
+const originalBunWrite = ((globalThis as Record<string, unknown>).Bun as Record<string, unknown> | undefined)?.write;
+const originalBunFile = ((globalThis as Record<string, unknown>).Bun as Record<string, unknown> | undefined)?.file;
 
 beforeEach(() => {
   mkdirSpy = spyOn(_fs, 'mkdirSync').mockImplementation(() => undefined as unknown as ReturnType<typeof _fs.mkdirSync>);
@@ -128,7 +128,7 @@ describe('writeMemoryToDisk — index.json', () => {
 
     await new Promise(r => setTimeout(r, 50));
 
-    const writtenPaths = mockBunWrite.mock.calls.map(c => c[0] as string);
+    const writtenPaths = (mockBunWrite.mock.calls as unknown as [string, string][]).map(c => c[0]);
     expect(writtenPaths.some(p => p.includes('index.json'))).toBe(true);
   });
 
@@ -148,7 +148,7 @@ describe('writeMemoryToDisk — index.json', () => {
 
     await new Promise(r => setTimeout(r, 50));
 
-    const writtenPaths = mockBunWrite.mock.calls.map(c => c[0] as string);
+    const writtenPaths = (mockBunWrite.mock.calls as unknown as [string, string][]).map(c => c[0]);
     expect(writtenPaths.some(p => p.includes('npc_guard.json'))).toBe(true);
   });
 });
