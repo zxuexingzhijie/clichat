@@ -6,35 +6,23 @@ Chronicle is an AI-driven CLI interactive novel game — a text RPG where AI han
 and NPC behavior while a deterministic Rules Engine controls truth, state, and game pacing.
 Chinese-first, CLI-first, single-player. Players interact through dual-input (structured
 commands + natural language), manage story forks like git branches, and explore a persistent
-world with long-memory NPCs. v1.0 ships a fully playable Classic Fantasy region.
+world with long-memory NPCs. v1.1 ships with streaming output, cinematic character creation,
+animation feedback, and npm + Homebrew distribution.
 
 ## Core Value
 
 The player must feel they are in a **persistent, consistent world that remembers them** — not
 a chatbot that reinvents the universe every turn.
 
-## Current Milestone: v1.1 Playability & Distribution
+## Current State (v1.1)
 
-**Goal:** 修复核心交互 bug、实现流式输出、叙事式角色创建、动画反馈系统，并通过 npm + Homebrew tap 让用户真正可以安装和使用游戏。
-
-**Target features:**
-- [BUG] Enter 确认后不推进 + 无法切换到自定义输入
-- [BUG] 游戏无法退出（无退出快捷键/命令）
-- 流式输出 — 旁白/NPC 对话逐字打印
-- 叙事式角色创建 — 取代菜单，通过守卫拦截场景引导定属性
-- 动画系统 — 开场标题、AI loading、场景转换、战斗打击感、界面反馈
-- npm publish (chronicle-cli) + Homebrew 自建 tap 分发
-
----
-
-## Current State (v1.0)
-
-- **Shipped:** 2026-04-22
-- **Codebase:** ~19,000 lines TypeScript, Bun runtime, React + Ink
-- **Test suite:** 637 tests, 0 failures
+- **Shipped:** 2026-04-26
+- **Codebase:** ~22,200 lines TypeScript, Bun runtime, React + Ink
+- **Test suite:** 744 tests, 0 failures
 - **AI providers:** Multi-provider via YAML config (Google, OpenAI, Anthropic, Qwen, DeepSeek)
 - **World:** Classic Fantasy — 9 locations, 4 factions, 15+ NPCs, main quest + side quests
-- **Known gaps:** 3 live UAT items deferred (require API session); chapter summary display not wired to UI
+- **Distribution:** npm (chronicle-cli), Homebrew tap, GitHub Actions CI/CD
+- **Known gaps:** OWNER placeholders in distribution files (user replaces before publish); live API UAT deferred
 
 ## Requirements
 
@@ -65,12 +53,18 @@ a chatbot that reinvents the universe every turn.
 - ✓ Classic Fantasy world pack (9 locations, 4 factions, 15+ NPCs, quests) — v1.0 (CONT-01–04)
 - ✓ CLI layout: four-panel (scene, status bar, suggested actions, input) — v1.0 (CLI-01)
 - ✓ Keyboard shortcuts: Tab completion, arrow history, `?` help — v1.0 (CLI-04)
+- ✓ Core input loop fixed (Enter advances, focus switching, reliable quit) — v1.1 (BUG-01–03)
+- ✓ Streaming typewriter narration and NPC dialogue with skip-to-end — v1.1 (STREAM-01–03)
+- ✓ Narrative character creation via guard intercept scene — v1.1 (NCC-01–04)
+- ✓ Animation system (title, spinner, transitions, combat flash, toast) — v1.1 (ANIM-01–05)
+- ✓ npm + Homebrew distribution with CI/CD release pipeline — v1.1 (DIST-01–05)
+- ✓ Chapter summary display wired to game-screen UI — v1.1 (CARRY-02)
 
 ### Active
 
-- [ ] Live session validation of /cost, /replay, background summarizer (carry-over from v1.0)
-- [ ] Chapter summary display wired to game-screen UI (stub storage not connected)
 - [ ] CJK text rendering audit in live terminal (partial mitigation via string-width)
+- [ ] Live session validation of /cost, /replay, background summarizer (carry-over)
+- [ ] Replace OWNER placeholders in distribution files before first publish
 
 ### Out of Scope
 
@@ -119,7 +113,13 @@ a chatbot that reinvents the universe every turn.
 | Inline dialogue mode | Appends NPC speech as narration; no layout change | ✓ Good — simpler than separate dialogue window |
 | immer for complex nested updates | Selective use; plain spreads elsewhere | ✓ Good — used only where nested mutation would be error-prone |
 | CostSessionState ephemeral | Resets on state_restored; prevents cross-session bleed | ✓ Good — clean separation of session vs save state |
-| gemini-2.0-flash as default for all roles | Placeholder; real routing via YAML config | ⚠️ Revisit — pricing fields not fully populated; estimatedCost stays 0 until YAML loaded |
+| gemini-2.0-flash as default for all roles | Placeholder; real routing via YAML config | Revisit — pricing fields not fully populated; estimatedCost stays 0 until YAML loaded |
+| Streaming via sentence buffer + async generator | Smooth typewriter without partial-word rendering | Good — clean separation of buffering and rendering |
+| Guard intercept scene for character creation | Cinematic entry replaces menu; Rules Engine sets stats | Good — immersive and deterministic |
+| Animation hooks as pure-logic + React wrappers | Testable without React Testing Library | Good — timer-dependent tests run fast |
+| CLI env var propagation for data dir | Single env var __CHRONICLE_DATA_DIR shared by all consumers | Good — no import changes needed |
+| Segment-based traversal guard | path.normalize resolves '..' away; split detects it | Good — security-correct |
+| GitHub Actions fan-out pattern | publish-npm and build-binaries parallel after quality-gate | Good — reduces pipeline time |
 
 ## Evolution
 
@@ -137,4 +137,4 @@ a chatbot that reinvents the universe every turn.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-22 after v1.0 milestone*
+*Last updated: 2026-04-26 after v1.1 milestone*

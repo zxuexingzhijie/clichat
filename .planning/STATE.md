@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Playability & Distribution
-status: verifying
-stopped_at: Completed 10-05-PLAN.md
-last_updated: "2026-04-25T16:18:30Z"
-last_activity: 2026-04-25
+status: complete
+stopped_at: Milestone v1.1 shipped
+last_updated: "2026-04-26T07:45:00Z"
+last_activity: 2026-04-26
 progress:
   total_phases: 5
   completed_phases: 5
@@ -18,16 +18,16 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-22)
+See: .planning/PROJECT.md (updated 2026-04-26)
 
 **Core value:** The player must feel they are in a persistent, consistent world that remembers them -- not a chatbot that reinvents the universe every turn.
-**Current focus:** Phase --phase — 07
+**Current focus:** v1.1 shipped. Planning next milestone.
 
 ## Current Position
 
-Phase: 10
+Phase: 10 (final)
 Plan: All 5 plans complete
-Status: Phase 10 executed — pending human verification of full distribution setup
+Status: v1.1 Playability & Distribution shipped 2026-04-26
 Last activity: 2026-04-25
 
 Progress: [██████████] 100%
@@ -199,6 +199,9 @@ Items acknowledged and deferred at milestone close on 2026-04-22:
 | uat | Phase 05 — /replay N interactive panel | deferred → CARRY-01 Phase 6 | v1.0 close |
 | uat | Phase 05 — background summarizer live session | deferred → CARRY-01 Phase 6 | v1.0 close |
 | ui | Chapter summary display not wired to game-screen UI | RESOLVED by 09-05 | v1.0 close |
+| uat | Phase 05 — 05-HUMAN-UAT.md | deferred | v1.1 close |
+| verification | Phase 05 — 05-VERIFICATION.md | human_needed | v1.1 close |
+| verification | Phase 07 — 07-VERIFICATION.md | human_needed | v1.1 close |
 
 ## Session Continuity
 

@@ -56,14 +56,65 @@
 
 ---
 
+## Milestone: v1.1 Playability & Distribution
+
+**Shipped:** 2026-04-26
+**Phases:** 5 | **Plans:** 23 | **Commits:** 135
+**Timeline:** 4 days (2026-04-22 → 2026-04-26)
+**Test suite:** 744 tests, 0 failures
+
+### What Was Built
+
+1. Core input loop fixed — Enter advances game, focus switching works, reliable quit via Ctrl-C/:quit/:exit
+2. Streaming typewriter narration and NPC dialogue with sentence buffering and skip-to-end
+3. Cinematic guard intercept scene replaces character creation menu — Rules Engine sets attributes deterministically
+4. Full animation system — title typewriter with gradient, AI spinner dimout, scene fade, combat HP flash, toast notifications
+5. npm + Homebrew distribution with automated GitHub Actions CI/CD release pipeline
+
+### What Worked
+
+- **Pure-logic + React wrapper pattern**: Animation hooks (useTimedEffect, useTypewriter) split into testable pure functions + thin React wrappers — timer tests run without React Testing Library
+- **Phase dependency graph**: Phase 7/8 ran in parallel after Phase 6; Phase 9 benefited from both; Phase 10 waited for stability — correct sequencing
+- **Env var propagation for data dir**: Single `__CHRONICLE_DATA_DIR` env var set before dynamic import — all consumers read it without import changes
+- **Segment-based traversal guard**: Caught that path.normalize resolves '..' away — split approach is security-correct
+- **Distribution scaffolding with placeholders**: OWNER/SHA256 stubs let CI/CD files pass validation; user replaces before first publish
+
+### What Was Inefficient
+
+- **REQUIREMENTS.md checkboxes stale**: 8 requirements showed unchecked despite being completed — traceability table never updated during execution
+- **87 TypeScript errors accumulated**: A dedicated fix commit was needed after Phase 10 plans — could be caught earlier with CI running during development
+- **Phase 05/07 VERIFICATION.md left as human_needed**: These were never resolved from v1.0 carry-over — acknowledged at close
+
+### Patterns Established
+
+- Streaming: sentence buffer accumulates partial text, flushes on sentence boundary — avoids partial-word rendering
+- Animation: 3-state machine (wasProcessing → isDimming → dimComplete) for smooth spinner-to-content transition
+- Distribution: fan-out CI pattern (quality-gate → parallel npm+binaries → release → homebrew dispatch)
+- Security: env: blocks in GitHub Actions instead of inline ${{ }} to prevent injection in sed operations
+
+### Key Lessons
+
+- Keep REQUIREMENTS.md checkboxes and traceability table updated after each phase — stale state causes confusion at milestone close
+- Run typecheck in CI or as pre-commit hook — 87 accumulated TS errors is a debt signal
+- Pure-logic extraction pattern is worth the upfront effort for any timer/animation code
+- Guard intercept scene proves narrative character creation is viable — players get immersed faster than with menus
+
+### Cost Observations
+
+- Model mix: Opus for planning/review agents, Sonnet for execution agents
+- Sessions: ~8 execution sessions across 4 days
+- Notable: Phase 10 plans averaged 1-2min each — distribution work was mostly scaffolding with little AI generation needed
+
+---
+
 ## Cross-Milestone Trends
 
-| Metric | v1.0 |
-|--------|------|
-| Phases | 5 |
-| Plans | 37 |
-| Tests at close | 637 |
-| Timeline (days) | 3 |
-| Deferred UAT items | 3 |
-| Critical bugs at review | 2 (CR-01 path traversal, CR-02 Immer mutation) |
-| Code review fix passes | 1 (WR-01–05) |
+| Metric | v1.0 | v1.1 |
+|--------|------|------|
+| Phases | 5 | 5 |
+| Plans | 37 | 23 |
+| Tests at close | 637 | 744 |
+| Timeline (days) | 3 | 4 |
+| Deferred UAT items | 3 | 3 |
+| Critical bugs at review | 2 | 0 |
+| Code review fix passes | 1 | 1 (87 TS errors) |

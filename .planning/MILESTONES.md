@@ -1,5 +1,40 @@
 # Milestones
 
+## v1.1 Playability & Distribution — 2026-04-26
+
+**Status:** SHIPPED
+**Phases:** 6-10 (23 plans, 135 commits)
+**Timeline:** 2026-04-22 -> 2026-04-26 (4 days)
+**Test Suite:** 744 tests, 0 failures
+**Codebase:** ~22,200 lines TypeScript
+
+### Delivered
+
+Core interaction bugs fixed (Enter advances, focus switching, reliable quit), streaming typewriter
+narration and NPC dialogue with skip-to-end, cinematic guard encounter replaces character creation
+menu, full animation system (title, spinner, transitions, combat flash, toast feedback), and
+npm + Homebrew distribution with automated CI/CD release pipeline.
+
+### Key Accomplishments
+
+1. Core input loop fixed — Enter advances game, Tab/slash focus switching, Ctrl-C + :quit exit
+2. Streaming typewriter effect for narration and NPC dialogue with any-key skip
+3. Narrative character creation — guard intercept scene replaces menu, Rules Engine sets attributes
+4. Animation system — title typewriter, AI spinner, scene fade, HP flash, toast notifications
+5. Distribution — npm publish (chronicle-cli), Homebrew tap, GitHub Actions CI + release pipeline
+
+### Known Deferred Items at Close: 3
+
+- Phase 05 HUMAN-UAT (live API session validation)
+- Phase 05/07 VERIFICATION human_needed items
+
+### Archive
+
+- Roadmap: `.planning/milestones/v1.1-ROADMAP.md`
+- Requirements: `.planning/milestones/v1.1-REQUIREMENTS.md`
+
+---
+
 ## v1.0 MVP — 2026-04-22
 
 **Status:** ✅ SHIPPED
