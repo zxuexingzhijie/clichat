@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { createStore } from './create-store';
+import { createStore, type Store } from './create-store';
 import { eventBus } from '../events/event-bus';
+import type { EventBus } from '../events/event-bus';
 import { AttributeNameSchema } from '../types/common';
 
 export const PlayerStateSchema = z.object({
@@ -34,19 +35,23 @@ export function getDefaultPlayerState(): PlayerState {
   };
 }
 
-export const playerStore = createStore<PlayerState>(
-  getDefaultPlayerState(),
-  ({ newState, oldState }) => {
-    if (newState.hp !== oldState.hp) {
-      const delta = newState.hp - oldState.hp;
-      if (delta < 0) {
-        eventBus.emit('player_damaged', { amount: Math.abs(delta), source: 'unknown' });
-      } else {
-        eventBus.emit('player_healed', { amount: delta, source: 'unknown' });
+export function createPlayerStore(bus: EventBus): Store<PlayerState> {
+  return createStore<PlayerState>(
+    getDefaultPlayerState(),
+    ({ newState, oldState }) => {
+      if (newState.hp !== oldState.hp) {
+        const delta = newState.hp - oldState.hp;
+        if (delta < 0) {
+          bus.emit('player_damaged', { amount: Math.abs(delta), source: 'unknown' });
+        } else {
+          bus.emit('player_healed', { amount: delta, source: 'unknown' });
+        }
       }
-    }
-    if (newState.gold !== oldState.gold) {
-      eventBus.emit('gold_changed', { delta: newState.gold - oldState.gold, newTotal: newState.gold });
-    }
-  },
-);
+      if (newState.gold !== oldState.gold) {
+        bus.emit('gold_changed', { delta: newState.gold - oldState.gold, newTotal: newState.gold });
+      }
+    },
+  );
+}
+
+export const playerStore = createPlayerStore(eventBus);
