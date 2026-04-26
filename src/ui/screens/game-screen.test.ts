@@ -5,10 +5,10 @@ import { GameScreen } from './game-screen';
 import type { GameLoop, ProcessResult } from '../../game-loop';
 
 describe('BUG-01: GameScreen accepts gameLoop prop', () => {
-  it('GameScreen function source references gameLoop.processInput', () => {
+  it('GameScreen function source references gameLoop.executeAction', () => {
     const source = GameScreen.toString();
     expect(source).toContain('gameLoop');
-    expect(source).toContain('processInput');
+    expect(source).toContain('executeAction');
   });
 
   it('GameScreen function source references useAiNarration and startNarration', () => {
@@ -33,6 +33,7 @@ describe('BUG-01: GameScreen accepts gameLoop prop', () => {
 function createMockGameLoop(processResult: ProcessResult): GameLoop {
   return {
     processInput: mock(() => Promise.resolve(processResult)),
+    executeAction: mock(() => Promise.resolve(processResult)),
     getCommandParser: mock(() => ({ parse: () => null })) as GameLoop['getCommandParser'],
   };
 }
@@ -45,7 +46,12 @@ async function executeAction(
 ): Promise<void> {
   const beforeLines = sceneStore.getState().narrationLines;
   try {
-    const result = await gameLoop.processInput(actionLabel, { source: 'action_select' });
+    const result = await gameLoop.executeAction({
+      type: 'look' as import('../../types/game-action').GameActionType,
+      target: null,
+      modifiers: {},
+      source: 'action_select',
+    });
     if (result.status === 'error') {
       sceneStore.setState(draft => {
         draft.narrationLines = [...draft.narrationLines, `[错误] ${result.message ?? '未知错误'}`];
@@ -156,7 +162,12 @@ describe('BUG-01: handleActionExecute guard paths', () => {
     if (!action) {
       // mirrors early return in handleActionExecute
     } else {
-      await mockLoop.processInput(action.label, { source: 'action_select' });
+      await mockLoop.executeAction({
+        type: action.type as import('../../types/game-action').GameActionType,
+        target: null,
+        modifiers: {},
+        source: 'action_select',
+      });
     }
 
     expect(mockLoop.processInput).not.toHaveBeenCalled();

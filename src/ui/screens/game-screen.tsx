@@ -208,7 +208,15 @@ export function GameScreen({
       if (!action || !gameLoop) return;
       setInputMode('processing');
       try {
-        const result = await gameLoop.processInput(action.label, { source: 'action_select' });
+        const underscoreIdx = action.id.indexOf('_');
+        const target = underscoreIdx >= 0 ? action.id.slice(underscoreIdx + 1) : null;
+        const gameAction = {
+          type: action.type as import('../../types/game-action').GameActionType,
+          target,
+          modifiers: {},
+          source: 'action_select' as const,
+        };
+        const result = await gameLoop.executeAction(gameAction);
         if (result.status === 'error') {
           sceneStore.setState(draft => {
             draft.narrationLines = [...draft.narrationLines, `[错误] ${result.message ?? '未知错误'}`];

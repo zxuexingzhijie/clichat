@@ -26,6 +26,7 @@ export function getLastReplayEntries(): readonly TurnLogEntry[] {
 
 export interface GameLoop {
   readonly processInput: (input: string, options?: RouteInputOptions) => Promise<ProcessResult>;
+  readonly executeAction: (action: GameAction) => Promise<ProcessResult>;
   readonly getCommandParser: () => CommandParser;
 }
 
@@ -104,8 +105,10 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
       return { status: 'clarification', message: routeResult.message };
     }
 
-    const action = routeResult.action;
+    return executeAction(routeResult.action);
+  }
 
+  async function executeAction(action: GameAction): Promise<ProcessResult> {
     if (action.type === 'help') {
       return { status: 'help', commands: HELP_COMMANDS };
     }
@@ -346,6 +349,7 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
 
   return {
     processInput,
+    executeAction,
     getCommandParser: () => commandParser,
   };
 }

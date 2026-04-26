@@ -1,6 +1,6 @@
 import { generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
 import { IntentSchema, type Intent } from '../types/intent';
+import { getModel } from '../ai/providers';
 
 const INTENT_SYSTEM_PROMPT = `You are an intent classifier for a Chinese fantasy RPG game.
 Classify the player's input into a structured game action.
@@ -19,7 +19,7 @@ export async function classifyIntent(
   options?: ClassifyIntentOptions,
 ): Promise<Intent> {
   const maxRetries = options?.maxRetries ?? 1;
-  const model = (options?.model ?? openai('gpt-4o-mini')) as import('ai').LanguageModel;
+  const model = (options?.model ?? getModel('retrieval-planner')) as import('ai').LanguageModel;
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {

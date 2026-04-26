@@ -81,7 +81,7 @@ export function GuardNameInput({
             />
           </Box>
           <Text> </Text>
-          <Text dimColor>Enter \u786e\u8ba4    Tab \u968f\u673a\u540d\u5b57    \u7559\u7a7a\u4e3a'\u65c5\u4eba'</Text>
+          <Text dimColor>{'Enter 确认    Tab 随机名字    留空为\'旅人\''}</Text>
         </>
       )}
 
