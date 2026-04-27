@@ -73,13 +73,14 @@ describe('QuestStateSchema', () => {
           completedAt: null,
         },
       },
+      eventLog: [],
     };
     const parsed = QuestStateSchema.parse(state);
     expect(parsed.quests['q1']?.status).toBe('active');
   });
 
   test('validates empty quests record', () => {
-    const parsed = QuestStateSchema.parse({ quests: {} });
+    const parsed = QuestStateSchema.parse({ quests: {}, eventLog: [] });
     expect(parsed.quests).toEqual({});
   });
 });

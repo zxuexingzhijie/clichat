@@ -16,11 +16,6 @@ export const QuestProgressSchema = z.object({
 });
 export type QuestProgress = z.infer<typeof QuestProgressSchema>;
 
-export const QuestStateSchema = z.object({
-  quests: z.record(z.string(), QuestProgressSchema),
-});
-export type QuestState = z.infer<typeof QuestStateSchema>;
-
 export const QuestEventSchema = z.object({
   id: z.string(),
   questId: z.string(),
@@ -38,8 +33,14 @@ export const QuestEventSchema = z.object({
 });
 export type QuestEvent = z.infer<typeof QuestEventSchema>;
 
+export const QuestStateSchema = z.object({
+  quests: z.record(z.string(), QuestProgressSchema),
+  eventLog: z.array(QuestEventSchema),
+});
+export type QuestState = z.infer<typeof QuestStateSchema>;
+
 export function getDefaultQuestState(): QuestState {
-  return { quests: {} };
+  return { quests: {}, eventLog: [] };
 }
 
 export let questEventLog: QuestEvent[] = [];
@@ -47,22 +48,29 @@ export let questEventLog: QuestEvent[] = [];
 export function appendQuestEvent(
   event: Omit<QuestEvent, 'id' | 'timestamp'>,
 ): void {
-  questEventLog = [
-    ...questEventLog,
-    {
-      ...event,
-      id: nanoid(),
-      timestamp: new Date().toISOString(),
-    },
-  ];
+  const newEvent: QuestEvent = {
+    ...event,
+    id: nanoid(),
+    timestamp: new Date().toISOString(),
+  };
+  questEventLog = [...questEventLog, newEvent];
+  questStore.setState((d) => {
+    d.eventLog = [...d.eventLog, newEvent];
+  });
 }
 
 export function resetQuestEventLog(): void {
   questEventLog = [];
+  questStore.setState((d) => {
+    d.eventLog = [];
+  });
 }
 
 export function restoreQuestEventLog(events: QuestEvent[]): void {
   questEventLog = [...events];
+  questStore.setState((d) => {
+    d.eventLog = [...events];
+  });
 }
 
 export function createQuestStore(

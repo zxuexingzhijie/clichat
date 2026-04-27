@@ -88,6 +88,7 @@ describe('compareBranches', () => {
             completedAt: null,
           },
         },
+        eventLog: [],
       },
     });
     const target = makeMinimalSave({
@@ -103,6 +104,7 @@ describe('compareBranches', () => {
             completedAt: 10,
           },
         },
+        eventLog: [],
       },
     });
     const result = compareBranches(source, target);
@@ -125,6 +127,7 @@ describe('compareBranches', () => {
             completedAt: null,
           },
         },
+        eventLog: [],
       },
     });
     const target = makeMinimalSave();
@@ -149,6 +152,7 @@ describe('compareBranches', () => {
             completedAt: null,
           },
         },
+        eventLog: [],
       },
     });
     const result = compareBranches(source, target);
@@ -314,6 +318,7 @@ describe('compareBranches', () => {
             completedAt: null,
           },
         },
+        eventLog: [],
       },
     });
     const target = makeMinimalSave({
@@ -338,6 +343,7 @@ describe('compareBranches', () => {
             completedAt: 10,
           },
         },
+        eventLog: [],
       },
     });
     const result = compareBranches(source, target);
