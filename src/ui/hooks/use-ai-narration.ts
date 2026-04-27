@@ -1,8 +1,7 @@
-import { useState, useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import type { NarrativeContext } from '../../ai/roles/narrative-director';
 import { streamNarration } from '../../ai/roles/narrative-director';
-import { createSentenceBuffer } from '../../ai/utils/sentence-buffer';
-import type { SentenceBuffer } from '../../ai/utils/sentence-buffer';
+import { useStreamingText } from './use-streaming-text';
 import { eventBus } from '../../events/event-bus';
 
 export type UseAiNarrationReturn = {
@@ -15,81 +14,19 @@ export type UseAiNarrationReturn = {
 };
 
 export function useAiNarration(): UseAiNarrationReturn {
-  const [streamingText, setStreamingText] = useState('');
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const cancelledRef = useRef(false);
-  const skippedRef = useRef(false);
-  const fullTextRef = useRef('');
-  const bufferRef = useRef<SentenceBuffer | null>(null);
+  const streaming = useStreamingText();
 
   const startNarration = useCallback((context: NarrativeContext) => {
-    cancelledRef.current = false;
-    skippedRef.current = false;
-    fullTextRef.current = '';
-    setStreamingText('');
-    setIsStreaming(true);
-    setError(null);
-
-    bufferRef.current = createSentenceBuffer({
-      onFlush: (text: string) => {
-        setStreamingText(prev => prev + text);
-      },
-    });
-
     eventBus.emit('narration_streaming_started', { sceneType: context.sceneType });
-
-    (async () => {
-      try {
-        const stream = streamNarration(context);
-        for await (const chunk of stream) {
-          if (cancelledRef.current) break;
-          fullTextRef.current += chunk;
-          if (!skippedRef.current) {
-            bufferRef.current?.push(chunk);
-          }
-        }
-      } catch (err) {
-        if (!cancelledRef.current) {
-          setError(err instanceof Error ? err : new Error(String(err)));
-          setIsStreaming(false);
-          return;
-        }
-      } finally {
-        if (!cancelledRef.current) {
-          bufferRef.current?.flush();
-          bufferRef.current?.dispose();
-          setStreamingText(fullTextRef.current);
-          setIsStreaming(false);
-          eventBus.emit('narration_streaming_completed', { charCount: fullTextRef.current.length });
-        }
-      }
-    })();
-  }, []);
-
-  const skipToEnd = useCallback(() => {
-    if (!skippedRef.current && isStreaming) {
-      skippedRef.current = true;
-      bufferRef.current?.flush();
-      bufferRef.current?.dispose();
-      setStreamingText(fullTextRef.current);
-    }
-  }, [isStreaming]);
-
-  const reset = useCallback(() => {
-    cancelledRef.current = true;
-    bufferRef.current?.dispose();
-    setStreamingText('');
-    setIsStreaming(false);
-    setError(null);
-  }, []);
+    streaming.start(streamNarration(context));
+  }, [streaming.start]);
 
   return {
-    streamingText,
-    isStreaming,
-    error,
+    streamingText: streaming.streamingText,
+    isStreaming: streaming.isStreaming,
+    error: streaming.error,
     startNarration,
-    skipToEnd,
-    reset,
+    skipToEnd: streaming.skipToEnd,
+    reset: streaming.reset,
   };
 }

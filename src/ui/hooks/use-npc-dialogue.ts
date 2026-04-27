@@ -3,9 +3,8 @@ import type { NpcProfile } from '../../ai/prompts/npc-system';
 import type { NpcDialogue } from '../../ai/schemas/npc-dialogue';
 import { streamNpcDialogue } from '../../ai/roles/npc-actor';
 import { generateNpcDialogue } from '../../ai/roles/npc-actor';
-import { createSentenceBuffer } from '../../ai/utils/sentence-buffer';
-import type { SentenceBuffer } from '../../ai/utils/sentence-buffer';
 import { extractNpcMetadata } from '../../ai/utils/metadata-extractor';
+import { useStreamingText } from './use-streaming-text';
 import { eventBus } from '../../events/event-bus';
 
 export type NpcDialogueContext = {
@@ -28,32 +27,13 @@ export type UseNpcDialogueReturn = {
 const SUBSTANTIVE_LENGTH_THRESHOLD = 50;
 
 export function useNpcDialogue(): UseNpcDialogueReturn {
-  const [streamingText, setStreamingText] = useState('');
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
   const [metadata, setMetadata] = useState<NpcDialogue | null>(null);
-
-  const cancelledRef = useRef(false);
-  const skippedRef = useRef(false);
-  const fullTextRef = useRef('');
-  const bufferRef = useRef<SentenceBuffer | null>(null);
   const contextRef = useRef<NpcDialogueContext | null>(null);
+  const streaming = useStreamingText();
 
   const startDialogue = useCallback((context: NpcDialogueContext) => {
-    cancelledRef.current = false;
-    skippedRef.current = false;
-    fullTextRef.current = '';
     contextRef.current = context;
-    setStreamingText('');
-    setIsStreaming(true);
-    setError(null);
     setMetadata(null);
-
-    bufferRef.current = createSentenceBuffer({
-      onFlush: (text: string) => {
-        setStreamingText(prev => prev + text);
-      },
-    });
 
     const { npcProfile, scene, playerAction, memories } = context;
 
@@ -62,97 +42,60 @@ export function useNpcDialogue(): UseNpcDialogueReturn {
       npcName: npcProfile.name,
     });
 
-    (async () => {
-      try {
-        const stream = streamNpcDialogue(npcProfile, scene, playerAction, memories);
-        for await (const chunk of stream) {
-          if (cancelledRef.current) break;
-          fullTextRef.current += chunk;
-          if (!skippedRef.current) {
-            bufferRef.current?.push(chunk);
-          }
-        }
-      } catch (err) {
-        if (!cancelledRef.current) {
-          setError(err instanceof Error ? err : new Error(String(err)));
-          setIsStreaming(false);
-          return;
-        }
-      } finally {
-        if (!cancelledRef.current) {
-          bufferRef.current?.flush();
-          bufferRef.current?.dispose();
-          setStreamingText(fullTextRef.current);
+    streaming.start(streamNpcDialogue(npcProfile, scene, playerAction, memories));
+  }, [streaming.start]);
 
-          const extracted = extractNpcMetadata(fullTextRef.current);
-          const isAllDefaults =
-            extracted.emotionTag === 'neutral' &&
-            !extracted.shouldRemember &&
-            extracted.sentiment === 'neutral';
-          const isSubstantive = fullTextRef.current.length > SUBSTANTIVE_LENGTH_THRESHOLD;
-
-          if (isAllDefaults && isSubstantive) {
-            try {
-              const ctx = contextRef.current!;
-              const fallbackResult = await generateNpcDialogue(
-                ctx.npcProfile,
-                ctx.scene,
-                ctx.playerAction,
-                ctx.memories,
-              );
-              setMetadata({
-                ...fallbackResult,
-                dialogue: fullTextRef.current,
-              });
-            } catch {
-              setMetadata({
-                dialogue: fullTextRef.current,
-                ...extracted,
-              });
-            }
-          } else {
-            setMetadata({
-              dialogue: fullTextRef.current,
-              ...extracted,
-            });
-          }
-
-          eventBus.emit('npc_dialogue_streaming_completed', {
-            npcId: npcProfile.id,
-            charCount: fullTextRef.current.length,
-          });
-
-          setIsStreaming(false);
-        }
-      }
-    })();
-  }, []);
-
-  const skipToEnd = useCallback(() => {
-    if (!skippedRef.current && isStreaming) {
-      skippedRef.current = true;
-      bufferRef.current?.flush();
-      bufferRef.current?.dispose();
-      setStreamingText(fullTextRef.current);
-    }
-  }, [isStreaming]);
-
+  const originalReset = streaming.reset;
   const reset = useCallback(() => {
-    cancelledRef.current = true;
-    bufferRef.current?.dispose();
-    setStreamingText('');
-    setIsStreaming(false);
-    setError(null);
+    originalReset();
     setMetadata(null);
-  }, []);
+  }, [originalReset]);
+
+  // Post-stream metadata extraction — runs when streaming completes
+  const prevIsStreaming = useRef(streaming.isStreaming);
+  if (prevIsStreaming.current && !streaming.isStreaming && !streaming.error) {
+    prevIsStreaming.current = false;
+    const fullText = streaming.fullTextRef.current;
+    const ctx = contextRef.current;
+
+    if (fullText && ctx) {
+      const extracted = extractNpcMetadata(fullText);
+      const isAllDefaults =
+        extracted.emotionTag === 'neutral' &&
+        !extracted.shouldRemember &&
+        extracted.sentiment === 'neutral';
+      const isSubstantive = fullText.length > SUBSTANTIVE_LENGTH_THRESHOLD;
+
+      if (isAllDefaults && isSubstantive) {
+        generateNpcDialogue(
+          ctx.npcProfile,
+          ctx.scene,
+          ctx.playerAction,
+          ctx.memories,
+        ).then(result => {
+          setMetadata({ ...result, dialogue: fullText });
+        }).catch(() => {
+          setMetadata({ dialogue: fullText, ...extracted });
+        });
+      } else {
+        setMetadata({ dialogue: fullText, ...extracted });
+      }
+
+      eventBus.emit('npc_dialogue_streaming_completed', {
+        npcId: ctx.npcProfile.id,
+        charCount: fullText.length,
+      });
+    }
+  }
+  prevIsStreaming.current = streaming.isStreaming;
 
   return {
-    streamingText,
-    isStreaming,
-    error,
+    streamingText: streaming.streamingText,
+    isStreaming: streaming.isStreaming,
+    error: streaming.error,
     metadata,
     startDialogue,
-    skipToEnd,
+    skipToEnd: streaming.skipToEnd,
     reset,
   };
 }
