@@ -10,6 +10,7 @@ import { eventBus } from './events/event-bus';
 import { TitleScreen } from './ui/screens/title-screen';
 import { GameScreen } from './ui/screens/game-screen';
 import { SizeGuard } from './ui/components/size-guard';
+import { GameErrorBoundary } from './ui/components/error-boundary';
 import { initRoleConfigs } from './ai/providers';
 import { createGameLoop } from './game-loop';
 import { NarrativeCreationScreen } from './ui/screens/narrative-creation-screen';
@@ -63,12 +64,14 @@ function AppInner(): React.ReactNode {
   }
 
   return (
-    <SizeGuard>
-      <GameScreen
-        questTemplates={new Map()}
-        gameLoop={gameLoop}
-      />
-    </SizeGuard>
+    <GameErrorBoundary>
+      <SizeGuard>
+        <GameScreen
+          questTemplates={new Map()}
+          gameLoop={gameLoop}
+        />
+      </SizeGuard>
+    </GameErrorBoundary>
   );
 }
 

@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Box, Text } from 'ink';
+import { GameErrorBoundary } from '../components/error-boundary';
 import { ScenePanel } from './scene-panel';
 import { DialoguePanel } from './dialogue-panel';
 import { JournalPanel, type QuestDisplayEntry } from './journal-panel';
@@ -108,82 +109,96 @@ export function PanelRouter({
 }: PanelRouterProps): React.ReactNode {
   if (isInCombat) {
     return (
-      <Box flexDirection="column" paddingX={1}>
-        {combatLastCheckResult && (
-          <CheckResultLine checkResult={combatLastCheckResult} />
-        )}
-        {combatLastNarration ? (
-          <Text>{combatLastNarration}</Text>
-        ) : (
-          <Text bold color="cyan">⚔ 战斗！</Text>
-        )}
-      </Box>
+      <GameErrorBoundary>
+        <Box flexDirection="column" paddingX={1}>
+          {combatLastCheckResult && (
+            <CheckResultLine checkResult={combatLastCheckResult} />
+          )}
+          {combatLastNarration ? (
+            <Text>{combatLastNarration}</Text>
+          ) : (
+            <Text bold color="cyan">⚔ 战斗！</Text>
+          )}
+        </Box>
+      </GameErrorBoundary>
     );
   }
 
   if (isInDialogueMode) {
     return (
-      <DialoguePanel
-        npcName={dialogueState.npcName}
-        dialogueHistory={dialogueState.dialogueHistory}
-        relationshipValue={dialogueState.relationshipValue}
-        emotionHint={dialogueState.emotionHint}
-        responseOptions={dialogueState.availableResponses}
-        selectedIndex={dialogueSelectedIndex}
-        onSelect={onDialogueSelect}
-        onExecute={onDialogueExecute}
-        isActive={true}
-        onEscape={onDialogueEscape}
-      />
+      <GameErrorBoundary>
+        <DialoguePanel
+          npcName={dialogueState.npcName}
+          dialogueHistory={dialogueState.dialogueHistory}
+          relationshipValue={dialogueState.relationshipValue}
+          emotionHint={dialogueState.emotionHint}
+          responseOptions={dialogueState.availableResponses}
+          selectedIndex={dialogueSelectedIndex}
+          onSelect={onDialogueSelect}
+          onExecute={onDialogueExecute}
+          isActive={true}
+          onEscape={onDialogueEscape}
+        />
+      </GameErrorBoundary>
     );
   }
 
   const panelMap = useMemo((): Record<string, React.ReactNode> => ({
     journal: (
-      <JournalPanel
-        activeQuests={activeQuests}
-        completedQuests={completedQuests}
-        failedQuests={failedQuests}
-        onClose={onClose}
-      />
+      <GameErrorBoundary>
+        <JournalPanel
+          activeQuests={activeQuests}
+          completedQuests={completedQuests}
+          failedQuests={failedQuests}
+          onClose={onClose}
+        />
+      </GameErrorBoundary>
     ),
     map: mapData ? (
-      <MapPanel
-        locations={mapData.locations}
-        currentLocationId={mapData.currentLocationId}
-        regionName={mapData.regionName}
-        onClose={onClose}
-      />
+      <GameErrorBoundary>
+        <MapPanel
+          locations={mapData.locations}
+          currentLocationId={mapData.currentLocationId}
+          regionName={mapData.regionName}
+          onClose={onClose}
+        />
+      </GameErrorBoundary>
     ) : null,
     codex: codexEntries ? (
-      <CodexPanel
-        entries={codexEntries}
-        onClose={onClose}
-      />
+      <GameErrorBoundary>
+        <CodexPanel
+          entries={codexEntries}
+          onClose={onClose}
+        />
+      </GameErrorBoundary>
     ) : null,
     branch_tree: branchTree ? (
-      <BranchTreePanel
-        tree={branchTree}
-        currentBranchId={currentBranchId ?? 'main'}
-        onClose={onClose}
-        onCompare={() => { onPhaseSwitch('compare'); }}
-        onSwitch={() => {}}
-        width={width}
-      />
+      <GameErrorBoundary>
+        <BranchTreePanel
+          tree={branchTree}
+          currentBranchId={currentBranchId ?? 'main'}
+          onClose={onClose}
+          onCompare={() => { onPhaseSwitch('compare'); }}
+          onSwitch={() => {}}
+          width={width}
+        />
+      </GameErrorBoundary>
     ) : null,
     compare: branchDiffResult && compareBranchNames ? (
-      <ComparePanel
-        sourceBranchName={compareBranchNames.source}
-        targetBranchName={compareBranchNames.target}
-        diffResult={branchDiffResult}
-        narrativeSummary=""
-        onClose={onClose}
-        width={width}
-      />
+      <GameErrorBoundary>
+        <ComparePanel
+          sourceBranchName={compareBranchNames.source}
+          targetBranchName={compareBranchNames.target}
+          diffResult={branchDiffResult}
+          narrativeSummary=""
+          onClose={onClose}
+          width={width}
+        />
+      </GameErrorBoundary>
     ) : null,
-    shortcuts: <ShortcutHelpPanel onClose={onClose} />,
-    replay: <ReplayPanel entries={[...replayEntries]} onClose={onClose} />,
-    chapter_summary: <ChapterSummaryPanel summaries={[...chapterSummaries]} onClose={onClose} />,
+    shortcuts: <GameErrorBoundary><ShortcutHelpPanel onClose={onClose} /></GameErrorBoundary>,
+    replay: <GameErrorBoundary><ReplayPanel entries={[...replayEntries]} onClose={onClose} /></GameErrorBoundary>,
+    chapter_summary: <GameErrorBoundary><ChapterSummaryPanel summaries={[...chapterSummaries]} onClose={onClose} /></GameErrorBoundary>,
   }), [
     activeQuests, completedQuests, failedQuests, onClose,
     mapData, codexEntries,
@@ -199,15 +214,17 @@ export function PanelRouter({
   }
 
   return (
-    <ScenePanel
-      lines={sceneLines}
-      streamingText={streamingText}
-      isStreaming={isStreaming}
-      showSpinner={showSpinner}
-      spinnerContext={spinnerContext}
-      toast={toast}
-      isDimmed={isDimmed}
-      isSpinnerDimming={isSpinnerDimming}
-    />
+    <GameErrorBoundary>
+      <ScenePanel
+        lines={sceneLines}
+        streamingText={streamingText}
+        isStreaming={isStreaming}
+        showSpinner={showSpinner}
+        spinnerContext={spinnerContext}
+        toast={toast}
+        isDimmed={isDimmed}
+        isSpinnerDimming={isSpinnerDimming}
+      />
+    </GameErrorBoundary>
   );
 }
