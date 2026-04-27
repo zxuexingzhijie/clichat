@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createStoreContext } from './ui/hooks/use-store';
 import { gameStore, type GameState } from './state/game-store';
 import { playerStore, type PlayerState } from './state/player-store';
@@ -15,6 +15,8 @@ import { initRoleConfigs } from './ai/providers';
 import { createGameLoop } from './game-loop';
 import { NarrativeCreationScreen } from './ui/screens/narrative-creation-screen';
 import { resolveDataDir, resolveConfigPath } from './paths';
+import { loadAllCodex } from './codex/loader';
+import type { QuestTemplate } from './codex/schemas/entry-types';
 
 const GameStoreCtx = createStoreContext<GameState>();
 const PlayerStoreCtx = createStoreContext<PlayerState>();
@@ -35,6 +37,24 @@ function AppInner(): React.ReactNode {
     ),
     [],
   );
+
+  const [questTemplates, setQuestTemplates] = useState<ReadonlyMap<string, QuestTemplate>>(new Map());
+
+  useEffect(() => {
+    const dataDir = process.env.__CHRONICLE_DATA_DIR || resolveDataDir();
+    const codexDir = `${dataDir}/codex`;
+    loadAllCodex(codexDir).then((entries) => {
+      const templates = new Map<string, QuestTemplate>();
+      for (const [id, entry] of entries) {
+        if (entry.type === 'quest') {
+          templates.set(id, entry);
+        }
+      }
+      setQuestTemplates(templates);
+    }).catch((err) => {
+      console.error('[Codex] Failed to load quest templates:', err instanceof Error ? err.message : String(err));
+    });
+  }, []);
 
   const handleStart = useCallback(() => {
     setGameState((draft) => {
@@ -67,7 +87,7 @@ function AppInner(): React.ReactNode {
     <GameErrorBoundary>
       <SizeGuard>
         <GameScreen
-          questTemplates={new Map()}
+          questTemplates={questTemplates}
           gameLoop={gameLoop}
         />
       </SizeGuard>
