@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Text } from 'ink';
 import { createStoreContext } from './ui/hooks/use-store';
 import { gameStore, type GameState } from './state/game-store';
 import { playerStore, type PlayerState } from './state/player-store';
@@ -39,6 +40,7 @@ function AppInner(): React.ReactNode {
   );
 
   const [questTemplates, setQuestTemplates] = useState<ReadonlyMap<string, QuestTemplate>>(new Map());
+  const [codexLoadError, setCodexLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const dataDir = process.env.__CHRONICLE_DATA_DIR || resolveDataDir();
@@ -52,7 +54,9 @@ function AppInner(): React.ReactNode {
       }
       setQuestTemplates(templates);
     }).catch((err) => {
-      console.error('[Codex] Failed to load quest templates:', err instanceof Error ? err.message : String(err));
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[Codex] Failed to load quest templates:', msg);
+      setCodexLoadError(msg);
     });
   }, []);
 
@@ -72,14 +76,21 @@ function AppInner(): React.ReactNode {
   }, [setGameState]);
 
   if (phase === 'title') {
-    return <TitleScreen onStart={handleStart} />;
+    return (
+      <GameErrorBoundary>
+        <TitleScreen onStart={handleStart} />
+        {codexLoadError && <Text color="red">[Codex] {codexLoadError}</Text>}
+      </GameErrorBoundary>
+    );
   }
 
   if (phase === 'narrative_creation') {
     return (
-      <SizeGuard>
-        <NarrativeCreationScreen onComplete={handleCharacterCreated} />
-      </SizeGuard>
+      <GameErrorBoundary>
+        <SizeGuard>
+          <NarrativeCreationScreen onComplete={handleCharacterCreated} />
+        </SizeGuard>
+      </GameErrorBoundary>
     );
   }
 

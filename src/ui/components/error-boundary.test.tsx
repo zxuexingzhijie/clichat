@@ -15,6 +15,6 @@ describe('GameErrorBoundary', () => {
     const boundary = new GameErrorBoundary({ children: null });
     boundary.componentDidCatch(new Error('boom'), { componentStack: '\n  at Foo' });
     console.error = original;
-    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining('[GameErrorBoundary]'), 'boom', expect.any(String));
   });
 });

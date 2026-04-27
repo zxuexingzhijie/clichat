@@ -99,6 +99,8 @@ describe('initMemoryPersistence', () => {
 
     initMemoryPersistence('/tmp/memory');
 
+    const errorSpy = spyOn(console, 'error').mockImplementation(() => {});
+
     expect(() => {
       eventBus.emit('npc_memory_written', {
         npcId: 'npc_guard',
@@ -108,6 +110,8 @@ describe('initMemoryPersistence', () => {
     }).not.toThrow();
 
     await new Promise(r => setTimeout(r, 50));
+
+    errorSpy.mockRestore();
   });
 });
 

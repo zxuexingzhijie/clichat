@@ -109,60 +109,50 @@ export function PanelRouter({
 }: PanelRouterProps): React.ReactNode {
   const panelMap = useMemo((): Record<string, React.ReactNode> => ({
     journal: (
-      <GameErrorBoundary>
-        <JournalPanel
-          activeQuests={activeQuests}
-          completedQuests={completedQuests}
-          failedQuests={failedQuests}
-          onClose={onClose}
-        />
-      </GameErrorBoundary>
+      <JournalPanel
+        activeQuests={activeQuests}
+        completedQuests={completedQuests}
+        failedQuests={failedQuests}
+        onClose={onClose}
+      />
     ),
     map: mapData ? (
-      <GameErrorBoundary>
-        <MapPanel
-          locations={mapData.locations}
-          currentLocationId={mapData.currentLocationId}
-          regionName={mapData.regionName}
-          onClose={onClose}
-        />
-      </GameErrorBoundary>
+      <MapPanel
+        locations={mapData.locations}
+        currentLocationId={mapData.currentLocationId}
+        regionName={mapData.regionName}
+        onClose={onClose}
+      />
     ) : null,
     codex: codexEntries ? (
-      <GameErrorBoundary>
-        <CodexPanel
-          entries={codexEntries}
-          onClose={onClose}
-        />
-      </GameErrorBoundary>
+      <CodexPanel
+        entries={codexEntries}
+        onClose={onClose}
+      />
     ) : null,
     branch_tree: branchTree ? (
-      <GameErrorBoundary>
-        <BranchTreePanel
-          tree={branchTree}
-          currentBranchId={currentBranchId ?? 'main'}
-          onClose={onClose}
-          onCompare={() => { onPhaseSwitch('compare'); }}
-          onSwitch={() => {}}
-          width={width}
-        />
-      </GameErrorBoundary>
+      <BranchTreePanel
+        tree={branchTree}
+        currentBranchId={currentBranchId ?? 'main'}
+        onClose={onClose}
+        onCompare={() => { onPhaseSwitch('compare'); }}
+        onSwitch={() => {}}
+        width={width}
+      />
     ) : null,
     compare: branchDiffResult && compareBranchNames ? (
-      <GameErrorBoundary>
-        <ComparePanel
-          sourceBranchName={compareBranchNames.source}
-          targetBranchName={compareBranchNames.target}
-          diffResult={branchDiffResult}
-          narrativeSummary=""
-          onClose={onClose}
-          width={width}
-        />
-      </GameErrorBoundary>
+      <ComparePanel
+        sourceBranchName={compareBranchNames.source}
+        targetBranchName={compareBranchNames.target}
+        diffResult={branchDiffResult}
+        narrativeSummary=""
+        onClose={onClose}
+        width={width}
+      />
     ) : null,
-    shortcuts: <GameErrorBoundary><ShortcutHelpPanel onClose={onClose} /></GameErrorBoundary>,
-    replay: <GameErrorBoundary><ReplayPanel entries={[...replayEntries]} onClose={onClose} /></GameErrorBoundary>,
-    chapter_summary: <GameErrorBoundary><ChapterSummaryPanel summaries={[...chapterSummaries]} onClose={onClose} /></GameErrorBoundary>,
+    shortcuts: <ShortcutHelpPanel onClose={onClose} />,
+    replay: <ReplayPanel entries={[...replayEntries]} onClose={onClose} />,
+    chapter_summary: <ChapterSummaryPanel summaries={[...chapterSummaries]} onClose={onClose} />,
   }), [
     activeQuests, completedQuests, failedQuests, onClose,
     mapData, codexEntries,
@@ -210,7 +200,7 @@ export function PanelRouter({
 
   const panel = panelMap[phase];
   if (panel !== undefined && panel !== null) {
-    return panel;
+    return <GameErrorBoundary>{panel}</GameErrorBoundary>;
   }
 
   return (

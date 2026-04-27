@@ -1,6 +1,9 @@
 import { parse as parseYaml } from "yaml";
+import { readdir as nodeReaddir } from "node:fs/promises";
 import { CodexEntrySchema, type CodexEntry } from "./schemas/entry-types.ts";
 import { RelationshipEdgeSchema, type RelationshipEdge } from "./schemas/relationship.ts";
+
+export const _fs = { readdir: nodeReaddir };
 
 export async function loadCodexFile(filePath: string): Promise<CodexEntry[]> {
   const file = Bun.file(filePath);
@@ -66,8 +69,7 @@ export async function loadRelationships(filePath: string): Promise<RelationshipE
 }
 
 export async function loadAllCodex(codexDir: string): Promise<Map<string, CodexEntry>> {
-  const { readdir } = await import("node:fs/promises");
-  const allFiles = await readdir(codexDir);
+  const allFiles = await _fs.readdir(codexDir);
   const files = allFiles.filter(
     (f) => f.endsWith(".yaml") && f !== "relationships.yaml" && f !== "guard-dialogue.yaml"
   );
