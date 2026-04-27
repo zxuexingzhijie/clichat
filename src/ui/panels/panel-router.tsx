@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Box, Text } from 'ink';
 import { ScenePanel } from './scene-panel';
 import { DialoguePanel } from './dialogue-panel';
@@ -138,7 +138,7 @@ export function PanelRouter({
     );
   }
 
-  const panelMap: Record<string, React.ReactNode> = {
+  const panelMap = useMemo((): Record<string, React.ReactNode> => ({
     journal: (
       <JournalPanel
         activeQuests={activeQuests}
@@ -184,7 +184,14 @@ export function PanelRouter({
     shortcuts: <ShortcutHelpPanel onClose={onClose} />,
     replay: <ReplayPanel entries={[...replayEntries]} onClose={onClose} />,
     chapter_summary: <ChapterSummaryPanel summaries={[...chapterSummaries]} onClose={onClose} />,
-  };
+  }), [
+    activeQuests, completedQuests, failedQuests, onClose,
+    mapData, codexEntries,
+    branchTree, currentBranchId, onPhaseSwitch,
+    branchDiffResult, compareBranchNames,
+    replayEntries, chapterSummaries,
+    width,
+  ]);
 
   const panel = panelMap[phase];
   if (panel !== undefined && panel !== null) {

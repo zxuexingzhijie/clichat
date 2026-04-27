@@ -185,7 +185,7 @@ export function GameScreen({
   const spinnerContext = isInCombat ? 'combat' as const
     : (isInDialogueMode || dialogueState.active) ? 'npc_dialogue' as const
     : 'narration' as const;
-  const overlayPhases = new Set(['map', 'codex', 'branch_tree', 'compare', 'shortcuts', 'replay', 'chapter_summary']);
+  const overlayPhases = new Set(['journal', 'map', 'codex', 'branch_tree', 'compare', 'shortcuts', 'replay', 'chapter_summary']);
   const isWide = width >= 100;
 
   const allQuestEntries: QuestDisplayEntry[] = Object.entries(questState.quests)
