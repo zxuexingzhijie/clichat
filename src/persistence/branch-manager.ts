@@ -1,9 +1,13 @@
 import * as nodeFs from 'node:fs';
+import { mkdir as fsMkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { nanoid } from 'nanoid';
 import { branchStore, BranchStateSchema, type BranchMeta } from '../state/branch-store';
 
-export const _fs = nodeFs;
+export const _fs = {
+  ...nodeFs,
+  mkdir: fsMkdir,
+};
 
 export type BranchTreeNode = {
   readonly branch: BranchMeta;
@@ -106,7 +110,7 @@ export function updateBranchHead(branchId: string, saveId: string): void {
 export async function saveBranchRegistry(saveDir: string): Promise<void> {
   const registryPath = path.join(saveDir, 'branches.json');
   guardPathTraversal(registryPath, saveDir);
-  _fs.mkdirSync(saveDir, { recursive: true });
+  await _fs.mkdir(saveDir, { recursive: true });
   await Bun.write(registryPath, JSON.stringify(branchStore.getState()));
 }
 

@@ -15,7 +15,7 @@ const originalBunWrite = ((globalThis as Record<string, unknown>).Bun as Record<
 const originalBunFile = ((globalThis as Record<string, unknown>).Bun as Record<string, unknown> | undefined)?.file;
 
 beforeEach(() => {
-  mkdirSpy = spyOn(_fs, 'mkdirSync').mockImplementation(() => undefined as unknown as ReturnType<typeof _fs.mkdirSync>);
+  mkdirSpy = spyOn(_fs, 'mkdir').mockImplementation(() => Promise.resolve(undefined));
   if (typeof Bun !== 'undefined') {
     (Bun as unknown as Record<string, unknown>).write = mockBunWrite;
     (Bun as unknown as Record<string, unknown>).file = mockBunFile;
