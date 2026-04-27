@@ -1,7 +1,9 @@
 import { nanoid } from 'nanoid';
-import { eventBus } from '../events/event-bus';
-import { playerKnowledgeStore, type KnowledgeStatus } from '../state/player-knowledge-store';
-import { gameStore } from '../state/game-store';
+import { type KnowledgeStatus } from '../state/player-knowledge-store';
+import type { Store } from '../state/create-store';
+import type { PlayerKnowledgeState } from '../state/player-knowledge-store';
+import type { GameState } from '../state/game-store';
+import type { EventBus } from '../events/event-bus';
 
 const STATUS_RANK: Record<KnowledgeStatus, number> = {
   heard: 0,
@@ -10,7 +12,9 @@ const STATUS_RANK: Record<KnowledgeStatus, number> = {
   contradicted: 3,
 };
 
-export function addKnowledge(opts: {
+export function addKnowledge(
+  stores: { playerKnowledge: Store<PlayerKnowledgeState>; game: Store<GameState> },
+  opts: {
   codexEntryId: string | null;
   source: string;
   knowledgeStatus: KnowledgeStatus;
@@ -18,8 +22,8 @@ export function addKnowledge(opts: {
   credibility: number;
   relatedQuestId?: string | null;
 }): void {
-  const turnNumber = gameStore.getState().turnCount;
-  const existingEntries = playerKnowledgeStore.getState().entries;
+  const turnNumber = stores.game.getState().turnCount;
+  const existingEntries = stores.playerKnowledge.getState().entries;
 
   const existingByCodex = opts.codexEntryId
     ? Object.values(existingEntries).find(e => e.codexEntryId === opts.codexEntryId)
@@ -30,7 +34,7 @@ export function addKnowledge(opts: {
     const newRank = STATUS_RANK[opts.knowledgeStatus] ?? 0;
     if (newRank <= existingRank && opts.knowledgeStatus !== 'contradicted') return;
 
-    playerKnowledgeStore.setState(draft => {
+    stores.playerKnowledge.setState(draft => {
       draft.entries[existingByCodex.id] = {
         ...draft.entries[existingByCodex.id]!,
         knowledgeStatus: opts.knowledgeStatus,
@@ -43,7 +47,7 @@ export function addKnowledge(opts: {
   }
 
   const id = nanoid();
-  playerKnowledgeStore.setState(draft => {
+  stores.playerKnowledge.setState(draft => {
     draft.entries[id] = {
       id,
       codexEntryId: opts.codexEntryId,
@@ -57,9 +61,12 @@ export function addKnowledge(opts: {
   });
 }
 
-export function initKnowledgeTracker(): () => void {
+export function initKnowledgeTracker(
+  stores: { playerKnowledge: Store<PlayerKnowledgeState>; game: Store<GameState> },
+  eventBus: EventBus,
+): () => void {
   const onDialogueEnded = ({ npcId }: { npcId: string }) => {
-    addKnowledge({
+    addKnowledge(stores, {
       codexEntryId: npcId,
       source: 'dialogue',
       knowledgeStatus: 'heard',
@@ -69,7 +76,7 @@ export function initKnowledgeTracker(): () => void {
   };
 
   const onQuestStageAdvanced = ({ questId, newStageId }: { questId: string; newStageId: string }) => {
-    addKnowledge({
+    addKnowledge(stores, {
       codexEntryId: null,
       source: 'quest_progress',
       knowledgeStatus: 'suspected',
@@ -80,7 +87,7 @@ export function initKnowledgeTracker(): () => void {
   };
 
   const onQuestCompleted = ({ questId }: { questId: string }) => {
-    addKnowledge({
+    addKnowledge(stores, {
       codexEntryId: null,
       source: 'quest_completion',
       knowledgeStatus: 'confirmed',
@@ -91,7 +98,7 @@ export function initKnowledgeTracker(): () => void {
   };
 
   const onSceneChanged = ({ sceneId }: { sceneId: string }) => {
-    addKnowledge({
+    addKnowledge(stores, {
       codexEntryId: sceneId,
       source: 'exploration',
       knowledgeStatus: 'confirmed',

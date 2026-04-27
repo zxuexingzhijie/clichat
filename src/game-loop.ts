@@ -2,12 +2,13 @@ import { createCommandParser, type CommandParser } from './input/command-parser'
 import { routeInput, type RouteInputOptions } from './input/input-router';
 import { resolveNormalCheck } from './engine/adjudication';
 import { rollD20 } from './engine/dice';
-import { playerStore } from './state/player-store';
-import { sceneStore } from './state/scene-store';
-import { gameStore } from './state/game-store';
-import { combatStore } from './state/combat-store';
-import { eventBus } from './events/event-bus';
 import { getCostSummary } from './state/cost-session-store';
+import type { Store } from './state/create-store';
+import type { PlayerState } from './state/player-store';
+import type { SceneState } from './state/scene-store';
+import type { GameState } from './state/game-store';
+import type { CombatState } from './state/combat-store';
+import type { EventBus } from './events/event-bus';
 import type { GameAction } from './types/game-action';
 import type { CheckResult } from './types/common';
 import type { SceneManager } from './engine/scene-manager';
@@ -81,7 +82,18 @@ export type GameLoopOptions = {
   };
 };
 
-export function createGameLoop(options?: GameLoopOptions): GameLoop {
+export type GameLoopStores = {
+  player: Store<PlayerState>;
+  scene: Store<SceneState>;
+  game: Store<GameState>;
+  combat: Store<CombatState>;
+};
+
+export function createGameLoop(
+  stores: GameLoopStores,
+  eventBus: EventBus,
+  options?: GameLoopOptions,
+): GameLoop {
   const commandParser = createCommandParser();
   const rng = options?.rng;
   const sceneManager = options?.sceneManager;
@@ -95,7 +107,7 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
   const turnLog = options?.turnLog;
 
   async function processInput(input: string, routeOptions?: RouteInputOptions): Promise<ProcessResult> {
-    const sceneContext = sceneStore.getState().narrationLines.join(' ');
+    const sceneContext = stores.scene.getState().narrationLines.join(' ');
     const routeResult = await routeInput(input, commandParser, sceneContext, routeOptions);
 
     if (routeResult.status === 'error') {
@@ -114,7 +126,7 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
     }
 
     // Combat routing: when in combat, route combat actions to combatLoop
-    if (combatStore.getState().active && combatLoop) {
+    if (stores.combat.getState().active && combatLoop) {
       const COMBAT_ACTIONS = new Set(['attack', 'cast', 'guard', 'flee']);
       if (COMBAT_ACTIONS.has(action.type)) {
         const combatResult = await combatLoop.processPlayerAction(
@@ -125,13 +137,13 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
         }
         await combatLoop.processEnemyTurn();
         await combatLoop.checkCombatEnd();
-        const narration = combatStore.getState().lastNarration
-          ? [combatStore.getState().lastNarration]
+        const narration = stores.combat.getState().lastNarration
+          ? [stores.combat.getState().lastNarration]
           : [];
         return {
           status: 'action_executed',
           action,
-          checkResult: combatStore.getState().lastCheckResult ?? undefined,
+          checkResult: stores.combat.getState().lastCheckResult ?? undefined,
           narration,
         };
       }
@@ -149,7 +161,7 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
       return {
         status: 'action_executed',
         action,
-        narration: sceneStore.getState().narrationLines,
+        narration: stores.scene.getState().narrationLines,
       };
     }
 
@@ -174,10 +186,10 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
       if (dialogueResult.error) {
         return { status: 'error', message: dialogueResult.error };
       }
-      gameStore.setState(draft => {
+      stores.game.setState(draft => {
         draft.phase = 'dialogue';
       });
-      const currentLines = sceneStore.getState().narrationLines;
+      const currentLines = stores.scene.getState().narrationLines;
       return {
         status: 'action_executed',
         action,
@@ -206,24 +218,24 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
     }
 
     if (action.type === 'journal') {
-      gameStore.setState(draft => { draft.phase = 'journal'; });
+      stores.game.setState(draft => { draft.phase = 'journal'; });
       return { status: 'action_executed', action, narration: [] };
     }
 
     if (action.type === 'map') {
-      gameStore.setState(draft => { draft.phase = 'map'; });
+      stores.game.setState(draft => { draft.phase = 'map'; });
       return { status: 'action_executed', action, narration: [] };
     }
 
     if (action.type === 'codex') {
-      gameStore.setState(draft => { draft.phase = 'codex'; });
+      stores.game.setState(draft => { draft.phase = 'codex'; });
       return { status: 'action_executed', action, narration: [] };
     }
 
     if (action.type === 'branch') {
       const subAction = action.target ?? 'tree';
       if (subAction === 'tree') {
-        gameStore.setState(draft => { draft.phase = 'branch_tree'; });
+        stores.game.setState(draft => { draft.phase = 'branch_tree'; });
         return { status: 'action_executed', action, narration: [] };
       }
       if (subAction === 'create') {
@@ -259,7 +271,7 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
     }
 
     if (action.type === 'compare') {
-      gameStore.setState(draft => { draft.phase = 'compare'; });
+      stores.game.setState(draft => { draft.phase = 'compare'; });
       return { status: 'action_executed', action, narration: [] };
     }
 
@@ -268,7 +280,7 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
       if (!turnLog) return { status: 'error', message: '回放系统未初始化' };
       const entries = turnLog.replayTurns(isNaN(count) ? 10 : count);
       lastReplayEntries = [...entries];
-      gameStore.setState(draft => { draft.phase = 'replay'; });
+      stores.game.setState(draft => { draft.phase = 'replay'; });
       return { status: 'action_executed', action, narration: [] };
     }
 
@@ -304,7 +316,7 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
     }
 
     if (action.type === 'quit') {
-      gameStore.setState(draft => { draft.pendingQuit = true; });
+      stores.game.setState(draft => { draft.pendingQuit = true; });
       return { status: 'action_executed', action, narration: [] };
     }
 
@@ -312,13 +324,13 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
 
     eventBus.emit('action_resolved', { action, result: checkResult });
 
-    const currentLines = sceneStore.getState().narrationLines;
+    const currentLines = stores.scene.getState().narrationLines;
     const newNarration = [...currentLines, checkResult.display];
-    sceneStore.setState(draft => {
+    stores.scene.setState(draft => {
       draft.narrationLines = newNarration;
     });
 
-    gameStore.setState(draft => {
+    stores.game.setState(draft => {
       draft.turnCount += 1;
     });
 
@@ -331,7 +343,7 @@ export function createGameLoop(options?: GameLoopOptions): GameLoop {
   }
 
   function adjudicate(action: GameAction): CheckResult {
-    const player = playerStore.getState();
+    const player = stores.player.getState();
     const attributeName = getRelevantAttribute(action.type);
     const attrMod = player.attributes[attributeName] ?? 0;
     const roll = rollD20(rng);

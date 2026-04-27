@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { createStore } from './create-store';
+import { createStore, type Store } from './create-store';
 import { eventBus } from '../events/event-bus';
+import type { EventBus } from '../events/event-bus';
 
 export const BranchMetaSchema = z.object({
   id: z.string(),
@@ -36,35 +37,39 @@ export function getDefaultBranchState(): BranchState {
   };
 }
 
-export const branchStore = createStore<BranchState>(
-  getDefaultBranchState(),
-  ({ newState, oldState }) => {
-    for (const branchId of Object.keys(newState.branches)) {
-      if (!oldState.branches[branchId]) {
-        const branch = newState.branches[branchId]!;
-        eventBus.emit('branch_created', {
-          branchId,
-          branchName: branch.name,
-          parentBranchId: branch.parentBranchId,
+export function createBranchStore(bus: EventBus): Store<BranchState> {
+  return createStore<BranchState>(
+    getDefaultBranchState(),
+    ({ newState, oldState }) => {
+      for (const branchId of Object.keys(newState.branches)) {
+        if (!oldState.branches[branchId]) {
+          const branch = newState.branches[branchId]!;
+          bus.emit('branch_created', {
+            branchId,
+            branchName: branch.name,
+            parentBranchId: branch.parentBranchId,
+          });
+        }
+      }
+
+      for (const branchId of Object.keys(oldState.branches)) {
+        if (!newState.branches[branchId]) {
+          const branch = oldState.branches[branchId]!;
+          bus.emit('branch_deleted', {
+            branchId,
+            branchName: branch.name,
+          });
+        }
+      }
+
+      if (newState.currentBranchId !== oldState.currentBranchId) {
+        bus.emit('branch_switched', {
+          fromBranchId: oldState.currentBranchId,
+          toBranchId: newState.currentBranchId,
         });
       }
-    }
+    },
+  );
+}
 
-    for (const branchId of Object.keys(oldState.branches)) {
-      if (!newState.branches[branchId]) {
-        const branch = oldState.branches[branchId]!;
-        eventBus.emit('branch_deleted', {
-          branchId,
-          branchName: branch.name,
-        });
-      }
-    }
-
-    if (newState.currentBranchId !== oldState.currentBranchId) {
-      eventBus.emit('branch_switched', {
-        fromBranchId: oldState.currentBranchId,
-        toBranchId: newState.currentBranchId,
-      });
-    }
-  },
-);
+export const branchStore = createBranchStore(eventBus);

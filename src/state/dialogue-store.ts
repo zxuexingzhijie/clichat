@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { createStore } from './create-store';
+import { createStore, type Store } from './create-store';
 import { eventBus } from '../events/event-bus';
+import type { EventBus } from '../events/event-bus';
 import { AttributeNameSchema } from '../types/common';
 
 const DialogueEntrySchema = z.object({
@@ -42,18 +43,22 @@ export function getDefaultDialogueState(): DialogueState {
   };
 }
 
-export const dialogueStore = createStore<DialogueState>(
-  getDefaultDialogueState(),
-  ({ newState, oldState }) => {
-    if (newState.active && !oldState.active && newState.npcId) {
-      eventBus.emit('dialogue_started', {
-        npcId: newState.npcId,
-        npcName: newState.npcName,
-        mode: newState.mode,
-      });
-    }
-    if (!newState.active && oldState.active && oldState.npcId) {
-      eventBus.emit('dialogue_ended', { npcId: oldState.npcId });
-    }
-  },
-);
+export function createDialogueStore(bus: EventBus): Store<DialogueState> {
+  return createStore<DialogueState>(
+    getDefaultDialogueState(),
+    ({ newState, oldState }) => {
+      if (newState.active && !oldState.active && newState.npcId) {
+        bus.emit('dialogue_started', {
+          npcId: newState.npcId,
+          npcName: newState.npcName,
+          mode: newState.mode,
+        });
+      }
+      if (!newState.active && oldState.active && oldState.npcId) {
+        bus.emit('dialogue_ended', { npcId: oldState.npcId });
+      }
+    },
+  );
+}
+
+export const dialogueStore = createDialogueStore(eventBus);

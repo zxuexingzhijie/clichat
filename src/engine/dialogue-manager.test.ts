@@ -25,6 +25,22 @@ const mockAdjudicate = mock((): CheckResult => ({
 
 const { createDialogueManager } = await import('./dialogue-manager');
 
+const { dialogueStore, getDefaultDialogueState } = await import('../state/dialogue-store');
+const { npcMemoryStore, getDefaultNpcMemoryState } = await import('../state/npc-memory-store');
+const { sceneStore } = await import('../state/scene-store');
+const { gameStore } = await import('../state/game-store');
+const { playerStore } = await import('../state/player-store');
+const { relationStore } = await import('../state/relation-store');
+
+const stores = {
+  dialogue: dialogueStore,
+  npcMemory: npcMemoryStore,
+  scene: sceneStore,
+  game: gameStore,
+  player: playerStore,
+  relation: relationStore,
+};
+
 const mockCodexEntries = new Map([
   [
     'npc_guard',
@@ -130,7 +146,7 @@ describe('createDialogueManager', () => {
   });
 
   it('startDialogue with quest-NPC enters full mode', async () => {
-    const manager = createDialogueManager(mockCodexEntries, {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
       adjudicateFn: mockAdjudicate,
     });
@@ -143,7 +159,7 @@ describe('createDialogueManager', () => {
   });
 
   it('startDialogue with simple NPC (no quest goals, neutral disposition) enters inline mode', async () => {
-    const manager = createDialogueManager(mockCodexEntries, {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
       adjudicateFn: mockAdjudicate,
     });
@@ -169,7 +185,7 @@ describe('createDialogueManager', () => {
         relationshipDelta: 0.1,
       });
 
-    const manager = createDialogueManager(mockCodexEntries, {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
       adjudicateFn: mockAdjudicate,
     });
@@ -201,7 +217,7 @@ describe('createDialogueManager', () => {
       display: '[D20: 18] + 心智 2 = 20 vs DC 12 -> 成功',
     });
 
-    const manager = createDialogueManager(mockCodexEntries, {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
       adjudicateFn: mockAdjudicate,
     });
@@ -224,7 +240,7 @@ describe('createDialogueManager', () => {
   });
 
   it('endDialogue clears dialogue store', async () => {
-    const manager = createDialogueManager(mockCodexEntries, {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
       adjudicateFn: mockAdjudicate,
     });
@@ -248,7 +264,7 @@ describe('createDialogueManager', () => {
       relationshipDelta: 0.2,
     });
 
-    const manager = createDialogueManager(mockCodexEntries, {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
       adjudicateFn: mockAdjudicate,
     });
@@ -261,7 +277,7 @@ describe('createDialogueManager', () => {
   });
 
   it('startDialogue returns error for unknown NPC', async () => {
-    const manager = createDialogueManager(mockCodexEntries, {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
       adjudicateFn: mockAdjudicate,
     });
@@ -284,7 +300,7 @@ describe('createDialogueManager', () => {
       draft.npcDispositions = {};
     });
 
-    const manager = createDialogueManager(mockCodexEntries, {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
       adjudicateFn: mockAdjudicate,
     });
@@ -316,7 +332,7 @@ describe('createDialogueManager', () => {
       };
     });
 
-    const manager = createDialogueManager(mockCodexEntries, {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
       adjudicateFn: mockAdjudicate,
     });

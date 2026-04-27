@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { createStore } from './create-store';
+import { createStore, type Store } from './create-store';
 import { eventBus } from '../events/event-bus';
+import type { EventBus } from '../events/event-bus';
 
 export const KnowledgeStatusSchema = z.enum(['heard', 'suspected', 'confirmed', 'contradicted']);
 export type KnowledgeStatus = z.infer<typeof KnowledgeStatusSchema>;
@@ -26,19 +27,23 @@ export function getDefaultPlayerKnowledgeState(): PlayerKnowledgeState {
   return { entries: {} };
 }
 
-export const playerKnowledgeStore = createStore<PlayerKnowledgeState>(
-  getDefaultPlayerKnowledgeState(),
-  ({ newState, oldState }) => {
-    for (const entryId of Object.keys(newState.entries)) {
-      if (!oldState.entries[entryId]) {
-        const entry = newState.entries[entryId]!;
-        eventBus.emit('knowledge_discovered', {
-          entryId,
-          codexEntryId: entry.codexEntryId,
-          knowledgeStatus: entry.knowledgeStatus,
-          turnNumber: entry.turnNumber,
-        });
+export function createPlayerKnowledgeStore(bus: EventBus): Store<PlayerKnowledgeState> {
+  return createStore<PlayerKnowledgeState>(
+    getDefaultPlayerKnowledgeState(),
+    ({ newState, oldState }) => {
+      for (const entryId of Object.keys(newState.entries)) {
+        if (!oldState.entries[entryId]) {
+          const entry = newState.entries[entryId]!;
+          bus.emit('knowledge_discovered', {
+            entryId,
+            codexEntryId: entry.codexEntryId,
+            knowledgeStatus: entry.knowledgeStatus,
+            turnNumber: entry.turnNumber,
+          });
+        }
       }
-    }
-  },
-);
+    },
+  );
+}
+
+export const playerKnowledgeStore = createPlayerKnowledgeStore(eventBus);

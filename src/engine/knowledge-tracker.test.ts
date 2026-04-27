@@ -3,6 +3,8 @@ import { eventBus } from '../events/event-bus';
 import { playerKnowledgeStore, getDefaultPlayerKnowledgeState } from '../state/player-knowledge-store';
 import { gameStore, getDefaultGameState } from '../state/game-store';
 
+const stores = { playerKnowledge: playerKnowledgeStore, game: gameStore };
+
 describe('KnowledgeTracker', () => {
   let cleanup: (() => void) | null = null;
 
@@ -19,7 +21,7 @@ describe('KnowledgeTracker', () => {
 
   test('dialogue_ended adds knowledge entry with source dialogue and status heard', async () => {
     const { initKnowledgeTracker } = await import('./knowledge-tracker');
-    cleanup = initKnowledgeTracker();
+    cleanup = initKnowledgeTracker(stores, eventBus);
 
     gameStore.setState(draft => { draft.turnCount = 5; });
     eventBus.emit('dialogue_ended', { npcId: 'npc_bartender' });
@@ -33,7 +35,7 @@ describe('KnowledgeTracker', () => {
 
   test('quest_stage_advanced adds knowledge entry with source quest_progress and status suspected', async () => {
     const { initKnowledgeTracker } = await import('./knowledge-tracker');
-    cleanup = initKnowledgeTracker();
+    cleanup = initKnowledgeTracker(stores, eventBus);
 
     gameStore.setState(draft => { draft.turnCount = 10; });
     eventBus.emit('quest_stage_advanced', {
@@ -51,7 +53,7 @@ describe('KnowledgeTracker', () => {
 
   test('quest_completed adds knowledge entry with source quest_completion and status confirmed', async () => {
     const { initKnowledgeTracker } = await import('./knowledge-tracker');
-    cleanup = initKnowledgeTracker();
+    cleanup = initKnowledgeTracker(stores, eventBus);
 
     gameStore.setState(draft => { draft.turnCount = 20; });
     eventBus.emit('quest_completed', { questId: 'quest_01', rewards: {} });
@@ -65,7 +67,7 @@ describe('KnowledgeTracker', () => {
 
   test('scene_changed adds knowledge entry with source exploration and status confirmed', async () => {
     const { initKnowledgeTracker } = await import('./knowledge-tracker');
-    cleanup = initKnowledgeTracker();
+    cleanup = initKnowledgeTracker(stores, eventBus);
 
     gameStore.setState(draft => { draft.turnCount = 15; });
     eventBus.emit('scene_changed', { sceneId: 'loc_market', previousSceneId: null });
@@ -79,11 +81,11 @@ describe('KnowledgeTracker', () => {
 
   test('addKnowledge does not overwrite entry with lower-ranked status', async () => {
     const { addKnowledge, initKnowledgeTracker } = await import('./knowledge-tracker');
-    cleanup = initKnowledgeTracker();
+    cleanup = initKnowledgeTracker(stores, eventBus);
 
     gameStore.setState(draft => { draft.turnCount = 5; });
 
-    addKnowledge({
+    addKnowledge(stores, {
       codexEntryId: 'fact_01',
       source: 'quest_completion',
       knowledgeStatus: 'confirmed',
@@ -91,7 +93,7 @@ describe('KnowledgeTracker', () => {
       credibility: 1.0,
     });
 
-    addKnowledge({
+    addKnowledge(stores, {
       codexEntryId: 'fact_01',
       source: 'dialogue',
       knowledgeStatus: 'heard',
@@ -107,11 +109,11 @@ describe('KnowledgeTracker', () => {
 
   test('contradicted status overrides any existing status', async () => {
     const { addKnowledge, initKnowledgeTracker } = await import('./knowledge-tracker');
-    cleanup = initKnowledgeTracker();
+    cleanup = initKnowledgeTracker(stores, eventBus);
 
     gameStore.setState(draft => { draft.turnCount = 5; });
 
-    addKnowledge({
+    addKnowledge(stores, {
       codexEntryId: 'fact_02',
       source: 'quest_completion',
       knowledgeStatus: 'confirmed',
@@ -119,7 +121,7 @@ describe('KnowledgeTracker', () => {
       credibility: 1.0,
     });
 
-    addKnowledge({
+    addKnowledge(stores, {
       codexEntryId: 'fact_02',
       source: 'discovery',
       knowledgeStatus: 'contradicted',
@@ -134,11 +136,11 @@ describe('KnowledgeTracker', () => {
 
   test('knowledge entry has correct turnNumber, credibility, and codexEntryId', async () => {
     const { addKnowledge, initKnowledgeTracker } = await import('./knowledge-tracker');
-    cleanup = initKnowledgeTracker();
+    cleanup = initKnowledgeTracker(stores, eventBus);
 
     gameStore.setState(draft => { draft.turnCount = 33; });
 
-    addKnowledge({
+    addKnowledge(stores, {
       codexEntryId: 'codex_dragon',
       source: 'exploration',
       knowledgeStatus: 'suspected',
@@ -157,11 +159,11 @@ describe('KnowledgeTracker', () => {
 
   test('entries without codexEntryId do not deduplicate by codex', async () => {
     const { addKnowledge, initKnowledgeTracker } = await import('./knowledge-tracker');
-    cleanup = initKnowledgeTracker();
+    cleanup = initKnowledgeTracker(stores, eventBus);
 
     gameStore.setState(draft => { draft.turnCount = 5; });
 
-    addKnowledge({
+    addKnowledge(stores, {
       codexEntryId: null,
       source: 'quest_progress',
       knowledgeStatus: 'suspected',
@@ -170,7 +172,7 @@ describe('KnowledgeTracker', () => {
       relatedQuestId: 'quest_01',
     });
 
-    addKnowledge({
+    addKnowledge(stores, {
       codexEntryId: null,
       source: 'quest_progress',
       knowledgeStatus: 'suspected',

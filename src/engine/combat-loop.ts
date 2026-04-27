@@ -1,9 +1,10 @@
 import { resolveNormalCheck } from './adjudication';
 import { calculateDamage } from './damage';
 import { rollD20 } from './dice';
-import { combatStore } from '../state/combat-store';
-import { playerStore } from '../state/player-store';
-import { gameStore } from '../state/game-store';
+import type { Store } from '../state/create-store';
+import type { CombatState } from '../state/combat-store';
+import type { PlayerState } from '../state/player-store';
+import type { GameState } from '../state/game-store';
 import type { CheckResult } from '../types/common';
 import type { CodexEntry, Enemy } from '../codex/schemas/entry-types';
 import type { NarrativeContext } from '../ai/roles/narrative-director';
@@ -41,19 +42,23 @@ function getPlayerAC(): number {
   return 10;
 }
 
-function getFirstAliveEnemyIndex(): number {
-  const enemies = combatStore.getState().enemies;
-  return enemies.findIndex(e => e.hp > 0);
-}
-
-function allEnemiesDead(): boolean {
-  return combatStore.getState().enemies.every(e => e.hp <= 0);
-}
-
 export function createCombatLoop(
+  stores: {
+    combat: Store<CombatState>;
+    player: Store<PlayerState>;
+    game: Store<GameState>;
+  },
   codexEntries: Map<string, CodexEntry>,
   options?: CombatLoopOptions,
 ): CombatLoop {
+  function getFirstAliveEnemyIndex(): number {
+    const enemies = stores.combat.getState().enemies;
+    return enemies.findIndex(e => e.hp > 0);
+  }
+
+  function allEnemiesDead(): boolean {
+    return stores.combat.getState().enemies.every(e => e.hp <= 0);
+  }
   const rng = options?.rng;
   const generateNarrationFn = options?.generateNarrationFn;
 
@@ -65,7 +70,7 @@ export function createCombatLoop(
         codexEntries: [],
         checkResult,
         playerAction,
-        recentNarration: combatStore.getState().lastNarration ? [combatStore.getState().lastNarration] : [],
+        recentNarration: stores.combat.getState().lastNarration ? [stores.combat.getState().lastNarration] : [],
         sceneContext: '战斗中',
       };
       return await generateNarrationFn(context);
@@ -84,7 +89,7 @@ export function createCombatLoop(
       return { id, name: enemy.name, hp: enemy.maxHp, maxHp: enemy.maxHp };
     });
 
-    combatStore.setState(draft => {
+    stores.combat.setState(draft => {
       draft.active = true;
       draft.phase = 'player_turn';
       draft.enemies = enemies;
@@ -94,14 +99,15 @@ export function createCombatLoop(
       draft.lastCheckResult = null;
       draft.lastNarration = '';
       draft.guardActive = false;
+      draft.outcome = null;
     });
 
-    gameStore.setState(draft => {
+    stores.game.setState(draft => {
       draft.phase = 'combat';
     });
 
     const narration = await doGenerateNarration('战斗开始');
-    combatStore.setState(draft => {
+    stores.combat.setState(draft => {
       draft.lastNarration = narration;
     });
   }
@@ -110,13 +116,13 @@ export function createCombatLoop(
     actionType: CombatActionType,
     options?: CombatActionOptions,
   ): Promise<CombatActionResult> {
-    combatStore.setState(draft => {
+    stores.combat.setState(draft => {
       draft.phase = 'resolving';
     });
 
-    const player = playerStore.getState();
+    const player = stores.player.getState();
     const targetIdx = options?.targetIndex ?? getFirstAliveEnemyIndex();
-    const enemies = combatStore.getState().enemies;
+    const enemies = stores.combat.getState().enemies;
     const target = enemies[targetIdx >= 0 ? targetIdx : 0];
 
     if (!target || target.hp <= 0) {
@@ -129,12 +135,12 @@ export function createCombatLoop(
     const enemyDefense = enemy?.defense ?? 0;
 
     if (actionType === 'guard') {
-      combatStore.setState(draft => {
+      stores.combat.setState(draft => {
         draft.guardActive = true;
         draft.phase = 'narrating';
       });
       const narration = await doGenerateNarration('防御');
-      combatStore.setState(draft => {
+      stores.combat.setState(draft => {
         draft.lastNarration = narration;
         draft.phase = 'enemy_turn';
       });
@@ -143,12 +149,12 @@ export function createCombatLoop(
 
     if (actionType === 'cast') {
       if (player.mp < 4) {
-        combatStore.setState(draft => {
+        stores.combat.setState(draft => {
           draft.phase = 'player_turn';
         });
         return { status: 'error', message: '魔力不足！无法施法。' };
       }
-      playerStore.setState(draft => {
+      stores.player.setState(draft => {
         draft.mp = draft.mp - 4;
       });
     }
@@ -174,7 +180,7 @@ export function createCombatLoop(
       dc: actionType === 'flee' ? 10 : enemyDc,
     });
 
-    combatStore.setState(draft => {
+    stores.combat.setState(draft => {
       draft.lastCheckResult = checkResult;
     });
 
@@ -182,12 +188,13 @@ export function createCombatLoop(
 
     if (actionType === 'flee') {
       if (isSuccess) {
-        combatStore.setState(draft => {
+        stores.combat.setState(draft => {
+          draft.outcome = 'flee';
           draft.active = false;
           draft.phase = 'ended';
           draft.lastNarration = '你成功逃脱了战斗！';
         });
-        gameStore.setState(draft => {
+        stores.game.setState(draft => {
           draft.phase = 'game';
         });
         return { status: 'ok', checkResult, narration: '你成功逃脱了战斗！', outcome: 'flee' };
@@ -206,7 +213,7 @@ export function createCombatLoop(
       });
 
       const newHp = Math.max(0, target.hp - damage.total);
-      combatStore.setState(draft => {
+      stores.combat.setState(draft => {
         const idx = draft.enemies.findIndex(e => e.id === target.id);
         if (idx >= 0) {
           draft.enemies[idx]!.hp = newHp;
@@ -214,14 +221,14 @@ export function createCombatLoop(
       });
     }
 
-    combatStore.setState(draft => {
+    stores.combat.setState(draft => {
       draft.phase = 'narrating';
     });
 
     const actionLabel = actionType === 'attack' ? '攻击' : actionType === 'cast' ? '施法' : '逃跑';
     const narration = await doGenerateNarration(actionLabel, checkResult);
 
-    combatStore.setState(draft => {
+    stores.combat.setState(draft => {
       draft.lastNarration = narration;
       draft.phase = 'enemy_turn';
     });
@@ -235,12 +242,12 @@ export function createCombatLoop(
   }
 
   async function processEnemyTurn(): Promise<void> {
-    const state = combatStore.getState();
-    const player = playerStore.getState();
+    const state = stores.combat.getState();
+    const player = stores.player.getState();
     const guardActive = state.guardActive;
     const playerAC = getPlayerAC() + (guardActive ? 2 : 0);
 
-    combatStore.setState(draft => {
+    stores.combat.setState(draft => {
       draft.guardActive = false;
     });
 
@@ -252,7 +259,7 @@ export function createCombatLoop(
       const enemyAttackMod = enemyData?.attack ?? 0;
       const enemyDamageBase = enemyData?.damage_base ?? 3;
 
-      combatStore.setState(draft => {
+      stores.combat.setState(draft => {
         draft.phase = 'resolving';
       });
 
@@ -266,7 +273,7 @@ export function createCombatLoop(
         dc: playerAC,
       });
 
-      combatStore.setState(draft => {
+      stores.combat.setState(draft => {
         draft.lastCheckResult = checkResult;
       });
 
@@ -281,29 +288,29 @@ export function createCombatLoop(
         });
 
         const newHp = Math.max(0, player.hp - damage.total);
-        playerStore.setState(draft => {
+        stores.player.setState(draft => {
           draft.hp = newHp;
         });
       }
 
-      combatStore.setState(draft => {
+      stores.combat.setState(draft => {
         draft.phase = 'narrating';
       });
 
       const actionLabel = `${enemy.name}攻击`;
       const narration = await doGenerateNarration(actionLabel, checkResult);
-      combatStore.setState(draft => {
+      stores.combat.setState(draft => {
         draft.lastNarration = narration;
       });
     }
 
-    combatStore.setState(draft => {
+    stores.combat.setState(draft => {
       draft.phase = 'check_end';
     });
 
     const endResult = await checkCombatEnd();
     if (!endResult.ended) {
-      combatStore.setState(draft => {
+      stores.combat.setState(draft => {
         draft.phase = 'player_turn';
         draft.roundNumber += 1;
       });
@@ -311,19 +318,20 @@ export function createCombatLoop(
   }
 
   async function checkCombatEnd(): Promise<CombatEndResult> {
-    const player = playerStore.getState();
+    const player = stores.player.getState();
 
     if (allEnemiesDead()) {
-      const narration = combatStore.getState().enemies
+      const narration = stores.combat.getState().enemies
         .map(e => `${e.name}被击败了。`)
         .join('') + '战斗胜利！';
 
-      combatStore.setState(draft => {
+      stores.combat.setState(draft => {
+        draft.outcome = 'victory';
         draft.active = false;
         draft.phase = 'ended';
         draft.lastNarration = narration;
       });
-      gameStore.setState(draft => {
+      stores.game.setState(draft => {
         draft.phase = 'game';
       });
       return { ended: true, outcome: 'victory', narration };
@@ -331,12 +339,13 @@ export function createCombatLoop(
 
     if (player.hp <= 0) {
       const narration = '你倒下了...... 世界在眼前逐渐模糊。';
-      combatStore.setState(draft => {
+      stores.combat.setState(draft => {
+        draft.outcome = 'defeat';
         draft.active = false;
         draft.phase = 'ended';
         draft.lastNarration = narration;
       });
-      gameStore.setState(draft => {
+      stores.game.setState(draft => {
         draft.phase = 'game';
       });
       return { ended: true, outcome: 'defeat', narration };
@@ -346,7 +355,7 @@ export function createCombatLoop(
   }
 
   function getCombatPhase(): string {
-    return combatStore.getState().phase;
+    return stores.combat.getState().phase;
   }
 
   return { startCombat, processPlayerAction, processEnemyTurn, checkCombatEnd, getCombatPhase };

@@ -7,6 +7,7 @@ import { sceneStore, type SceneState } from './state/scene-store';
 import { dialogueStore, type DialogueState } from './state/dialogue-store';
 import { combatStore, type CombatState } from './state/combat-store';
 import { questStore, type QuestState } from './state/quest-store';
+import { eventBus } from './events/event-bus';
 import { TitleScreen } from './ui/screens/title-screen';
 import { GameScreen } from './ui/screens/game-screen';
 import { SizeGuard } from './ui/components/size-guard';
@@ -14,6 +15,7 @@ import { initRoleConfigs } from './ai/providers';
 import { createGameLoop } from './game-loop';
 import { NarrativeCreationScreen } from './ui/screens/narrative-creation-screen';
 import { resolveDataDir, resolveConfigPath } from './paths';
+import type { GameContext } from './context/game-context';
 
 const GameStoreCtx = createStoreContext<GameState>();
 const PlayerStoreCtx = createStoreContext<PlayerState>();
@@ -27,7 +29,13 @@ export { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx };
 function AppInner(): React.ReactNode {
   const phase = GameStoreCtx.useStoreState((s) => s.phase);
   const setGameState = GameStoreCtx.useSetState();
-  const gameLoop = useMemo(() => createGameLoop(), []);
+  const gameLoop = useMemo(
+    () => createGameLoop(
+      { player: playerStore, scene: sceneStore, game: gameStore, combat: combatStore },
+      eventBus,
+    ),
+    [],
+  );
 
   const gameState = GameStoreCtx.useStoreState((s) => s);
   const playerState = PlayerStoreCtx.useStoreState((s) => s);

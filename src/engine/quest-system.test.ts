@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { questStore, resetQuestEventLog, getDefaultQuestState } from '../state/quest-store';
 import { relationStore } from '../state/relation-store';
+import { gameStore } from '../state/game-store';
+
+const stores = { quest: questStore, relation: relationStore, game: gameStore };
 
 function resetStores() {
   questStore.setState(draft => { Object.assign(draft, getDefaultQuestState()); });
@@ -119,7 +122,7 @@ describe('createQuestSystem', () => {
 
   it('acceptQuest returns { status: ok } and sets quest to active when no gate', async () => {
     const { createQuestSystem } = await import('./quest-system');
-    const questSystem = createQuestSystem(mockCodexEntries as any);
+    const questSystem = createQuestSystem(stores, mockCodexEntries as any);
 
     const result = questSystem.acceptQuest('quest_side_missing_ore');
 
@@ -129,7 +132,7 @@ describe('createQuestSystem', () => {
 
   it('acceptQuest returns { status: gated, reason: 声望不足 } when reputation below threshold', async () => {
     const { createQuestSystem } = await import('./quest-system');
-    const questSystem = createQuestSystem(mockCodexEntries as any);
+    const questSystem = createQuestSystem(stores, mockCodexEntries as any);
 
     relationStore.setState(draft => {
       draft.npcDispositions['npc_merchant'] = {
@@ -152,7 +155,7 @@ describe('createQuestSystem', () => {
 
   it('acceptQuest returns { status: ok } when reputation meets threshold', async () => {
     const { createQuestSystem } = await import('./quest-system');
-    const questSystem = createQuestSystem(mockCodexEntries as any);
+    const questSystem = createQuestSystem(stores, mockCodexEntries as any);
 
     relationStore.setState(draft => {
       draft.npcDispositions['npc_merchant'] = {
@@ -172,7 +175,7 @@ describe('createQuestSystem', () => {
 
   it('acceptQuest returns { status: error } for unknown quest id', async () => {
     const { createQuestSystem } = await import('./quest-system');
-    const questSystem = createQuestSystem(mockCodexEntries as any);
+    const questSystem = createQuestSystem(stores, mockCodexEntries as any);
 
     const result = questSystem.acceptQuest('quest_unknown_id');
 
@@ -184,7 +187,7 @@ describe('createQuestSystem', () => {
 
   it('completeObjective adds objectiveId to completedObjectives', async () => {
     const { createQuestSystem } = await import('./quest-system');
-    const questSystem = createQuestSystem(mockCodexEntries as any);
+    const questSystem = createQuestSystem(stores, mockCodexEntries as any);
 
     questSystem.acceptQuest('quest_main_01');
     questSystem.completeObjective('quest_main_01', 'obj_01');
@@ -194,7 +197,7 @@ describe('createQuestSystem', () => {
 
   it('advanceStage sets currentStageId', async () => {
     const { createQuestSystem } = await import('./quest-system');
-    const questSystem = createQuestSystem(mockCodexEntries as any);
+    const questSystem = createQuestSystem(stores, mockCodexEntries as any);
 
     questSystem.acceptQuest('quest_main_01');
     questSystem.advanceStage('quest_main_01', 'stage_02');
@@ -204,7 +207,7 @@ describe('createQuestSystem', () => {
 
   it('failQuest sets status to failed', async () => {
     const { createQuestSystem } = await import('./quest-system');
-    const questSystem = createQuestSystem(mockCodexEntries as any);
+    const questSystem = createQuestSystem(stores, mockCodexEntries as any);
 
     questSystem.acceptQuest('quest_main_01');
     questSystem.failQuest('quest_main_01');

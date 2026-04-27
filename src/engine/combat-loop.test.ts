@@ -3,7 +3,10 @@ import { createSeededRng } from './dice';
 import { createCombatLoop } from './combat-loop';
 import { combatStore, getDefaultCombatState } from '../state/combat-store';
 import { playerStore, getDefaultPlayerState } from '../state/player-store';
+import { gameStore } from '../state/game-store';
 import type { CodexEntry } from '../codex/schemas/entry-types';
+
+const stores = { combat: combatStore, player: playerStore, game: gameStore };
 
 const EPISTEMIC = {
   authority: 'established_canon' as const,
@@ -64,7 +67,7 @@ beforeEach(() => {
 
 describe('createCombatLoop', () => {
   it('startCombat initializes combatStore with enemies from codex', async () => {
-    const loop = createCombatLoop(makeCodex(GOBLIN_ENTRY), { generateNarrationFn: mockNarration });
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { generateNarrationFn: mockNarration });
     await loop.startCombat(['goblin']);
 
     const state = combatStore.getState();
@@ -80,14 +83,14 @@ describe('createCombatLoop', () => {
 
   it('attack with successful roll deals damage to enemy', async () => {
     const rng = createSeededRng(42);
-    const loop = createCombatLoop(makeCodex(GOBLIN_ENTRY), { rng, generateNarrationFn: mockNarration });
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { rng, generateNarrationFn: mockNarration });
     await loop.startCombat(['goblin']);
 
     const initialHp = combatStore.getState().enemies[0]!.hp;
 
     // Force a high roll by providing a rng that always returns near-max
     const highRng = () => 0.99;
-    const highLoop = createCombatLoop(makeCodex(GOBLIN_ENTRY), { rng: highRng, generateNarrationFn: mockNarration });
+    const highLoop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { rng: highRng, generateNarrationFn: mockNarration });
     await highLoop.startCombat(['goblin']);
     const result = await highLoop.processPlayerAction('attack');
 
@@ -102,7 +105,7 @@ describe('createCombatLoop', () => {
   it('attack with failed roll deals no damage', async () => {
     // rng that always rolls 1 (first value 0 -> roll = 1)
     const lowRng = () => 0;
-    const loop = createCombatLoop(makeCodex(GOBLIN_ENTRY), { rng: lowRng, generateNarrationFn: mockNarration });
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { rng: lowRng, generateNarrationFn: mockNarration });
     await loop.startCombat(['goblin']);
 
     await loop.processPlayerAction('attack');
@@ -114,7 +117,7 @@ describe('createCombatLoop', () => {
 
   it('cast deducts MP on use', async () => {
     const highRng = () => 0.99;
-    const loop = createCombatLoop(makeCodex(GOBLIN_ENTRY), { rng: highRng, generateNarrationFn: mockNarration });
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { rng: highRng, generateNarrationFn: mockNarration });
     await loop.startCombat(['goblin']);
 
     const initialMp = playerStore.getState().mp;
@@ -125,7 +128,7 @@ describe('createCombatLoop', () => {
 
   it('cast fails with insufficient MP and returns error message', async () => {
     playerStore.setState(draft => { draft.mp = 2; });
-    const loop = createCombatLoop(makeCodex(GOBLIN_ENTRY), { generateNarrationFn: mockNarration });
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { generateNarrationFn: mockNarration });
     await loop.startCombat(['goblin']);
 
     const result = await loop.processPlayerAction('cast');
@@ -136,7 +139,7 @@ describe('createCombatLoop', () => {
   });
 
   it('guard sets guardActive flag', async () => {
-    const loop = createCombatLoop(makeCodex(GOBLIN_ENTRY), { generateNarrationFn: mockNarration });
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { generateNarrationFn: mockNarration });
     await loop.startCombat(['goblin']);
 
     await loop.processPlayerAction('guard');
@@ -147,7 +150,7 @@ describe('createCombatLoop', () => {
   it('flee success ends combat with flee outcome', async () => {
     // rng always high -> roll=20, flee DC=10, will succeed
     const highRng = () => 0.99;
-    const loop = createCombatLoop(makeCodex(GOBLIN_ENTRY), { rng: highRng, generateNarrationFn: mockNarration });
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { rng: highRng, generateNarrationFn: mockNarration });
     await loop.startCombat(['goblin']);
 
     const result = await loop.processPlayerAction('flee');
@@ -161,7 +164,7 @@ describe('createCombatLoop', () => {
 
   it('enemy turn deals damage to player on successful hit', async () => {
     const highRng = () => 0.99;
-    const loop = createCombatLoop(makeCodex(GOBLIN_ENTRY), { rng: highRng, generateNarrationFn: mockNarration });
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { rng: highRng, generateNarrationFn: mockNarration });
     await loop.startCombat(['goblin']);
 
     const initialHp = playerStore.getState().hp;
@@ -171,7 +174,7 @@ describe('createCombatLoop', () => {
   });
 
   it('guard resets guardActive flag after enemy turn', async () => {
-    const loop = createCombatLoop(makeCodex(GOBLIN_ENTRY), { generateNarrationFn: mockNarration });
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { generateNarrationFn: mockNarration });
     await loop.startCombat(['goblin']);
 
     combatStore.setState(draft => { draft.guardActive = true; });
@@ -193,7 +196,7 @@ describe('createCombatLoop', () => {
     // So verify guard raises the AC effectively by confirming the check uses DC=12 not DC=10.
     // We do this by checking that the lastCheckResult.dc reflects the guard AC.
     const midRng = () => 0.4; // roll=9
-    const loop = createCombatLoop(makeCodex(GOBLIN_ENTRY), { rng: midRng, generateNarrationFn: mockNarration });
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { rng: midRng, generateNarrationFn: mockNarration });
     await loop.startCombat(['goblin']);
 
     combatStore.setState(draft => { draft.guardActive = true; });
@@ -205,7 +208,7 @@ describe('createCombatLoop', () => {
   });
 
   it('combat ends on enemy HP 0 (victory)', async () => {
-    const loop = createCombatLoop(makeCodex(GOBLIN_ENTRY), { generateNarrationFn: mockNarration });
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { generateNarrationFn: mockNarration });
     await loop.startCombat(['goblin']);
 
     // Manually set enemy HP to 0
@@ -220,7 +223,7 @@ describe('createCombatLoop', () => {
   });
 
   it('combat ends on player HP 0 (defeat)', async () => {
-    const loop = createCombatLoop(makeCodex(GOBLIN_ENTRY), { generateNarrationFn: mockNarration });
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { generateNarrationFn: mockNarration });
     await loop.startCombat(['goblin']);
 
     playerStore.setState(draft => { draft.hp = 0; });
@@ -234,7 +237,7 @@ describe('createCombatLoop', () => {
   });
 
   it('checkCombatEnd returns not ended when both sides alive', async () => {
-    const loop = createCombatLoop(makeCodex(GOBLIN_ENTRY), { generateNarrationFn: mockNarration });
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { generateNarrationFn: mockNarration });
     await loop.startCombat(['goblin']);
 
     const result = await loop.checkCombatEnd();

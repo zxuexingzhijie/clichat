@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { createStore } from './create-store';
+import { createStore, type Store } from './create-store';
 import { eventBus } from '../events/event-bus';
+import type { EventBus } from '../events/event-bus';
 import { CheckResultSchema } from '../types/common';
 
 export const CombatStateSchema = z.object({
@@ -18,6 +19,7 @@ export const CombatStateSchema = z.object({
   lastCheckResult: CheckResultSchema.nullable(),
   lastNarration: z.string(),
   guardActive: z.boolean(),
+  outcome: z.enum(['victory', 'defeat', 'flee']).nullable(),
 });
 export type CombatState = z.infer<typeof CombatStateSchema>;
 
@@ -32,26 +34,31 @@ export function getDefaultCombatState(): CombatState {
     lastCheckResult: null,
     lastNarration: '',
     guardActive: false,
+    outcome: null,
   };
 }
 
-export const combatStore = createStore<CombatState>(
-  getDefaultCombatState(),
-  ({ newState, oldState }) => {
-    if (newState.active && !oldState.active) {
-      eventBus.emit('combat_started', {
-        enemies: newState.enemies.map(e => e.name),
-      });
-    }
-    if (!newState.active && oldState.active) {
-      eventBus.emit('combat_ended', { outcome: 'victory' });
-    }
-    if (newState.currentTurnIndex !== oldState.currentTurnIndex) {
-      const currentActorId = newState.turnOrder[newState.currentTurnIndex] ?? 'player';
-      eventBus.emit('combat_turn_advanced', {
-        currentActorId,
-        roundNumber: newState.roundNumber,
-      });
-    }
-  },
-);
+export function createCombatStore(bus: EventBus): Store<CombatState> {
+  return createStore<CombatState>(
+    getDefaultCombatState(),
+    ({ newState, oldState }) => {
+      if (newState.active && !oldState.active) {
+        bus.emit('combat_started', {
+          enemies: newState.enemies.map(e => e.name),
+        });
+      }
+      if (!newState.active && oldState.active) {
+        bus.emit('combat_ended', { outcome: newState.outcome ?? 'victory' });
+      }
+      if (newState.currentTurnIndex !== oldState.currentTurnIndex) {
+        const currentActorId = newState.turnOrder[newState.currentTurnIndex] ?? 'player';
+        bus.emit('combat_turn_advanced', {
+          currentActorId,
+          roundNumber: newState.roundNumber,
+        });
+      }
+    },
+  );
+}
+
+export const combatStore = createCombatStore(eventBus);
