@@ -1,4 +1,5 @@
 import { resolveNormalCheck } from './adjudication';
+import { GAME_CONSTANTS } from './game-constants';
 import { calculateDamage } from './damage';
 import { rollD20 } from './dice';
 import type { Store } from '../state/create-store';
@@ -39,7 +40,7 @@ export type CombatLoopOptions = {
 const FALLBACK_NARRATION = '战斗继续......';
 
 function getPlayerAC(): number {
-  return 10;
+  return GAME_CONSTANTS.BASE_AC;
 }
 
 export function createCombatLoop(
@@ -131,7 +132,7 @@ export function createCombatLoop(
 
     const enemyEntry = codexEntries.get(target.id);
     const enemy = enemyEntry?.type === 'enemy' ? (enemyEntry as Enemy) : null;
-    const enemyDc = enemy?.dc ?? 12;
+    const enemyDc = enemy?.dc ?? GAME_CONSTANTS.DEFAULT_DC;
     const enemyDefense = enemy?.defense ?? 0;
 
     if (actionType === 'guard') {
@@ -148,14 +149,14 @@ export function createCombatLoop(
     }
 
     if (actionType === 'cast') {
-      if (player.mp < 4) {
+      if (player.mp < GAME_CONSTANTS.CAST_MP_COST) {
         stores.combat.setState(draft => {
           draft.phase = 'player_turn';
         });
         return { status: 'error', message: '魔力不足！无法施法。' };
       }
       stores.player.setState(draft => {
-        draft.mp = draft.mp - 4;
+        draft.mp = draft.mp - GAME_CONSTANTS.CAST_MP_COST;
       });
     }
 
@@ -177,7 +178,7 @@ export function createCombatLoop(
       attributeModifier: attrMod,
       skillModifier: 0,
       environmentModifier: 0,
-      dc: actionType === 'flee' ? 10 : enemyDc,
+      dc: actionType === 'flee' ? GAME_CONSTANTS.FLEE_DC : enemyDc,
     });
 
     stores.combat.setState(draft => {
@@ -204,7 +205,7 @@ export function createCombatLoop(
     if (isSuccess && (actionType === 'attack' || actionType === 'cast')) {
       const weaponBase = actionType === 'attack'
         ? getWeaponBase(player.equipment, codexEntries)
-        : 6;
+        : GAME_CONSTANTS.CAST_WEAPON_BASE;
       const damage = calculateDamage({
         weaponBase,
         attributeModifier: attrMod,
@@ -245,7 +246,7 @@ export function createCombatLoop(
     const state = stores.combat.getState();
     const player = stores.player.getState();
     const guardActive = state.guardActive;
-    const playerAC = getPlayerAC() + (guardActive ? 2 : 0);
+    const playerAC = getPlayerAC() + (guardActive ? GAME_CONSTANTS.GUARD_AC_BONUS : 0);
 
     stores.combat.setState(draft => {
       draft.guardActive = false;
@@ -366,8 +367,8 @@ function getWeaponBase(
   codexEntries: Map<string, CodexEntry>,
 ): number {
   const weaponId = equipment['weapon'];
-  if (!weaponId) return 5;
+  if (!weaponId) return GAME_CONSTANTS.DEFAULT_WEAPON_BASE;
   const entry = codexEntries.get(weaponId);
-  if (!entry || entry.type !== 'item') return 5;
-  return entry.base_damage ?? 5;
+  if (!entry || entry.type !== 'item') return GAME_CONSTANTS.DEFAULT_WEAPON_BASE;
+  return entry.base_damage ?? GAME_CONSTANTS.DEFAULT_WEAPON_BASE;
 }

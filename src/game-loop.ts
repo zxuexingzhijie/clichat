@@ -1,6 +1,7 @@
 import { createCommandParser, type CommandParser } from './input/command-parser';
 import { routeInput, type RouteInputOptions } from './input/input-router';
 import { resolveNormalCheck } from './engine/adjudication';
+import { GAME_CONSTANTS } from './engine/game-constants';
 import { rollD20 } from './engine/dice';
 import { getCostSummary } from './state/cost-session-store';
 import type { Store } from './state/create-store';
@@ -347,7 +348,7 @@ export function createGameLoop(
     const attributeName = getRelevantAttribute(action.type);
     const attrMod = player.attributes[attributeName] ?? 0;
     const roll = rollD20(rng);
-    const dc = 12;
+    const dc = GAME_CONSTANTS.DEFAULT_DC;
 
     return resolveNormalCheck({
       roll,

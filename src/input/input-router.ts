@@ -1,5 +1,6 @@
 import type { GameAction } from '../types/game-action';
 import type { CommandParser } from './command-parser';
+import { GAME_CONSTANTS } from '../engine/game-constants';
 import { classifyIntent, type ClassifyIntentOptions } from './intent-classifier';
 
 export type InputResult =
@@ -7,7 +8,7 @@ export type InputResult =
   | { readonly status: 'clarification'; readonly message: string; readonly candidates: readonly GameAction[] }
   | { readonly status: 'error'; readonly message: string };
 
-const CONFIDENCE_THRESHOLD = 0.3;
+const CONFIDENCE_THRESHOLD = GAME_CONSTANTS.CONFIDENCE_THRESHOLD;
 
 export type RouteInputOptions = {
   readonly classifyOptions?: ClassifyIntentOptions;

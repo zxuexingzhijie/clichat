@@ -3,6 +3,7 @@ import { queryById } from '../codex/query';
 import { getDefaultDialogueState } from '../state/dialogue-store';
 import { generateNpcDialogue } from '../ai/roles/npc-actor';
 import { resolveNormalCheck } from './adjudication';
+import { GAME_CONSTANTS } from './game-constants';
 import { rollD20 } from './dice';
 import { applyReputationDelta } from './reputation-system';
 import { getDefaultNpcDisposition } from '../state/relation-store';
@@ -42,10 +43,10 @@ function buildResponses(npcName: string, mode: 'inline' | 'full') {
   if (mode === 'full') {
     baseResponses.push({
       id: nanoid(),
-      label: `[心智检定 DC 12] 观察${npcName}的表情`,
+      label: `[心智检定 DC ${GAME_CONSTANTS.DEFAULT_DC}] 观察${npcName}的表情`,
       requiresCheck: true,
       checkAttribute: 'mind',
-      checkDc: 12,
+      checkDc: GAME_CONSTANTS.DEFAULT_DC,
     } as typeof baseResponses[0] & { checkAttribute: string; checkDc: number });
   }
 
@@ -116,7 +117,7 @@ export function createDialogueManager(
         attributeModifier: attrMod,
         skillModifier: 0,
         environmentModifier: 0,
-        dc: 12,
+        dc: GAME_CONSTANTS.DEFAULT_DC,
       });
     });
 
