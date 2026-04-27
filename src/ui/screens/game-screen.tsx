@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
 import { useScreenSize } from 'fullscreen-ink';
 import { Divider } from '../components/divider';
@@ -116,19 +116,14 @@ export function GameScreen({
   const [spinnerDimoutComplete, setSpinnerDimoutComplete] = useState(false);
   const wasProcessingRef = useRef(false);
 
-  const controllerRef = useRef(
-    createGameScreenController(
+  const controller = useMemo(
+    () => createGameScreenController(
       { game: gameStore, scene: sceneStore },
       eventBus,
       { gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue },
     ),
+    [gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue],
   );
-  controllerRef.current = createGameScreenController(
-    { game: gameStore, scene: sceneStore },
-    eventBus,
-    { gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue },
-  );
-  const controller = controllerRef.current;
 
   useEffect(() => {
     const isProcessing = inputMode === 'processing' && !isAnyStreaming;
@@ -223,7 +218,7 @@ export function GameScreen({
 
   const handleActionExecute = useCallback(
     (index: number) => { void controller.handleActionExecute(index); },
-    [gameLoop, setInputMode, startNarration],
+    [controller],
   );
 
   const handleInputSubmit = useCallback(
@@ -236,20 +231,20 @@ export function GameScreen({
       controller.handleDialogueExecute(index);
       setDialogueSelectedIndex(0);
     },
-    [dialogueManager],
+    [controller],
   );
 
   const handleDialogueEscape = useCallback(() => {
     controller.handleDialogueEscape();
     setDialogueSelectedIndex(0);
-  }, [dialogueManager]);
+  }, [controller]);
 
   const handleCombatExecute = useCallback(
     (index: number) => {
       controller.handleCombatExecute(index);
       setCombatSelectedIndex(0);
     },
-    [combatLoop],
+    [controller],
   );
 
   const isInOverlayPanel = isInMap || isInCodex || isInBranchTree || isInCompare || isInShortcuts || isInReplay || isInChapterSummary;
