@@ -14,6 +14,7 @@ import { createNpcMemoryStore, type NpcMemoryState } from '../state/npc-memory-s
 import { createPlayerKnowledgeStore, type PlayerKnowledgeState } from '../state/player-knowledge-store';
 import { createBranchStore, type BranchState } from '../state/branch-store';
 import { createCostSessionStore, type CostSessionState } from '../state/cost-session-store';
+import { createTurnLogStore, type TurnLogState } from '../state/turn-log-store';
 
 export type GameStores = {
   readonly player: Store<PlayerState>;
@@ -28,6 +29,7 @@ export type GameStores = {
   readonly playerKnowledge: Store<PlayerKnowledgeState>;
   readonly branch: Store<BranchState>;
   readonly costSession: Store<CostSessionState>;
+  readonly turnLog: Store<TurnLogState>;
 };
 
 export type GameContext = {
@@ -52,6 +54,7 @@ export function createGameContext(): GameContext {
     playerKnowledge: createPlayerKnowledgeStore(eventBus),
     branch: createBranchStore(eventBus),
     costSession: createCostSessionStore(eventBus),
+    turnLog: createTurnLogStore(eventBus),
   };
 
   return { stores, eventBus };

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'bun:test';
 import { createGameContext } from '../game-context';
 
 describe('createGameContext', () => {
-  it('creates a context with all 12 stores', () => {
+  it('creates a context with all 13 stores', () => {
     const ctx = createGameContext();
     expect(ctx.stores.player).toBeDefined();
     expect(ctx.stores.scene).toBeDefined();
@@ -16,6 +16,7 @@ describe('createGameContext', () => {
     expect(ctx.stores.playerKnowledge).toBeDefined();
     expect(ctx.stores.branch).toBeDefined();
     expect(ctx.stores.costSession).toBeDefined();
+    expect(ctx.stores.turnLog).toBeDefined();
     expect(ctx.eventBus).toBeDefined();
   });
 
