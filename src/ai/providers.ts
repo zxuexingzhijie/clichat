@@ -3,6 +3,7 @@ import { google } from '@ai-sdk/google';
 import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { createDeepSeek } from '@ai-sdk/deepseek';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { loadAiConfig } from './config/ai-config-loader';
 import type { AiConfig } from './config/ai-config-schema';
 
@@ -31,11 +32,19 @@ const deepseek = createDeepSeek({
   apiKey: process.env.DEEPSEEK_API_KEY,
 });
 
+const openaiCompatible = createOpenAICompatible({
+  name: 'custom',
+  baseURL: process.env.OPENAI_COMPATIBLE_BASE_URL ?? 'http://localhost:11434/v1',
+  apiKey: process.env.OPENAI_COMPATIBLE_API_KEY ?? 'not-needed',
+});
+
 const PROVIDER_FACTORIES: Record<string, (modelId: string) => LanguageModel> = {
   google: (id) => google(id) as unknown as LanguageModel,
   openai: (id) => openai(id) as unknown as LanguageModel,
   anthropic: (id) => anthropic(id) as unknown as LanguageModel,
   deepseek: (id) => deepseek(id) as unknown as LanguageModel,
+  alibaba: (id) => openai.call({ baseURL: process.env.ALIBABA_BASE_URL ?? 'https://dashscope.aliyuncs.com/compatible-mode/v1', apiKey: process.env.ALIBABA_API_KEY ?? '' }, id) as unknown as LanguageModel,
+  'openai-compatible': (id) => openaiCompatible(id) as unknown as LanguageModel,
 };
 
 const DEFAULT_ROLE_CONFIGS: Record<AiRole, RoleConfig> = {
@@ -56,9 +65,10 @@ export function buildRoleConfigs(config: AiConfig, profile: string): Record<AiRo
       `Profile '${profile}' not found in ai-config.yaml and no default_profile fallback`,
     );
   }
+  const defaultProfileData = config.profiles[config.default_profile];
   return Object.fromEntries(
     (Object.keys(DEFAULT_ROLE_CONFIGS) as AiRole[]).map((role) => {
-      const entry = profileData.roles[role];
+      const entry = profileData.roles[role] ?? defaultProfileData?.roles[role];
       if (!entry) return [role, DEFAULT_ROLE_CONFIGS[role]!];
       const factory = PROVIDER_FACTORIES[entry.provider];
       if (!factory) {
