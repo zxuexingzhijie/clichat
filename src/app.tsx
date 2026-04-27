@@ -7,6 +7,8 @@ import { sceneStore, type SceneState } from './state/scene-store';
 import { dialogueStore, type DialogueState } from './state/dialogue-store';
 import { combatStore, type CombatState } from './state/combat-store';
 import { questStore, type QuestState } from './state/quest-store';
+import { npcMemoryStore } from './state/npc-memory-store';
+import { relationStore } from './state/relation-store';
 import { eventBus } from './events/event-bus';
 import { TitleScreen } from './ui/screens/title-screen';
 import { GameScreen } from './ui/screens/game-screen';
@@ -14,10 +16,13 @@ import { SizeGuard } from './ui/components/size-guard';
 import { GameErrorBoundary } from './ui/components/error-boundary';
 import { initRoleConfigs } from './ai/providers';
 import { createGameLoop } from './game-loop';
+import { createSceneManager } from './engine/scene-manager';
+import { createDialogueManager } from './engine/dialogue-manager';
+import { createCombatLoop } from './engine/combat-loop';
 import { NarrativeCreationScreen } from './ui/screens/narrative-creation-screen';
 import { resolveDataDir, resolveConfigPath } from './paths';
 import { loadAllCodex } from './codex/loader';
-import type { QuestTemplate } from './codex/schemas/entry-types';
+import type { CodexEntry, QuestTemplate } from './codex/schemas/entry-types';
 
 const GameStoreCtx = createStoreContext<GameState>();
 const PlayerStoreCtx = createStoreContext<PlayerState>();
@@ -31,34 +36,61 @@ export { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx, DialogueStoreCtx, CombatSt
 function AppInner(): React.ReactNode {
   const phase = GameStoreCtx.useStoreState((s) => s.phase);
   const setGameState = GameStoreCtx.useSetState();
-  const gameLoop = useMemo(
-    () => createGameLoop(
-      { player: playerStore, scene: sceneStore, game: gameStore, combat: combatStore },
-      eventBus,
-    ),
-    [],
-  );
 
-  const [questTemplates, setQuestTemplates] = useState<ReadonlyMap<string, QuestTemplate>>(new Map());
+  const [allCodexEntries, setAllCodexEntries] = useState<ReadonlyMap<string, CodexEntry>>(new Map());
   const [codexLoadError, setCodexLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const dataDir = process.env.__CHRONICLE_DATA_DIR || resolveDataDir();
     const codexDir = `${dataDir}/codex`;
     loadAllCodex(codexDir).then((entries) => {
-      const templates = new Map<string, QuestTemplate>();
-      for (const [id, entry] of entries) {
-        if (entry.type === 'quest') {
-          templates.set(id, entry);
-        }
-      }
-      setQuestTemplates(templates);
+      setAllCodexEntries(entries);
     }).catch((err) => {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error('[Codex] Failed to load quest templates:', msg);
+      console.error('[Codex] Failed to load codex:', msg);
       setCodexLoadError(msg);
     });
   }, []);
+
+  const questTemplates = useMemo(() => {
+    const templates = new Map<string, QuestTemplate>();
+    for (const [id, entry] of allCodexEntries) {
+      if (entry.type === 'quest') {
+        templates.set(id, entry as QuestTemplate);
+      }
+    }
+    return templates;
+  }, [allCodexEntries]);
+
+  const sceneManager = useMemo(
+    () => createSceneManager({ scene: sceneStore, eventBus }, allCodexEntries as Map<string, CodexEntry>),
+    [allCodexEntries],
+  );
+
+  const dialogueManager = useMemo(
+    () => createDialogueManager(
+      { dialogue: dialogueStore, npcMemory: npcMemoryStore, scene: sceneStore, game: gameStore, player: playerStore, relation: relationStore },
+      allCodexEntries as Map<string, CodexEntry>,
+    ),
+    [allCodexEntries],
+  );
+
+  const combatLoop = useMemo(
+    () => createCombatLoop(
+      { combat: combatStore, player: playerStore, game: gameStore },
+      allCodexEntries as Map<string, CodexEntry>,
+    ),
+    [allCodexEntries],
+  );
+
+  const gameLoop = useMemo(
+    () => createGameLoop(
+      { player: playerStore, scene: sceneStore, game: gameStore, combat: combatStore },
+      eventBus,
+      { sceneManager, dialogueManager, combatLoop },
+    ),
+    [sceneManager, dialogueManager, combatLoop],
+  );
 
   const handleStart = useCallback(() => {
     setGameState((draft) => {
@@ -66,14 +98,15 @@ function AppInner(): React.ReactNode {
     });
   }, [setGameState]);
 
-  const handleCharacterCreated = useCallback((newPlayerState: PlayerState) => {
+  const handleCharacterCreated = useCallback(async (newPlayerState: PlayerState) => {
     playerStore.setState((draft) => {
       Object.assign(draft, newPlayerState);
     });
+    await sceneManager.loadScene('loc_north_gate');
     setGameState((draft) => {
       draft.phase = 'game';
     });
-  }, [setGameState]);
+  }, [setGameState, sceneManager]);
 
   if (phase === 'title') {
     return (
@@ -100,6 +133,8 @@ function AppInner(): React.ReactNode {
         <GameScreen
           questTemplates={questTemplates}
           gameLoop={gameLoop}
+          dialogueManager={dialogueManager}
+          combatLoop={combatLoop}
         />
       </SizeGuard>
     </GameErrorBoundary>

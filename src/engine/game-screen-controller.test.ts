@@ -162,6 +162,36 @@ describe('createGameScreenController', () => {
         modifiers: {},
         source: 'action_select',
       });
+      // handler returned narration — AI narration is skipped, input mode reset to action_select
+      expect(startNarration).not.toHaveBeenCalled();
+      expect(setInputMode).toHaveBeenCalledWith('action_select');
+    });
+
+    it('fires AI narration when handler returns no narration text', async () => {
+      const gameStore = makeGameStore();
+      const sceneStore = makeSceneStore();
+      const eventBus = mitt<DomainEvents>();
+      const setInputMode = mock(() => {});
+      const startNarration = mock(() => {});
+
+      const gameLoop: GameLoop = {
+        executeAction: mock(async () => ({
+          status: 'action_executed' as const,
+          action: { type: 'talk' as const, target: 'guard', modifiers: {}, source: 'action_select' as const },
+          narration: [],
+        })),
+        processInput: mock(async () => ({ status: 'help' as const, commands: [] })),
+        getCommandParser: mock(() => ({ parse: () => null })),
+      } as unknown as GameLoop;
+
+      const controller = createGameScreenController(
+        { game: gameStore, scene: sceneStore },
+        eventBus,
+        { setInputMode, startNarration, gameLoop },
+      );
+
+      await controller.handleActionExecute(0);
+
       expect(startNarration).toHaveBeenCalled();
     });
 

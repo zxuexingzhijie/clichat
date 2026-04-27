@@ -29,6 +29,7 @@ export type GameScreenController = {
   readonly handlePanelClose: () => void;
   readonly handlePhaseSwitch: (phase: GameState['phase']) => void;
   readonly handleActionExecute: (index: number) => Promise<void>;
+  readonly handleInputSubmit: (text: string) => void;
   readonly handleNarrationComplete: (text: string) => void;
   readonly handleNarrationError: (error: Error) => void;
   readonly handleNpcDialogueComplete: (npcName: string, dialogue: string, currentInputMode: InputMode) => void;
@@ -79,6 +80,11 @@ export function createGameScreenController(
         return;
       }
 
+      if (result.status === 'action_executed' && result.narration.length > 0) {
+        setInputMode?.('action_select');
+        return;
+      }
+
       const sceneState = sceneStore.getState();
       startNarration?.({
         sceneType: 'exploration',
@@ -94,6 +100,49 @@ export function createGameScreenController(
       });
       setInputMode?.('action_select');
     }
+  };
+
+  const handleInputSubmit = (text: string): void => {
+    if (!text.trim() || !gameLoop) {
+      setInputMode?.('action_select');
+      return;
+    }
+    setInputMode?.('processing');
+    gameLoop.processInput(text).then((result) => {
+      if (result.status === 'error') {
+        sceneStore.setState(draft => {
+          draft.narrationLines = [...draft.narrationLines, `[错误] ${result.message}`];
+        });
+        setInputMode?.('action_select');
+      } else if (result.status === 'clarification') {
+        sceneStore.setState(draft => {
+          draft.narrationLines = [...draft.narrationLines, result.message];
+        });
+        setInputMode?.('action_select');
+      } else if (result.status === 'help') {
+        sceneStore.setState(draft => {
+          draft.narrationLines = [...draft.narrationLines, ...result.commands];
+        });
+        setInputMode?.('action_select');
+      } else if (result.status === 'action_executed' && result.narration.length > 0) {
+        setInputMode?.('action_select');
+      } else {
+        const sceneState = sceneStore.getState();
+        startNarration?.({
+          sceneType: 'exploration',
+          codexEntries: [],
+          playerAction: text,
+          recentNarration: sceneState.narrationLines.slice(-3),
+          sceneContext: sceneState.locationName ?? '',
+        });
+      }
+    }).catch((err: unknown) => {
+      const msg = err instanceof Error ? err.message : String(err);
+      sceneStore.setState(draft => {
+        draft.narrationLines = [...draft.narrationLines, `[错误] ${msg}`];
+      });
+      setInputMode?.('action_select');
+    });
   };
 
   const handleNarrationComplete = (text: string): void => {
@@ -145,6 +194,7 @@ export function createGameScreenController(
     handlePanelClose,
     handlePhaseSwitch,
     handleActionExecute,
+    handleInputSubmit,
     handleNarrationComplete,
     handleNarrationError,
     handleNpcDialogueComplete,

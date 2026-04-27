@@ -6,6 +6,7 @@ import type { CodexEntry, Location } from '../codex/schemas/entry-types';
 import type { NarrativeContext } from '../ai/roles/narrative-director';
 import type { RetrievalPlan } from '../ai/schemas/retrieval-plan';
 import type { SceneAction } from '../state/scene-store';
+import type { EventBus } from '../events/event-bus';
 
 export type SceneManagerResult =
   | { readonly status: 'success'; readonly narration: readonly string[] }
@@ -72,7 +73,7 @@ function buildSuggestedActions(location: Location, codexEntries: Map<string, Cod
 }
 
 export function createSceneManager(
-  stores: { scene: Store<SceneState> },
+  stores: { scene: Store<SceneState>; eventBus?: EventBus },
   codexEntries: Map<string, CodexEntry>,
   options?: SceneManagerOptions,
 ): SceneManager {
@@ -87,6 +88,7 @@ export function createSceneManager(
       return { status: 'error', message: `找不到位置: ${locationId}` };
     }
 
+    const previousSceneId = currentSceneId;
     currentSceneId = locationId;
 
     stores.scene.setState(draft => {
@@ -134,6 +136,8 @@ export function createSceneManager(
     stores.scene.setState(draft => {
       draft.actions = actions;
     });
+
+    stores.eventBus?.emit('scene_changed', { sceneId: locationId, previousSceneId });
 
     return { status: 'success', narration: narrationLines };
   }

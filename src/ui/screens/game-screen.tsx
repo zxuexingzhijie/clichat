@@ -208,8 +208,8 @@ export function GameScreen({
   );
 
   const handleInputSubmit = useCallback(
-    (_text: string) => { setInputMode('action_select'); },
-    [setInputMode],
+    (text: string) => { controller.handleInputSubmit(text); },
+    [controller],
   );
 
   const handleDialogueExecute = useCallback(
