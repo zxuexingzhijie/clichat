@@ -1,23 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
+
 import { useScreenSize } from 'fullscreen-ink';
 import { Divider } from '../components/divider';
 import { TitleBar } from '../panels/title-bar';
-import { ScenePanel } from '../panels/scene-panel';
-import { DialoguePanel } from '../panels/dialogue-panel';
-import { JournalPanel, type QuestDisplayEntry } from '../panels/journal-panel';
-import { MapPanel } from '../panels/map-panel';
-import { CodexPanel } from '../panels/codex-panel';
-import { BranchTreePanel } from '../panels/branch-tree-panel';
-import { ComparePanel } from '../panels/compare-panel';
-import { ShortcutHelpPanel } from '../panels/shortcut-help-panel';
-import { ReplayPanel } from '../panels/replay-panel';
-import { ChapterSummaryPanel } from '../panels/chapter-summary-panel';
+import { PanelRouter } from '../panels/panel-router';
+import { type QuestDisplayEntry } from '../panels/journal-panel';
 import { StatusBar } from '../panels/status-bar';
 import { CombatStatusBar } from '../panels/combat-status-bar';
 import { ActionsPanel } from '../panels/actions-panel';
 import { CombatActionsPanel } from '../panels/combat-actions-panel';
-import { CheckResultLine } from '../panels/check-result-line';
 import { InputArea } from '../panels/input-area';
 import { InlineConfirm } from '../components/inline-confirm';
 import { useGameInput, getPanelActionForKey } from '../hooks/use-game-input';
@@ -193,14 +185,7 @@ export function GameScreen({
   const spinnerContext = isInCombat ? 'combat' as const
     : (isInDialogueMode || dialogueState.active) ? 'npc_dialogue' as const
     : 'narration' as const;
-  const isInJournal = gameState.phase === 'journal';
-  const isInMap = gameState.phase === 'map';
-  const isInCodex = gameState.phase === 'codex';
-  const isInBranchTree = gameState.phase === 'branch_tree';
-  const isInCompare = gameState.phase === 'compare';
-  const isInShortcuts = gameState.phase === 'shortcuts';
-  const isInReplay = gameState.phase === 'replay';
-  const isInChapterSummary = gameState.phase === 'chapter_summary';
+  const overlayPhases = new Set(['map', 'codex', 'branch_tree', 'compare', 'shortcuts', 'replay', 'chapter_summary']);
   const isWide = width >= 100;
 
   const allQuestEntries: QuestDisplayEntry[] = Object.entries(questState.quests)
@@ -247,7 +232,7 @@ export function GameScreen({
     [controller],
   );
 
-  const isInOverlayPanel = isInMap || isInCodex || isInBranchTree || isInCompare || isInShortcuts || isInReplay || isInChapterSummary;
+  const isInOverlayPanel = overlayPhases.has(gameState.phase);
 
   useInput(useCallback((input: string, key: { escape: boolean; tab?: boolean; return?: boolean }) => {
     if (inputMode === 'processing' && isAnyStreaming && (key.return || input === ' ')) {
@@ -282,7 +267,7 @@ export function GameScreen({
     }
   }, [isTyping, isInCombat, isInDialogueMode, isInOverlayPanel, inputMode, inputValue, setInputValue, setInputMode, isNarrationStreaming, skipNarration, isNpcStreaming, skipNpcDialogue, isAnyStreaming]));
 
-  const inlineDialogueLines = dialogueState.active && dialogueState.mode === 'inline'
+  const sceneLines = dialogueState.active && dialogueState.mode === 'inline'
     ? [
         ...sceneState.narrationLines,
         ...dialogueState.dialogueHistory
@@ -290,23 +275,6 @@ export function GameScreen({
           .map((e) => `${dialogueState.npcName}："${e.text}"`),
       ]
     : [...sceneState.narrationLines];
-
-  const sceneLines = dialogueState.active && dialogueState.mode === 'inline'
-    ? inlineDialogueLines
-    : [...sceneState.narrationLines];
-
-  const combatSceneContent = (
-    <Box flexDirection="column" paddingX={1}>
-      {combatState.lastCheckResult && (
-        <CheckResultLine checkResult={combatState.lastCheckResult} />
-      )}
-      {combatState.lastNarration ? (
-        <Text>{combatState.lastNarration}</Text>
-      ) : (
-        <Text bold color="cyan">⚔ 战斗！</Text>
-      )}
-    </Box>
-  );
 
   const statusBarNode = isInCombat ? (
     <CombatStatusBar
@@ -353,77 +321,42 @@ export function GameScreen({
     />
   );
 
-  const scenePanelNode = isInCombat
-    ? combatSceneContent
-    : isInDialogueMode
-      ? (
-        <DialoguePanel
-          npcName={dialogueState.npcName}
-          dialogueHistory={dialogueState.dialogueHistory}
-          relationshipValue={dialogueState.relationshipValue}
-          emotionHint={dialogueState.emotionHint}
-          responseOptions={dialogueState.availableResponses}
-          selectedIndex={dialogueSelectedIndex}
-          onSelect={setDialogueSelectedIndex}
-          onExecute={handleDialogueExecute}
-          isActive={true}
-          onEscape={handleDialogueEscape}
-        />
-      )
-      : isInJournal
-        ? (
-          <JournalPanel
-            activeQuests={activeQuests}
-            completedQuests={completedQuests}
-            failedQuests={failedQuests}
-            onClose={controller.handlePanelClose}
-          />
-        )
-        : isInMap && mapData
-          ? (
-            <MapPanel
-              locations={mapData.locations}
-              currentLocationId={mapData.currentLocationId}
-              regionName={mapData.regionName}
-              onClose={controller.handlePanelClose}
-            />
-          )
-          : isInCodex && codexEntries
-            ? (
-              <CodexPanel
-                entries={codexEntries}
-                onClose={controller.handlePanelClose}
-              />
-            )
-            : isInBranchTree && branchTree
-              ? (
-                <BranchTreePanel
-                  tree={branchTree}
-                  currentBranchId={currentBranchId ?? 'main'}
-                  onClose={controller.handlePanelClose}
-                  onCompare={() => { controller.handlePhaseSwitch('compare'); }}
-                  onSwitch={() => {}}
-                  width={width}
-                />
-              )
-              : isInCompare && branchDiffResult && compareBranchNames
-                ? (
-                  <ComparePanel
-                    sourceBranchName={compareBranchNames.source}
-                    targetBranchName={compareBranchNames.target}
-                    diffResult={branchDiffResult}
-                    narrativeSummary=""
-                    onClose={controller.handlePanelClose}
-                    width={width}
-                  />
-                )
-                : isInShortcuts
-                  ? <ShortcutHelpPanel onClose={controller.handlePanelClose} />
-                  : isInReplay
-                    ? <ReplayPanel entries={[...getLastReplayEntries()]} onClose={controller.handlePanelClose} />
-                    : isInChapterSummary
-                      ? <ChapterSummaryPanel summaries={[...getRecentChapterSummaries()]} onClose={controller.handlePanelClose} />
-                      : <ScenePanel lines={sceneLines} streamingText={isNarrationStreaming ? streamingText : isNpcStreaming ? `${dialogueState.npcName}\uFF1A\u201C${npcStreamingText}` : undefined} isStreaming={isAnyStreaming} showSpinner={showSpinnerWithDim} spinnerContext={spinnerContext} toast={toast} isDimmed={isSceneDimmed} isSpinnerDimming={isSpinnerDimming} />;
+  const scenePanelNode = (
+    <PanelRouter
+      phase={gameState.phase}
+      onClose={controller.handlePanelClose}
+      onPhaseSwitch={controller.handlePhaseSwitch}
+      isInCombat={isInCombat}
+      isInDialogueMode={isInDialogueMode}
+      combatLastCheckResult={combatState.lastCheckResult}
+      combatLastNarration={combatState.lastNarration}
+      dialogueState={dialogueState}
+      dialogueSelectedIndex={dialogueSelectedIndex}
+      onDialogueSelect={setDialogueSelectedIndex}
+      onDialogueExecute={handleDialogueExecute}
+      onDialogueEscape={handleDialogueEscape}
+      activeQuests={activeQuests}
+      completedQuests={completedQuests}
+      failedQuests={failedQuests}
+      mapData={mapData}
+      codexEntries={codexEntries}
+      branchTree={branchTree}
+      currentBranchId={currentBranchId}
+      branchDiffResult={branchDiffResult}
+      compareBranchNames={compareBranchNames}
+      replayEntries={getLastReplayEntries()}
+      chapterSummaries={getRecentChapterSummaries()}
+      width={width}
+      sceneLines={sceneLines}
+      streamingText={isNarrationStreaming ? streamingText : isNpcStreaming ? `${dialogueState.npcName}\uFF1A\u201C${npcStreamingText}` : undefined}
+      isStreaming={isAnyStreaming}
+      showSpinner={showSpinnerWithDim}
+      spinnerContext={spinnerContext}
+      toast={toast}
+      isDimmed={isSceneDimmed}
+      isSpinnerDimming={isSpinnerDimming}
+    />
+  );
 
   if (isWide) {
     const sceneWidth = Math.floor(innerWidth * 0.6);
