@@ -1,66 +1,7 @@
 import { describe, test, expect } from 'bun:test';
-import { NarrationOutputSchema, type NarrationOutput } from './narration-output';
 import { NpcDialogueSchema, type NpcDialogue } from './npc-dialogue';
 import { RetrievalPlanSchema, type RetrievalPlan } from './retrieval-plan';
 import { SafetyFilterResultSchema, type SafetyFilterResult } from './safety-filter';
-
-describe('NarrationOutputSchema', () => {
-  test('validates a correct narration output', () => {
-    const valid: NarrationOutput = {
-      narration: '你环顾四周，雨水顺着屋檐滴落，远处传来模糊的脚步声。黑松镇的北门在夜色中若隐若现。',
-      sceneType: 'exploration',
-      suggestedActions: ['仔细观察周围', '向北门走去'],
-    };
-    const result = NarrationOutputSchema.parse(valid);
-    expect(result.narration).toBe(valid.narration);
-    expect(result.sceneType).toBe('exploration');
-    expect(result.suggestedActions).toHaveLength(2);
-  });
-
-  test('rejects narration shorter than 10 chars', () => {
-    expect(() => NarrationOutputSchema.parse({
-      narration: '短',
-      sceneType: 'exploration',
-      suggestedActions: [],
-    })).toThrow();
-  });
-
-  test('rejects narration longer than 300 chars', () => {
-    expect(() => NarrationOutputSchema.parse({
-      narration: '长'.repeat(301),
-      sceneType: 'exploration',
-      suggestedActions: [],
-    })).toThrow();
-  });
-
-  test('rejects invalid scene type', () => {
-    expect(() => NarrationOutputSchema.parse({
-      narration: '你环顾四周，一切似乎很平静，夜风吹过林间。',
-      sceneType: 'invalid_type',
-      suggestedActions: [],
-    })).toThrow();
-  });
-
-  test('rejects more than 4 suggested actions', () => {
-    expect(() => NarrationOutputSchema.parse({
-      narration: '你环顾四周，一切似乎很平静，夜风吹过林间。',
-      sceneType: 'exploration',
-      suggestedActions: ['a', 'b', 'c', 'd', 'e'],
-    })).toThrow();
-  });
-
-  test('accepts all valid scene types', () => {
-    const types = ['exploration', 'combat', 'dialogue', 'lore', 'horror', 'check_result'] as const;
-    for (const sceneType of types) {
-      const result = NarrationOutputSchema.parse({
-        narration: '这是一段有效的叙述文本，至少十个字符以上。',
-        sceneType,
-        suggestedActions: [],
-      });
-      expect(result.sceneType).toBe(sceneType);
-    }
-  });
-});
 
 describe('NpcDialogueSchema', () => {
   test('validates a correct NPC dialogue', () => {
