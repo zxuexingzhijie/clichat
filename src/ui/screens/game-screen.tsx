@@ -23,6 +23,7 @@ import { InlineConfirm } from '../components/inline-confirm';
 import { useGameInput, getPanelActionForKey } from '../hooks/use-game-input';
 import { useGameEventToasts } from '../hooks/use-game-event-toasts';
 import { useTimedEffect } from '../hooks/use-timed-effect';
+import { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx, DialogueStoreCtx, CombatStoreCtx, QuestStoreCtx } from '../../app';
 import { eventBus } from '../../events/event-bus';
 import { getRecentChapterSummaries } from '../../ai/summarizer/summarizer-worker';
 import { TIME_OF_DAY_LABELS } from '../../types/common';
@@ -32,14 +33,9 @@ import { getLastReplayEntries } from '../../game-loop';
 import { useAiNarration } from '../hooks/use-ai-narration';
 import { useNpcDialogue } from '../hooks/use-npc-dialogue';
 import { sceneStore } from '../../state/scene-store';
-import type { PlayerState } from '../../state/player-store';
-import type { SceneState } from '../../state/scene-store';
 import type { GameLoop } from '../../game-loop';
-import type { DialogueState } from '../../state/dialogue-store';
-import type { CombatState } from '../../state/combat-store';
 import type { DialogueManager } from '../../engine/dialogue-manager';
 import type { CombatLoop, CombatActionType } from '../../engine/combat-loop';
-import type { QuestState } from '../../state/quest-store';
 import type { QuestTemplate } from '../../codex/schemas/entry-types';
 import type { LocationMapData } from '../panels/map-panel';
 import type { CodexDisplayEntry } from '../panels/codex-panel';
@@ -47,14 +43,7 @@ import type { BranchDisplayNode } from '../panels/branch-tree-panel';
 import type { BranchDiffResult } from '../../engine/branch-diff';
 
 type GameScreenProps = {
-  readonly gameState: GameState;
-  readonly playerState: PlayerState;
-  readonly sceneState: SceneState;
-  readonly dialogueState: DialogueState;
-  readonly combatState: CombatState;
-  readonly questState: QuestState;
   readonly questTemplates: ReadonlyMap<string, QuestTemplate>;
-  readonly onSetGamePhase: (recipe: (draft: GameState) => void) => void;
   readonly dialogueManager?: DialogueManager;
   readonly combatLoop?: CombatLoop;
   readonly gameLoop?: GameLoop;
@@ -73,14 +62,7 @@ type GameScreenProps = {
 const COMBAT_ACTION_TYPES: readonly CombatActionType[] = ['attack', 'cast', 'guard', 'flee'];
 
 export function GameScreen({
-  gameState,
-  playerState,
-  sceneState,
-  dialogueState,
-  combatState,
-  questState,
   questTemplates,
-  onSetGamePhase,
   dialogueManager,
   combatLoop,
   gameLoop,
@@ -91,6 +73,13 @@ export function GameScreen({
   branchDiffResult,
   compareBranchNames,
 }: GameScreenProps): React.ReactNode {
+  const gameState = GameStoreCtx.useStoreState((s) => s);
+  const playerState = PlayerStoreCtx.useStoreState((s) => s);
+  const sceneState = SceneStoreCtx.useStoreState((s) => s);
+  const dialogueState = DialogueStoreCtx.useStoreState((s) => s);
+  const combatState = CombatStoreCtx.useStoreState((s) => s);
+  const questState = QuestStoreCtx.useStoreState((s) => s);
+
   const { width, height } = useScreenSize();
   const { exit } = useApp();
   const {

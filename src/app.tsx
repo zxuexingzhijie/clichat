@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { Box, Text } from 'ink';
 import { createStoreContext } from './ui/hooks/use-store';
 import { gameStore, type GameState } from './state/game-store';
 import { playerStore, type PlayerState } from './state/player-store';
@@ -15,7 +14,6 @@ import { initRoleConfigs } from './ai/providers';
 import { createGameLoop } from './game-loop';
 import { NarrativeCreationScreen } from './ui/screens/narrative-creation-screen';
 import { resolveDataDir, resolveConfigPath } from './paths';
-import type { GameContext } from './context/game-context';
 
 const GameStoreCtx = createStoreContext<GameState>();
 const PlayerStoreCtx = createStoreContext<PlayerState>();
@@ -24,7 +22,7 @@ const DialogueStoreCtx = createStoreContext<DialogueState>();
 const CombatStoreCtx = createStoreContext<CombatState>();
 const QuestStoreCtx = createStoreContext<QuestState>();
 
-export { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx };
+export { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx, DialogueStoreCtx, CombatStoreCtx, QuestStoreCtx };
 
 function AppInner(): React.ReactNode {
   const phase = GameStoreCtx.useStoreState((s) => s.phase);
@@ -36,13 +34,6 @@ function AppInner(): React.ReactNode {
     ),
     [],
   );
-
-  const gameState = GameStoreCtx.useStoreState((s) => s);
-  const playerState = PlayerStoreCtx.useStoreState((s) => s);
-  const sceneState = SceneStoreCtx.useStoreState((s) => s);
-  const dialogueState = DialogueStoreCtx.useStoreState((s) => s);
-  const combatState = CombatStoreCtx.useStoreState((s) => s);
-  const questState = QuestStoreCtx.useStoreState((s) => s);
 
   const handleStart = useCallback(() => {
     setGameState((draft) => {
@@ -74,14 +65,7 @@ function AppInner(): React.ReactNode {
   return (
     <SizeGuard>
       <GameScreen
-        gameState={gameState}
-        playerState={playerState}
-        sceneState={sceneState}
-        dialogueState={dialogueState}
-        combatState={combatState}
-        questState={questState}
         questTemplates={new Map()}
-        onSetGamePhase={setGameState}
         gameLoop={gameLoop}
       />
     </SizeGuard>
