@@ -7,7 +7,7 @@ const mockGenerateNpcDialogue = mock((): Promise<NpcDialogue> =>
     dialogue: '这里最近发生了些事情，你要小心。',
     emotionTag: 'suspicious',
     shouldRemember: false,
-    relationshipDelta: 0,
+    sentiment: 'neutral',
   }),
 );
 
@@ -130,7 +130,7 @@ describe('createDialogueManager', () => {
       dialogue: '这里最近发生了些事情，你要小心。',
       emotionTag: 'suspicious',
       shouldRemember: false,
-      relationshipDelta: 0,
+      sentiment: 'neutral',
     });
     mockAdjudicate.mockReturnValue({
       roll: 15,
@@ -176,13 +176,13 @@ describe('createDialogueManager', () => {
         dialogue: '最近的确不太平。',
         emotionTag: 'neutral',
         shouldRemember: false,
-        relationshipDelta: 0,
+        sentiment: 'neutral',
       })
       .mockResolvedValueOnce({
         dialogue: '你有什么线索吗？',
         emotionTag: 'happy',
         shouldRemember: false,
-        relationshipDelta: 0.1,
+        sentiment: 'positive',
       });
 
     const manager = createDialogueManager(stores, mockCodexEntries, {
@@ -202,7 +202,7 @@ describe('createDialogueManager', () => {
       dialogue: '什么事也没有。',
       emotionTag: 'suspicious',
       shouldRemember: false,
-      relationshipDelta: 0,
+      sentiment: 'neutral',
     });
 
     mockAdjudicate.mockReturnValue({
@@ -261,7 +261,7 @@ describe('createDialogueManager', () => {
       dialogue: '我会记住你的帮助。',
       emotionTag: 'happy',
       shouldRemember: true,
-      relationshipDelta: 0.2,
+      sentiment: 'positive',
     });
 
     const manager = createDialogueManager(stores, mockCodexEntries, {
@@ -292,7 +292,7 @@ describe('createDialogueManager', () => {
       dialogue: '你是个值得信赖的人。',
       emotionTag: 'happy',
       shouldRemember: false,
-      relationshipDelta: 0.3,
+      sentiment: 'positive',
     });
 
     const { relationStore } = await import('../state/relation-store');

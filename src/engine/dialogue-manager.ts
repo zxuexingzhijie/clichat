@@ -5,7 +5,7 @@ import { generateNpcDialogue } from '../ai/roles/npc-actor';
 import { resolveNormalCheck } from './adjudication';
 import { GAME_CONSTANTS } from './game-constants';
 import { rollD20 } from './dice';
-import { applyReputationDelta } from './reputation-system';
+import { applyReputationDelta, sentimentToDelta } from './reputation-system';
 import { getDefaultNpcDisposition } from '../state/relation-store';
 import type { Store } from '../state/create-store';
 import type { DialogueState } from '../state/dialogue-store';
@@ -163,7 +163,7 @@ export function createDialogueManager(
       draft.mode = mode;
       draft.dialogueHistory = [{ speaker: 'npc', text: npcDialogue.dialogue }];
       draft.availableResponses = responses;
-      draft.relationshipValue = npc.initial_disposition + npcDialogue.relationshipDelta;
+      draft.relationshipValue = npc.initial_disposition + sentimentToDelta(npcDialogue.sentiment);
       draft.emotionHint = null;
     });
 
@@ -235,7 +235,7 @@ export function createDialogueManager(
       memoryStrings,
     );
 
-    const newRelationship = state.relationshipValue + npcDialogue.relationshipDelta;
+    const newRelationship = state.relationshipValue + sentimentToDelta(npcDialogue.sentiment);
     const newResponses = buildResponses(npc.name, state.mode);
 
     stores.dialogue.setState((draft) => {

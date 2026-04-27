@@ -68,46 +68,34 @@ describe('NpcDialogueSchema', () => {
       dialogue: '你这家伙，又来了？上次欠我的酒钱还没还呢！',
       emotionTag: 'amused',
       shouldRemember: true,
-      relationshipDelta: 0.1,
+      sentiment: 'positive',
     };
     const result = NpcDialogueSchema.parse(valid);
     expect(result.emotionTag).toBe('amused');
     expect(result.shouldRemember).toBe(true);
-    expect(result.relationshipDelta).toBe(0.1);
+    expect(result.sentiment).toBe('positive');
   });
 
-  test('rejects relationship delta out of range', () => {
+  test('rejects invalid sentiment value', () => {
     expect(() => NpcDialogueSchema.parse({
       dialogue: '这是一段有效的NPC对话文本内容。',
       emotionTag: 'neutral',
       shouldRemember: false,
-      relationshipDelta: 0.6,
-    })).toThrow();
-
-    expect(() => NpcDialogueSchema.parse({
-      dialogue: '这是一段有效的NPC对话文本内容。',
-      emotionTag: 'neutral',
-      shouldRemember: false,
-      relationshipDelta: -0.6,
+      sentiment: 'invalid',
     })).toThrow();
   });
 
-  test('accepts boundary relationship delta values', () => {
-    const atMax = NpcDialogueSchema.parse({
-      dialogue: '这是一段有效的NPC对话文本内容。',
-      emotionTag: 'happy',
-      shouldRemember: false,
-      relationshipDelta: 0.5,
-    });
-    expect(atMax.relationshipDelta).toBe(0.5);
-
-    const atMin = NpcDialogueSchema.parse({
-      dialogue: '这是一段有效的NPC对话文本内容。',
-      emotionTag: 'angry',
-      shouldRemember: false,
-      relationshipDelta: -0.5,
-    });
-    expect(atMin.relationshipDelta).toBe(-0.5);
+  test('accepts all valid sentiment values', () => {
+    const sentiments = ['positive', 'neutral', 'negative', 'hostile'] as const;
+    for (const sentiment of sentiments) {
+      const result = NpcDialogueSchema.parse({
+        dialogue: '这是一段有效的NPC对话文本内容。',
+        emotionTag: 'neutral',
+        shouldRemember: false,
+        sentiment,
+      });
+      expect(result.sentiment).toBe(sentiment);
+    }
   });
 
   test('accepts all valid emotion tags', () => {
@@ -117,7 +105,7 @@ describe('NpcDialogueSchema', () => {
         dialogue: '这是一段有效的NPC对话文本内容。',
         emotionTag,
         shouldRemember: false,
-        relationshipDelta: 0,
+        sentiment: 'neutral',
       });
       expect(result.emotionTag).toBe(emotionTag);
     }

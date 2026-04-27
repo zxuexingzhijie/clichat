@@ -42,7 +42,7 @@ describe('generateNpcDialogue', () => {
       dialogue: '嗯？你要打什么？说吧，别浪费我时间。',
       emotionTag: 'neutral',
       shouldRemember: false,
-      relationshipDelta: 0,
+      sentiment: 'neutral',
     };
     mockGenerateObject.mockResolvedValueOnce({ object: expected, usage: mockUsage });
 
@@ -72,7 +72,7 @@ describe('generateNpcDialogue', () => {
     expect(result.dialogue).toContain('老铁匠');
     expect(result.emotionTag).toBe('neutral');
     expect(result.shouldRemember).toBe(false);
-    expect(result.relationshipDelta).toBe(0);
+    expect(result.sentiment).toBe('neutral');
   });
 
   it('retries on first failure then succeeds', async () => {
@@ -80,7 +80,7 @@ describe('generateNpcDialogue', () => {
       dialogue: '今天天气不错。',
       emotionTag: 'happy',
       shouldRemember: true,
-      relationshipDelta: 0.1,
+      sentiment: 'positive',
     };
     mockGenerateObject
       .mockRejectedValueOnce(new Error('Schema validation failed'))

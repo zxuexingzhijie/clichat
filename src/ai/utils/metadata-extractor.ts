@@ -3,7 +3,7 @@ import type { NpcDialogue } from '../schemas/npc-dialogue';
 export type ExtractedNpcMetadata = {
   readonly emotionTag: NpcDialogue['emotionTag'];
   readonly shouldRemember: boolean;
-  readonly relationshipDelta: number;
+  readonly sentiment: NpcDialogue['sentiment'];
 };
 
 const EMOTION_PATTERNS: ReadonlyArray<readonly [NpcDialogue['emotionTag'], RegExp]> = [
@@ -30,6 +30,6 @@ export function extractNpcMetadata(rawText: string): ExtractedNpcMetadata {
   return Object.freeze({
     emotionTag,
     shouldRemember: rawText.length > REMEMBER_THRESHOLD,
-    relationshipDelta: 0,
+    sentiment: 'neutral',
   });
 }

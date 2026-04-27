@@ -51,16 +51,16 @@ describe('extractNpcMetadata', () => {
     expect(result.shouldRemember).toBe(false);
   });
 
-  test('relationshipDelta is always 0', () => {
+  test('sentiment is always neutral', () => {
     const result = extractNpcMetadata('他怒视着你，握紧了拳头。');
-    expect(result.relationshipDelta).toBe(0);
+    expect(result.sentiment).toBe('neutral');
   });
 
   test('returns all defaults for empty string', () => {
     const result = extractNpcMetadata('');
     expect(result.emotionTag).toBe('neutral');
     expect(result.shouldRemember).toBe(false);
-    expect(result.relationshipDelta).toBe(0);
+    expect(result.sentiment).toBe('neutral');
   });
 
   test('emotionTag is always a valid NpcDialogueSchema enum value', () => {

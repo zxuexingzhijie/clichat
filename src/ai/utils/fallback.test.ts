@@ -33,7 +33,7 @@ describe('getFallbackDialogue', () => {
     expect(result.dialogue).toContain('老铁匠');
     expect(result.emotionTag).toBe('neutral');
     expect(result.shouldRemember).toBe(false);
-    expect(result.relationshipDelta).toBe(0);
+    expect(result.sentiment).toBe('neutral');
   });
 
   test('includes the NPC name in the dialogue', () => {

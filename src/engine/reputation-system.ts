@@ -1,5 +1,16 @@
 import type { NpcDisposition } from '../state/relation-store';
 
+const SENTIMENT_DELTAS: Record<string, number> = {
+  positive: 0.2,
+  neutral: 0,
+  negative: -0.2,
+  hostile: -0.4,
+};
+
+export function sentimentToDelta(sentiment: string): number {
+  return SENTIMENT_DELTAS[sentiment] ?? 0;
+}
+
 export function getAttitudeLabel(value: number): string {
   if (value < -60) return '敌视';
   if (value < -20) return '冷漠';

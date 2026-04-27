@@ -88,7 +88,7 @@ export function useNpcDialogue(): UseNpcDialogueReturn {
           const isAllDefaults =
             extracted.emotionTag === 'neutral' &&
             !extracted.shouldRemember &&
-            extracted.relationshipDelta === 0;
+            extracted.sentiment === 'neutral';
           const isSubstantive = fullTextRef.current.length > SUBSTANTIVE_LENGTH_THRESHOLD;
 
           if (isAllDefaults && isSubstantive) {
