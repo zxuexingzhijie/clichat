@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { createStore } from './create-store';
+import { createStore, type Store } from './create-store';
 import { eventBus } from '../events/event-bus';
+import type { EventBus } from '../events/event-bus';
 
 export const NpcMemoryEntrySchema = z.object({
   id: z.string(),
@@ -36,23 +37,27 @@ export function getDefaultNpcMemoryState(): NpcMemoryState {
   return { memories: {} };
 }
 
-export const npcMemoryStore = createStore<NpcMemoryState>(
-  getDefaultNpcMemoryState(),
-  ({ newState, oldState }) => {
-    for (const npcId of Object.keys(newState.memories)) {
-      const newLen = newState.memories[npcId]?.recentMemories.length ?? 0;
-      const oldLen = oldState.memories[npcId]?.recentMemories.length ?? 0;
-      if (newLen > oldLen) {
-        const recentMemories = newState.memories[npcId]!.recentMemories;
-        const latest = recentMemories[recentMemories.length - 1];
-        if (latest) {
-          eventBus.emit('npc_memory_written', {
-            npcId,
-            event: latest.event,
-            turnNumber: latest.turnNumber,
-          });
+export function createNpcMemoryStore(bus: EventBus): Store<NpcMemoryState> {
+  return createStore<NpcMemoryState>(
+    getDefaultNpcMemoryState(),
+    ({ newState, oldState }) => {
+      for (const npcId of Object.keys(newState.memories)) {
+        const newLen = newState.memories[npcId]?.recentMemories.length ?? 0;
+        const oldLen = oldState.memories[npcId]?.recentMemories.length ?? 0;
+        if (newLen > oldLen) {
+          const recentMemories = newState.memories[npcId]!.recentMemories;
+          const latest = recentMemories[recentMemories.length - 1];
+          if (latest) {
+            bus.emit('npc_memory_written', {
+              npcId,
+              event: latest.event,
+              turnNumber: latest.turnNumber,
+            });
+          }
         }
       }
-    }
-  },
-);
+    },
+  );
+}
+
+export const npcMemoryStore = createNpcMemoryStore(eventBus);

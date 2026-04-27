@@ -1,5 +1,6 @@
-import { createStore } from './create-store';
+import { createStore, type Store } from './create-store';
 import { eventBus } from '../events/event-bus';
+import type { EventBus } from '../events/event-bus';
 import { getRoleConfig, type AiRole } from '../ai/providers';
 
 export type RoleCostEntry = {
@@ -26,16 +27,20 @@ type PricingInfo = {
   price_per_1k_output_tokens?: number;
 };
 
-function getDefaultState(): CostSessionState {
+export function getDefaultCostSessionState(): CostSessionState {
   return { byRole: {}, lastTurnTokens: 0 };
 }
 
-export const costSessionStore = createStore<CostSessionState>(
-  getDefaultState(),
-  ({ newState }) => {
-    eventBus.emit('token_usage_updated', { lastTurnTokens: newState.lastTurnTokens });
-  },
-);
+export function createCostSessionStore(bus: EventBus): Store<CostSessionState> {
+  return createStore<CostSessionState>(
+    getDefaultCostSessionState(),
+    ({ newState }) => {
+      bus.emit('token_usage_updated', { lastTurnTokens: newState.lastTurnTokens });
+    },
+  );
+}
+
+export const costSessionStore = createCostSessionStore(eventBus);
 
 export function recordUsage(
   role: AiRole,

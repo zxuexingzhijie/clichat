@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { createStore } from './create-store';
+import { createStore, type Store } from './create-store';
 import { eventBus } from '../events/event-bus';
+import type { EventBus } from '../events/event-bus';
 
 const SceneActionSchema = z.object({
   id: z.string(),
@@ -40,17 +41,21 @@ export function getDefaultSceneState(): SceneState {
   };
 }
 
-export const sceneStore = createStore<SceneState>(
-  getDefaultSceneState(),
-  ({ newState, oldState }) => {
-    if (newState.sceneId !== oldState.sceneId) {
-      eventBus.emit('scene_changed', {
-        sceneId: newState.sceneId,
-        previousSceneId: oldState.sceneId,
-      });
-    }
-    if (newState.narrationLines !== oldState.narrationLines) {
-      eventBus.emit('narration_updated', { lines: newState.narrationLines });
-    }
-  },
-);
+export function createSceneStore(bus: EventBus): Store<SceneState> {
+  return createStore<SceneState>(
+    getDefaultSceneState(),
+    ({ newState, oldState }) => {
+      if (newState.sceneId !== oldState.sceneId) {
+        bus.emit('scene_changed', {
+          sceneId: newState.sceneId,
+          previousSceneId: oldState.sceneId,
+        });
+      }
+      if (newState.narrationLines !== oldState.narrationLines) {
+        bus.emit('narration_updated', { lines: newState.narrationLines });
+      }
+    },
+  );
+}
+
+export const sceneStore = createSceneStore(eventBus);

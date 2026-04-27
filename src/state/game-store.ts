@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { createStore } from './create-store';
+import { createStore, type Store } from './create-store';
 import { eventBus } from '../events/event-bus';
+import type { EventBus } from '../events/event-bus';
 import { TimeOfDaySchema } from '../types/common';
 
 export const GamePhaseSchema = z.enum(['title', 'narrative_creation', 'game', 'combat', 'dialogue', 'journal', 'map', 'codex', 'branch_tree', 'compare', 'shortcuts', 'replay', 'cost', 'chapter_summary']);
@@ -29,14 +30,18 @@ export function getDefaultGameState(): GameState {
   };
 }
 
-export const gameStore = createStore<GameState>(
-  getDefaultGameState(),
-  ({ newState, oldState }) => {
-    if (newState.day !== oldState.day || newState.timeOfDay !== oldState.timeOfDay) {
-      eventBus.emit('time_advanced', { day: newState.day, timeOfDay: newState.timeOfDay });
-    }
-    if (newState.phase !== oldState.phase) {
-      eventBus.emit('game_phase_changed', { phase: newState.phase });
-    }
-  },
-);
+export function createGameStore(bus: EventBus): Store<GameState> {
+  return createStore<GameState>(
+    getDefaultGameState(),
+    ({ newState, oldState }) => {
+      if (newState.day !== oldState.day || newState.timeOfDay !== oldState.timeOfDay) {
+        bus.emit('time_advanced', { day: newState.day, timeOfDay: newState.timeOfDay });
+      }
+      if (newState.phase !== oldState.phase) {
+        bus.emit('game_phase_changed', { phase: newState.phase });
+      }
+    },
+  );
+}
+
+export const gameStore = createGameStore(eventBus);
