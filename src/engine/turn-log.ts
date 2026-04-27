@@ -1,10 +1,17 @@
 import type { TurnLogEntry } from '../state/serializer';
-import { createTurnLogStore, MAX_TURN_LOG_SIZE } from '../state/turn-log-store';
+import { createTurnLogStore, MAX_TURN_LOG_SIZE, type TurnLogState } from '../state/turn-log-store';
 import { eventBus } from '../events/event-bus';
-
-const defaultStore = createTurnLogStore(eventBus);
+import type { Store } from '../state/create-store';
 
 let turnLog: TurnLogEntry[] = [];
+let _defaultStore: Store<TurnLogState> | null = null;
+
+function getStore(): Store<TurnLogState> {
+  if (!_defaultStore) {
+    _defaultStore = createTurnLogStore(eventBus);
+  }
+  return _defaultStore;
+}
 
 export function appendTurnLog(entry: Omit<TurnLogEntry, 'timestamp'>): void {
   const fullEntry: TurnLogEntry = {
@@ -15,7 +22,7 @@ export function appendTurnLog(entry: Omit<TurnLogEntry, 'timestamp'>): void {
   if (turnLog.length > MAX_TURN_LOG_SIZE) {
     turnLog = turnLog.slice(turnLog.length - MAX_TURN_LOG_SIZE);
   }
-  defaultStore.setState((d) => {
+  getStore().setState((d) => {
     d.entries = [...d.entries, fullEntry].slice(-MAX_TURN_LOG_SIZE);
   });
 }
@@ -31,12 +38,12 @@ export function replayTurns(count: number): readonly TurnLogEntry[] {
 
 export function resetTurnLog(): void {
   turnLog = [];
-  defaultStore.setState((d) => { d.entries = []; });
+  getStore().setState((d) => { d.entries = []; });
 }
 
 export function restoreTurnLog(entries: readonly TurnLogEntry[]): void {
   turnLog = [...entries].slice(-MAX_TURN_LOG_SIZE);
-  defaultStore.setState((d) => { d.entries = [...entries].slice(-MAX_TURN_LOG_SIZE); });
+  getStore().setState((d) => { d.entries = [...entries].slice(-MAX_TURN_LOG_SIZE); });
 }
 
-export { defaultStore as turnLogStore };
+export { getStore as getTurnLogStore };
