@@ -1,15 +1,18 @@
 import { nanoid } from 'nanoid';
 import { queryById } from '../codex/query';
-import { dialogueStore, getDefaultDialogueState } from '../state/dialogue-store';
-import { npcMemoryStore } from '../state/npc-memory-store';
-import { sceneStore } from '../state/scene-store';
-import { gameStore } from '../state/game-store';
-import { playerStore } from '../state/player-store';
-import { relationStore, getDefaultNpcDisposition } from '../state/relation-store';
+import { getDefaultDialogueState } from '../state/dialogue-store';
 import { generateNpcDialogue } from '../ai/roles/npc-actor';
 import { resolveNormalCheck } from './adjudication';
 import { rollD20 } from './dice';
 import { applyReputationDelta } from './reputation-system';
+import { getDefaultNpcDisposition } from '../state/relation-store';
+import type { Store } from '../state/create-store';
+import type { DialogueState } from '../state/dialogue-store';
+import type { NpcMemoryState } from '../state/npc-memory-store';
+import type { SceneState } from '../state/scene-store';
+import type { GameState } from '../state/game-store';
+import type { PlayerState } from '../state/player-store';
+import type { RelationState } from '../state/relation-store';
 import type { CodexEntry, Npc } from '../codex/schemas/entry-types';
 import type { NpcDialogue } from '../ai/schemas/npc-dialogue';
 import type { CheckResult } from '../types/common';
@@ -89,6 +92,14 @@ export interface DialogueManager {
 }
 
 export function createDialogueManager(
+  stores: {
+    dialogue: Store<DialogueState>;
+    npcMemory: Store<NpcMemoryState>;
+    scene: Store<SceneState>;
+    game: Store<GameState>;
+    player: Store<PlayerState>;
+    relation: Store<RelationState>;
+  },
   codexEntries: Map<string, CodexEntry>,
   options?: DialogueManagerOptions,
 ): DialogueManager {
@@ -96,7 +107,7 @@ export function createDialogueManager(
   const doAdjudicate =
     options?.adjudicateFn ??
     ((action: { type: string }) => {
-      const player = playerStore.getState();
+      const player = stores.player.getState();
       const attrMod = player.attributes['mind'] ?? 0;
       const roll = rollD20();
       return resolveNormalCheck({
@@ -117,14 +128,14 @@ export function createDialogueManager(
     }
 
     const npc = entry as Npc;
-    const memoryRecord = npcMemoryStore.getState().memories[npcId];
+    const memoryRecord = stores.npcMemory.getState().memories[npcId];
     const memoryStrings: string[] = memoryRecord
       ? [
           ...memoryRecord.recentMemories.map((m) => m.event),
           ...memoryRecord.salientMemories.map((m) => m.event),
         ]
       : [];
-    const scene = sceneStore.getState().narrationLines.join(' ');
+    const scene = stores.scene.getState().narrationLines.join(' ');
 
     const npcProfile = {
       id: npc.id,
@@ -144,7 +155,7 @@ export function createDialogueManager(
     const mode = requiresFullMode(npc) ? 'full' : 'inline';
     const responses = buildResponses(npc.name, mode);
 
-    dialogueStore.setState((draft) => {
+    stores.dialogue.setState((draft) => {
       draft.active = true;
       draft.npcId = npcId;
       draft.npcName = npc.name;
@@ -159,7 +170,7 @@ export function createDialogueManager(
       writeMemory(npcId, `与玩家初次对话: ${npcDialogue.dialogue.slice(0, 50)}`);
     }
 
-    gameStore.setState((draft) => {
+    stores.game.setState((draft) => {
       draft.phase = 'dialogue';
     });
 
@@ -167,7 +178,7 @@ export function createDialogueManager(
   }
 
   async function processPlayerResponse(responseIndex: number): Promise<DialogueResult | null> {
-    const state = dialogueStore.getState();
+    const state = stores.dialogue.getState();
     const response = state.availableResponses[responseIndex];
 
     if (!response) return null;
@@ -199,14 +210,14 @@ export function createDialogueManager(
       }
     }
 
-    const memoryRecord = npcMemoryStore.getState().memories[npcId];
+    const memoryRecord = stores.npcMemory.getState().memories[npcId];
     const memoryStrings: string[] = memoryRecord
       ? [
           ...memoryRecord.recentMemories.map((m) => m.event),
           ...memoryRecord.salientMemories.map((m) => m.event),
         ]
       : [];
-    const scene = sceneStore.getState().narrationLines.join(' ');
+    const scene = stores.scene.getState().narrationLines.join(' ');
 
     const npcProfile = {
       id: npc.id,
@@ -226,7 +237,7 @@ export function createDialogueManager(
     const newRelationship = state.relationshipValue + npcDialogue.relationshipDelta;
     const newResponses = buildResponses(npc.name, state.mode);
 
-    dialogueStore.setState((draft) => {
+    stores.dialogue.setState((draft) => {
       draft.dialogueHistory = [
         ...state.dialogueHistory,
         { speaker: 'player', text: response.label },
@@ -251,29 +262,29 @@ export function createDialogueManager(
   }
 
   function endDialogue(): void {
-    const npcId = dialogueStore.getState().npcId;
-    const delta = dialogueStore.getState().relationshipValue;
+    const npcId = stores.dialogue.getState().npcId;
+    const delta = stores.dialogue.getState().relationshipValue;
 
-    dialogueStore.setState((draft) => {
+    stores.dialogue.setState((draft) => {
       Object.assign(draft, getDefaultDialogueState());
     });
 
     if (npcId && delta !== 0) {
-      relationStore.setState(persistDraft => {
+      stores.relation.setState(persistDraft => {
         const current = persistDraft.npcDispositions[npcId] ?? getDefaultNpcDisposition();
         persistDraft.npcDispositions[npcId] = applyReputationDelta(current, { value: delta });
       });
     }
 
-    gameStore.setState((draft) => {
+    stores.game.setState((draft) => {
       draft.phase = 'game';
     });
   }
 
   function writeMemory(npcId: string, event: string): void {
-    const turnNumber = gameStore.getState().turnCount;
+    const turnNumber = stores.game.getState().turnCount;
 
-    npcMemoryStore.setState((draft) => {
+    stores.npcMemory.setState((draft) => {
       const existing = draft.memories[npcId];
       const newEntry = {
         id: nanoid(),
