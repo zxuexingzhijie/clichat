@@ -2,7 +2,7 @@ import { describe, it, expect, mock, beforeEach } from 'bun:test';
 
 const mockUsage = { inputTokens: 100, outputTokens: 50, totalTokens: 150 };
 const mockGenerateText = mock(() => Promise.resolve({ text: 'response', usage: mockUsage }));
-const mockGenerateObject = mock(() => Promise.resolve({ object: { foo: 1 }, usage: mockUsage }));
+const mockGenerateObject = mock(() => Promise.resolve({ object: { val: 42 }, usage: mockUsage }));
 const mockStreamText = mock(() => ({
   textStream: (async function* () { yield 'chunk'; })(),
   usage: Promise.resolve(mockUsage),

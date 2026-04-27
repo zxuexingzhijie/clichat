@@ -6,7 +6,7 @@ import type { AiRole } from '../providers';
 
 type MessageMode =
   | { readonly mode: 'standard'; readonly options: { readonly system: string; readonly prompt: string } }
-  | { readonly mode: 'anthropic_cache'; readonly options: { readonly messages: ReadonlyArray<Record<string, unknown>> } };
+  | { readonly mode: 'anthropic_cache'; readonly options: { readonly messages: Array<Record<string, unknown>> } };
 
 export function buildAiCallMessages(
   providerName: string,
@@ -50,14 +50,14 @@ type BaseCallOptions = {
 };
 
 type GenerateObjectOptions<T> = BaseCallOptions & {
-  readonly schema: Parameters<typeof generateObject>[0]['schema'];
+  readonly schema: unknown;
 };
 
-function normalizeUsage(usage: { inputTokens?: number | undefined; outputTokens?: number | undefined; totalTokens?: number | undefined }) {
+function normalizeUsage(usage?: { inputTokens?: number | undefined; outputTokens?: number | undefined; totalTokens?: number | undefined }) {
   return {
-    inputTokens: usage.inputTokens ?? 0,
-    outputTokens: usage.outputTokens ?? 0,
-    totalTokens: usage.totalTokens ?? 0,
+    inputTokens: usage?.inputTokens ?? 0,
+    outputTokens: usage?.outputTokens ?? 0,
+    totalTokens: usage?.totalTokens ?? 0,
   };
 }
 
@@ -83,7 +83,7 @@ export async function callGenerateText(
         temperature,
         maxOutputTokens: maxTokens,
         ...msgOpts.options,
-      });
+      } as any);
       recordUsage(role, normalizeUsage(result.usage));
       return { text: result.text };
     } catch (err) {
@@ -139,7 +139,7 @@ export async function* callStreamText(
         temperature,
         maxOutputTokens: maxTokens,
         ...msgOpts.options,
-      });
+      } as any);
       for await (const chunk of result.textStream) {
         yield chunk;
       }

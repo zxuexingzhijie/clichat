@@ -1,6 +1,5 @@
-import { generateText } from 'ai';
 import { getRoleConfig } from '../providers';
-import { recordUsage } from '../../state/cost-session-store';
+import { callGenerateText } from '../utils/ai-caller';
 import type { NpcMemoryEntry } from '../../state/npc-memory-store';
 import {
   buildNpcMemoryCompressPrompt,
@@ -9,51 +8,38 @@ import {
   type TurnLogEntry,
 } from '../summarizer/summarizer-prompts';
 
+async function callSummarizer(system: string, prompt: string): Promise<string> {
+  const config = getRoleConfig('summarizer');
+  const { text } = await callGenerateText({
+    role: 'summarizer',
+    providerName: config.providerName,
+    model: config.model,
+    temperature: config.temperature,
+    maxTokens: config.maxTokens,
+    system,
+    prompt,
+  });
+  return text;
+}
+
 export async function generateNpcMemorySummary(
   npcId: string,
   memories: readonly NpcMemoryEntry[],
 ): Promise<string> {
-  const config = getRoleConfig('summarizer');
   const { system, prompt } = buildNpcMemoryCompressPrompt(npcId, memories);
-  const { text, usage } = await generateText({
-    model: config.model(),
-    temperature: config.temperature,
-    maxOutputTokens: config.maxTokens,
-    system,
-    prompt,
-  });
-  recordUsage('summarizer', { inputTokens: usage.inputTokens ?? 0, outputTokens: usage.outputTokens ?? 0, totalTokens: usage.totalTokens ?? 0 });
-  return text;
+  return callSummarizer(system, prompt);
 }
 
 export async function generateChapterSummary(
   narrationLines: readonly string[],
 ): Promise<string> {
-  const config = getRoleConfig('summarizer');
   const { system, prompt } = buildChapterSummaryPrompt(narrationLines);
-  const { text, usage } = await generateText({
-    model: config.model(),
-    temperature: config.temperature,
-    maxOutputTokens: config.maxTokens,
-    system,
-    prompt,
-  });
-  recordUsage('summarizer', { inputTokens: usage.inputTokens ?? 0, outputTokens: usage.outputTokens ?? 0, totalTokens: usage.totalTokens ?? 0 });
-  return text;
+  return callSummarizer(system, prompt);
 }
 
 export async function generateTurnLogCompress(
   turns: readonly TurnLogEntry[],
 ): Promise<string> {
-  const config = getRoleConfig('summarizer');
   const { system, prompt } = buildTurnLogCompressPrompt(turns);
-  const { text, usage } = await generateText({
-    model: config.model(),
-    temperature: config.temperature,
-    maxOutputTokens: config.maxTokens,
-    system,
-    prompt,
-  });
-  recordUsage('summarizer', { inputTokens: usage.inputTokens ?? 0, outputTokens: usage.outputTokens ?? 0, totalTokens: usage.totalTokens ?? 0 });
-  return text;
+  return callSummarizer(system, prompt);
 }
