@@ -5,10 +5,10 @@ import { GameScreen } from './game-screen';
 import type { GameLoop, ProcessResult } from '../../game-loop';
 
 describe('BUG-01: GameScreen accepts gameLoop prop', () => {
-  it('GameScreen function source references gameLoop.executeAction', () => {
+  it('GameScreen function source delegates to controller.handleActionExecute', () => {
     const source = GameScreen.toString();
     expect(source).toContain('gameLoop');
-    expect(source).toContain('executeAction');
+    expect(source).toContain('handleActionExecute');
   });
 
   it('GameScreen function source references useAiNarration and startNarration', () => {
@@ -22,11 +22,10 @@ describe('BUG-01: GameScreen accepts gameLoop prop', () => {
     expect(source).toContain('processing');
   });
 
-  it('GameScreen function source has error handling with Chinese error prefix (D-04)', () => {
+  it('GameScreen function source delegates error handling to controller (D-04)', () => {
     const source = GameScreen.toString();
-    // Bun compiles Chinese chars to unicode escapes in toString()
-    expect(source).toContain('\\u9519\\u8BEF');
-    expect(source).toContain('\\u53D9\\u4E8B\\u9519\\u8BEF');
+    expect(source).toContain('handleNarrationError');
+    expect(source).toContain('handleNarrationComplete');
   });
 });
 

@@ -33,9 +33,10 @@ import { getLastReplayEntries } from '../../game-loop';
 import { useAiNarration } from '../hooks/use-ai-narration';
 import { useNpcDialogue } from '../hooks/use-npc-dialogue';
 import { sceneStore } from '../../state/scene-store';
+import { createGameScreenController } from '../../engine/game-screen-controller';
 import type { GameLoop } from '../../game-loop';
 import type { DialogueManager } from '../../engine/dialogue-manager';
-import type { CombatLoop, CombatActionType } from '../../engine/combat-loop';
+import type { CombatLoop } from '../../engine/combat-loop';
 import type { QuestTemplate } from '../../codex/schemas/entry-types';
 import type { LocationMapData } from '../panels/map-panel';
 import type { CodexDisplayEntry } from '../panels/codex-panel';
@@ -58,8 +59,6 @@ type GameScreenProps = {
   readonly branchDiffResult?: BranchDiffResult;
   readonly compareBranchNames?: { readonly source: string; readonly target: string };
 };
-
-const COMBAT_ACTION_TYPES: readonly CombatActionType[] = ['attack', 'cast', 'guard', 'flee'];
 
 export function GameScreen({
   questTemplates,
@@ -105,7 +104,6 @@ export function GameScreen({
     streamingText: npcStreamingText,
     isStreaming: isNpcStreaming,
     metadata: npcMetadata,
-    startDialogue: startNpcDialogue,
     skipToEnd: skipNpcDialogue,
     reset: resetNpcDialogue,
   } = useNpcDialogue();
@@ -117,6 +115,20 @@ export function GameScreen({
   const { active: isSpinnerDimming, trigger: triggerSpinnerDimout } = useTimedEffect(150);
   const [spinnerDimoutComplete, setSpinnerDimoutComplete] = useState(false);
   const wasProcessingRef = useRef(false);
+
+  const controllerRef = useRef(
+    createGameScreenController(
+      { game: gameStore, scene: sceneStore },
+      eventBus,
+      { gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue },
+    ),
+  );
+  controllerRef.current = createGameScreenController(
+    { game: gameStore, scene: sceneStore },
+    eventBus,
+    { gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue },
+  );
+  const controller = controllerRef.current;
 
   useEffect(() => {
     const isProcessing = inputMode === 'processing' && !isAnyStreaming;
@@ -160,6 +172,24 @@ export function GameScreen({
     });
   }, []);
 
+  useEffect(() => {
+    if (!isNarrationStreaming && streamingText.length > 0) {
+      controller.handleNarrationComplete(streamingText);
+    }
+  }, [isNarrationStreaming, streamingText]);
+
+  useEffect(() => {
+    if (narrationError) {
+      controller.handleNarrationError(narrationError);
+    }
+  }, [narrationError]);
+
+  useEffect(() => {
+    if (!isNpcStreaming && npcMetadata && npcStreamingText.length > 0) {
+      controller.handleNpcDialogueComplete(dialogueState.npcName, npcMetadata.dialogue, inputMode);
+    }
+  }, [isNpcStreaming, npcMetadata, npcStreamingText]);
+
   const innerWidth = width - 2;
   const timeLabel = TIME_OF_DAY_LABELS[gameState.timeOfDay] ?? gameState.timeOfDay;
 
@@ -192,121 +222,35 @@ export function GameScreen({
   const activeQuestName = activeQuests[0]?.template.name ?? null;
 
   const handleActionExecute = useCallback(
-    async (index: number) => {
-      const action = sceneState.actions[index];
-      if (!action || !gameLoop) return;
-      setInputMode('processing');
-      try {
-        const underscoreIdx = action.id.indexOf('_');
-        const target = underscoreIdx >= 0 ? action.id.slice(underscoreIdx + 1) : null;
-        const gameAction = {
-          type: action.type as import('../../types/game-action').GameActionType,
-          target,
-          modifiers: {},
-          source: 'action_select' as const,
-        };
-        const result = await gameLoop.executeAction(gameAction);
-        if (result.status === 'error') {
-          sceneStore.setState(draft => {
-            draft.narrationLines = [...draft.narrationLines, `[错误] ${result.message ?? '未知错误'}`];
-          });
-          setInputMode('action_select');
-          return;
-        }
-        startNarration({
-          sceneType: 'exploration',
-          codexEntries: [],
-          playerAction: action.label,
-          recentNarration: sceneState.narrationLines.slice(-3),
-          sceneContext: sceneState.locationName ?? '',
-        });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        sceneStore.setState(draft => {
-          draft.narrationLines = [...draft.narrationLines, `[错误] ${msg}`];
-        });
-        setInputMode('action_select');
-      }
-    },
-    [sceneState.actions, sceneState.narrationLines, sceneState.locationName, gameLoop, setInputMode, startNarration],
+    (index: number) => { void controller.handleActionExecute(index); },
+    [gameLoop, setInputMode, startNarration],
   );
 
   const handleInputSubmit = useCallback(
-    (_text: string) => {
-      setInputMode('action_select');
-    },
+    (_text: string) => { setInputMode('action_select'); },
     [setInputMode],
   );
 
-  useEffect(() => {
-    if (!isNarrationStreaming && streamingText.length > 0) {
-      sceneStore.setState(draft => {
-        draft.narrationLines = [...draft.narrationLines, streamingText];
-      });
-      resetNarration();
-      setInputMode('action_select');
-    }
-  }, [isNarrationStreaming, streamingText, resetNarration, setInputMode]);
-
-  useEffect(() => {
-    if (narrationError) {
-      sceneStore.setState(draft => {
-        draft.narrationLines = [...draft.narrationLines, `[叙事错误] ${narrationError.message}`];
-      });
-      resetNarration();
-      setInputMode('action_select');
-    }
-  }, [narrationError, resetNarration, setInputMode]);
-
-  useEffect(() => {
-    if (!isNpcStreaming && npcMetadata && npcStreamingText.length > 0) {
-      sceneStore.setState(draft => {
-        draft.narrationLines = [
-          ...draft.narrationLines,
-          `${dialogueState.npcName}\uFF1A\u201C${npcMetadata.dialogue}\u201D`,
-        ];
-      });
-      resetNpcDialogue();
-      if (inputMode === 'processing') {
-        setInputMode('action_select');
-      }
-    }
-  }, [isNpcStreaming, npcMetadata, npcStreamingText, dialogueState.npcName, resetNpcDialogue, inputMode, setInputMode]);
-
   const handleDialogueExecute = useCallback(
     (index: number) => {
-      if (dialogueManager) {
-        dialogueManager.processPlayerResponse(index).catch(() => {});
-        setDialogueSelectedIndex(0);
-      }
+      controller.handleDialogueExecute(index);
+      setDialogueSelectedIndex(0);
     },
     [dialogueManager],
   );
 
   const handleDialogueEscape = useCallback(() => {
-    if (dialogueManager) {
-      dialogueManager.endDialogue();
-    }
+    controller.handleDialogueEscape();
     setDialogueSelectedIndex(0);
   }, [dialogueManager]);
 
   const handleCombatExecute = useCallback(
     (index: number) => {
-      if (!combatLoop) return;
-      const actionType = COMBAT_ACTION_TYPES[index] ?? 'attack';
-      combatLoop.processPlayerAction(actionType).catch(() => {});
+      controller.handleCombatExecute(index);
       setCombatSelectedIndex(0);
     },
     [combatLoop],
   );
-
-  const handleJournalClose = useCallback(() => {
-    gameStore.setState(draft => { draft.phase = 'game'; });
-  }, []);
-
-  const handlePanelClose = useCallback(() => {
-    gameStore.setState(draft => { draft.phase = 'game'; });
-  }, []);
 
   const isInOverlayPanel = isInMap || isInCodex || isInBranchTree || isInCompare || isInShortcuts || isInReplay || isInChapterSummary;
 
@@ -329,16 +273,16 @@ export function GameScreen({
       return;
     }
     if (key.escape && isInOverlayPanel) {
-      gameStore.setState(draft => { draft.phase = 'game'; });
+      controller.handlePanelClose();
       return;
     }
     const panelAction = getPanelActionForKey(input, isTyping);
     const validPhases = new Set<string>(['map', 'journal', 'codex', 'branch_tree', 'compare', 'shortcuts']);
     if (panelAction && validPhases.has(panelAction) && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
-      gameStore.setState(draft => { draft.phase = panelAction as GameState['phase']; });
+      controller.handlePhaseSwitch(panelAction as GameState['phase']);
     }
     if (input === 'S' && !isTyping && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
-      gameStore.setState(draft => { draft.phase = 'chapter_summary'; });
+      controller.handlePhaseSwitch('chapter_summary');
       return;
     }
   }, [isTyping, isInCombat, isInDialogueMode, isInOverlayPanel, inputMode, inputValue, setInputValue, setInputMode, isNarrationStreaming, skipNarration, isNpcStreaming, skipNpcDialogue, isAnyStreaming]));
@@ -437,7 +381,7 @@ export function GameScreen({
             activeQuests={activeQuests}
             completedQuests={completedQuests}
             failedQuests={failedQuests}
-            onClose={handleJournalClose}
+            onClose={controller.handlePanelClose}
           />
         )
         : isInMap && mapData
@@ -446,14 +390,14 @@ export function GameScreen({
               locations={mapData.locations}
               currentLocationId={mapData.currentLocationId}
               regionName={mapData.regionName}
-              onClose={handlePanelClose}
+              onClose={controller.handlePanelClose}
             />
           )
           : isInCodex && codexEntries
             ? (
               <CodexPanel
                 entries={codexEntries}
-                onClose={handlePanelClose}
+                onClose={controller.handlePanelClose}
               />
             )
             : isInBranchTree && branchTree
@@ -461,10 +405,8 @@ export function GameScreen({
                 <BranchTreePanel
                   tree={branchTree}
                   currentBranchId={currentBranchId ?? 'main'}
-                  onClose={handlePanelClose}
-                  onCompare={() => {
-                    gameStore.setState(draft => { draft.phase = 'compare'; });
-                  }}
+                  onClose={controller.handlePanelClose}
+                  onCompare={() => { controller.handlePhaseSwitch('compare'); }}
                   onSwitch={() => {}}
                   width={width}
                 />
@@ -476,16 +418,16 @@ export function GameScreen({
                     targetBranchName={compareBranchNames.target}
                     diffResult={branchDiffResult}
                     narrativeSummary=""
-                    onClose={handlePanelClose}
+                    onClose={controller.handlePanelClose}
                     width={width}
                   />
                 )
                 : isInShortcuts
-                  ? <ShortcutHelpPanel onClose={handlePanelClose} />
+                  ? <ShortcutHelpPanel onClose={controller.handlePanelClose} />
                   : isInReplay
-                    ? <ReplayPanel entries={[...getLastReplayEntries()]} onClose={handlePanelClose} />
+                    ? <ReplayPanel entries={[...getLastReplayEntries()]} onClose={controller.handlePanelClose} />
                     : isInChapterSummary
-                      ? <ChapterSummaryPanel summaries={[...getRecentChapterSummaries()]} onClose={handlePanelClose} />
+                      ? <ChapterSummaryPanel summaries={[...getRecentChapterSummaries()]} onClose={controller.handlePanelClose} />
                       : <ScenePanel lines={sceneLines} streamingText={isNarrationStreaming ? streamingText : isNpcStreaming ? `${dialogueState.npcName}\uFF1A\u201C${npcStreamingText}` : undefined} isStreaming={isAnyStreaming} showSpinner={showSpinnerWithDim} spinnerContext={spinnerContext} toast={toast} isDimmed={isSceneDimmed} isSpinnerDimming={isSpinnerDimming} />;
 
   if (isWide) {
