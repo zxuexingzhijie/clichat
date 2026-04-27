@@ -94,6 +94,7 @@ export function createCombatLoop(
       draft.lastCheckResult = null;
       draft.lastNarration = '';
       draft.guardActive = false;
+      draft.outcome = null;
     });
 
     gameStore.setState(draft => {
@@ -183,6 +184,7 @@ export function createCombatLoop(
     if (actionType === 'flee') {
       if (isSuccess) {
         combatStore.setState(draft => {
+          draft.outcome = 'flee';
           draft.active = false;
           draft.phase = 'ended';
           draft.lastNarration = '你成功逃脱了战斗！';
@@ -319,6 +321,7 @@ export function createCombatLoop(
         .join('') + '战斗胜利！';
 
       combatStore.setState(draft => {
+        draft.outcome = 'victory';
         draft.active = false;
         draft.phase = 'ended';
         draft.lastNarration = narration;
@@ -332,6 +335,7 @@ export function createCombatLoop(
     if (player.hp <= 0) {
       const narration = '你倒下了...... 世界在眼前逐渐模糊。';
       combatStore.setState(draft => {
+        draft.outcome = 'defeat';
         draft.active = false;
         draft.phase = 'ended';
         draft.lastNarration = narration;

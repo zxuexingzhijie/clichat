@@ -19,6 +19,7 @@ export const CombatStateSchema = z.object({
   lastCheckResult: CheckResultSchema.nullable(),
   lastNarration: z.string(),
   guardActive: z.boolean(),
+  outcome: z.enum(['victory', 'defeat', 'flee']).nullable(),
 });
 export type CombatState = z.infer<typeof CombatStateSchema>;
 
@@ -33,6 +34,7 @@ export function getDefaultCombatState(): CombatState {
     lastCheckResult: null,
     lastNarration: '',
     guardActive: false,
+    outcome: null,
   };
 }
 
@@ -46,7 +48,7 @@ export function createCombatStore(bus: EventBus): Store<CombatState> {
         });
       }
       if (!newState.active && oldState.active) {
-        bus.emit('combat_ended', { outcome: 'victory' });
+        bus.emit('combat_ended', { outcome: newState.outcome ?? 'victory' });
       }
       if (newState.currentTurnIndex !== oldState.currentTurnIndex) {
         const currentActorId = newState.turnOrder[newState.currentTurnIndex] ?? 'player';
