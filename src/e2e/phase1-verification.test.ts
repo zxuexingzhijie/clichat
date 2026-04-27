@@ -7,11 +7,13 @@ import { playerStore, getDefaultPlayerState } from '../state/player-store';
 import { sceneStore, getDefaultSceneState } from '../state/scene-store';
 import { combatStore, getDefaultCombatState } from '../state/combat-store';
 import { gameStore, getDefaultGameState } from '../state/game-store';
-import { questStore, questEventLog } from '../state/quest-store';
+import { questStore } from '../state/quest-store';
 import { relationStore } from '../state/relation-store';
 import { npcMemoryStore } from '../state/npc-memory-store';
 import { explorationStore } from '../state/exploration-store';
 import { playerKnowledgeStore } from '../state/player-knowledge-store';
+import { createStore } from '../state/create-store';
+import { getDefaultTurnLogState, type TurnLogState } from '../state/turn-log-store';
 import { loadCodexFile } from '../codex/loader';
 import { resolve } from 'node:path';
 import { IntentSchema } from '../types/intent';
@@ -146,7 +148,8 @@ describe('Phase 1 Success Criteria', () => {
         npcMemory: npcMemoryStore,
         exploration: explorationStore,
         playerKnowledge: playerKnowledgeStore,
-      }, () => questEventLog, () => [], () => 'main', () => null);
+        turnLog: createStore<TurnLogState>(getDefaultTurnLogState()),
+      }, () => 'main', () => null);
 
       const original = serializer.snapshot();
       const originalHp = playerStore.getState().hp;
@@ -169,7 +172,8 @@ describe('Phase 1 Success Criteria', () => {
         npcMemory: npcMemoryStore,
         exploration: explorationStore,
         playerKnowledge: playerKnowledgeStore,
-      }, () => questEventLog, () => [], () => 'main', () => null);
+        turnLog: createStore<TurnLogState>(getDefaultTurnLogState()),
+      }, () => 'main', () => null);
 
       const snap1 = serializer.snapshot();
       const parsed = JSON.parse(snap1);
@@ -192,7 +196,8 @@ describe('Phase 1 Success Criteria', () => {
         npcMemory: npcMemoryStore,
         exploration: explorationStore,
         playerKnowledge: playerKnowledgeStore,
-      }, () => questEventLog, () => [], () => 'main', () => null);
+        turnLog: createStore<TurnLogState>(getDefaultTurnLogState()),
+      }, () => 'main', () => null);
 
       expect(() => serializer.restore('not json at all')).toThrow('Invalid save data');
     });

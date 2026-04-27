@@ -4,13 +4,13 @@ import { PlayerStateSchema, type PlayerState } from './player-store';
 import { SceneStateSchema, type SceneState } from './scene-store';
 import { CombatStateSchema, type CombatState } from './combat-store';
 import { GameStateSchema, type GameState } from './game-store';
-import { QuestStateSchema, QuestEventSchema, resetQuestEventLog, restoreQuestEventLog, type QuestState, type QuestEvent } from './quest-store';
+import { QuestStateSchema, QuestEventSchema, type QuestState, type QuestEvent } from './quest-store';
 import { RelationStateSchema, type RelationState } from './relation-store';
 import { NpcMemoryStateSchema, type NpcMemoryState } from './npc-memory-store';
 import { ExplorationStateSchema, type ExplorationState } from './exploration-store';
 import { PlayerKnowledgeStateSchema, type PlayerKnowledgeState } from './player-knowledge-store';
+import type { TurnLogState } from './turn-log-store';
 import { migrateV1ToV2, migrateV2ToV3, migrateV3ToV4 } from '../persistence/save-migrator';
-import { resetTurnLog, restoreTurnLog as restoreTurnLogEntries } from '../engine/turn-log';
 
 export interface Serializer {
   snapshot(): string;
@@ -97,9 +97,8 @@ export function createSerializer(
     npcMemory: Store<NpcMemoryState>;
     exploration: Store<ExplorationState>;
     playerKnowledge: Store<PlayerKnowledgeState>;
+    turnLog: Store<TurnLogState>;
   },
-  getQuestEventLog: () => QuestEvent[],
-  getTurnLog: () => TurnLogEntry[],
   getBranchId: () => string,
   getParentSaveId: () => string | null,
 ): Serializer {
@@ -133,10 +132,10 @@ export function createSerializer(
         quest: stores.quest.getState(),
         relations: stores.relations.getState(),
         npcMemorySnapshot: stores.npcMemory.getState(),
-        questEventLog: getQuestEventLog(),
+        questEventLog: stores.quest.getState().eventLog,
         exploration: stores.exploration.getState(),
         playerKnowledge: stores.playerKnowledge.getState(),
-        turnLog: getTurnLog(),
+        turnLog: stores.turnLog.getState().entries,
       };
       return JSON.stringify(data);
     },
@@ -171,11 +170,8 @@ export function createSerializer(
       stores.exploration.setState(draft => { Object.assign(draft, data.exploration); });
       stores.playerKnowledge.setState(draft => { Object.assign(draft, data.playerKnowledge); });
 
-      resetQuestEventLog();
-      restoreQuestEventLog(data.questEventLog);
-
-      resetTurnLog();
-      restoreTurnLogEntries(data.turnLog);
+      stores.quest.setState(draft => { draft.eventLog = data.questEventLog; });
+      stores.turnLog.setState(draft => { draft.entries = data.turnLog; });
     },
   };
 }

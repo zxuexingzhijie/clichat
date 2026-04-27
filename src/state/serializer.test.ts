@@ -4,11 +4,12 @@ import { getDefaultPlayerState, type PlayerState } from './player-store';
 import { getDefaultSceneState, type SceneState } from './scene-store';
 import { getDefaultCombatState, type CombatState } from './combat-store';
 import { getDefaultGameState, type GameState } from './game-store';
-import { getDefaultQuestState, resetQuestEventLog, type QuestState, type QuestEvent } from './quest-store';
+import { getDefaultQuestState, type QuestState, type QuestEvent } from './quest-store';
 import { getDefaultRelationState, type RelationState } from './relation-store';
 import { getDefaultNpcMemoryState, type NpcMemoryState } from './npc-memory-store';
 import { getDefaultExplorationState, type ExplorationState } from './exploration-store';
 import { getDefaultPlayerKnowledgeState, type PlayerKnowledgeState } from './player-knowledge-store';
+import { getDefaultTurnLogState, type TurnLogState } from './turn-log-store';
 import { createSerializer, SaveDataV2Schema, SaveDataV3Schema, SaveDataV4Schema, SaveMetaSchema, TurnLogEntrySchema } from './serializer';
 
 function freshStores() {
@@ -22,18 +23,15 @@ function freshStores() {
     npcMemory: createStore<NpcMemoryState>(getDefaultNpcMemoryState()),
     exploration: createStore<ExplorationState>(getDefaultExplorationState()),
     playerKnowledge: createStore<PlayerKnowledgeState>(getDefaultPlayerKnowledgeState()),
+    turnLog: createStore<TurnLogState>(getDefaultTurnLogState()),
   };
 }
 
 function freshSerializer() {
-  return createSerializer(freshStores(), () => [], () => [], () => 'main', () => null);
+  return createSerializer(freshStores(), () => 'main', () => null);
 }
 
 describe('createSerializer', () => {
-  beforeEach(() => {
-    resetQuestEventLog();
-  });
-
   it('snapshot returns JSON with required v4 keys', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
@@ -57,7 +55,7 @@ describe('createSerializer', () => {
 
   it('snapshot reflects modified store state', () => {
     const stores = freshStores();
-    const serializer = createSerializer(stores, () => [], () => [], () => 'main', () => null);
+    const serializer = createSerializer(stores, () => 'main', () => null);
 
     stores.player.setState(draft => { draft.hp = 20; });
 
@@ -67,7 +65,7 @@ describe('createSerializer', () => {
 
   it('restore sets stores back to snapshot state', () => {
     const stores = freshStores();
-    const serializer = createSerializer(stores, () => [], () => [], () => 'main', () => null);
+    const serializer = createSerializer(stores, () => 'main', () => null);
     const snap = serializer.snapshot();
 
     stores.player.setState(draft => { draft.hp = 1; });
@@ -81,7 +79,7 @@ describe('createSerializer', () => {
 
   it('roundtrip: snapshot -> modify -> restore preserves original state', () => {
     const stores = freshStores();
-    const serializer = createSerializer(stores, () => [], () => [], () => 'main', () => null);
+    const serializer = createSerializer(stores, () => 'main', () => null);
 
     const originalHp = stores.player.getState().hp;
     const snap = serializer.snapshot();
@@ -110,7 +108,7 @@ describe('createSerializer', () => {
 
   it('roundtrip: snapshot -> parse -> stringify -> restore produces identical state', () => {
     const stores = freshStores();
-    const serializer = createSerializer(stores, () => [], () => [], () => 'main', () => null);
+    const serializer = createSerializer(stores, () => 'main', () => null);
 
     stores.player.setState(draft => { draft.gold = 999; });
     stores.scene.setState(draft => { draft.sceneId = 'tavern_01'; });
@@ -121,7 +119,7 @@ describe('createSerializer', () => {
     const repacked = JSON.stringify(JSON.parse(snap));
 
     const stores2 = freshStores();
-    const serializer2 = createSerializer(stores2, () => [], () => [], () => 'main', () => null);
+    const serializer2 = createSerializer(stores2, () => 'main', () => null);
     serializer2.restore(repacked);
 
     expect(stores2.player.getState().gold).toBe(999);
@@ -172,10 +170,6 @@ describe('SaveDataV2Schema', () => {
 });
 
 describe('createSerializer v2 specific', () => {
-  beforeEach(() => {
-    resetQuestEventLog();
-  });
-
   it('snapshot produces JSON parseable to v4 schema', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
@@ -185,7 +179,7 @@ describe('createSerializer v2 specific', () => {
 
   it('restore with valid v2 JSON restores questStore to saved quest state', () => {
     const stores = freshStores();
-    const serializer = createSerializer(stores, () => [], () => [], () => 'main', () => null);
+    const serializer = createSerializer(stores, () => 'main', () => null);
 
     stores.quest.setState(draft => {
       draft.quests['quest_001'] = {
@@ -201,7 +195,7 @@ describe('createSerializer v2 specific', () => {
 
     const snap = serializer.snapshot();
     const stores2 = freshStores();
-    const serializer2 = createSerializer(stores2, () => [], () => [], () => 'main', () => null);
+    const serializer2 = createSerializer(stores2, () => 'main', () => null);
     serializer2.restore(snap);
 
     expect(stores2.quest.getState().quests['quest_001']).toBeDefined();
@@ -210,7 +204,7 @@ describe('createSerializer v2 specific', () => {
 
   it('restore with valid v2 JSON restores relationStore to saved relations state', () => {
     const stores = freshStores();
-    const serializer = createSerializer(stores, () => [], () => [], () => 'main', () => null);
+    const serializer = createSerializer(stores, () => 'main', () => null);
 
     stores.relations.setState(draft => {
       draft.factionReputations['merchants_guild'] = 50;
@@ -218,7 +212,7 @@ describe('createSerializer v2 specific', () => {
 
     const snap = serializer.snapshot();
     const stores2 = freshStores();
-    const serializer2 = createSerializer(stores2, () => [], () => [], () => 'main', () => null);
+    const serializer2 = createSerializer(stores2, () => 'main', () => null);
     serializer2.restore(snap);
 
     expect(stores2.relations.getState().factionReputations['merchants_guild']).toBe(50);
@@ -235,7 +229,7 @@ describe('createSerializer v2 specific', () => {
     });
 
     const stores = freshStores();
-    const serializer = createSerializer(stores, () => [], () => [], () => 'main', () => null);
+    const serializer = createSerializer(stores, () => 'main', () => null);
     serializer.restore(v1SaveJson);
 
     expect(stores.quest.getState()).toEqual(getDefaultQuestState());
@@ -357,10 +351,6 @@ describe('SaveDataV4Schema', () => {
 });
 
 describe('createSerializer v4 migration', () => {
-  beforeEach(() => {
-    resetQuestEventLog();
-  });
-
   it('snapshot produces JSON with version: 4', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
@@ -393,7 +383,7 @@ describe('createSerializer v4 migration', () => {
     });
 
     const stores = freshStores();
-    const serializer = createSerializer(stores, () => [], () => [], () => 'main', () => null);
+    const serializer = createSerializer(stores, () => 'main', () => null);
     expect(() => serializer.restore(v3Json)).not.toThrow();
     expect(stores.player.getState().hp).toBe(30);
   });
