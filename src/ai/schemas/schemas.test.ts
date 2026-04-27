@@ -174,7 +174,7 @@ describe('SafetyFilterResultSchema', () => {
   });
 
   test('accepts all safety categories', () => {
-    const categories = ['safe', 'state_override', 'inappropriate_content', 'prompt_injection'] as const;
+    const categories = ['safe', 'state_override', 'inappropriate_content', 'prompt_injection', 'error'] as const;
     for (const category of categories) {
       const result = SafetyFilterResultSchema.parse({ safe: false, category });
       expect(result.category).toBe(category);
