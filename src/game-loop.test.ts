@@ -3,10 +3,13 @@ import type { Intent } from './types/intent';
 import { getDefaultPlayerState, playerStore } from './state/player-store';
 import { getDefaultSceneState, sceneStore } from './state/scene-store';
 import { getDefaultGameState, gameStore } from './state/game-store';
+import { combatStore } from './state/combat-store';
 import { eventBus } from './events/event-bus';
 import { createSeededRng } from './engine/dice';
 import type { CheckResult } from './types/common';
 import type { GameAction } from './types/game-action';
+
+const stores = { player: playerStore, scene: sceneStore, game: gameStore, combat: combatStore };
 
 const mockGenerateObject = mock(() => Promise.resolve({ object: {} as Intent }));
 
@@ -35,7 +38,7 @@ describe('createGameLoop', () => {
   });
 
   it('processInput /look returns action_executed with narration lines from sceneStore', async () => {
-    const loop = createGameLoop({ rng: createSeededRng(42) });
+    const loop = createGameLoop(stores, eventBus, { rng: createSeededRng(42) });
     const result = await loop.processInput('/look');
 
     expect(result.status).toBe('action_executed');
@@ -47,7 +50,7 @@ describe('createGameLoop', () => {
   });
 
   it('processInput /help returns help with commands list', async () => {
-    const loop = createGameLoop({ rng: createSeededRng(42) });
+    const loop = createGameLoop(stores, eventBus, { rng: createSeededRng(42) });
     const result = await loop.processInput('/help');
 
     expect(result.status).toBe('help');
@@ -59,7 +62,7 @@ describe('createGameLoop', () => {
   });
 
   it('processInput /attack wolf with seeded rng returns action_executed with checkResult', async () => {
-    const loop = createGameLoop({ rng: createSeededRng(42) });
+    const loop = createGameLoop(stores, eventBus, { rng: createSeededRng(42) });
     const result = await loop.processInput('/attack wolf');
 
     expect(result.status).toBe('action_executed');
@@ -74,7 +77,7 @@ describe('createGameLoop', () => {
   });
 
   it('processInput with unknown command returns error with Chinese message', async () => {
-    const loop = createGameLoop({ rng: createSeededRng(42) });
+    const loop = createGameLoop(stores, eventBus, { rng: createSeededRng(42) });
     const result = await loop.processInput('/invalid_cmd');
 
     expect(result.status).toBe('error');
@@ -84,7 +87,7 @@ describe('createGameLoop', () => {
   });
 
   it('after /attack wolf, turnCount has incremented', async () => {
-    const loop = createGameLoop({ rng: createSeededRng(42) });
+    const loop = createGameLoop(stores, eventBus, { rng: createSeededRng(42) });
 
     expect(gameStore.getState().turnCount).toBe(0);
     await loop.processInput('/attack wolf');
@@ -92,7 +95,7 @@ describe('createGameLoop', () => {
   });
 
   it('after /attack wolf, eventBus emits action_resolved', async () => {
-    const loop = createGameLoop({ rng: createSeededRng(42) });
+    const loop = createGameLoop(stores, eventBus, { rng: createSeededRng(42) });
 
     let receivedEvent: { action: GameAction; result: CheckResult } | null = null;
     const unsub = eventBus.on('action_resolved', (evt) => {
@@ -110,7 +113,7 @@ describe('createGameLoop', () => {
   });
 
   it('/look does NOT increment turnCount', async () => {
-    const loop = createGameLoop({ rng: createSeededRng(42) });
+    const loop = createGameLoop(stores, eventBus, { rng: createSeededRng(42) });
 
     expect(gameStore.getState().turnCount).toBe(0);
     await loop.processInput('/look');
@@ -118,7 +121,7 @@ describe('createGameLoop', () => {
   });
 
   it('/attack appends check display to scene narration lines', async () => {
-    const loop = createGameLoop({ rng: createSeededRng(42) });
+    const loop = createGameLoop(stores, eventBus, { rng: createSeededRng(42) });
     const initialLineCount = sceneStore.getState().narrationLines.length;
 
     await loop.processInput('/attack wolf');
@@ -129,7 +132,7 @@ describe('createGameLoop', () => {
   });
 
   it('/journal sets gameStore.phase to journal', async () => {
-    const loop = createGameLoop({ rng: createSeededRng(42) });
+    const loop = createGameLoop(stores, eventBus, { rng: createSeededRng(42) });
 
     const result = await loop.processInput('/journal');
 
@@ -145,7 +148,7 @@ describe('createGameLoop', () => {
       failQuest: mock(() => {}),
     };
 
-    const loop = createGameLoop({ rng: createSeededRng(42), questSystem: mockQuestSystem });
+    const loop = createGameLoop(stores, eventBus, { rng: createSeededRng(42), questSystem: mockQuestSystem });
 
     const result = await loop.processInput('/quest accept quest_main_01');
 
@@ -161,7 +164,7 @@ describe('createGameLoop', () => {
       failQuest: mock(() => {}),
     };
 
-    const loop = createGameLoop({ rng: createSeededRng(42), questSystem: mockQuestSystem });
+    const loop = createGameLoop(stores, eventBus, { rng: createSeededRng(42), questSystem: mockQuestSystem });
 
     const result = await loop.processInput('/quest accept quest_gated');
 
@@ -182,7 +185,7 @@ describe('createGameLoop', () => {
       restore: mock(() => {}),
     };
 
-    const loop = createGameLoop({
+    const loop = createGameLoop(stores, eventBus, {
       rng: createSeededRng(42),
       saveFileManager: mockSaveFileManager,
       serializer: mockSerializer,
@@ -206,7 +209,7 @@ describe('createGameLoop', () => {
       restore: mock(() => {}),
     };
 
-    const loop = createGameLoop({
+    const loop = createGameLoop(stores, eventBus, {
       rng: createSeededRng(42),
       saveFileManager: mockSaveFileManager,
       serializer: mockSerializer,
@@ -230,7 +233,7 @@ describe('createGameLoop', () => {
       restore: mock(() => {}),
     };
 
-    const loop = createGameLoop({
+    const loop = createGameLoop(stores, eventBus, {
       rng: createSeededRng(42),
       saveFileManager: mockSaveFileManager,
       serializer: mockSerializer,
