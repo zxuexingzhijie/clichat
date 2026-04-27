@@ -63,13 +63,12 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
 
         if (cancelled) return;
 
-        const guardNpc = codexEntries.find(
-          (e): e is Npc => e.type === 'npc' && e.id === 'npc_guard',
-        );
-        if (!guardNpc) {
+        const guardEntry = codexEntries.get('npc_guard');
+        if (!guardEntry || guardEntry.type !== 'npc') {
           setPhase({ type: 'load_error', message: '找不到守卫NPC数据 (npc_guard)' });
           return;
         }
+        const guardNpc = guardEntry as Npc;
 
         characterCreationRef.current = createCharacterCreation(codexEntries);
         setGuardProfile({
