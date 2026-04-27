@@ -1,9 +1,11 @@
 import React, { useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
+import { GAME_CONSTANTS } from '../../engine/game-constants';
 
 type CombatActionsPanelProps = {
   readonly playerMp: number;
   readonly canFlee: boolean;
+  readonly hasItems: boolean;
   readonly selectedIndex: number;
   readonly onSelect: (index: number) => void;
   readonly onExecute: (index: number) => void;
@@ -16,15 +18,15 @@ type CombatAction = {
   readonly disabledReason?: string;
 };
 
-function buildCombatActions(playerMp: number, canFlee: boolean): CombatAction[] {
+function buildCombatActions(playerMp: number, canFlee: boolean, hasItems: boolean): CombatAction[] {
   return [
     {
       label: '⚔ 攻击 — 挥剑斩击',
       disabled: false,
     },
     {
-      label: `✦ 施法 — 火球术 (消耗 4 MP)`,
-      disabled: playerMp < 4,
+      label: `✦ 施法 — 火球术 (消耗 ${GAME_CONSTANTS.CAST_MP_COST} MP)`,
+      disabled: playerMp < GAME_CONSTANTS.CAST_MP_COST,
       disabledReason: '魔力不足！',
     },
     {
@@ -33,7 +35,7 @@ function buildCombatActions(playerMp: number, canFlee: boolean): CombatAction[] 
     },
     {
       label: '🎒 物品 — 使用背包中的物品',
-      disabled: true,
+      disabled: !hasItems,
       disabledReason: '背包空空如也。',
     },
     {
@@ -46,12 +48,13 @@ function buildCombatActions(playerMp: number, canFlee: boolean): CombatAction[] 
 export function CombatActionsPanel({
   playerMp,
   canFlee,
+  hasItems,
   selectedIndex,
   onSelect,
   onExecute,
   isActive,
 }: CombatActionsPanelProps): React.ReactNode {
-  const actions = buildCombatActions(playerMp, canFlee);
+  const actions = buildCombatActions(playerMp, canFlee, hasItems);
 
   const handleInput = useCallback(
     (input: string, key: { upArrow?: boolean; downArrow?: boolean; return?: boolean }) => {

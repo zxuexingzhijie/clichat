@@ -13,14 +13,17 @@ import {
 } from '../../engine/weight-resolver';
 import { createCharacterCreation } from '../../engine/character-creation';
 import { loadAllCodex } from '../../codex/loader';
-import type { CodexEntry } from '../../codex/schemas/entry-types';
+import type { Npc } from '../../codex/schemas/entry-types';
 import type { PlayerState } from '../../state/player-store';
 import type { NpcProfile } from '../../ai/prompts/npc-system';
 import { eventBus } from '../../events/event-bus';
 import { resolveDataDir } from '../../paths';
 
+const TRANSITION_DELAY_MS = 500;
+
 type CreationPhase =
   | { readonly type: 'loading' }
+  | { readonly type: 'load_error'; readonly message: string }
   | { readonly type: 'round_streaming'; readonly round: number }
   | { readonly type: 'round_selecting'; readonly round: number }
   | { readonly type: 'name_prompt_streaming' }
@@ -32,19 +35,12 @@ type NarrativeCreationScreenProps = {
   readonly onComplete: (playerState: PlayerState) => void;
 };
 
-const GUARD_PROFILE: NpcProfile = {
-  id: 'npc_guard',
-  name: '北门守卫',
-  personality_tags: ['dutiful', 'cautious', 'honest'],
-  goals: ['protect_gate'],
-  backstory: '从小在黑松镇长大，五年前狼灾后加入守卫队。对镇子有深厚的感情。',
-};
-
 const TOTAL_ROUNDS = 4;
 
 export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenProps): React.ReactNode {
   const [phase, setPhase] = useState<CreationPhase>({ type: 'loading' });
   const [dialogueConfig, setDialogueConfig] = useState<GuardDialogueConfig | null>(null);
+  const [guardProfile, setGuardProfile] = useState<NpcProfile | null>(null);
   const [weights, setWeights] = useState<AccumulatedWeights>(() => createInitialWeights());
   const [lastSelectionLabel, setLastSelectionLabel] = useState<string | undefined>(undefined);
 
@@ -67,13 +63,28 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
 
         if (cancelled) return;
 
+        const guardNpc = codexEntries.find(
+          (e): e is Npc => e.type === 'npc' && e.id === 'npc_guard',
+        );
+        if (!guardNpc) {
+          setPhase({ type: 'load_error', message: '找不到守卫NPC数据 (npc_guard)' });
+          return;
+        }
+
         characterCreationRef.current = createCharacterCreation(codexEntries);
+        setGuardProfile({
+          id: guardNpc.id,
+          name: guardNpc.name,
+          personality_tags: guardNpc.personality_tags,
+          goals: guardNpc.goals,
+          backstory: guardNpc.backstory,
+        });
         setDialogueConfig(guardConfig);
         eventBus.emit('narrative_creation_started', undefined);
         setPhase({ type: 'round_streaming', round: 1 });
       } catch (err) {
         if (!cancelled) {
-          console.error('[NarrativeCreation] Failed to load:', err);
+          setPhase({ type: 'load_error', message: err instanceof Error ? err.message : String(err) });
         }
       }
     })();
@@ -82,7 +93,7 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
 
   // Trigger streaming when entering round_streaming or name_prompt_streaming or farewell_streaming
   useEffect(() => {
-    if (!dialogueConfig) return;
+    if (!dialogueConfig || !guardProfile) return;
 
     if (phase.type === 'round_streaming') {
       const roundData = dialogueConfig.rounds[phase.round - 1];
@@ -94,14 +105,14 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
         : '旅人刚走到城门前';
 
       npcDialogue.startDialogue({
-        npcProfile: GUARD_PROFILE,
+        npcProfile: guardProfile,
         scene: sceneContext,
         playerAction,
         memories: [],
       });
     } else if (phase.type === 'name_prompt_streaming') {
       npcDialogue.startDialogue({
-        npcProfile: GUARD_PROFILE,
+        npcProfile: guardProfile,
         scene: '黑松镇北门，守卫需要登记旅人的名字。',
         playerAction: '旅人已经回答完了所有问题，等待登记名字',
         memories: [],
@@ -113,7 +124,7 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
         : '旅人';
 
       npcDialogue.startDialogue({
-        npcProfile: GUARD_PROFILE,
+        npcProfile: guardProfile,
         scene: `黑松镇北门，守卫准备放行。旅人的特征：${summary}`,
         playerAction: '旅人登记完毕，等待放行',
         memories: [],
@@ -142,7 +153,7 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
         if (resolvedPlayerStateRef.current) {
           onComplete(resolvedPlayerStateRef.current);
         }
-      }, 500);
+      }, TRANSITION_DELAY_MS);
       return () => clearTimeout(timer);
     }
   }, [phase.type, onComplete]);
@@ -182,7 +193,12 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
         questionPriority: { profession: 1, background: 2 },
       });
 
-      const playerState = characterCreationRef.current!.buildCharacter({
+      if (!characterCreationRef.current) {
+        setPhase({ type: 'load_error', message: '角色创建系统未初始化' });
+        return;
+      }
+
+      const playerState = characterCreationRef.current.buildCharacter({
         name,
         raceId: resolved.raceId,
         professionId: resolved.professionId,
@@ -215,6 +231,23 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
     );
   }
 
+  if (phase.type === 'load_error') {
+    return (
+      <Box flexGrow={1} justifyContent="center" alignItems="center" flexDirection="column">
+        <Text color="red">加载失败，请重启游戏</Text>
+        <Text dimColor>{phase.message}</Text>
+      </Box>
+    );
+  }
+
+  if (!guardProfile) {
+    return (
+      <Box flexGrow={1} justifyContent="center" alignItems="center">
+        <Text dimColor>加载中...</Text>
+      </Box>
+    );
+  }
+
   const isRoundPhase = phase.type === 'round_streaming' || phase.type === 'round_selecting';
   const isNamePhase = phase.type === 'name_prompt_streaming' || phase.type === 'name_input';
   const isFarewellPhase = phase.type === 'farewell_streaming' || phase.type === 'transition_delay';
@@ -235,7 +268,7 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
       <Box flexDirection="column" flexGrow={1}>
         {isRoundPhase && dialogueConfig && (
           <GuardDialoguePanel
-            guardName={GUARD_PROFILE.name}
+            guardName={guardProfile.name}
             streamingText={npcDialogue.streamingText}
             isStreaming={npcDialogue.isStreaming}
             options={dialogueConfig.rounds[currentRound - 1]?.options ?? []}
@@ -255,7 +288,7 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
 
         {isNamePhase && dialogueConfig && (
           <GuardNameInput
-            guardName={GUARD_PROFILE.name}
+            guardName={guardProfile.name}
             streamingText={npcDialogue.streamingText}
             isStreaming={npcDialogue.isStreaming}
             isNameInputActive={phase.type === 'name_input'}
@@ -272,7 +305,7 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
 
         {isFarewellPhase && (
           <Box flexDirection="column" flexGrow={1} paddingX={1}>
-            <Text bold color="cyan">{'\u3010'}{GUARD_PROFILE.name}{'\u3011'}</Text>
+            <Text bold color="cyan">{'\u3010'}{guardProfile.name}{'\u3011'}</Text>
             <Text> </Text>
             <Box flexDirection="column" flexGrow={1}>
               {npcDialogue.streamingText ? (

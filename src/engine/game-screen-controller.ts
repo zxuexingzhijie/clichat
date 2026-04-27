@@ -1,3 +1,5 @@
+import { GAME_CONSTANTS } from './game-constants';
+import { combatStore } from '../state/combat-store';
 import type { Store } from '../state/create-store';
 import type { GameState } from '../state/game-store';
 import type { SceneState } from '../state/scene-store';
@@ -40,9 +42,15 @@ export type GameScreenController = {
 
 const COMBAT_ACTION_TYPES: readonly CombatActionType[] = ['attack', 'cast', 'guard', 'flee'];
 
+function capNarrationLines(lines: readonly string[]): string[] {
+  return lines.length > GAME_CONSTANTS.MAX_TURN_LOG_SIZE
+    ? lines.slice(-GAME_CONSTANTS.MAX_TURN_LOG_SIZE) as string[]
+    : [...lines];
+}
+
 export function createGameScreenController(
   stores: ControllerStores,
-  _eventBus: Emitter<DomainEvents>,
+  eventBus: Emitter<DomainEvents>,
   deps: ControllerDeps,
 ): GameScreenController {
   const { game: gameStore, scene: sceneStore } = stores;
@@ -74,7 +82,7 @@ export function createGameScreenController(
       const result = await gameLoop.executeAction(gameAction);
       if (result.status === 'error') {
         sceneStore.setState(draft => {
-          draft.narrationLines = [...draft.narrationLines, `[错误] ${result.message ?? '未知错误'}`];
+          draft.narrationLines = capNarrationLines([...draft.narrationLines, `[错误] ${result.message ?? '未知错误'}`]);
         });
         setInputMode?.('action_select');
         return;
@@ -96,7 +104,7 @@ export function createGameScreenController(
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       sceneStore.setState(draft => {
-        draft.narrationLines = [...draft.narrationLines, `[错误] ${msg}`];
+        draft.narrationLines = capNarrationLines([...draft.narrationLines, `[错误] ${msg}`]);
       });
       setInputMode?.('action_select');
     }
@@ -111,17 +119,17 @@ export function createGameScreenController(
     gameLoop.processInput(text).then((result) => {
       if (result.status === 'error') {
         sceneStore.setState(draft => {
-          draft.narrationLines = [...draft.narrationLines, `[错误] ${result.message}`];
+          draft.narrationLines = capNarrationLines([...draft.narrationLines, `[错误] ${result.message}`]);
         });
         setInputMode?.('action_select');
       } else if (result.status === 'clarification') {
         sceneStore.setState(draft => {
-          draft.narrationLines = [...draft.narrationLines, result.message];
+          draft.narrationLines = capNarrationLines([...draft.narrationLines, result.message]);
         });
         setInputMode?.('action_select');
       } else if (result.status === 'help') {
         sceneStore.setState(draft => {
-          draft.narrationLines = [...draft.narrationLines, ...result.commands];
+          draft.narrationLines = capNarrationLines([...draft.narrationLines, ...result.commands]);
         });
         setInputMode?.('action_select');
       } else if (result.status === 'action_executed' && result.narration.length > 0) {
@@ -139,7 +147,7 @@ export function createGameScreenController(
     }).catch((err: unknown) => {
       const msg = err instanceof Error ? err.message : String(err);
       sceneStore.setState(draft => {
-        draft.narrationLines = [...draft.narrationLines, `[错误] ${msg}`];
+        draft.narrationLines = capNarrationLines([...draft.narrationLines, `[错误] ${msg}`]);
       });
       setInputMode?.('action_select');
     });
@@ -147,7 +155,7 @@ export function createGameScreenController(
 
   const handleNarrationComplete = (text: string): void => {
     sceneStore.setState(draft => {
-      draft.narrationLines = [...draft.narrationLines, text];
+      draft.narrationLines = capNarrationLines([...draft.narrationLines, text]);
     });
     resetNarration?.();
     setInputMode?.('action_select');
@@ -155,7 +163,7 @@ export function createGameScreenController(
 
   const handleNarrationError = (error: Error): void => {
     sceneStore.setState(draft => {
-      draft.narrationLines = [...draft.narrationLines, `[叙事错误] ${error.message}`];
+      draft.narrationLines = capNarrationLines([...draft.narrationLines, `[叙事错误] ${error.message}`]);
     });
     resetNarration?.();
     setInputMode?.('action_select');
@@ -163,10 +171,10 @@ export function createGameScreenController(
 
   const handleNpcDialogueComplete = (npcName: string, dialogue: string, currentInputMode: InputMode): void => {
     sceneStore.setState(draft => {
-      draft.narrationLines = [
+      draft.narrationLines = capNarrationLines([
         ...draft.narrationLines,
         `${npcName}\uFF1A\u201C${dialogue}\u201D`,
-      ];
+      ]);
     });
     resetNpcDialogue?.();
     if (currentInputMode === 'processing') {
@@ -176,7 +184,11 @@ export function createGameScreenController(
 
   const handleDialogueExecute = (index: number): void => {
     if (!dialogueManager) return;
-    dialogueManager.processPlayerResponse(index).catch(() => {});
+    dialogueManager.processPlayerResponse(index).catch((err: unknown) => {
+      console.error('[dialogue] processPlayerResponse failed:', err);
+      eventBus.emit('ai_call_failed', { role: 'npc_actor', error: err instanceof Error ? err.message : String(err) });
+      gameStore.setState(draft => { draft.phase = 'game'; });
+    });
   };
 
   const handleDialogueEscape = (): void => {
@@ -187,7 +199,11 @@ export function createGameScreenController(
   const handleCombatExecute = (index: number): void => {
     if (!combatLoop) return;
     const actionType = COMBAT_ACTION_TYPES[index] ?? 'attack';
-    combatLoop.processPlayerAction(actionType).catch(() => {});
+    combatLoop.processPlayerAction(actionType).catch((err: unknown) => {
+      console.error('[combat] processPlayerAction failed:', err);
+      eventBus.emit('ai_call_failed', { role: 'narrative_director', error: err instanceof Error ? err.message : String(err) });
+      combatStore.setState(draft => { draft.phase = 'player_turn'; });
+    });
   };
 
   return {

@@ -1,6 +1,6 @@
 import type { GameAction } from '../../types/game-action';
 import type { ProcessResult } from '../../game-loop';
-import type { GameStores } from '../../context/game-context';
+import type { GameLoopStores } from '../../game-loop';
 import type { EventBus } from '../../events/event-bus';
 import type { SceneManager } from '../scene-manager';
 import type { DialogueManager } from '../dialogue-manager';
@@ -11,7 +11,7 @@ import type { BranchMeta } from '../../state/branch-store';
 import type { TurnLogEntry } from '../../state/serializer';
 
 export type ActionContext = {
-  readonly stores: GameStores;
+  readonly stores: GameLoopStores;
   readonly eventBus: EventBus;
   readonly sceneManager?: SceneManager;
   readonly dialogueManager?: DialogueManager;

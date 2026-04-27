@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { Box, Text } from 'ink';
 import { GameErrorBoundary } from '../components/error-boundary';
 import { ScenePanel } from './scene-panel';
@@ -12,6 +12,7 @@ import { ShortcutHelpPanel } from './shortcut-help-panel';
 import { ReplayPanel } from './replay-panel';
 import { ChapterSummaryPanel } from './chapter-summary-panel';
 import { CheckResultLine } from './check-result-line';
+import { switchBranch } from '../../persistence/branch-manager';
 import type { GameState } from '../../state/game-store';
 import type { DialogueState } from '../../state/dialogue-store';
 import type { CombatState } from '../../state/combat-store';
@@ -107,6 +108,17 @@ export function PanelRouter({
   isDimmed,
   isSpinnerDimming,
 }: PanelRouterProps): React.ReactNode {
+  const [switchMessage, setSwitchMessage] = useState<string | null>(null);
+
+  const handleSwitchBranch = useCallback((branchId: string) => {
+    try {
+      switchBranch(branchId);
+      setSwitchMessage('分支已切换。重新加载存档以继续。');
+    } catch (err) {
+      setSwitchMessage(err instanceof Error ? err.message : '切换分支失败。');
+    }
+  }, []);
+
   const panelMap = useMemo((): Record<string, React.ReactNode> => ({
     journal: (
       <JournalPanel
@@ -136,8 +148,9 @@ export function PanelRouter({
         currentBranchId={currentBranchId ?? 'main'}
         onClose={onClose}
         onCompare={() => { onPhaseSwitch('compare'); }}
-        onSwitch={() => {}}
+        onSwitch={handleSwitchBranch}
         width={width}
+        switchMessage={switchMessage ?? undefined}
       />
     ) : null,
     compare: branchDiffResult && compareBranchNames ? (
@@ -159,7 +172,7 @@ export function PanelRouter({
     branchTree, currentBranchId, onPhaseSwitch,
     branchDiffResult, compareBranchNames,
     replayEntries, chapterSummaries,
-    width,
+    width, handleSwitchBranch, switchMessage,
   ]);
 
   if (isInCombat) {

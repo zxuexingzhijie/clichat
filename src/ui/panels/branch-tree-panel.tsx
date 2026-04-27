@@ -23,6 +23,7 @@ type BranchTreePanelProps = {
   readonly onCompare: (branchId: string) => void;
   readonly onSwitch: (branchId: string) => void;
   readonly width?: number;
+  readonly switchMessage?: string;
 };
 
 export type { BranchSaveInfo, BranchDisplayNode, BranchTreePanelProps };
@@ -140,6 +141,7 @@ export function BranchTreePanel({
   onCompare,
   onSwitch,
   width = 80,
+  switchMessage,
 }: BranchTreePanelProps): React.ReactNode {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -240,8 +242,13 @@ export function BranchTreePanel({
       )}
 
       <Box marginTop={1}>
-        <Text dimColor>↑↓ 选择节点    Enter 查看详情    c 对比    Esc 返回</Text>
+        <Text dimColor>↑↓ 选择节点    Enter 切换分支    c 对比    Esc 返回</Text>
       </Box>
+      {switchMessage && (
+        <Box marginTop={1}>
+          <Text color="yellow">{switchMessage}</Text>
+        </Box>
+      )}
     </Box>
   );
 }

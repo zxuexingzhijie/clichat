@@ -16,6 +16,7 @@ export interface QuestSystem {
   readonly completeObjective: (questId: string, objectiveId: string) => void;
   readonly advanceStage: (questId: string, stageId: string) => void;
   readonly failQuest: (questId: string) => void;
+  readonly completeQuest: (questId: string) => void;
 }
 
 export function createQuestSystem(
@@ -102,5 +103,17 @@ export function createQuestSystem(
     appendQuestEvent({ questId, type: 'quest_failed', turnNumber });
   }
 
-  return { acceptQuest, completeObjective, advanceStage, failQuest };
+  function completeQuest(questId: string): void {
+    const turnNumber = stores.game.getState().turnCount;
+    stores.quest.setState(draft => {
+      const progress = draft.quests[questId];
+      if (progress) {
+        progress.status = 'completed';
+        progress.completedAt = turnNumber;
+      }
+    });
+    appendQuestEvent({ questId, type: 'quest_completed', turnNumber });
+  }
+
+  return { acceptQuest, completeObjective, advanceStage, failQuest, completeQuest };
 }

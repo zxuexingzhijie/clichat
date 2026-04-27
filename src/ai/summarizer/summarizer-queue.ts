@@ -57,8 +57,8 @@ export function enqueueTask(
   };
 
   summarizerQueueStore.setState((draft) => {
-    const inserted = ([...draft.tasks, newTask] as SummarizerTask[]).sort((a, b) => a.priority - b.priority);
-    (draft.tasks as SummarizerTask[]).splice(0, draft.tasks.length, ...inserted);
+    const inserted = [...draft.tasks, newTask].sort((a, b) => a.priority - b.priority);
+    draft.tasks = inserted as typeof draft.tasks;
   });
 }
 
@@ -75,16 +75,13 @@ export function markRunning(taskId: string): void {
 }
 
 export function markDone(taskId: string): void {
-  let completedType = '';
-  summarizerQueueStore.setState((draft) => {
-    const task = draft.tasks.find((t) => t.id === taskId);
-    if (task) {
-      task.status = 'done';
-      completedType = task.type;
-    }
-  });
-  if (completedType) {
-    eventBus.emit('summarizer_task_completed', { taskId, type: completedType });
+  const task = summarizerQueueStore.getState().tasks.find((t) => t.id === taskId);
+  if (task) {
+    summarizerQueueStore.setState((draft) => {
+      const t = draft.tasks.find((t) => t.id === taskId);
+      if (t) t.status = 'done';
+    });
+    eventBus.emit('summarizer_task_completed', { taskId, type: task.type });
   }
 }
 

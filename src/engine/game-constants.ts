@@ -12,3 +12,5 @@ export const GAME_CONSTANTS = {
   CONFIDENCE_THRESHOLD: 0.3,
   MAX_TURN_LOG_SIZE: 50,
 } as const;
+
+export const DEFAULT_START_LOCATION = 'loc_north_gate' as const;

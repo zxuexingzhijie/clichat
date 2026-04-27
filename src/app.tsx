@@ -22,6 +22,7 @@ import { createCombatLoop } from './engine/combat-loop';
 import { NarrativeCreationScreen } from './ui/screens/narrative-creation-screen';
 import { resolveDataDir, resolveConfigPath } from './paths';
 import { loadAllCodex } from './codex/loader';
+import { DEFAULT_START_LOCATION } from './engine/game-constants';
 import type { CodexEntry, QuestTemplate } from './codex/schemas/entry-types';
 
 const GameStoreCtx = createStoreContext<GameState>();
@@ -102,7 +103,7 @@ function AppInner(): React.ReactNode {
     playerStore.setState((draft) => {
       Object.assign(draft, newPlayerState);
     });
-    await sceneManager.loadScene('loc_north_gate');
+    await sceneManager.loadScene(DEFAULT_START_LOCATION);
     setGameState((draft) => {
       draft.phase = 'game';
     });

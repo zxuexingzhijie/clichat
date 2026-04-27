@@ -1,5 +1,6 @@
 import { queryById } from '../codex/query';
 import { assembleNarrativeContext } from '../ai/utils/context-assembler';
+import { GAME_CONSTANTS } from './game-constants';
 import type { Store } from '../state/create-store';
 import type { SceneState } from '../state/scene-store';
 import type { CodexEntry, Location } from '../codex/schemas/entry-types';
@@ -70,6 +71,12 @@ function buildSuggestedActions(location: Location, codexEntries: Map<string, Cod
   }
 
   return actions;
+}
+
+function capNarrationLines(lines: readonly string[]): string[] {
+  return lines.length > GAME_CONSTANTS.MAX_TURN_LOG_SIZE
+    ? lines.slice(-GAME_CONSTANTS.MAX_TURN_LOG_SIZE) as string[]
+    : [...lines];
 }
 
 export function createSceneManager(
@@ -165,7 +172,7 @@ export function createSceneManager(
         sceneContext: state.locationName,
       });
 
-      const newLines = [...state.narrationLines, narration];
+      const newLines = capNarrationLines([...state.narrationLines, narration]);
       stores.scene.setState(draft => {
         draft.narrationLines = newLines;
       });
@@ -213,7 +220,7 @@ export function createSceneManager(
         sceneContext: description,
       });
 
-      const newLines = [...state.narrationLines, narration];
+      const newLines = capNarrationLines([...state.narrationLines, narration]);
       stores.scene.setState(draft => {
         draft.narrationLines = newLines;
       });
@@ -221,7 +228,7 @@ export function createSceneManager(
       return { status: 'success', narration: newLines };
     }
 
-    const newLines = [...state.narrationLines, description];
+    const newLines = capNarrationLines([...state.narrationLines, description]);
     stores.scene.setState(draft => {
       draft.narrationLines = newLines;
     });

@@ -75,10 +75,10 @@ export type GameLoopOptions = {
 };
 
 export type GameLoopStores = {
-  player: Store<PlayerState>;
-  scene: Store<SceneState>;
-  game: Store<GameState>;
-  combat: Store<CombatState>;
+  readonly player: Store<PlayerState>;
+  readonly scene: Store<SceneState>;
+  readonly game: Store<GameState>;
+  readonly combat: Store<CombatState>;
 };
 
 export function createGameLoop(
@@ -90,7 +90,7 @@ export function createGameLoop(
   const registry = createDefaultRegistry();
 
   const actionContext: ActionContext = {
-    stores: stores as any,
+    stores: stores,
     eventBus,
     sceneManager: options?.sceneManager,
     dialogueManager: options?.dialogueManager,

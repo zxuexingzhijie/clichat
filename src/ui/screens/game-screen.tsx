@@ -189,18 +189,23 @@ export function GameScreen({
     : 'narration' as const;
   const isWide = width >= 100;
 
-  const allQuestEntries: QuestDisplayEntry[] = Object.entries(questState.quests)
-    .map(([questId, progress]) => {
-      const template = questTemplates.get(questId);
-      return template ? { progress, template } : null;
-    })
-    .filter((e): e is QuestDisplayEntry => e !== null);
+  const allQuestEntries = useMemo<QuestDisplayEntry[]>(() =>
+    Object.entries(questState.quests)
+      .map(([questId, progress]) => {
+        const template = questTemplates.get(questId);
+        return template ? { progress, template } : null;
+      })
+      .filter((e): e is QuestDisplayEntry => e !== null),
+    [questState.quests, questTemplates],
+  );
 
-  const activeQuests = allQuestEntries.filter(e => e.progress.status === 'active');
-  const completedQuests = allQuestEntries.filter(e => e.progress.status === 'completed');
-  const failedQuests = allQuestEntries.filter(e => e.progress.status === 'failed');
+  const activeQuests = useMemo(() => allQuestEntries.filter(e => e.progress.status === 'active'), [allQuestEntries]);
+  const completedQuests = useMemo(() => allQuestEntries.filter(e => e.progress.status === 'completed'), [allQuestEntries]);
+  const failedQuests = useMemo(() => allQuestEntries.filter(e => e.progress.status === 'failed'), [allQuestEntries]);
 
   const activeQuestName = activeQuests[0]?.template.name ?? null;
+
+  const replayEntries = useMemo(() => getLastReplayEntries(), [gameState.phase]);
 
   const handleActionExecute = useCallback(
     (index: number) => { void controller.handleActionExecute(index); },
@@ -306,6 +311,7 @@ export function GameScreen({
     <CombatActionsPanel
       playerMp={playerState.mp}
       canFlee={true}
+      hasItems={false}
       selectedIndex={combatSelectedIndex}
       onSelect={setCombatSelectedIndex}
       onExecute={handleCombatExecute}
@@ -345,7 +351,7 @@ export function GameScreen({
       currentBranchId={currentBranchId}
       branchDiffResult={branchDiffResult}
       compareBranchNames={compareBranchNames}
-      replayEntries={getLastReplayEntries()}
+      replayEntries={replayEntries}
       chapterSummaries={getRecentChapterSummaries()}
       width={width}
       sceneLines={sceneLines}

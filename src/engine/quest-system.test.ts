@@ -214,4 +214,16 @@ describe('createQuestSystem', () => {
 
     expect(questStore.getState().quests['quest_main_01']?.status).toBe('failed');
   });
+
+  it('completeQuest sets status to completed and records completedAt', async () => {
+    const { createQuestSystem } = await import('./quest-system');
+    const questSystem = createQuestSystem(stores, mockCodexEntries as any);
+
+    questSystem.acceptQuest('quest_main_01');
+    questSystem.completeQuest('quest_main_01');
+
+    const progress = questStore.getState().quests['quest_main_01'];
+    expect(progress?.status).toBe('completed');
+    expect(progress?.completedAt).not.toBeNull();
+  });
 });

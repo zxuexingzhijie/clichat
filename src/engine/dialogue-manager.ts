@@ -121,6 +121,9 @@ export function createDialogueManager(
       });
     });
 
+  let isProcessing = false;
+  let lastNpcEmotionTag = 'neutral';
+
   async function startDialogue(npcId: string): Promise<DialogueResult> {
     const entry = queryById(codexEntries, npcId);
 
@@ -153,6 +156,8 @@ export function createDialogueManager(
       memoryStrings,
     );
 
+    lastNpcEmotionTag = npcDialogue.emotionTag;
+
     const mode = requiresFullMode(npc) ? 'full' : 'inline';
     const responses = buildResponses(npc.name, mode);
 
@@ -179,6 +184,8 @@ export function createDialogueManager(
   }
 
   async function processPlayerResponse(responseIndex: number): Promise<DialogueResult | null> {
+    if (isProcessing) return null;
+
     const state = stores.dialogue.getState();
     const response = state.availableResponses[responseIndex];
 
@@ -203,9 +210,7 @@ export function createDialogueManager(
       const grade = checkResult.grade;
 
       if (grade === 'success' || grade === 'great_success' || grade === 'critical_success') {
-        const latestNpcLine = state.dialogueHistory.findLast((e) => e.speaker === 'npc');
-        const currentEmotionTag = latestNpcLine ? 'suspicious' : 'neutral';
-        emotionHint = emotionTagToHint(npc.name, currentEmotionTag);
+        emotionHint = emotionTagToHint(npc.name, lastNpcEmotionTag);
       } else if (grade === 'partial_success') {
         emotionHint = `（${npc.name}似乎有所保留）`;
       }
@@ -228,38 +233,45 @@ export function createDialogueManager(
       backstory: npc.backstory,
     };
 
-    const npcDialogue: NpcDialogue = await doGenerateDialogue(
-      npcProfile,
-      scene,
-      response.label,
-      memoryStrings,
-    );
+    isProcessing = true;
+    try {
+      const npcDialogue: NpcDialogue = await doGenerateDialogue(
+        npcProfile,
+        scene,
+        response.label,
+        memoryStrings,
+      );
 
-    const newRelationship = state.relationshipValue + sentimentToDelta(npcDialogue.sentiment);
-    const newResponses = buildResponses(npc.name, state.mode);
+      lastNpcEmotionTag = npcDialogue.emotionTag;
 
-    stores.dialogue.setState((draft) => {
-      draft.dialogueHistory = [
-        ...state.dialogueHistory,
-        { speaker: 'player', text: response.label },
-        { speaker: 'npc', text: npcDialogue.dialogue },
-      ];
-      draft.availableResponses = newResponses;
-      draft.relationshipValue = newRelationship;
-      if (emotionHint !== null) {
-        draft.emotionHint = emotionHint;
+      const newRelationship = state.relationshipValue + sentimentToDelta(npcDialogue.sentiment);
+      const newResponses = buildResponses(npc.name, state.mode);
+
+      stores.dialogue.setState((draft) => {
+        draft.dialogueHistory = [
+          ...state.dialogueHistory,
+          { speaker: 'player', text: response.label },
+          { speaker: 'npc', text: npcDialogue.dialogue },
+        ];
+        draft.availableResponses = newResponses;
+        draft.relationshipValue = newRelationship;
+        if (emotionHint !== null) {
+          draft.emotionHint = emotionHint;
+        }
+      });
+
+      if (npcDialogue.shouldRemember) {
+        writeMemory(npcId, `玩家说: "${response.label.slice(0, 30)}" — ${npcDialogue.dialogue.slice(0, 50)}`);
       }
-    });
 
-    if (npcDialogue.shouldRemember) {
-      writeMemory(npcId, `玩家说: "${response.label.slice(0, 30)}" — ${npcDialogue.dialogue.slice(0, 50)}`);
+      return {
+        mode: state.mode,
+        dialogue: npcDialogue.dialogue,
+        npcName: npc.name,
+      };
+    } finally {
+      isProcessing = false;
     }
-
-    return {
-      mode: state.mode,
-      dialogue: npcDialogue.dialogue,
-      npcName: npc.name,
-    };
   }
 
   function endDialogue(): void {
