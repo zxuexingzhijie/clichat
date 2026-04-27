@@ -35,6 +35,8 @@ import type { CodexDisplayEntry } from '../panels/codex-panel';
 import type { BranchDisplayNode } from '../panels/branch-tree-panel';
 import type { BranchDiffResult } from '../../engine/branch-diff';
 
+const OVERLAY_PHASES = new Set(['journal', 'map', 'codex', 'branch_tree', 'compare', 'shortcuts', 'replay', 'chapter_summary']);
+
 type GameScreenProps = {
   readonly questTemplates: ReadonlyMap<string, QuestTemplate>;
   readonly dialogueManager?: DialogueManager;
@@ -163,19 +165,19 @@ export function GameScreen({
     if (!isNarrationStreaming && streamingText.length > 0) {
       controller.handleNarrationComplete(streamingText);
     }
-  }, [isNarrationStreaming, streamingText]);
+  }, [isNarrationStreaming, streamingText, controller]);
 
   useEffect(() => {
     if (narrationError) {
       controller.handleNarrationError(narrationError);
     }
-  }, [narrationError]);
+  }, [narrationError, controller]);
 
   useEffect(() => {
     if (!isNpcStreaming && npcMetadata && npcStreamingText.length > 0) {
       controller.handleNpcDialogueComplete(dialogueState.npcName, npcMetadata.dialogue, inputMode);
     }
-  }, [isNpcStreaming, npcMetadata, npcStreamingText]);
+  }, [isNpcStreaming, npcMetadata, npcStreamingText, controller, dialogueState.npcName, inputMode]);
 
   const innerWidth = width - 2;
   const timeLabel = TIME_OF_DAY_LABELS[gameState.timeOfDay] ?? gameState.timeOfDay;
@@ -185,7 +187,6 @@ export function GameScreen({
   const spinnerContext = isInCombat ? 'combat' as const
     : (isInDialogueMode || dialogueState.active) ? 'npc_dialogue' as const
     : 'narration' as const;
-  const overlayPhases = new Set(['journal', 'map', 'codex', 'branch_tree', 'compare', 'shortcuts', 'replay', 'chapter_summary']);
   const isWide = width >= 100;
 
   const allQuestEntries: QuestDisplayEntry[] = Object.entries(questState.quests)
@@ -232,7 +233,7 @@ export function GameScreen({
     [controller],
   );
 
-  const isInOverlayPanel = overlayPhases.has(gameState.phase);
+  const isInOverlayPanel = OVERLAY_PHASES.has(gameState.phase);
 
   useInput(useCallback((input: string, key: { escape: boolean; tab?: boolean; return?: boolean }) => {
     if (inputMode === 'processing' && isAnyStreaming && (key.return || input === ' ')) {

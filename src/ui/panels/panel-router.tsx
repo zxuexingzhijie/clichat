@@ -107,42 +107,6 @@ export function PanelRouter({
   isDimmed,
   isSpinnerDimming,
 }: PanelRouterProps): React.ReactNode {
-  if (isInCombat) {
-    return (
-      <GameErrorBoundary>
-        <Box flexDirection="column" paddingX={1}>
-          {combatLastCheckResult && (
-            <CheckResultLine checkResult={combatLastCheckResult} />
-          )}
-          {combatLastNarration ? (
-            <Text>{combatLastNarration}</Text>
-          ) : (
-            <Text bold color="cyan">⚔ 战斗！</Text>
-          )}
-        </Box>
-      </GameErrorBoundary>
-    );
-  }
-
-  if (isInDialogueMode) {
-    return (
-      <GameErrorBoundary>
-        <DialoguePanel
-          npcName={dialogueState.npcName}
-          dialogueHistory={dialogueState.dialogueHistory}
-          relationshipValue={dialogueState.relationshipValue}
-          emotionHint={dialogueState.emotionHint}
-          responseOptions={dialogueState.availableResponses}
-          selectedIndex={dialogueSelectedIndex}
-          onSelect={onDialogueSelect}
-          onExecute={onDialogueExecute}
-          isActive={true}
-          onEscape={onDialogueEscape}
-        />
-      </GameErrorBoundary>
-    );
-  }
-
   const panelMap = useMemo((): Record<string, React.ReactNode> => ({
     journal: (
       <GameErrorBoundary>
@@ -207,6 +171,42 @@ export function PanelRouter({
     replayEntries, chapterSummaries,
     width,
   ]);
+
+  if (isInCombat) {
+    return (
+      <GameErrorBoundary>
+        <Box flexDirection="column" paddingX={1}>
+          {combatLastCheckResult && (
+            <CheckResultLine checkResult={combatLastCheckResult} />
+          )}
+          {combatLastNarration ? (
+            <Text>{combatLastNarration}</Text>
+          ) : (
+            <Text bold color="cyan">⚔ 战斗！</Text>
+          )}
+        </Box>
+      </GameErrorBoundary>
+    );
+  }
+
+  if (isInDialogueMode) {
+    return (
+      <GameErrorBoundary>
+        <DialoguePanel
+          npcName={dialogueState.npcName}
+          dialogueHistory={dialogueState.dialogueHistory}
+          relationshipValue={dialogueState.relationshipValue}
+          emotionHint={dialogueState.emotionHint}
+          responseOptions={dialogueState.availableResponses}
+          selectedIndex={dialogueSelectedIndex}
+          onSelect={onDialogueSelect}
+          onExecute={onDialogueExecute}
+          isActive={true}
+          onEscape={onDialogueEscape}
+        />
+      </GameErrorBoundary>
+    );
+  }
 
   const panel = panelMap[phase];
   if (panel !== undefined && panel !== null) {
