@@ -1,7 +1,7 @@
 import { queryById } from '../codex/query';
 import { assembleNarrativeContext } from '../ai/utils/context-assembler';
-import { sceneStore } from '../state/scene-store';
-import { eventBus } from '../events/event-bus';
+import type { Store } from '../state/create-store';
+import type { SceneState } from '../state/scene-store';
 import type { CodexEntry, Location } from '../codex/schemas/entry-types';
 import type { NarrativeContext } from '../ai/roles/narrative-director';
 import type { RetrievalPlan } from '../ai/schemas/retrieval-plan';
@@ -72,6 +72,7 @@ function buildSuggestedActions(location: Location, codexEntries: Map<string, Cod
 }
 
 export function createSceneManager(
+  stores: { scene: Store<SceneState> },
   codexEntries: Map<string, CodexEntry>,
   options?: SceneManagerOptions,
 ): SceneManager {
@@ -88,7 +89,7 @@ export function createSceneManager(
 
     currentSceneId = locationId;
 
-    sceneStore.setState(draft => {
+    stores.scene.setState(draft => {
       draft.sceneId = locationId;
       draft.locationName = entry.name;
       draft.npcsPresent = [...entry.notable_npcs];
@@ -125,12 +126,12 @@ export function createSceneManager(
 
     const narrationLines = [narrationText];
 
-    sceneStore.setState(draft => {
+    stores.scene.setState(draft => {
       draft.narrationLines = narrationLines;
     });
 
     const actions = buildSuggestedActions(entry, codexEntries);
-    sceneStore.setState(draft => {
+    stores.scene.setState(draft => {
       draft.actions = actions;
     });
 
@@ -139,11 +140,11 @@ export function createSceneManager(
 
   async function handleLook(target?: string): Promise<SceneManagerResult> {
     if (!target) {
-      const lines = sceneStore.getState().narrationLines;
+      const lines = stores.scene.getState().narrationLines;
       return { status: 'success', narration: lines };
     }
 
-    const state = sceneStore.getState();
+    const state = stores.scene.getState();
     const isNpc = state.npcsPresent.includes(target);
     const isObject = state.objects.includes(target);
 
@@ -161,7 +162,7 @@ export function createSceneManager(
       });
 
       const newLines = [...state.narrationLines, narration];
-      sceneStore.setState(draft => {
+      stores.scene.setState(draft => {
         draft.narrationLines = newLines;
       });
 
@@ -172,7 +173,7 @@ export function createSceneManager(
   }
 
   async function handleInspect(target: string): Promise<SceneManagerResult> {
-    const state = sceneStore.getState();
+    const state = stores.scene.getState();
     const isNpc = state.npcsPresent.includes(target);
     const isObject = state.objects.includes(target);
 
@@ -209,7 +210,7 @@ export function createSceneManager(
       });
 
       const newLines = [...state.narrationLines, narration];
-      sceneStore.setState(draft => {
+      stores.scene.setState(draft => {
         draft.narrationLines = newLines;
       });
 
@@ -217,7 +218,7 @@ export function createSceneManager(
     }
 
     const newLines = [...state.narrationLines, description];
-    sceneStore.setState(draft => {
+    stores.scene.setState(draft => {
       draft.narrationLines = newLines;
     });
 
@@ -225,7 +226,7 @@ export function createSceneManager(
   }
 
   async function handleGo(direction: string): Promise<SceneManagerResult> {
-    const state = sceneStore.getState();
+    const state = stores.scene.getState();
 
     if (!state.exits.includes(direction)) {
       return { status: 'error', message: '那个方向没有出路。' };

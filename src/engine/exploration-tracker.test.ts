@@ -3,6 +3,8 @@ import { eventBus } from '../events/event-bus';
 import { explorationStore, getDefaultExplorationState } from '../state/exploration-store';
 import { gameStore, getDefaultGameState } from '../state/game-store';
 
+const stores = { exploration: explorationStore, game: gameStore };
+
 describe('ExplorationTracker', () => {
   let cleanup: (() => void) | null = null;
 
@@ -19,7 +21,7 @@ describe('ExplorationTracker', () => {
 
   test('initExplorationTracker registers a scene_changed listener', async () => {
     const { initExplorationTracker } = await import('./exploration-tracker');
-    cleanup = initExplorationTracker();
+    cleanup = initExplorationTracker(stores, eventBus);
 
     gameStore.setState(draft => { draft.turnCount = 1; });
     eventBus.emit('scene_changed', { sceneId: 'loc_test', previousSceneId: null });
@@ -30,7 +32,7 @@ describe('ExplorationTracker', () => {
 
   test('scene_changed for a new location adds it with level visited', async () => {
     const { initExplorationTracker } = await import('./exploration-tracker');
-    cleanup = initExplorationTracker();
+    cleanup = initExplorationTracker(stores, eventBus);
 
     gameStore.setState(draft => { draft.turnCount = 3; });
     eventBus.emit('scene_changed', { sceneId: 'loc_tavern', previousSceneId: null });
@@ -42,7 +44,7 @@ describe('ExplorationTracker', () => {
 
   test('scene_changed for an already-visited location does not downgrade level', async () => {
     const { initExplorationTracker } = await import('./exploration-tracker');
-    cleanup = initExplorationTracker();
+    cleanup = initExplorationTracker(stores, eventBus);
 
     explorationStore.setState(draft => {
       draft.locations['loc_tavern'] = {
@@ -65,7 +67,7 @@ describe('ExplorationTracker', () => {
 
   test('scene_changed for a rumored location upgrades it to visited', async () => {
     const { initExplorationTracker } = await import('./exploration-tracker');
-    cleanup = initExplorationTracker();
+    cleanup = initExplorationTracker(stores, eventBus);
 
     explorationStore.setState(draft => {
       draft.locations['loc_forest'] = {
@@ -88,7 +90,7 @@ describe('ExplorationTracker', () => {
 
   test('scene_changed for a known location upgrades it to visited', async () => {
     const { initExplorationTracker } = await import('./exploration-tracker');
-    cleanup = initExplorationTracker();
+    cleanup = initExplorationTracker(stores, eventBus);
 
     explorationStore.setState(draft => {
       draft.locations['loc_tower'] = {
@@ -111,7 +113,7 @@ describe('ExplorationTracker', () => {
 
   test('exploration entry has correct discoverySource, discoveredAt, credibility', async () => {
     const { initExplorationTracker } = await import('./exploration-tracker');
-    cleanup = initExplorationTracker();
+    cleanup = initExplorationTracker(stores, eventBus);
 
     gameStore.setState(draft => { draft.turnCount = 42; });
     eventBus.emit('scene_changed', { sceneId: 'loc_plaza', previousSceneId: 'loc_gate' });
@@ -125,10 +127,10 @@ describe('ExplorationTracker', () => {
 
   test('markLocationLevel sets rumored for unknown location', async () => {
     const { markLocationLevel, initExplorationTracker } = await import('./exploration-tracker');
-    cleanup = initExplorationTracker();
+    cleanup = initExplorationTracker(stores, eventBus);
 
     gameStore.setState(draft => { draft.turnCount = 5; });
-    markLocationLevel('loc_x', 'rumored', 'npc_dialogue', 0.5);
+    markLocationLevel(stores,'loc_x', 'rumored', 'npc_dialogue', 0.5);
 
     const loc = explorationStore.getState().locations['loc_x'];
     expect(loc).toBeDefined();
@@ -139,7 +141,7 @@ describe('ExplorationTracker', () => {
 
   test('markLocationLevel does not downgrade visited to rumored', async () => {
     const { markLocationLevel, initExplorationTracker } = await import('./exploration-tracker');
-    cleanup = initExplorationTracker();
+    cleanup = initExplorationTracker(stores, eventBus);
 
     explorationStore.setState(draft => {
       draft.locations['loc_y'] = {
@@ -153,7 +155,7 @@ describe('ExplorationTracker', () => {
       };
     });
 
-    markLocationLevel('loc_y', 'rumored', 'npc_dialogue', 0.5);
+    markLocationLevel(stores,'loc_y', 'rumored', 'npc_dialogue', 0.5);
 
     const loc = explorationStore.getState().locations['loc_y'];
     expect(loc!.level).toBe('visited');

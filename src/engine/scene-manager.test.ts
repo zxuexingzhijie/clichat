@@ -14,6 +14,8 @@ mock.module('@ai-sdk/openai', () => ({
 const { createSceneManager } = await import('./scene-manager');
 const { sceneStore, getDefaultSceneState } = await import('../state/scene-store');
 
+const stores = { scene: sceneStore };
+
 function createMockCodexEntries(): Map<string, CodexEntry> {
   const entries = new Map<string, CodexEntry>();
 
@@ -115,7 +117,7 @@ describe('createSceneManager', () => {
     const narrationFn = createMockNarrationFn();
     const retrievalFn = createMockRetrievalFn();
 
-    const manager = createSceneManager(codex, {
+    const manager = createSceneManager(stores, codex, {
       generateNarrationFn: narrationFn,
       generateRetrievalPlanFn: retrievalFn,
     });
@@ -135,7 +137,7 @@ describe('createSceneManager', () => {
     const narrationFn = createMockNarrationFn();
     const retrievalFn = createMockRetrievalFn();
 
-    const manager = createSceneManager(codex, {
+    const manager = createSceneManager(stores, codex, {
       generateNarrationFn: narrationFn,
       generateRetrievalPlanFn: retrievalFn,
     });
@@ -154,7 +156,7 @@ describe('createSceneManager', () => {
     const narrationFn = createMockNarrationFn();
     const retrievalFn = createMockRetrievalFn();
 
-    const manager = createSceneManager(codex, {
+    const manager = createSceneManager(stores, codex, {
       generateNarrationFn: narrationFn,
       generateRetrievalPlanFn: retrievalFn,
     });
@@ -173,7 +175,7 @@ describe('createSceneManager', () => {
     const narrationFn = createMockNarrationFn();
     const retrievalFn = createMockRetrievalFn();
 
-    const manager = createSceneManager(codex, {
+    const manager = createSceneManager(stores, codex, {
       generateNarrationFn: narrationFn,
       generateRetrievalPlanFn: retrievalFn,
     });
@@ -192,7 +194,7 @@ describe('createSceneManager', () => {
     const narrationFn = createMockNarrationFn();
     const retrievalFn = createMockRetrievalFn();
 
-    const manager = createSceneManager(codex, {
+    const manager = createSceneManager(stores, codex, {
       generateNarrationFn: narrationFn,
       generateRetrievalPlanFn: retrievalFn,
     });
@@ -211,7 +213,7 @@ describe('createSceneManager', () => {
     const narrationFn = createMockNarrationFn();
     const retrievalFn = createMockRetrievalFn();
 
-    const manager = createSceneManager(codex, {
+    const manager = createSceneManager(stores, codex, {
       generateNarrationFn: narrationFn,
       generateRetrievalPlanFn: retrievalFn,
     });
@@ -240,7 +242,7 @@ describe('createSceneManager', () => {
     const narrationFn = mock(async () => inspectNarration);
     const retrievalFn = createMockRetrievalFn();
 
-    const manager = createSceneManager(codex, {
+    const manager = createSceneManager(stores, codex, {
       generateNarrationFn: narrationFn,
       generateRetrievalPlanFn: retrievalFn,
     });
@@ -259,7 +261,7 @@ describe('createSceneManager', () => {
     const narrationFn = createMockNarrationFn();
     const retrievalFn = createMockRetrievalFn();
 
-    const manager = createSceneManager(codex, {
+    const manager = createSceneManager(stores, codex, {
       generateNarrationFn: narrationFn,
       generateRetrievalPlanFn: retrievalFn,
     });

@@ -1,7 +1,9 @@
 import { queryById } from '../codex/query';
-import { questStore, appendQuestEvent } from '../state/quest-store';
-import { relationStore } from '../state/relation-store';
-import { gameStore } from '../state/game-store';
+import { appendQuestEvent } from '../state/quest-store';
+import type { Store } from '../state/create-store';
+import type { QuestState } from '../state/quest-store';
+import type { RelationState } from '../state/relation-store';
+import type { GameState } from '../state/game-store';
 import type { CodexEntry, QuestTemplate } from '../codex/schemas/entry-types';
 
 export type QuestResult =
@@ -16,7 +18,14 @@ export interface QuestSystem {
   readonly failQuest: (questId: string) => void;
 }
 
-export function createQuestSystem(codexEntries: Map<string, CodexEntry>): QuestSystem {
+export function createQuestSystem(
+  stores: {
+    quest: Store<QuestState>;
+    relation: Store<RelationState>;
+    game: Store<GameState>;
+  },
+  codexEntries: Map<string, CodexEntry>,
+): QuestSystem {
   function getTemplate(questId: string): QuestTemplate | null {
     const entry = queryById(codexEntries, questId);
     return entry?.type === 'quest' ? (entry as QuestTemplate) : null;
@@ -26,21 +35,21 @@ export function createQuestSystem(codexEntries: Map<string, CodexEntry>): QuestS
     const template = getTemplate(questId);
     if (!template) return { status: 'error', reason: `找不到任务: ${questId}` };
 
-    const currentProgress = questStore.getState().quests[questId];
+    const currentProgress = stores.quest.getState().quests[questId];
     if (currentProgress?.status === 'active') return { status: 'ok' };
 
     if (template.min_reputation !== undefined && template.required_npc_id) {
       const npcId = template.required_npc_id;
-      const disposition = relationStore.getState().npcDispositions[npcId]?.value ?? 0;
+      const disposition = stores.relation.getState().npcDispositions[npcId]?.value ?? 0;
       if (disposition < template.min_reputation) {
         return { status: 'gated', reason: '声望不足' };
       }
     }
 
-    const turnNumber = gameStore.getState().turnCount;
+    const turnNumber = stores.game.getState().turnCount;
     const firstStageId = template.stages[0]?.id ?? null;
 
-    questStore.setState(draft => {
+    stores.quest.setState(draft => {
       draft.quests[questId] = {
         status: 'active',
         currentStageId: firstStageId,
@@ -57,7 +66,7 @@ export function createQuestSystem(codexEntries: Map<string, CodexEntry>): QuestS
   }
 
   function completeObjective(questId: string, objectiveId: string): void {
-    questStore.setState(draft => {
+    stores.quest.setState(draft => {
       const progress = draft.quests[questId];
       if (progress && !progress.completedObjectives.includes(objectiveId)) {
         progress.completedObjectives = [...progress.completedObjectives, objectiveId];
@@ -66,27 +75,27 @@ export function createQuestSystem(codexEntries: Map<string, CodexEntry>): QuestS
     appendQuestEvent({
       questId,
       type: 'objective_completed',
-      turnNumber: gameStore.getState().turnCount,
+      turnNumber: stores.game.getState().turnCount,
       details: { objectiveId },
     });
   }
 
   function advanceStage(questId: string, stageId: string): void {
-    questStore.setState(draft => {
+    stores.quest.setState(draft => {
       const progress = draft.quests[questId];
       if (progress) progress.currentStageId = stageId;
     });
     appendQuestEvent({
       questId,
       type: 'stage_advanced',
-      turnNumber: gameStore.getState().turnCount,
+      turnNumber: stores.game.getState().turnCount,
       details: { stageId },
     });
   }
 
   function failQuest(questId: string): void {
-    const turnNumber = gameStore.getState().turnCount;
-    questStore.setState(draft => {
+    const turnNumber = stores.game.getState().turnCount;
+    stores.quest.setState(draft => {
       const progress = draft.quests[questId];
       if (progress) progress.status = 'failed';
     });
