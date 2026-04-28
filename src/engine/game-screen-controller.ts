@@ -211,7 +211,12 @@ export function createGameScreenController(
         });
         return;
       }
-      if (combatLoop.getCombatPhase() === 'enemy_turn') {
+      if (
+        combatLoop.getCombatPhase() === 'enemy_turn' &&
+        result.outcome !== 'flee' &&
+        result.outcome !== 'victory' &&
+        result.outcome !== 'defeat'
+      ) {
         await combatLoop.processEnemyTurn();
       }
     } catch (err: unknown) {

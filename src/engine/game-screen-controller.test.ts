@@ -543,5 +543,125 @@ describe('createGameScreenController', () => {
 
       expect(() => controller.handleCombatExecute(0)).not.toThrow();
     });
+
+    it('does NOT call processEnemyTurn when outcome is flee', async () => {
+      const gameStore = makeGameStore();
+      const sceneStore = makeSceneStore();
+      const eventBus = mitt<DomainEvents>();
+
+      const combatLoop: CombatLoop = {
+        processPlayerAction: mock(async () => ({ status: 'ok' as const, narration: '逃跑成功', outcome: 'flee' as const })),
+        startCombat: mock(async () => {}),
+        processEnemyTurn: mock(async () => {}),
+        checkCombatEnd: mock(async () => ({ ended: false as const })),
+        getCombatPhase: mock(() => 'enemy_turn'),
+      };
+
+      const controller = createGameScreenController(
+        { game: gameStore, scene: sceneStore },
+        eventBus,
+        { combatLoop },
+      );
+
+      await controller.handleCombatExecute(0);
+
+      expect(combatLoop.processEnemyTurn).not.toHaveBeenCalled();
+    });
+
+    it('does NOT call processEnemyTurn when outcome is victory', async () => {
+      const gameStore = makeGameStore();
+      const sceneStore = makeSceneStore();
+      const eventBus = mitt<DomainEvents>();
+
+      const combatLoop: CombatLoop = {
+        processPlayerAction: mock(async () => ({ status: 'ok' as const, narration: '战斗胜利', outcome: 'victory' as const })),
+        startCombat: mock(async () => {}),
+        processEnemyTurn: mock(async () => {}),
+        checkCombatEnd: mock(async () => ({ ended: false as const })),
+        getCombatPhase: mock(() => 'enemy_turn'),
+      };
+
+      const controller = createGameScreenController(
+        { game: gameStore, scene: sceneStore },
+        eventBus,
+        { combatLoop },
+      );
+
+      await controller.handleCombatExecute(0);
+
+      expect(combatLoop.processEnemyTurn).not.toHaveBeenCalled();
+    });
+
+    it('does NOT call processEnemyTurn when outcome is defeat', async () => {
+      const gameStore = makeGameStore();
+      const sceneStore = makeSceneStore();
+      const eventBus = mitt<DomainEvents>();
+
+      const combatLoop: CombatLoop = {
+        processPlayerAction: mock(async () => ({ status: 'ok' as const, narration: '战斗失败', outcome: 'defeat' as const })),
+        startCombat: mock(async () => {}),
+        processEnemyTurn: mock(async () => {}),
+        checkCombatEnd: mock(async () => ({ ended: false as const })),
+        getCombatPhase: mock(() => 'enemy_turn'),
+      };
+
+      const controller = createGameScreenController(
+        { game: gameStore, scene: sceneStore },
+        eventBus,
+        { combatLoop },
+      );
+
+      await controller.handleCombatExecute(0);
+
+      expect(combatLoop.processEnemyTurn).not.toHaveBeenCalled();
+    });
+
+    it('DOES call processEnemyTurn when no outcome and phase is enemy_turn', async () => {
+      const gameStore = makeGameStore();
+      const sceneStore = makeSceneStore();
+      const eventBus = mitt<DomainEvents>();
+
+      const combatLoop: CombatLoop = {
+        processPlayerAction: mock(async () => ({ status: 'ok' as const, narration: '攻击' })),
+        startCombat: mock(async () => {}),
+        processEnemyTurn: mock(async () => {}),
+        checkCombatEnd: mock(async () => ({ ended: false as const })),
+        getCombatPhase: mock(() => 'enemy_turn'),
+      };
+
+      const controller = createGameScreenController(
+        { game: gameStore, scene: sceneStore },
+        eventBus,
+        { combatLoop },
+      );
+
+      await controller.handleCombatExecute(0);
+
+      expect(combatLoop.processEnemyTurn).toHaveBeenCalledTimes(1);
+    });
+
+    it('does NOT call processEnemyTurn when phase is player_turn (no outcome)', async () => {
+      const gameStore = makeGameStore();
+      const sceneStore = makeSceneStore();
+      const eventBus = mitt<DomainEvents>();
+
+      const combatLoop: CombatLoop = {
+        processPlayerAction: mock(async () => ({ status: 'ok' as const, narration: '攻击' })),
+        startCombat: mock(async () => {}),
+        processEnemyTurn: mock(async () => {}),
+        checkCombatEnd: mock(async () => ({ ended: false as const })),
+        getCombatPhase: mock(() => 'player_turn'),
+      };
+
+      const controller = createGameScreenController(
+        { game: gameStore, scene: sceneStore },
+        eventBus,
+        { combatLoop },
+      );
+
+      await controller.handleCombatExecute(0);
+
+      expect(combatLoop.processEnemyTurn).not.toHaveBeenCalled();
+    });
   });
 });
