@@ -146,7 +146,12 @@ export function createCombatLoop(
 
     if (actionType === 'use_item') {
       if (sceneStore && combatEventBus) {
-        const itemId = options?.spellId;
+        let itemId = options?.spellId;
+        if (!itemId) {
+          const tags = stores.player.getState().tags;
+          const itemTag = tags.find(t => t.startsWith('item:'));
+          itemId = itemTag ? itemTag.slice('item:'.length) : undefined;
+        }
         if (!itemId) {
           stores.combat.setState(draft => { draft.phase = 'player_turn'; });
           return { status: 'error', message: '请指定要使用的物品。' };

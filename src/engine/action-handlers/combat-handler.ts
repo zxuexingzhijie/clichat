@@ -25,18 +25,18 @@ export const handleCombat: ActionHandler = async (action, ctx) => {
     return { status: 'action_executed', action, narration };
   }
 
-  const COMBAT_ACTIONS = new Set(['attack', 'cast', 'guard', 'flee']);
+  const COMBAT_ACTIONS = new Set(['attack', 'cast', 'guard', 'flee', 'use_item']);
   if (!COMBAT_ACTIONS.has(action.type)) {
     return { status: 'error', message: '战斗中只能进行战斗行动！' };
   }
 
   const castOptions: CombatActionOptions | undefined =
-    action.type === 'cast' && action.target
+    (action.type === 'cast' || action.type === 'use_item') && action.target
       ? { spellId: action.target }
       : undefined;
 
   const combatResult = await ctx.combatLoop.processPlayerAction(
-    action.type as 'attack' | 'cast' | 'guard' | 'flee',
+    action.type as 'attack' | 'cast' | 'guard' | 'use_item' | 'flee',
     castOptions,
   );
   if (combatResult.status === 'error') {

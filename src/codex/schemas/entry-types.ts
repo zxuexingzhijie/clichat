@@ -85,6 +85,7 @@ export const ItemSchema = z.object({
   base_damage: z.number().optional(),
   armor_value: z.number().optional(),
   heal_amount: z.number().optional(),
+  mp_restore: z.number().optional(),
 });
 
 export const HistoryEventSchema = z.object({

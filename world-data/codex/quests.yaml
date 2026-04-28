@@ -186,6 +186,7 @@
       description: 猎杀威胁村民的狼群
       trigger:
         event: combat_ended
+        targetId: enemy_wolf
       objectives:
         - id: obj_defeat_wolves
           type: defeat_enemy
