@@ -35,6 +35,10 @@ import type { LocationMapData } from './ui/panels/map-panel';
 import type { BranchDisplayNode } from './ui/panels/branch-tree-panel';
 import type { ExplorationState } from './state/exploration-store';
 import type { BranchState } from './state/branch-store';
+import type { PlayerKnowledgeState } from './state/player-knowledge-store';
+import { runSummarizerLoop } from './ai/summarizer/summarizer-worker';
+import { initExplorationTracker } from './engine/exploration-tracker';
+import { initKnowledgeTracker } from './engine/knowledge-tracker';
 
 const GameStoreCtx = createStoreContext<GameState>();
 const PlayerStoreCtx = createStoreContext<PlayerState>();
@@ -57,6 +61,15 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
 
   const [allCodexEntries, setAllCodexEntries] = useState<ReadonlyMap<string, CodexEntry>>(new Map());
   const [codexLoadError, setCodexLoadError] = useState<string | null>(null);
+
+  const [playerKnowledgeState, setPlayerKnowledgeState] = useState<PlayerKnowledgeState>(
+    () => ctx.stores.playerKnowledge.getState(),
+  );
+  useEffect(() => {
+    return ctx.stores.playerKnowledge.subscribe(() => {
+      setPlayerKnowledgeState(ctx.stores.playerKnowledge.getState());
+    });
+  }, [ctx]);
 
   useEffect(() => {
     const dataDir = process.env.__CHRONICLE_DATA_DIR || resolveDataDir();
@@ -82,9 +95,10 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
       sourceType: entry.epistemic.source_type,
       tags: entry.tags,
       relatedIds: [],
-      knowledgeStatus: null,
+      knowledgeStatus: Object.values(playerKnowledgeState.entries)
+        .find(e => e.codexEntryId === entry.id)?.knowledgeStatus ?? null,
     }));
-  }, [allCodexEntries]);
+  }, [allCodexEntries, playerKnowledgeState]);
 
   const questTemplates = useMemo(() => {
     const templates = new Map<string, QuestTemplate>();
@@ -239,6 +253,29 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
     }
     return buildNodes(null);
   }, [branchState]);
+
+  useEffect(() => {
+    runSummarizerLoop().catch((err) => {
+      console.error('[Summarizer] loop error:', err instanceof Error ? err.message : String(err));
+    });
+  }, []);
+
+  useEffect(() => {
+    const cleanup = initExplorationTracker(
+      { exploration: ctx.stores.exploration, game: ctx.stores.game },
+      ctx.eventBus,
+    );
+    return cleanup;
+  }, [ctx]);
+
+  useEffect(() => {
+    if (allCodexEntries.size === 0) return;
+    const cleanup = initKnowledgeTracker(
+      { playerKnowledge: ctx.stores.playerKnowledge, game: ctx.stores.game },
+      ctx.eventBus,
+    );
+    return cleanup;
+  }, [ctx, allCodexEntries]);
 
   const handleStart = useCallback(() => {
     setGameState((draft) => {
