@@ -243,4 +243,38 @@ describe('createCombatLoop', () => {
     const result = await loop.checkCombatEnd();
     expect(result.ended).toBe(false);
   });
+
+  it('processPlayerAction returns error message when rng throws', async () => {
+    const throwingRng = (): number => { throw new Error('rng exploded'); };
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { rng: throwingRng, generateNarrationFn: mockNarration });
+    await loop.startCombat(['goblin']);
+
+    const result = await loop.processPlayerAction('attack');
+
+    expect(result.status).toBe('error');
+    if (result.status === 'error') {
+      expect(result.message).toContain('战斗处理出错');
+      expect(result.message).toContain('rng exploded');
+    }
+  });
+
+  it('combat.phase resets to player_turn after processPlayerAction throws', async () => {
+    const throwingRng = (): number => { throw new Error('rng exploded'); };
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { rng: throwingRng, generateNarrationFn: mockNarration });
+    await loop.startCombat(['goblin']);
+
+    await loop.processPlayerAction('attack');
+
+    expect(combatStore.getState().phase).toBe('player_turn');
+  });
+
+  it('normal attack path still works when no exception occurs', async () => {
+    const highRng = () => 0.99;
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { rng: highRng, generateNarrationFn: mockNarration });
+    await loop.startCombat(['goblin']);
+
+    const result = await loop.processPlayerAction('attack');
+
+    expect(result.status).toBe('ok');
+  });
 });

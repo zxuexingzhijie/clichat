@@ -120,6 +120,7 @@ export function createCombatLoop(
     stores.combat.setState(draft => {
       draft.phase = 'resolving';
     });
+    try {
 
     const player = stores.player.getState();
     const targetIdx = options?.targetIndex ?? getFirstAliveEnemyIndex();
@@ -245,6 +246,13 @@ export function createCombatLoop(
     }
 
     return { status: 'ok', checkResult, narration };
+    } catch (err: unknown) {
+      stores.combat.setState(draft => {
+        draft.phase = 'player_turn';
+      });
+      const msg = err instanceof Error ? err.message : String(err);
+      return { status: 'error', message: `战斗处理出错: ${msg}` };
+    }
   }
 
   async function processEnemyTurn(): Promise<void> {
