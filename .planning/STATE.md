@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Game System Integrity & Playability
 status: executing
-last_updated: "2026-04-28T10:20:00.000Z"
-last_activity: 2026-04-28 — Phase 13 P02 complete (REP-04: restoreState bypasses reputation_changed)
+last_updated: "2026-04-28T11:00:00.000Z"
+last_activity: 2026-04-28 — Phase 13 P01 complete (integer reputation scale + faction delta + NpcSchema faction)
 progress:
   total_phases: 5
   completed_phases: 2
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 ## Current Position
 
 Phase: 13 of 15 (Dialogue & Reputation)
-Plan: P02 complete (REP-04 done)
+Plan: P01 complete (DIAL-01/02/07, REP-01/02/03 done)
 Status: Executing
-Last activity: 2026-04-28 — Phase 13 P02 complete (REP-04: restoreState bypasses reputation_changed)
+Last activity: 2026-04-28 — Phase 13 P01 complete (integer reputation scale + faction delta + NpcSchema faction)
 
 Progress: [████      ] 40%
 
@@ -46,6 +46,7 @@ Progress: [████      ] 40%
 | 11 (App Wiring) | 3 | ~45 min | ~15 min |
 | 12 (Combat & Save) | 4 | ~75 min | ~19 min |
 | 13 P02 (Dialogue & Reputation) | 1 | ~12 min | ~12 min |
+| 13 P01 (Dialogue & Reputation) | 1 | ~25 min | ~25 min |
 
 *Updated after each plan completion*
 
@@ -56,6 +57,7 @@ Progress: [████      ] 40%
 Decisions are logged in PROJECT.md Key Decisions table.
 
 - REP-04: RelationStore uses isRestoring flag to bypass reputation_changed during game load; GameStores.relation typed as RelationStore
+- DIAL-01/REP-01: sentimentToDelta returns integers (10/0/-10/-20); startDialogue sets relationshipValue=0; endDialogue calls applyFactionReputationDelta when npc.faction set; NpcSchema has faction field
 
 ### Pending Todos
 
@@ -80,9 +82,10 @@ None.
 |----------|------|--------|-------------|
 | UAT | Live API session validation (/cost, /replay, summarizer) | Carried | v1.1 close |
 | Dist | Replace OWNER placeholders before first npm publish | Carried | v1.1 close |
+| Bug | use-game-input.test.ts: getPanelActionForKey 'i' returns null (pre-existing) | Deferred | Phase 13 P01 |
 
 ## Session Continuity
 
-Last session: 2026-04-28T10:20:00.000Z
-Stopped at: Completed 13-P02-PLAN.md
+Last session: 2026-04-28T11:00:00.000Z
+Stopped at: Completed 13-P01-PLAN.md
 Resume file: None
