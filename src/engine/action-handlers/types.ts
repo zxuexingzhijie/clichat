@@ -20,7 +20,7 @@ export type ActionContext = {
   readonly saveFileManager?: {
     readonly quickSave: (serializer: Serializer, saveDir: string) => Promise<string>;
     readonly saveGame: (name: string, serializer: Serializer, saveDir: string) => Promise<string>;
-    readonly loadGame: (filePath: string, serializer: Serializer) => Promise<void>;
+    readonly loadGame: (filePath: string, serializer: Serializer, saveDir?: string) => Promise<void>;
   };
   readonly serializer?: Serializer;
   readonly saveDir?: string;
@@ -28,6 +28,7 @@ export type ActionContext = {
     readonly createBranch: (name: string) => BranchMeta;
     readonly switchBranch: (branchId: string) => void;
     readonly deleteBranch: (branchId: string) => void;
+    readonly getBranchMeta: (branchId: string) => BranchMeta | undefined;
   };
   readonly turnLog?: {
     readonly replayTurns: (count: number) => readonly TurnLogEntry[];

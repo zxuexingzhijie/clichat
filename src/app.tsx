@@ -29,6 +29,7 @@ import { quickSave, saveGame, loadGame } from './persistence/save-file-manager';
 import { createSerializer } from './state/serializer';
 import { createQuestSystem } from './engine/quest-system';
 import { createBranch, switchBranch, deleteBranch } from './persistence/branch-manager';
+import { branchStore } from './state/branch-store';
 import { replayTurns } from './engine/turn-log';
 import { generateRetrievalPlan } from './ai/roles/retrieval-planner';
 import type { LocationMapData } from './ui/panels/map-panel';
@@ -201,7 +202,12 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
         serializer,
         saveDir,
         questSystem,
-        branchManager: { createBranch, switchBranch, deleteBranch },
+        branchManager: {
+          createBranch,
+          switchBranch,
+          deleteBranch,
+          getBranchMeta: (branchId: string) => branchStore.getState().branches[branchId],
+        },
         turnLog: { replayTurns },
       },
     ),

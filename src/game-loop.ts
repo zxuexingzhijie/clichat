@@ -59,7 +59,7 @@ export type GameLoopOptions = {
   readonly saveFileManager?: {
     quickSave: (serializer: Serializer, saveDir: string) => Promise<string>;
     saveGame: (name: string, serializer: Serializer, saveDir: string) => Promise<string>;
-    loadGame: (filePath: string, serializer: Serializer) => Promise<void>;
+    loadGame: (filePath: string, serializer: Serializer, saveDir?: string) => Promise<void>;
   };
   readonly serializer?: Serializer;
   readonly saveDir?: string;
@@ -68,6 +68,7 @@ export type GameLoopOptions = {
     readonly createBranch: (name: string) => BranchMeta;
     readonly switchBranch: (branchId: string) => void;
     readonly deleteBranch: (branchId: string) => void;
+    readonly getBranchMeta: (branchId: string) => BranchMeta | undefined;
   };
   readonly turnLog?: {
     readonly replayTurns: (count: number) => readonly TurnLogEntry[];
