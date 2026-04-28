@@ -1,0 +1,194 @@
+- id: quest_main_01
+  name: 黑松镇的秘密
+  type: quest
+  quest_type: main
+  region: 黑松镇
+  tags:
+    - main
+    - 黑松镇
+  description: 黑松镇接连发生失踪事件，调查背后的真相。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  stages:
+    - id: stage_rumor
+      description: 调查关于北林失踪事件的谣言
+      trigger:
+        event: dialogue_ended
+      objectives:
+        - id: obj_talk_any_npc
+          type: talk
+          description: 与任意NPC交谈，打听谣言
+      nextStageId: stage_investigate
+    - id: stage_investigate
+      description: 追查线索，深入黑暗洞穴
+      trigger:
+        event: location_entered
+        targetId: loc_dark_cave
+      objectives:
+        - id: obj_enter_cave
+          type: visit_location
+          targetId: loc_dark_cave
+          description: 进入黑暗洞穴调查
+      nextStageId: stage_expose
+    - id: stage_expose
+      description: 揭露狼灾真相
+      trigger:
+        event: dialogue_ended
+        targetId: npc_elder
+        secondaryEvent: item_found
+      objectives:
+        - id: obj_talk_elder
+          type: talk
+          targetId: npc_elder
+          description: 与镇长王德交谈，揭露真相
+        - id: obj_find_evidence
+          type: find_item
+          description: 找到关键证据
+      nextStageId: null
+      completionCondition: all_objectives
+  rewards:
+    reputation_delta:
+      faction_guard: 20
+
+- id: quest_side_missing_ore
+  name: 失踪的矿石
+  type: quest
+  quest_type: side
+  region: 黑松镇
+  required_npc_id: npc_blacksmith
+  tags:
+    - side
+    - 黑松镇
+  description: 铁匠老赵急需矿石，听说北林废弃矿洞里还有存货。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  stages:
+    - id: stage_find_ore
+      description: 寻找老赵需要的铁矿石
+      trigger:
+        event: item_found
+        targetId: item_iron_ore
+      objectives:
+        - id: obj_find_ore
+          type: find_item
+          targetId: item_iron_ore
+          description: 在北林找到铁矿石
+      nextStageId: stage_deliver
+    - id: stage_deliver
+      description: 将矿石交给铁匠
+      objectives:
+        - id: obj_deliver_ore
+          type: talk
+          targetId: npc_blacksmith
+          description: 将矿石交给铁匠老赵
+      nextStageId: null
+  rewards:
+    gold: 80
+    relation_delta:
+      npc_blacksmith: 10
+
+- id: quest_side_overdue_debt
+  name: 拖欠的债务
+  type: quest
+  quest_type: side
+  region: 黑松镇
+  required_npc_id: npc_merchant_afu
+  min_reputation: -20
+  tags:
+    - side
+    - 黑松镇
+  description: 阿福被人欠着一笔旧账，他需要人帮忙讨回来。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  stages:
+    - id: stage_locate_debtor
+      description: 找到欠债人的下落
+      trigger:
+        event: dialogue_ended
+        targetId: npc_merchant_afu
+      objectives:
+        - id: obj_talk_merchant
+          type: talk
+          targetId: npc_merchant_afu
+          description: 从阿福处得知欠债人信息
+      nextStageId: stage_collect
+    - id: stage_collect
+      description: 向欠债人收回债款
+      objectives:
+        - id: obj_collect_debt
+          type: talk
+          targetId: npc_beggar
+          description: 与瞎子孙谈判收债
+      nextStageId: null
+  rewards:
+    gold: 120
+    reputation_delta:
+      faction_merchants: 15
+
+- id: quest_side_wolf_bounty
+  name: 狼群悬赏
+  type: quest
+  quest_type: side
+  region: 黑松镇
+  required_npc_id: npc_hunter
+  tags:
+    - side
+    - 黑松镇
+  description: 猎人阿虎请求帮忙清除北林中异常活跃的狼群。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  stages:
+    - id: stage_hunt_wolves
+      description: 猎杀威胁村民的狼群
+      trigger:
+        event: combat_ended
+      objectives:
+        - id: obj_defeat_wolves
+          type: defeat_enemy
+          targetId: enemy_wolf
+          description: 击败北林中的狼群
+      nextStageId: stage_report
+    - id: stage_report
+      description: 向阿虎汇报任务完成情况
+      objectives:
+        - id: obj_report_hunter
+          type: talk
+          targetId: npc_hunter
+          description: 向猎人阿虎汇报猎狼结果
+      nextStageId: null
+  rewards:
+    gold: 60
+    relation_delta:
+      npc_hunter: 15
