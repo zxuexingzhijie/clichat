@@ -25,14 +25,24 @@ export type NpcUserPromptContext = {
   readonly playerAction: string;
   readonly memories: readonly string[];
   readonly emotionHint?: string;
+  readonly archiveSummary?: string;
+  readonly relevantCodex?: readonly string[];
 };
 
 export function buildNpcUserPrompt(context: NpcUserPromptContext): string {
-  const memoriesText = context.memories.slice(0, 3).join('\n') || '（无）';
+  const memoriesText = context.memories.slice(0, 8).join('\n') || '（无）';
+
+  const archiveSection = context.archiveSummary
+    ? `\n长期记忆摘要：${context.archiveSummary}`
+    : '';
+
+  const codexSection = context.relevantCodex?.length
+    ? `\n当前相关世界知识：\n${context.relevantCodex.map((c) => `- ${c}`).join('\n')}`
+    : '';
 
   return `场景：${context.scene}
 玩家动作：${context.playerAction}
-你对这个玩家的记忆：${memoriesText}
+你对这个玩家的记忆：${memoriesText}${archiveSection}${codexSection}
 当前情绪倾向：${context.emotionHint ?? '中立'}
 请以角色身份回应。`;
 }

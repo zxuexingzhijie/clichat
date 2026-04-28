@@ -6,6 +6,8 @@ import { getFallbackDialogue } from '../utils/fallback';
 
 export type NpcActorOptions = {
   readonly maxRetries?: number;
+  readonly archiveSummary?: string;
+  readonly relevantCodex?: readonly string[];
 };
 
 export async function generateNpcDialogue(
@@ -17,7 +19,13 @@ export async function generateNpcDialogue(
 ): Promise<NpcDialogue> {
   const config = getRoleConfig('npc-actor');
   const system = buildNpcSystemPrompt(npcProfile);
-  const prompt = buildNpcUserPrompt({ scene, playerAction, memories });
+  const prompt = buildNpcUserPrompt({
+    scene,
+    playerAction,
+    memories,
+    archiveSummary: options?.archiveSummary,
+    relevantCodex: options?.relevantCodex,
+  });
 
   try {
     const { object } = await callGenerateObject<NpcDialogue>({
@@ -46,7 +54,13 @@ export async function* streamNpcDialogue(
 ): AsyncGenerator<string> {
   const config = getRoleConfig('npc-actor');
   const system = buildNpcSystemPrompt(npcProfile);
-  const prompt = buildNpcUserPrompt({ scene, playerAction, memories });
+  const prompt = buildNpcUserPrompt({
+    scene,
+    playerAction,
+    memories,
+    archiveSummary: options?.archiveSummary,
+    relevantCodex: options?.relevantCodex,
+  });
 
   try {
     yield* callStreamText({

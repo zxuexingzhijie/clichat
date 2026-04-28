@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid';
 import { queryById } from '../codex/query';
 import { getDefaultDialogueState } from '../state/dialogue-store';
 import { generateNpcDialogue } from '../ai/roles/npc-actor';
+import { filterCodexForNpc } from '../ai/utils/npc-knowledge-filter';
 import { resolveNormalCheck } from './adjudication';
 import { GAME_CONSTANTS } from './game-constants';
 import { rollD20 } from './dice';
@@ -9,13 +10,14 @@ import { applyReputationDelta, applyFactionReputationDelta, sentimentToDelta } f
 import { getDefaultNpcDisposition } from '../state/relation-store';
 import type { Store } from '../state/create-store';
 import type { DialogueState } from '../state/dialogue-store';
-import type { NpcMemoryState } from '../state/npc-memory-store';
+import type { NpcMemoryState, NpcMemoryRecord } from '../state/npc-memory-store';
 import type { SceneState } from '../state/scene-store';
 import type { GameState } from '../state/game-store';
 import type { PlayerState } from '../state/player-store';
 import type { RelationState } from '../state/relation-store';
 import type { CodexEntry, Npc } from '../codex/schemas/entry-types';
 import type { NpcDialogue } from '../ai/schemas/npc-dialogue';
+import type { NpcFilterContext } from '../ai/utils/npc-knowledge-filter';
 import type { CheckResult, AttributeName } from '../types/common';
 
 const QUEST_GOAL_KEYWORDS = ['investigate', 'find', 'recruit', 'discover', 'locate', 'uncover', '调查', '寻找', '找到', '招募', '发现', '追踪', '揭露'];
@@ -187,6 +189,26 @@ export function createDialogueManager(
   let isProcessing = false;
   let lastNpcEmotionTag = 'neutral';
 
+  function buildNpcCallOptions(
+    npc: Npc,
+    memoryRecord: NpcMemoryRecord | undefined,
+  ): { archiveSummary?: string; relevantCodex?: readonly string[] } {
+    const archiveSummary = memoryRecord?.archiveSummary || undefined;
+
+    const npcFilterCtx: NpcFilterContext = {
+      npcId: npc.id,
+      npcFactionIds: npc.faction ? [npc.faction] : [],
+      npcProfession: npc.tags[0] ?? '',
+      npcLocationId: npc.location_id,
+      npcRegion: '',
+    };
+
+    const filtered = filterCodexForNpc(Array.from(codexEntries.values()), npcFilterCtx);
+    const relevantCodex = filtered.slice(0, 3).map((e) => e.description.slice(0, 150));
+
+    return { archiveSummary, relevantCodex };
+  }
+
   async function startDialogue(npcId: string): Promise<DialogueResult> {
     const entry = queryById(codexEntries, npcId);
 
@@ -217,6 +239,7 @@ export function createDialogueManager(
       scene,
       'greet',
       memoryStrings,
+      buildNpcCallOptions(npc, memoryRecord),
     );
 
     lastNpcEmotionTag = npcDialogue.emotionTag;
@@ -303,6 +326,7 @@ export function createDialogueManager(
         scene,
         response.label,
         memoryStrings,
+        buildNpcCallOptions(npc, memoryRecord),
       );
 
       lastNpcEmotionTag = npcDialogue.emotionTag;
@@ -376,7 +400,7 @@ export function createDialogueManager(
         participants: ['player', npcId],
       };
       if (existing) {
-        existing.recentMemories.push(newEntry);
+        existing.recentMemories = [...existing.recentMemories, newEntry];
         existing.lastUpdated = new Date().toISOString();
       } else {
         draft.memories[npcId] = {
@@ -426,6 +450,7 @@ export function createDialogueManager(
         scene,
         text,
         memoryStrings,
+        buildNpcCallOptions(npc, memoryRecord),
       );
 
       lastNpcEmotionTag = npcDialogue.emotionTag;
