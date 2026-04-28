@@ -30,6 +30,11 @@ import { createSerializer } from './state/serializer';
 import { createQuestSystem } from './engine/quest-system';
 import { createBranch, switchBranch, deleteBranch } from './persistence/branch-manager';
 import { replayTurns } from './engine/turn-log';
+import { generateRetrievalPlan } from './ai/roles/retrieval-planner';
+import type { LocationMapData } from './ui/panels/map-panel';
+import type { BranchDisplayNode } from './ui/panels/branch-tree-panel';
+import type { ExplorationState } from './state/exploration-store';
+import type { BranchState } from './state/branch-store';
 
 const GameStoreCtx = createStoreContext<GameState>();
 const PlayerStoreCtx = createStoreContext<PlayerState>();
@@ -123,7 +128,16 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
     () => createSceneManager(
       { scene: ctx.stores.scene, eventBus: ctx.eventBus },
       allCodexEntries as Map<string, CodexEntry>,
-      { generateNarrationFn: generateNarration },
+      {
+        generateNarrationFn: generateNarration,
+        generateRetrievalPlanFn: (context) => generateRetrievalPlan({
+          sceneId: context.currentScene,
+          locationName: context.currentScene,
+          playerIntent: context.playerAction,
+          activeNpcIds: context.activeNpcs,
+          activeQuestIds: context.activeQuests,
+        }),
+      },
     ),
     [ctx, allCodexEntries],
   );
@@ -147,6 +161,7 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
     () => createCombatLoop(
       { combat: ctx.stores.combat, player: ctx.stores.player, game: ctx.stores.game },
       allCodexEntries as Map<string, CodexEntry>,
+      { generateNarrationFn: generateNarration },
     ),
     [ctx, allCodexEntries],
   );
@@ -174,6 +189,56 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
     ),
     [sceneManager, dialogueManager, combatLoop, serializer, questSystem, ctx],
   );
+
+  const currentSceneId = SceneStoreCtx.useStoreState((s) => s.sceneId);
+
+  const [explorationState, setExplorationState] = useState<ExplorationState>(
+    () => ctx.stores.exploration.getState(),
+  );
+  useEffect(() => {
+    return ctx.stores.exploration.subscribe(() => {
+      setExplorationState(ctx.stores.exploration.getState());
+    });
+  }, [ctx]);
+
+  const [branchState, setBranchState] = useState<BranchState>(
+    () => ctx.stores.branch.getState(),
+  );
+  useEffect(() => {
+    return ctx.stores.branch.subscribe(() => {
+      setBranchState(ctx.stores.branch.getState());
+    });
+  }, [ctx]);
+
+  const mapData = useMemo(() => {
+    const locationEntries = Array.from(allCodexEntries.values()).filter(e => e.type === 'location');
+    const locations: LocationMapData[] = locationEntries.map(entry => ({
+      id: entry.id,
+      name: entry.name,
+      mapIcon: (entry as any).map_icon ?? '',
+      coordinates: (entry as any).coordinates ?? { x: 0, y: 0 },
+      exits: ((entry as any).exits ?? []).map((ex: any) => ({
+        direction: ex.direction,
+        targetId: ex.location_id,
+      })),
+      dangerLevel: (entry as any).danger_level ?? 0,
+      region: (entry as any).region ?? '',
+      explorationLevel: explorationState.locations[entry.id]?.level ?? 'unknown',
+      isQuestRelated: entry.tags?.includes('quest_related') ?? false,
+    }));
+    const regionName = locations[0]?.region ?? '';
+    return { locations, currentLocationId: currentSceneId, regionName };
+  }, [allCodexEntries, explorationState, currentSceneId]);
+
+  const branchTree = useMemo((): readonly BranchDisplayNode[] => {
+    const { branches } = branchState;
+    function buildNodes(parentId: string | null): BranchDisplayNode[] {
+      return Object.values(branches)
+        .filter(b => b.parentBranchId === parentId)
+        .map(b => ({ branchMeta: b, saves: [], children: buildNodes(b.id) }));
+    }
+    return buildNodes(null);
+  }, [branchState]);
 
   const handleStart = useCallback(() => {
     setGameState((draft) => {
@@ -219,6 +284,11 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
           dialogueManager={dialogueManager}
           combatLoop={combatLoop}
           codexEntries={codexDisplayEntries}
+          mapData={mapData}
+          branchTree={branchTree}
+          currentBranchId={branchState.currentBranchId}
+          branchDiffResult={undefined}
+          compareBranchNames={undefined}
         />
       </SizeGuard>
     </GameErrorBoundary>
