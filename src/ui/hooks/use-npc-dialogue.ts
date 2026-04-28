@@ -63,7 +63,7 @@ export function useNpcDialogue(): UseNpcDialogueReturn {
       const isAllDefaults =
         extracted.emotionTag === 'neutral' &&
         !extracted.shouldRemember &&
-        extracted.sentiment === 'neutral';
+        !extracted.sentiment;
       const isSubstantive = fullText.length > SUBSTANTIVE_LENGTH_THRESHOLD;
 
       if (isAllDefaults && isSubstantive) {
@@ -75,10 +75,10 @@ export function useNpcDialogue(): UseNpcDialogueReturn {
         ).then(result => {
           setMetadata({ ...result, dialogue: fullText });
         }).catch(() => {
-          setMetadata({ dialogue: fullText, ...extracted });
+          setMetadata({ dialogue: fullText, sentiment: 'neutral', ...extracted });
         });
       } else {
-        setMetadata({ dialogue: fullText, ...extracted });
+        setMetadata({ dialogue: fullText, sentiment: 'neutral', ...extracted });
       }
 
       eventBus.emit('npc_dialogue_streaming_completed', {

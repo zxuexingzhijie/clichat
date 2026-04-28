@@ -51,16 +51,21 @@ describe('extractNpcMetadata', () => {
     expect(result.shouldRemember).toBe(false);
   });
 
-  test('sentiment is always neutral', () => {
+  test('sentiment is undefined (not hardcoded neutral)', () => {
     const result = extractNpcMetadata('他怒视着你，握紧了拳头。');
-    expect(result.sentiment).toBe('neutral');
+    expect(result.sentiment).toBeUndefined();
   });
 
   test('returns all defaults for empty string', () => {
     const result = extractNpcMetadata('');
     expect(result.emotionTag).toBe('neutral');
     expect(result.shouldRemember).toBe(false);
-    expect(result.sentiment).toBe('neutral');
+    expect(result.sentiment).toBeUndefined();
+  });
+
+  test('sentiment is undefined for neutral content', () => {
+    const result = extractNpcMetadata('中立内容');
+    expect(result.sentiment).toBeUndefined();
   });
 
   test('emotionTag is always a valid NpcDialogueSchema enum value', () => {
