@@ -84,6 +84,7 @@ export const ItemSchema = z.object({
   effect: z.string().optional(),
   base_damage: z.number().optional(),
   armor_value: z.number().optional(),
+  heal_amount: z.number().optional(),
 });
 
 export const HistoryEventSchema = z.object({
@@ -158,6 +159,7 @@ export const QuestTemplateSchema = z.object({
   region: z.string().optional(),
   required_npc_id: z.string().optional(),
   min_reputation: z.number().optional(),
+  auto_accept: z.boolean().optional(),
   stages: z.array(QuestStageSchema),
   rewards: z.object({
     gold: z.number().optional(),

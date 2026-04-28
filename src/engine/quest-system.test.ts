@@ -228,6 +228,25 @@ describe('createQuestSystem', () => {
     expect(progress?.status).toBe('completed');
     expect(progress?.completedAt).not.toBeNull();
   });
+
+  it('completeQuest applies reputation_delta to factionReputations', async () => {
+    const { createQuestSystem } = await import('./quest-system');
+    const mockQuestWithRewards = {
+      ...mockQuestMain,
+      id: 'quest_with_rewards',
+      rewards: { reputation_delta: { faction_guard: 20 } },
+    };
+    const entries = new Map<string, any>([
+      ...mockCodexEntries,
+      ['quest_with_rewards', mockQuestWithRewards],
+    ]);
+    const questSystem = createQuestSystem(stores, entries as any);
+
+    questSystem.acceptQuest('quest_with_rewards');
+    questSystem.completeQuest('quest_with_rewards');
+
+    expect(relationStore.getState().factionReputations['faction_guard']).toBe(20);
+  });
 });
 
 const epistemic = {
@@ -474,5 +493,38 @@ describe('createQuestSystem — event-based advancement', () => {
     bus.emit('dialogue_ended', { npcId: 'npc_farmer' });
 
     expect(questStore.getState().quests['quest_targeted_dialogue']?.currentStageId).toBe('stage_01');
+  });
+
+  it('auto_accept quest is accepted automatically on dialogue_ended', async () => {
+    const { createQuestSystem } = await import('./quest-system');
+    const bus = mitt<DomainEvents>();
+    const autoQuest = {
+      ...mockQuestWithDialogueTrigger,
+      id: 'quest_auto_accept',
+      auto_accept: true,
+    };
+    const entries = new Map<string, any>([['quest_auto_accept', autoQuest]]);
+    createQuestSystem(stores, entries, bus);
+
+    expect(questStore.getState().quests['quest_auto_accept']).toBeUndefined();
+    bus.emit('dialogue_ended', { npcId: 'npc_innkeeper' });
+    expect(questStore.getState().quests['quest_auto_accept']?.status).toBe('active');
+  });
+
+  it('auto_accept quest is NOT re-accepted if already active', async () => {
+    const { createQuestSystem } = await import('./quest-system');
+    const bus = mitt<DomainEvents>();
+    const autoQuest = {
+      ...mockQuestWithDialogueTrigger,
+      id: 'quest_auto_accept_2',
+      auto_accept: true,
+    };
+    const entries = new Map<string, any>([['quest_auto_accept_2', autoQuest]]);
+    const questSystem = createQuestSystem(stores, entries, bus);
+
+    questSystem.acceptQuest('quest_auto_accept_2');
+    const acceptedAt = questStore.getState().quests['quest_auto_accept_2']?.acceptedAt;
+    bus.emit('dialogue_ended', { npcId: 'npc_innkeeper' });
+    expect(questStore.getState().quests['quest_auto_accept_2']?.acceptedAt).toBe(acceptedAt);
   });
 });

@@ -1,5 +1,6 @@
 import { queryById } from '../codex/query';
 import { appendQuestEvent } from '../state/quest-store';
+import { applyFactionReputationDelta } from './reputation-system';
 import type { Store } from '../state/create-store';
 import type { QuestState } from '../state/quest-store';
 import type { RelationState } from '../state/relation-store';
@@ -107,6 +108,7 @@ export function createQuestSystem(
 
   function completeQuest(questId: string): void {
     const turnNumber = stores.game.getState().turnCount;
+    const template = getTemplate(questId);
     stores.quest.setState(draft => {
       const progress = draft.quests[questId];
       if (progress) {
@@ -114,6 +116,11 @@ export function createQuestSystem(
         progress.completedAt = turnNumber;
       }
     });
+    if (template?.rewards?.reputation_delta) {
+      for (const [factionId, delta] of Object.entries(template.rewards.reputation_delta)) {
+        applyFactionReputationDelta(stores.relation, factionId, delta);
+      }
+    }
     appendQuestEvent({ questId, type: 'quest_completed', turnNumber });
   }
 
@@ -146,6 +153,19 @@ export function createQuestSystem(
 
   if (bus) {
     bus.on('dialogue_ended', ({ npcId }) => {
+      for (const [questId, entry] of codexEntries) {
+        if (entry.type !== 'quest') continue;
+        const template = entry as QuestTemplate;
+        if (!template.auto_accept) continue;
+        const progress = stores.quest.getState().quests[questId];
+        if (progress) continue;
+        const firstStage = template.stages[0];
+        if (!firstStage?.trigger) continue;
+        if (firstStage.trigger.event !== 'dialogue_ended') continue;
+        if (firstStage.trigger.targetId && firstStage.trigger.targetId !== npcId) continue;
+        acceptQuest(questId);
+      }
+
       for (const [questId, progress] of Object.entries(stores.quest.getState().quests)) {
         if (progress.status !== 'active' || !progress.currentStageId) continue;
         const template = getTemplate(questId);
