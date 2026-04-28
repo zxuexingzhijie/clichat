@@ -315,4 +315,85 @@ describe('createGameLoop options wiring', () => {
     expect(mockTurnLog.replayTurns).toHaveBeenCalledWith(3);
     expect(result.status).toBe('action_executed');
   });
+
+  it('loadLastSave calls listSaves and loads the first save', async () => {
+    const mockSaveFileManager = {
+      quickSave: mock(() => Promise.resolve('/saves/quicksave.json')),
+      saveGame: mock(() => Promise.resolve('/saves/test.json')),
+      loadGame: mock(() => Promise.resolve()),
+    };
+    const mockSerializer = {
+      snapshot: mock(() => '{}'),
+      restore: mock(() => {}),
+    };
+
+    mock.module('./persistence/save-file-manager', () => ({
+      listSaves: mock(() => Promise.resolve([
+        { filePath: '/saves/save_2024-01-02.json', meta: { timestamp: '2024-01-02T00:00:00Z', name: 'test', version: 1 } },
+        { filePath: '/saves/save_2024-01-01.json', meta: { timestamp: '2024-01-01T00:00:00Z', name: 'old', version: 1 } },
+      ])),
+      quickSave: mock(() => Promise.resolve('/saves/quicksave.json')),
+      saveGame: mock(() => Promise.resolve('/saves/test.json')),
+      loadGame: mock(() => Promise.resolve()),
+    }));
+
+    const { createGameLoop: freshCreateGameLoop } = await import('./game-loop');
+
+    const loop = freshCreateGameLoop(stores, eventBus, {
+      rng: createSeededRng(42),
+      saveFileManager: mockSaveFileManager,
+      serializer: mockSerializer,
+      saveDir: '/saves',
+    });
+
+    await loop.loadLastSave();
+
+    expect(mockSaveFileManager.loadGame).toHaveBeenCalledWith(
+      '/saves/save_2024-01-02.json',
+      mockSerializer,
+      '/saves',
+    );
+    expect(gameStore.getState().phase).toBe('game');
+  });
+
+  it('loadLastSave is a no-op when no saves exist', async () => {
+    const mockSaveFileManager = {
+      quickSave: mock(() => Promise.resolve('/saves/quicksave.json')),
+      saveGame: mock(() => Promise.resolve('/saves/test.json')),
+      loadGame: mock(() => Promise.resolve()),
+    };
+    const mockSerializer = {
+      snapshot: mock(() => '{}'),
+      restore: mock(() => {}),
+    };
+
+    mock.module('./persistence/save-file-manager', () => ({
+      listSaves: mock(() => Promise.resolve([])),
+      quickSave: mock(() => Promise.resolve('/saves/quicksave.json')),
+      saveGame: mock(() => Promise.resolve('/saves/test.json')),
+      loadGame: mock(() => Promise.resolve()),
+    }));
+
+    const { createGameLoop: freshCreateGameLoop } = await import('./game-loop');
+
+    const loop = freshCreateGameLoop(stores, eventBus, {
+      rng: createSeededRng(42),
+      saveFileManager: mockSaveFileManager,
+      serializer: mockSerializer,
+      saveDir: '/saves',
+    });
+
+    await expect(loop.loadLastSave()).resolves.toBeUndefined();
+    expect(mockSaveFileManager.loadGame).not.toHaveBeenCalled();
+  });
+
+  it('loadLastSave is a no-op when saveFileManager is not provided', async () => {
+    const { createGameLoop: freshCreateGameLoop } = await import('./game-loop');
+
+    const loop = freshCreateGameLoop(stores, eventBus, {
+      rng: createSeededRng(42),
+    });
+
+    await expect(loop.loadLastSave()).resolves.toBeUndefined();
+  });
 });
