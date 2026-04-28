@@ -1,9 +1,11 @@
 import { queryById } from '../codex/query';
 import { appendQuestEvent } from '../state/quest-store';
-import { applyFactionReputationDelta } from './reputation-system';
+import { applyFactionReputationDelta, applyReputationDelta } from './reputation-system';
+import { getDefaultNpcDisposition } from '../state/relation-store';
 import type { Store } from '../state/create-store';
 import type { QuestState } from '../state/quest-store';
 import type { RelationState } from '../state/relation-store';
+import type { PlayerState } from '../state/player-store';
 import type { GameState } from '../state/game-store';
 import type { CodexEntry, QuestTemplate } from '../codex/schemas/entry-types';
 import type { EventBus } from '../events/event-bus';
@@ -25,6 +27,7 @@ export function createQuestSystem(
   stores: {
     quest: Store<QuestState>;
     relation: Store<RelationState>;
+    player: Store<PlayerState>;
     game: Store<GameState>;
   },
   codexEntries: Map<string, CodexEntry>,
@@ -116,9 +119,25 @@ export function createQuestSystem(
         progress.completedAt = turnNumber;
       }
     });
+    if (template?.rewards?.gold) {
+      stores.player.setState(draft => {
+        draft.gold += template.rewards!.gold!;
+      });
+    }
     if (template?.rewards?.reputation_delta) {
       for (const [factionId, delta] of Object.entries(template.rewards.reputation_delta)) {
         applyFactionReputationDelta(stores.relation, factionId, delta);
+      }
+    }
+    if (template?.rewards?.relation_delta) {
+      for (const [npcId, delta] of Object.entries(template.rewards.relation_delta)) {
+        stores.relation.setState(draft => {
+          const current = draft.npcDispositions[npcId] ?? getDefaultNpcDisposition();
+          draft.npcDispositions = {
+            ...draft.npcDispositions,
+            [npcId]: applyReputationDelta(current, { value: delta }),
+          };
+        });
       }
     }
     appendQuestEvent({ questId, type: 'quest_completed', turnNumber });

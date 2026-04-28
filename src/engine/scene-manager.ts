@@ -2,6 +2,7 @@ import { queryById } from '../codex/query';
 import { assembleNarrativeContext } from '../ai/utils/context-assembler';
 import { GAME_CONSTANTS } from './game-constants';
 import { gameStore } from '../state/game-store';
+import { playerStore } from '../state/player-store';
 import type { Store } from '../state/create-store';
 import type { SceneState } from '../state/scene-store';
 import type { CodexEntry, Location } from '../codex/schemas/entry-types';
@@ -249,6 +250,15 @@ export function createSceneManager(
 
     if (!isNpc && !isObject && !codexEntry) {
       return { status: 'error', message: `找不到目标 "${target}"。` };
+    }
+
+    if (codexEntry?.type === 'item') {
+      playerStore.setState(draft => {
+        if (!draft.tags.includes(`item:${target}`)) {
+          draft.tags = [...draft.tags, `item:${target}`];
+        }
+      });
+      stores.eventBus?.emit('item_acquired', { itemId: target, itemName: codexEntry.name, quantity: 1 });
     }
 
     const description = codexEntry?.description ?? target;

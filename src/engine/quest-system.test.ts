@@ -3,9 +3,10 @@ import mitt from 'mitt';
 import { questStore, resetQuestEventLog, getDefaultQuestState } from '../state/quest-store';
 import { relationStore } from '../state/relation-store';
 import { gameStore } from '../state/game-store';
+import { playerStore, getDefaultPlayerState } from '../state/player-store';
 import type { DomainEvents } from '../events/event-types';
 
-const stores = { quest: questStore, relation: relationStore, game: gameStore };
+const stores = { quest: questStore, relation: relationStore, game: gameStore, player: playerStore };
 
 function resetStores() {
   questStore.setState(draft => { Object.assign(draft, getDefaultQuestState()); });

@@ -2,6 +2,7 @@ import envPaths from 'env-paths';
 import * as nodeFs from 'node:fs';
 import { mkdir as fsMkdir, readdir as fsReaddir } from 'node:fs/promises';
 import path from 'node:path';
+import { eventBus } from '../events/event-bus';
 import type { Serializer } from '../state/serializer';
 import type { SaveMeta } from '../state/serializer';
 
@@ -60,6 +61,7 @@ export async function loadGame(filePath: string, serializer: Serializer, saveDir
   const file = Bun.file(resolvedPath);
   const json = await file.text();
   serializer.restore(json);
+  eventBus.emit('state_restored', undefined);
 }
 
 export async function listSaves(saveDir: string): Promise<SaveListEntry[]> {

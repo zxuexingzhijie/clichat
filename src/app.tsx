@@ -137,7 +137,7 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
 
   const questSystem = useMemo(
     () => createQuestSystem(
-      { quest: ctx.stores.quest, relation: ctx.stores.relation, game: ctx.stores.game },
+      { quest: ctx.stores.quest, relation: ctx.stores.relation, game: ctx.stores.game, player: ctx.stores.player },
       allCodexEntries as Map<string, CodexEntry>,
       ctx.eventBus,
     ),
@@ -181,7 +181,7 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
     () => createCombatLoop(
       { combat: ctx.stores.combat, player: ctx.stores.player, game: ctx.stores.game },
       allCodexEntries as Map<string, CodexEntry>,
-      { generateNarrationFn: generateNarration },
+      { generateNarrationFn: generateNarration, sceneStore: ctx.stores.scene, eventBus: ctx.eventBus },
     ),
     [ctx, allCodexEntries],
   );
