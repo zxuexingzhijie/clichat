@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, spyOn } from 'bun:test';
 import { eventBus } from '../events/event-bus';
-import { NpcDispositionSchema, RelationStateSchema, getDefaultRelationState, relationStore } from './relation-store';
+import { NpcDispositionSchema, RelationStateSchema, getDefaultRelationState, createRelationStore, relationStore } from './relation-store';
 
 describe('NpcDispositionSchema', () => {
   it('validates with all 6 fields in [-100, 100]', () => {
@@ -149,5 +149,66 @@ describe('relationStore onChange', () => {
     });
 
     expect(emitSpy).not.toHaveBeenCalledWith('reputation_changed', expect.anything());
+  });
+});
+
+describe('createRelationStore restoreState', () => {
+  let store: ReturnType<typeof createRelationStore>;
+  let mockBus: { emit: ReturnType<typeof spyOn> };
+
+  beforeEach(() => {
+    const bus = { emit: () => {} } as unknown as typeof eventBus;
+    mockBus = { emit: spyOn(bus, 'emit') };
+    store = createRelationStore(bus);
+  });
+
+  it('restoreState sets npcDispositions correctly', () => {
+    store.restoreState({
+      npcDispositions: {
+        npc_guard: { value: 50, publicReputation: 0, personalTrust: 0, fear: 0, infamy: 0, credibility: 0 },
+      },
+      factionReputations: {},
+    });
+
+    expect(store.getState().npcDispositions['npc_guard']?.value).toBe(50);
+  });
+
+  it('restoreState does NOT emit reputation_changed', () => {
+    store.restoreState({
+      npcDispositions: {
+        npc_guard: { value: 50, publicReputation: 0, personalTrust: 0, fear: 0, infamy: 0, credibility: 0 },
+      },
+      factionReputations: {},
+    });
+
+    expect(mockBus.emit).not.toHaveBeenCalledWith('reputation_changed', expect.anything());
+  });
+
+  it('setState still emits reputation_changed after restoreState', () => {
+    store.restoreState({
+      npcDispositions: {
+        npc_guard: { value: 50, publicReputation: 0, personalTrust: 0, fear: 0, infamy: 0, credibility: 0 },
+      },
+      factionReputations: {},
+    });
+    mockBus.emit.mockClear();
+
+    store.setState(draft => {
+      draft.npcDispositions['npc_guard'] = {
+        value: 60,
+        publicReputation: 0,
+        personalTrust: 0,
+        fear: 0,
+        infamy: 0,
+        credibility: 0,
+      };
+    });
+
+    expect(mockBus.emit).toHaveBeenCalledWith('reputation_changed', {
+      targetId: 'npc_guard',
+      targetType: 'npc',
+      delta: 10,
+      newValue: 60,
+    });
   });
 });

@@ -8,7 +8,7 @@ import { createGameStore, type GameState } from '../state/game-store';
 import { createCombatStore, type CombatState } from '../state/combat-store';
 import { createDialogueStore, type DialogueState } from '../state/dialogue-store';
 import { createQuestStore, type QuestState } from '../state/quest-store';
-import { createRelationStore, type RelationState } from '../state/relation-store';
+import { createRelationStore, type RelationState, type RelationStore } from '../state/relation-store';
 import { createExplorationStore, type ExplorationState } from '../state/exploration-store';
 import { createNpcMemoryStore, type NpcMemoryState } from '../state/npc-memory-store';
 import { createPlayerKnowledgeStore, type PlayerKnowledgeState } from '../state/player-knowledge-store';
@@ -23,7 +23,7 @@ export type GameStores = {
   readonly combat: Store<CombatState>;
   readonly dialogue: Store<DialogueState>;
   readonly quest: Store<QuestState>;
-  readonly relation: Store<RelationState>;
+  readonly relation: RelationStore;
   readonly exploration: Store<ExplorationState>;
   readonly npcMemory: Store<NpcMemoryState>;
   readonly playerKnowledge: Store<PlayerKnowledgeState>;

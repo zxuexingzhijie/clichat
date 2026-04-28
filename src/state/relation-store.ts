@@ -19,6 +19,10 @@ export const RelationStateSchema = z.object({
 });
 export type RelationState = z.infer<typeof RelationStateSchema>;
 
+export type RelationStore = Store<RelationState> & {
+  restoreState: (data: RelationState) => void;
+};
+
 export function getDefaultNpcDisposition(): NpcDisposition {
   return { value: 0, publicReputation: 0, personalTrust: 0, fear: 0, infamy: 0, credibility: 0 };
 }
@@ -27,10 +31,14 @@ export function getDefaultRelationState(): RelationState {
   return { npcDispositions: {}, factionReputations: {} };
 }
 
-export function createRelationStore(bus: EventBus): Store<RelationState> {
-  return createStore<RelationState>(
+export function createRelationStore(bus: EventBus): RelationStore {
+  let isRestoring = false;
+
+  const store = createStore<RelationState>(
     getDefaultRelationState(),
     ({ newState, oldState }) => {
+      if (isRestoring) return;
+
       const allNpcIds = new Set([
         ...Object.keys(newState.npcDispositions),
         ...Object.keys(oldState.npcDispositions),
@@ -68,6 +76,14 @@ export function createRelationStore(bus: EventBus): Store<RelationState> {
       }
     },
   );
+
+  function restoreState(data: RelationState): void {
+    isRestoring = true;
+    store.setState(draft => { Object.assign(draft, data); });
+    isRestoring = false;
+  }
+
+  return { ...store, restoreState };
 }
 
 export const relationStore = createRelationStore(eventBus);

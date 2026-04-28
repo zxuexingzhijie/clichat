@@ -1,16 +1,17 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
+import { describe, it, expect, beforeEach, spyOn } from 'bun:test';
 import { createStore } from './create-store';
 import { getDefaultPlayerState, type PlayerState } from './player-store';
 import { getDefaultSceneState, type SceneState } from './scene-store';
 import { getDefaultCombatState, type CombatState } from './combat-store';
 import { getDefaultGameState, type GameState } from './game-store';
 import { getDefaultQuestState, type QuestState, type QuestEvent } from './quest-store';
-import { getDefaultRelationState, type RelationState } from './relation-store';
+import { getDefaultRelationState, createRelationStore, type RelationState } from './relation-store';
 import { getDefaultNpcMemoryState, type NpcMemoryState } from './npc-memory-store';
 import { getDefaultExplorationState, type ExplorationState } from './exploration-store';
 import { getDefaultPlayerKnowledgeState, type PlayerKnowledgeState } from './player-knowledge-store';
 import { getDefaultTurnLogState, type TurnLogState } from './turn-log-store';
 import { createSerializer, SaveDataV2Schema, SaveDataV3Schema, SaveDataV4Schema, SaveMetaSchema, TurnLogEntrySchema } from './serializer';
+import { eventBus } from '../events/event-bus';
 
 function freshStores() {
   return {
@@ -19,7 +20,7 @@ function freshStores() {
     combat: createStore<CombatState>(getDefaultCombatState()),
     game: createStore<GameState>(getDefaultGameState()),
     quest: createStore<QuestState>(getDefaultQuestState()),
-    relations: createStore<RelationState>(getDefaultRelationState()),
+    relations: createRelationStore({ emit: () => {} } as unknown as typeof eventBus),
     npcMemory: createStore<NpcMemoryState>(getDefaultNpcMemoryState()),
     exploration: createStore<ExplorationState>(getDefaultExplorationState()),
     playerKnowledge: createStore<PlayerKnowledgeState>(getDefaultPlayerKnowledgeState()),
@@ -419,5 +420,41 @@ describe('createSerializer v4 migration', () => {
     const serializer = createSerializer(stores, () => 'main', () => null);
     expect(() => serializer.restore(v3Json)).not.toThrow();
     expect(stores.player.getState().hp).toBe(30);
+  });
+});
+
+describe('serializer.restore() does not emit reputation_changed (REP-04)', () => {
+  it('restore() with saved relations data does not fire reputation_changed events', () => {
+    const bus = { emit: () => {} } as unknown as typeof eventBus;
+    const emitSpy = spyOn(bus, 'emit');
+
+    const stores = {
+      player: createStore<PlayerState>(getDefaultPlayerState()),
+      scene: createStore<SceneState>(getDefaultSceneState()),
+      combat: createStore<CombatState>(getDefaultCombatState()),
+      game: createStore<GameState>(getDefaultGameState()),
+      quest: createStore<QuestState>(getDefaultQuestState()),
+      relations: createRelationStore(bus),
+      npcMemory: createStore<NpcMemoryState>(getDefaultNpcMemoryState()),
+      exploration: createStore<ExplorationState>(getDefaultExplorationState()),
+      playerKnowledge: createStore<PlayerKnowledgeState>(getDefaultPlayerKnowledgeState()),
+      turnLog: createStore<TurnLogState>(getDefaultTurnLogState()),
+    };
+
+    const snapStores = freshStores();
+    snapStores.relations.setState(draft => {
+      draft.npcDispositions['npc_guard'] = {
+        value: 50, publicReputation: 0, personalTrust: 0, fear: 0, infamy: 0, credibility: 0,
+      };
+    });
+    const snap = createSerializer(snapStores, () => 'main', () => null).snapshot();
+
+    emitSpy.mockClear();
+
+    const serializer = createSerializer(stores, () => 'main', () => null);
+    serializer.restore(snap);
+
+    expect(emitSpy).not.toHaveBeenCalledWith('reputation_changed', expect.anything());
+    expect(stores.relations.getState().npcDispositions['npc_guard']?.value).toBe(50);
   });
 });
