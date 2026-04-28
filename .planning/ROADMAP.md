@@ -114,7 +114,10 @@ Plans:
   3. The dark cave has at least one enemy encounter trigger when entered
   4. After a bartender conversation or knowledge check, the shadow contact NPC becomes visible
   5. The death screen offers both "return to title" and "load last save"; if no save exists, an auto-save is created before death
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 15-01-PLAN.md — Add notable_npcs to 4 locations and enemies to loc_dark_cave in locations.yaml (CONT-01..05)
+- [ ] 15-02-PLAN.md — revealedNpcs on GameState; shadow contact discovery; loadLastSave on GameLoop; death screen key routing; emergency save on defeat (CONT-04, DEATH-01)
 
 ## Progress
 
@@ -134,4 +137,4 @@ Plans:
 | 12. Combat & Save Correctness | v1.2 | 0/4 | Not started | - |
 | 13. Dialogue & Reputation | v1.2 | 0/TBD | Not started | - |
 | 14. Quest, Memory, Scene & Codex | v1.2 | 4/4 | Complete | 2026-04-28 |
-| 15. Content & Death Recovery | v1.2 | 0/TBD | Not started | - |
+| 15. Content & Death Recovery | v1.2 | 0/2 | Not started | - |
