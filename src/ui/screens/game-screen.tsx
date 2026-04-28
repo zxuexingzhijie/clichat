@@ -110,6 +110,7 @@ export function GameScreen({
   const [spinnerDimoutComplete, setSpinnerDimoutComplete] = useState(false);
   const wasProcessingRef = useRef(false);
   const wasNarrationStreamingRef = useRef(false);
+  const hasFiredRef = useRef(false);
 
   const controller = useMemo(
     () => createGameScreenController(
@@ -180,7 +181,14 @@ export function GameScreen({
   }, [narrationError, controller]);
 
   useEffect(() => {
-    if (!isNpcStreaming && npcMetadata && npcStreamingText.length > 0) {
+    if (isNpcStreaming) {
+      hasFiredRef.current = false;
+    }
+  }, [isNpcStreaming]);
+
+  useEffect(() => {
+    if (!isNpcStreaming && npcMetadata && npcStreamingText.length > 0 && !hasFiredRef.current) {
+      hasFiredRef.current = true;
       controller.handleNpcDialogueComplete(dialogueState.npcName, npcMetadata.dialogue, inputMode);
     }
   }, [isNpcStreaming, npcMetadata, npcStreamingText, controller, dialogueState.npcName, inputMode]);

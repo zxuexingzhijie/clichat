@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { NpcProfile } from '../../ai/prompts/npc-system';
 import type { NpcDialogue } from '../../ai/schemas/npc-dialogue';
 import { streamNpcDialogue } from '../../ai/roles/npc-actor';
@@ -30,6 +30,7 @@ export function useNpcDialogue(): UseNpcDialogueReturn {
   const [metadata, setMetadata] = useState<NpcDialogue | null>(null);
   const contextRef = useRef<NpcDialogueContext | null>(null);
   const streaming = useStreamingText();
+  const completionFiredRef = useRef(false);
 
   const startDialogue = useCallback((context: NpcDialogueContext) => {
     contextRef.current = context;
@@ -51,43 +52,48 @@ export function useNpcDialogue(): UseNpcDialogueReturn {
     setMetadata(null);
   }, [originalReset]);
 
-  // Post-stream metadata extraction — runs when streaming completes
-  const prevIsStreaming = useRef(streaming.isStreaming);
-  if (prevIsStreaming.current && !streaming.isStreaming && !streaming.error) {
-    prevIsStreaming.current = false;
-    const fullText = streaming.fullTextRef.current;
-    const ctx = contextRef.current;
-
-    if (fullText && ctx) {
-      const extracted = extractNpcMetadata(fullText);
-      const isAllDefaults =
-        extracted.emotionTag === 'neutral' &&
-        !extracted.shouldRemember &&
-        !extracted.sentiment;
-      const isSubstantive = fullText.length > SUBSTANTIVE_LENGTH_THRESHOLD;
-
-      if (isAllDefaults && isSubstantive) {
-        generateNpcDialogue(
-          ctx.npcProfile,
-          ctx.scene,
-          ctx.playerAction,
-          ctx.memories,
-        ).then(result => {
-          setMetadata({ ...result, dialogue: fullText });
-        }).catch(() => {
-          setMetadata({ dialogue: fullText, sentiment: 'neutral', ...extracted });
-        });
-      } else {
-        setMetadata({ dialogue: fullText, sentiment: 'neutral', ...extracted });
-      }
-
-      eventBus.emit('npc_dialogue_streaming_completed', {
-        npcId: ctx.npcProfile.id,
-        charCount: fullText.length,
-      });
+  useEffect(() => {
+    if (streaming.isStreaming) {
+      completionFiredRef.current = false;
     }
-  }
-  prevIsStreaming.current = streaming.isStreaming;
+  }, [streaming.isStreaming]);
+
+  useEffect(() => {
+    if (!streaming.isStreaming && !streaming.error && streaming.streamingText && !completionFiredRef.current) {
+      completionFiredRef.current = true;
+      const fullText = streaming.fullTextRef.current;
+      const ctx = contextRef.current;
+
+      if (fullText && ctx) {
+        const extracted = extractNpcMetadata(fullText);
+        const isAllDefaults =
+          extracted.emotionTag === 'neutral' &&
+          !extracted.shouldRemember &&
+          !extracted.sentiment;
+        const isSubstantive = fullText.length > SUBSTANTIVE_LENGTH_THRESHOLD;
+
+        if (isAllDefaults && isSubstantive) {
+          generateNpcDialogue(
+            ctx.npcProfile,
+            ctx.scene,
+            ctx.playerAction,
+            ctx.memories,
+          ).then(result => {
+            setMetadata({ ...result, dialogue: fullText });
+          }).catch(() => {
+            setMetadata({ dialogue: fullText, sentiment: 'neutral', ...extracted });
+          });
+        } else {
+          setMetadata({ dialogue: fullText, sentiment: 'neutral', ...extracted });
+        }
+
+        eventBus.emit('npc_dialogue_streaming_completed', {
+          npcId: ctx.npcProfile.id,
+          charCount: fullText.length,
+        });
+      }
+    }
+  }, [streaming.isStreaming, streaming.error, streaming.streamingText]);
 
   return {
     streamingText: streaming.streamingText,

@@ -298,3 +298,42 @@ describe('DIAL-04: DialogueManager processPlayerFreeText', () => {
     expect(source).toContain('processPlayerFreeText');
   });
 });
+
+describe('DIAL-06: streaming completion is in useEffect not render body', () => {
+  it('use-npc-dialogue source has completionFiredRef', async () => {
+    const { useNpcDialogue } = await import('../hooks/use-npc-dialogue');
+    const source = useNpcDialogue.toString();
+    expect(source).toContain('completionFiredRef');
+  });
+
+  it('use-npc-dialogue source does not use prevIsStreaming render-body pattern', async () => {
+    const { useNpcDialogue } = await import('../hooks/use-npc-dialogue');
+    const source = useNpcDialogue.toString();
+    expect(source).not.toContain('prevIsStreaming');
+  });
+
+  it('use-npc-dialogue source has useEffect containing extractNpcMetadata call', async () => {
+    const { useNpcDialogue } = await import('../hooks/use-npc-dialogue');
+    const source = useNpcDialogue.toString();
+    expect(source).toContain('useEffect');
+    expect(source).toContain('extractNpcMetadata');
+  });
+});
+
+describe('DIAL-07: hasFiredRef prevents handleNpcDialogueComplete double-fire', () => {
+  it('GameScreen function source contains hasFiredRef', () => {
+    const source = GameScreen.toString();
+    expect(source).toContain('hasFiredRef');
+  });
+
+  it('GameScreen function source resets hasFiredRef when isNpcStreaming becomes true', () => {
+    const source = GameScreen.toString();
+    expect(source).toContain('hasFiredRef');
+    expect(source).toContain('isNpcStreaming');
+  });
+
+  it('GameScreen handleNpcDialogueComplete effect checks hasFiredRef.current before firing', () => {
+    const source = GameScreen.toString();
+    expect(source).toMatch(/hasFiredRef\.current/);
+  });
+});
