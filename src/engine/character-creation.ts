@@ -109,7 +109,13 @@ export function createCharacterCreation(codexEntries: Map<string, CodexEntry>): 
     };
     if (profession) {
       for (let i = 0; i < profession.starting_equipment.length && i < EQUIPMENT_SLOT_ORDER.length; i++) {
-        equipment[EQUIPMENT_SLOT_ORDER[i]] = profession.starting_equipment[i];
+        const itemId = profession.starting_equipment[i];
+        const itemEntry = codexEntries.get(itemId ?? '');
+        if (itemEntry?.type === 'item' && itemEntry.item_type === 'consumable') {
+          tags.push(`item:${itemId}`);
+        } else {
+          equipment[EQUIPMENT_SLOT_ORDER[i]] = itemId ?? null;
+        }
       }
     }
 

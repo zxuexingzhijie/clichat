@@ -65,7 +65,5 @@ export const handleUseItem: ActionHandler = async (action, ctx) => {
     draft.turnCount += 1;
   });
 
-  ctx.eventBus.emit('item_acquired', { itemId, itemName: item.name, quantity: -1 });
-
   return { status: 'action_executed', action, narration: newLines };
 };

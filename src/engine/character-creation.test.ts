@@ -87,8 +87,9 @@ describe('buildCharacter', () => {
     expect(char.tags).toContain('newcomer');
     expect(char.tags).toContain('adaptable');
     expect(char.tags).toContain('refugee');
-    expect(char.equipment.weapon).toBe('iron_sword');
-    expect(char.equipment.armor).toBe('leather_armor');
+    expect(char.equipment.weapon).toBe('item_iron_sword');
+    expect(char.equipment.armor).toBe('item_leather_armor');
+    expect(char.tags).toContain('item:item_healing_potion');
   });
 
   it('builds mage with HP 20 and MP 12', () => {
@@ -103,7 +104,7 @@ describe('buildCharacter', () => {
     expect(char.maxHp).toBe(20);
     expect(char.mp).toBe(12);
     expect(char.gold).toBe(8);
-    expect(char.equipment.weapon).toBe('wooden_staff');
+    expect(char.equipment.weapon).toBe('item_wooden_staff');
   });
 
   it('builds rogue with HP 25 and gold 15', () => {

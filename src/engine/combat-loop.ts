@@ -2,13 +2,16 @@ import { resolveNormalCheck } from './adjudication';
 import { GAME_CONSTANTS } from './game-constants';
 import { calculateDamage } from './damage';
 import { rollD20 } from './dice';
+import { handleUseItem } from './action-handlers/use-item-handler';
 import type { Store } from '../state/create-store';
 import type { CombatState } from '../state/combat-store';
 import type { PlayerState } from '../state/player-store';
 import type { GameState } from '../state/game-store';
+import type { SceneState } from '../state/scene-store';
 import type { CheckResult } from '../types/common';
 import type { CodexEntry, Enemy, Spell } from '../codex/schemas/entry-types';
 import type { NarrativeContext } from '../ai/roles/narrative-director';
+import type { EventBus } from '../events/event-bus';
 
 export type CombatActionType = 'attack' | 'cast' | 'guard' | 'use_item' | 'flee';
 
@@ -36,6 +39,8 @@ export interface CombatLoop {
 export type CombatLoopOptions = {
   readonly rng?: () => number;
   readonly generateNarrationFn?: (context: NarrativeContext) => Promise<string>;
+  readonly sceneStore?: Store<SceneState>;
+  readonly eventBus?: EventBus;
 };
 
 const FALLBACK_NARRATION = '战斗继续......';
@@ -63,6 +68,8 @@ export function createCombatLoop(
   }
   const rng = options?.rng;
   const generateNarrationFn = options?.generateNarrationFn;
+  const sceneStore = options?.sceneStore;
+  const combatEventBus = options?.eventBus;
 
   async function doGenerateNarration(playerAction: string, checkResult?: CheckResult): Promise<string> {
     if (!generateNarrationFn) return FALLBACK_NARRATION;
@@ -138,6 +145,30 @@ export function createCombatLoop(
     const enemyDefense = enemy?.defense ?? 0;
 
     if (actionType === 'use_item') {
+      if (sceneStore && combatEventBus) {
+        const itemId = options?.spellId;
+        if (!itemId) {
+          stores.combat.setState(draft => { draft.phase = 'player_turn'; });
+          return { status: 'error', message: '请指定要使用的物品。' };
+        }
+        const useItemCtx = {
+          stores: { ...stores, scene: sceneStore },
+          eventBus: combatEventBus,
+          codexEntries,
+        };
+        const itemAction = { type: 'use_item' as const, target: itemId, modifiers: {}, source: 'command' as const };
+        const result = await handleUseItem(
+          itemAction,
+          useItemCtx as Parameters<typeof handleUseItem>[1],
+        );
+        stores.combat.setState(draft => { draft.phase = 'enemy_turn'; });
+        if (result.status === 'error') {
+          stores.combat.setState(draft => { draft.phase = 'player_turn'; });
+          return { status: 'error', message: result.message };
+        }
+        const narrationLines = result.status === 'action_executed' ? result.narration : [];
+        return { status: 'ok', narration: narrationLines[narrationLines.length - 1] ?? '使用了物品。' };
+      }
       stores.combat.setState(draft => { draft.phase = 'player_turn'; });
       return { status: 'error', message: '背包里没有可用的物品。' };
     }
@@ -431,6 +462,10 @@ export function createCombatLoop(
       stores.combat.setState(draft => {
         draft.lastNarration = narration;
       });
+
+      if (stores.player.getState().hp <= 0) {
+        break;
+      }
     }
 
     stores.combat.setState(draft => {
@@ -450,9 +485,21 @@ export function createCombatLoop(
     const player = stores.player.getState();
 
     if (allEnemiesDead()) {
-      const narration = stores.combat.getState().enemies
+      const defeatedEnemies = stores.combat.getState().enemies;
+      const narration = defeatedEnemies
         .map(e => `${e.name}被击败了。`)
         .join('') + '战斗胜利！';
+
+      for (const combatEnemy of defeatedEnemies) {
+        const enemyEntry = codexEntries.get(combatEnemy.id);
+        const enemyData = enemyEntry?.type === 'enemy' ? (enemyEntry as Enemy) : null;
+        const lootItems = enemyData?.loot ?? [];
+        for (const itemId of lootItems) {
+          stores.player.setState(draft => {
+            draft.tags = [...draft.tags, `item:${itemId}`];
+          });
+        }
+      }
 
       stores.combat.setState(draft => {
         draft.outcome = 'victory';

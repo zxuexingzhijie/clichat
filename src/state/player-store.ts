@@ -31,7 +31,7 @@ export function getDefaultPlayerState(): PlayerState {
     maxMp: 8,
     gold: 12,
     attributes: { physique: 3, finesse: 2, mind: 1 },
-    tags: ['newcomer'],
+    tags: ['newcomer', 'item:item_healing_potion'],
     equipment: { weapon: null, armor: null, accessory: null },
     poisonStacks: 0,
   };

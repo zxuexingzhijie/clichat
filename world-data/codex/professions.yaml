@@ -19,9 +19,9 @@
     - basic_combat
     - survival
   starting_equipment:
-    - iron_sword
-    - leather_armor
-    - healing_potion
+    - item_iron_sword
+    - item_leather_armor
+    - item_healing_potion
   primary_attribute: physique
 
 - id: prof_mage
@@ -45,9 +45,9 @@
     - basic_spellcasting
     - arcane_knowledge
   starting_equipment:
-    - wooden_staff
-    - cloth_robe
-    - mana_potion
+    - item_wooden_staff
+    - item_cloth_robe
+    - item_mana_potion
   primary_attribute: mind
 
 - id: prof_rogue
