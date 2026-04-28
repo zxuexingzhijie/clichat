@@ -308,7 +308,7 @@ export function MapPanel({
     </Box>
   ) : null;
 
-  const hintBar = <Text dimColor>{'↑↓←→ 移动选择    Esc 返回'}</Text>;
+  const hintBar = <Text dimColor>{'↑↓←→ 切换地点    Esc 返回'}</Text>;
 
   if (isWide) {
     return (

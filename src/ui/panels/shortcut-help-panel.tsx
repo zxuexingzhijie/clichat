@@ -12,11 +12,10 @@ type ShortcutEntry = {
 };
 
 const CORE_SHORTCUTS: readonly ShortcutEntry[] = [
-  { key: 'Tab', description: '命令/NPC名/方向补全' },
+  { key: 'Tab / /', description: '切换至命令输入' },
   { key: '↑ ↓', description: '浏览历史 / 列表选择' },
   { key: 'Enter', description: '确认选择' },
   { key: 'Esc', description: '取消 / 返回上级' },
-  { key: '/', description: '切换至命令输入' },
   { key: '?', description: '显示此帮助' },
 ];
 
@@ -24,14 +23,12 @@ const PANEL_SHORTCUTS: readonly ShortcutEntry[] = [
   { key: 'm', description: '打开地图', command: '/map' },
   { key: 'j', description: '打开任务日志', command: '/journal' },
   { key: 'c', description: '打开知识典籍', command: '/codex' },
-  { key: 'i', description: '打开背包', command: '/inventory' },
   { key: 'b', description: '打开分支树', command: '/branch tree' },
 ];
 
 const NAV_SHORTCUTS: readonly ShortcutEntry[] = [
-  { key: '↑ ↓ ← →', description: '地图移动 / 列表滚动' },
-  { key: 'Enter', description: '查看详情' },
-  { key: 'Ctrl-R', description: '搜索历史' },
+  { key: '↑ ↓ ← →', description: '切换地点 / 列表滚动' },
+  { key: 'PgUp / PgDn', description: '场景文字滚动' },
 ];
 
 const KEY_COL_WIDTH = 14;

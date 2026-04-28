@@ -102,7 +102,6 @@ export function GuardNameInput({
       )}
 
       <Text> </Text>
-      <Text dimColor>{'\u547d\u540d'}</Text>
       <Text dimColor>{helpText}</Text>
     </Box>
   );

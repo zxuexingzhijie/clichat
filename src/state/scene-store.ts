@@ -34,7 +34,7 @@ export function getDefaultSceneState(): SceneState {
       { id: 'action_1', label: '仔细阅读告示', type: 'inspect' },
       { id: 'action_2', label: '向守卫询问最近的失踪事件', type: 'talk' },
       { id: 'action_3', label: '绕到城墙阴影处观察', type: 'look' },
-      { id: 'action_4', label: '打开地图', type: 'look' },
+      { id: 'action_4', label: '打开地图', type: 'map' },
     ],
     npcsPresent: ['guard'],
     exits: ['north', 'south', 'east'],

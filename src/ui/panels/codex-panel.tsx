@@ -296,7 +296,7 @@ export function CodexPanel({ entries, onClose }: CodexPanelProps): React.ReactNo
 
   const detailContent = selectedEntry ? <EntryDetail entry={selectedEntry} entries={visibleEntries} /> : null;
 
-  const hintBar = <Text dimColor>{'↑↓ 选择    Tab 搜索    Enter 查看    / 过滤    Esc 返回'}</Text>;
+  const hintBar = <Text dimColor>{'↑↓ 选择    Tab 搜索(字母)    Enter 查看    Esc 返回'}</Text>;
 
   if (!isWide && showDetailNarrow && selectedEntry) {
     return (

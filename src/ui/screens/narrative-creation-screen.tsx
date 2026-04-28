@@ -47,10 +47,12 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
 
   const characterCreationRef = useRef<ReturnType<typeof createCharacterCreation> | null>(null);
   const resolvedPlayerStateRef = useRef<PlayerState | null>(null);
+  const streamingWasActiveRef = useRef(false);
+  const [loadRetryKey, setLoadRetryKey] = useState(0);
 
   const npcDialogue = useNpcDialogue();
 
-  // Load codex + guard dialogue on mount
+  // Load codex + guard dialogue on mount (or on retry)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -89,7 +91,7 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [loadRetryKey]);
 
   // Trigger streaming when entering round_streaming or name_prompt_streaming or farewell_streaming
   useEffect(() => {
@@ -130,12 +132,16 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
         memories: [],
       });
     }
-  }, [phase.type, phase.type === 'round_streaming' ? (phase as { round: number }).round : 0]);
+  }, [phase, dialogueConfig, guardProfile, lastSelectionLabel, npcDialogue.startDialogue]);
 
-  // Detect stream completion: not streaming + has text + in a streaming phase = transition
+  // Detect stream completion: fires on isStreaming true→false transition, handles empty AI responses
   useEffect(() => {
-    if (npcDialogue.isStreaming) return;
-    if (!npcDialogue.streamingText) return;
+    if (npcDialogue.isStreaming) {
+      streamingWasActiveRef.current = true;
+      return;
+    }
+    if (!streamingWasActiveRef.current) return;
+    streamingWasActiveRef.current = false;
 
     if (phase.type === 'round_streaming') {
       setPhase({ type: 'round_selecting', round: (phase as { round: number }).round });
@@ -144,7 +150,7 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
     } else if (phase.type === 'farewell_streaming') {
       setPhase({ type: 'transition_delay' });
     }
-  }, [npcDialogue.isStreaming, npcDialogue.streamingText, phase]);
+  }, [npcDialogue.isStreaming, phase]);
 
   // Transition delay -> onComplete
   useEffect(() => {
@@ -157,6 +163,15 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
       return () => clearTimeout(timer);
     }
   }, [phase.type, onComplete]);
+
+  // Allow retry on any key press when load fails
+  useInput(
+    useCallback((_input: string, _key: unknown) => {
+      setPhase({ type: 'loading' });
+      setLoadRetryKey(k => k + 1);
+    }, []),
+    { isActive: phase.type === 'load_error' },
+  );
 
   const handleOptionSelected = useCallback(
     (optionId: string, optionLabel: string) => {
@@ -260,8 +275,10 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
   if (phase.type === 'load_error') {
     return (
       <Box flexGrow={1} justifyContent="center" alignItems="center" flexDirection="column">
-        <Text color="red">加载失败，请重启游戏</Text>
+        <Text color="red">加载失败</Text>
         <Text dimColor>{phase.message}</Text>
+        <Text> </Text>
+        <Text dimColor>按任意键重试...</Text>
       </Box>
     );
   }

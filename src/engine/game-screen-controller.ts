@@ -187,6 +187,9 @@ export function createGameScreenController(
     dialogueManager.processPlayerResponse(index).catch((err: unknown) => {
       console.error('[dialogue] processPlayerResponse failed:', err);
       eventBus.emit('ai_call_failed', { role: 'npc_actor', error: err instanceof Error ? err.message : String(err) });
+      sceneStore.setState(draft => {
+        draft.narrationLines = capNarrationLines([...draft.narrationLines, '[对话中断] 对话意外结束。']);
+      });
       dialogueManager.endDialogue();
       gameStore.setState(draft => { draft.phase = 'game'; });
     });

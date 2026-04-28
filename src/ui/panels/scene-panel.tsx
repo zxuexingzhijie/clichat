@@ -39,11 +39,12 @@ export function ScenePanel({
   const [scrollOffset, setScrollOffset] = useState(0);
   const prevLinesLen = useRef(lines.length);
 
-  // auto-scroll to bottom when new lines arrive
+  // auto-scroll to bottom when new lines arrive, preserving position if user scrolled up
   useEffect(() => {
     if (lines.length !== prevLinesLen.current) {
+      const diff = lines.length - prevLinesLen.current;
       prevLinesLen.current = lines.length;
-      setScrollOffset(0);
+      setScrollOffset(prev => prev === 0 ? 0 : prev + diff);
     }
   }, [lines.length]);
 
@@ -61,7 +62,7 @@ export function ScenePanel({
     [maxVisible, maxOffset],
   );
 
-  useInput(handleInput, { isActive: isInputActive && !isStreaming && totalLines > maxVisible });
+  useInput(handleInput, { isActive: isInputActive && totalLines > maxVisible });
 
   const visibleLines = scrollOffset === 0
     ? lines.slice(-maxVisible)

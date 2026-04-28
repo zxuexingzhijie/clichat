@@ -76,6 +76,7 @@ export function DialoguePanel({
 
   const relLabel = relationshipLabel(relationshipValue);
   const recentHistory = dialogueHistory.slice(-4);
+  const hasMoreHistory = dialogueHistory.length > 4;
 
   return (
     <Box flexDirection="column" flexGrow={1} paddingX={1}>
@@ -84,6 +85,9 @@ export function DialoguePanel({
         <Text dimColor>关系: {relLabel}</Text>
       </Box>
       <Text> </Text>
+      {hasMoreHistory && (
+        <Text dimColor>  ↑ 还有 {dialogueHistory.length - 4} 条早期对话...</Text>
+      )}
       {recentHistory.length === 0 && (
         <Text dimColor>......</Text>
       )}

@@ -106,9 +106,10 @@ export function GameScreen({
 
   const { toast } = useGameEventToasts();
 
-  const { active: isSpinnerDimming, trigger: triggerSpinnerDimout } = useTimedEffect(150);
+  const { active: isSpinnerDimming, trigger: triggerSpinnerDimout } = useTimedEffect(300);
   const [spinnerDimoutComplete, setSpinnerDimoutComplete] = useState(false);
   const wasProcessingRef = useRef(false);
+  const wasNarrationStreamingRef = useRef(false);
 
   const controller = useMemo(
     () => createGameScreenController(
@@ -162,7 +163,12 @@ export function GameScreen({
   }, []);
 
   useEffect(() => {
-    if (!isNarrationStreaming && streamingText.length > 0) {
+    if (isNarrationStreaming) {
+      wasNarrationStreamingRef.current = true;
+      return;
+    }
+    if (wasNarrationStreamingRef.current) {
+      wasNarrationStreamingRef.current = false;
       controller.handleNarrationComplete(streamingText);
     }
   }, [isNarrationStreaming, streamingText, controller]);
@@ -275,7 +281,7 @@ export function GameScreen({
   }, [gameState.pendingQuit, isTyping, isInCombat, isInDialogueMode, isInOverlayPanel, inputMode, inputValue, setInputValue, setInputMode, isNarrationStreaming, skipNarration, isNpcStreaming, skipNpcDialogue, isAnyStreaming]));
 
   useInput(useCallback((_input: string, _key: unknown) => {
-    gameStore.setState(draft => { draft.phase = 'title'; });
+    gameStore.setState(draft => { draft.phase = 'title'; draft.pendingQuit = false; });
   }, []), { isActive: gameState.phase === 'game_over' });
 
   const sceneLines = dialogueState.active && dialogueState.mode === 'inline'
@@ -315,12 +321,13 @@ export function GameScreen({
   const actionsNode = isInCombat ? (
     <CombatActionsPanel
       playerMp={playerState.mp}
-      canFlee={true}
+      canFlee={combatState.active && combatState.outcome === null}
       hasItems={false}
       selectedIndex={combatSelectedIndex}
       onSelect={setCombatSelectedIndex}
       onExecute={handleCombatExecute}
       isActive={!isTyping && combatState.phase === 'player_turn'}
+      combatPhase={combatState.phase}
     />
   ) : (
     <ActionsPanel
@@ -360,7 +367,7 @@ export function GameScreen({
       chapterSummaries={getRecentChapterSummaries()}
       width={width}
       sceneLines={sceneLines}
-      streamingText={isNarrationStreaming ? streamingText : isNpcStreaming ? `${dialogueState.npcName}\uFF1A\u201C${npcStreamingText}` : undefined}
+      streamingText={isNarrationStreaming ? streamingText : isNpcStreaming ? `${dialogueState.npcName}："${npcStreamingText}` : undefined}
       isStreaming={isAnyStreaming}
       showSpinner={showSpinnerWithDim}
       spinnerContext={spinnerContext}

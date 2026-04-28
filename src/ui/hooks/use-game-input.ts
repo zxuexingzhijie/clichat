@@ -20,7 +20,6 @@ export function getPanelActionForKey(input: string, isTyping: boolean): PanelAct
     case 'm': return 'map';
     case 'j': return 'journal';
     case 'c': return 'codex';
-    case 'i': return 'inventory';
     case 'b': return 'branch_tree';
     case '?': return 'shortcuts';
     default: return null;

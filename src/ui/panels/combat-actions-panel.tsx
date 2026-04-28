@@ -10,6 +10,7 @@ type CombatActionsPanelProps = {
   readonly onSelect: (index: number) => void;
   readonly onExecute: (index: number) => void;
   readonly isActive: boolean;
+  readonly combatPhase?: string;
 };
 
 type CombatAction = {
@@ -53,6 +54,7 @@ export function CombatActionsPanel({
   onSelect,
   onExecute,
   isActive,
+  combatPhase,
 }: CombatActionsPanelProps): React.ReactNode {
   const actions = buildCombatActions(playerMp, canFlee, hasItems);
 
@@ -84,9 +86,14 @@ export function CombatActionsPanel({
 
   useInput(handleInput, { isActive });
 
+  const waitingLabel = combatPhase === 'enemy_turn' ? '敌方行动中...'
+    : combatPhase === 'resolving' || combatPhase === 'narrating' ? '处理中...'
+    : null;
+
   return (
     <Box flexDirection="column" paddingX={1}>
       <Text bold>战斗行动</Text>
+      {waitingLabel && <Text dimColor>{waitingLabel}</Text>}
       {actions.map((action, i) => {
         const isSelected = i === selectedIndex;
         return (
@@ -98,7 +105,7 @@ export function CombatActionsPanel({
           >
             {isSelected ? '❯ ' : '  '}
             {i + 1}. {action.label}
-            {i === 4 && !action.disabled ? <Text color="yellow"> DC 10</Text> : null}
+            {action.disabled && action.disabledReason && isSelected ? <Text color="red"> — {action.disabledReason}</Text> : null}
           </Text>
         );
       })}

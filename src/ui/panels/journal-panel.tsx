@@ -50,6 +50,7 @@ export function JournalPanel({
     <Box flexDirection="column" flexGrow={1} paddingX={1}>
       <Box flexDirection="row" justifyContent="space-between">
         <Text bold color="cyan">【任务日志】</Text>
+        <Text dimColor>Esc 关闭</Text>
       </Box>
       <Text> </Text>
       <Text bold color="yellow">进行中</Text>
