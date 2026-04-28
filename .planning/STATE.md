@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Game System Integrity & Playability
-status: Phase complete
-stopped_at: ~
-last_updated: "2026-04-28T00:00:00.000Z"
-last_activity: 2026-04-28
+status: executing
+last_updated: "2026-04-28T10:00:00.000Z"
+last_activity: 2026-04-28 — Phase 12 complete (4/4 plans, SAVE-01..03 + COMBAT-01..06)
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
-  percent: 20
+  completed_phases: 2
+  total_plans: 7
+  completed_plans: 7
+  percent: 40
 ---
 
 # Project State
@@ -21,29 +20,31 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-28)
 
 **Core value:** The player must feel they are in a persistent, consistent world that remembers them -- not a chatbot that reinvents the universe every turn.
-**Current focus:** v1.2 Phase 12 — Save/Branch/Replay commands
+**Current focus:** v1.2 Phase 13 — Dialogue & Reputation
 
 ## Current Position
 
-Phase: 12 of 15 (Save/Branch/Replay)
+Phase: 13 of 15 (Dialogue & Reputation)
 Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-04-28 — Phase 11 complete (3/3 plans, WIRE-01..10 + CODEX-01)
+Status: Ready to discuss/plan
+Last activity: 2026-04-28 — Phase 12 complete (4/4 plans, SAVE-01..03 + COMBAT-01..06)
 
-Progress: [██        ] 20%
+Progress: [████      ] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0 (v1.2)
-- Average duration: — (no data yet)
-- Total execution time: 0 hours
+
+- Total plans completed: 7 (v1.2)
+- Average duration: ~15 min/plan
+- Total execution time: ~2 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 11 (App Wiring) | 3 | ~45 min | ~15 min |
+| 12 (Combat & Save) | 4 | ~75 min | ~19 min |
 
 *Updated after each plan completion*
 
@@ -79,6 +80,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-28
-Stopped at: Roadmap created — Phase 11 ready to plan
+Last session: 2026-04-28T07:02:44.738Z
+Stopped at: context exhaustion at 90% (2026-04-28)
 Resume file: None
