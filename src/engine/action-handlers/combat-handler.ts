@@ -16,7 +16,6 @@ export const handleCombat: ActionHandler = async (action, ctx) => {
   if (combatResult.status === 'error') {
     return { status: 'error', message: combatResult.message };
   }
-  await ctx.combatLoop.processEnemyTurn();
   await ctx.combatLoop.checkCombatEnd();
   const narration = ctx.stores.combat.getState().lastNarration
     ? [ctx.stores.combat.getState().lastNarration]
