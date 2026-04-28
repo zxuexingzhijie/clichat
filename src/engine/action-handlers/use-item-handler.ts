@@ -40,20 +40,32 @@ export const handleUseItem: ActionHandler = async (action, ctx) => {
   }
 
   const healAmount = item.heal_amount ?? 0;
+  const mpRestore = (item as { mp_restore?: number }).mp_restore ?? 0;
 
-  if (healAmount <= 0) {
+  if (healAmount <= 0 && mpRestore <= 0) {
     return { status: 'error', message: `${item.name} 目前无法使用。` };
   }
 
-  const newHp = Math.min(playerState.maxHp, playerState.hp + healAmount);
-  const actualHeal = newHp - playerState.hp;
+  let narrationLine: string;
 
-  ctx.stores.player.setState(draft => {
-    draft.hp = newHp;
-    draft.tags = removeItemTag(draft.tags, itemId);
-  });
-
-  const narrationLine = `你使用了${item.name}，恢复了 ${actualHeal} 点生命值。（HP: ${newHp}/${playerState.maxHp}）`;
+  if (mpRestore > 0) {
+    const playerState2 = ctx.stores.player.getState();
+    const newMp = Math.min(playerState2.maxMp, playerState2.mp + mpRestore);
+    const actualRestore = newMp - playerState2.mp;
+    ctx.stores.player.setState(draft => {
+      draft.mp = newMp;
+      draft.tags = removeItemTag(draft.tags, itemId);
+    });
+    narrationLine = `你使用了${item.name}，恢复了 ${actualRestore} 点魔力。（MP: ${newMp}/${playerState2.maxMp}）`;
+  } else {
+    const newHp = Math.min(playerState.maxHp, playerState.hp + healAmount);
+    const actualHeal = newHp - playerState.hp;
+    ctx.stores.player.setState(draft => {
+      draft.hp = newHp;
+      draft.tags = removeItemTag(draft.tags, itemId);
+    });
+    narrationLine = `你使用了${item.name}，恢复了 ${actualHeal} 点生命值。（HP: ${newHp}/${playerState.maxHp}）`;
+  }
 
   const currentLines = ctx.stores.scene.getState().narrationLines;
   const newLines = [...currentLines, narrationLine];

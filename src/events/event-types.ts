@@ -9,7 +9,7 @@ export type DomainEvents = {
   narration_updated: { lines: string[] };
 
   combat_started: { enemies: string[] };
-  combat_ended: { outcome: 'victory' | 'defeat' | 'flee' };
+  combat_ended: { outcome: 'victory' | 'defeat' | 'flee'; enemyIds?: string[] };
 
   player_damaged: { amount: number; source: string };
   player_healed: { amount: number; source: string };

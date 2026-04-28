@@ -105,11 +105,23 @@ export function createSceneManager(
 
   stores.eventBus?.on('dialogue_ended', ({ npcId }) => {
     if (npcId === 'npc_bartender') {
+      const newNpcId = 'npc_shadow_contact';
       gameStore.setState(draft => {
-        if (!draft.revealedNpcs.includes('npc_shadow_contact')) {
-          draft.revealedNpcs.push('npc_shadow_contact');
+        if (!draft.revealedNpcs.includes(newNpcId)) {
+          draft.revealedNpcs.push(newNpcId);
         }
       });
+      if (currentSceneId) {
+        const npcEntry = queryById(codexEntries, newNpcId);
+        const npcLocation = (npcEntry as { location_id?: string } | null)?.location_id;
+        if (npcLocation === currentSceneId) {
+          stores.scene.setState(draft => {
+            if (!draft.npcsPresent.includes(newNpcId)) {
+              draft.npcsPresent = [...draft.npcsPresent, newNpcId];
+            }
+          });
+        }
+      }
     }
   });
 

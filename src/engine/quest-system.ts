@@ -178,11 +178,20 @@ export function createQuestSystem(
         if (!template.auto_accept) continue;
         const progress = stores.quest.getState().quests[questId];
         if (progress) continue;
-        const firstStage = template.stages[0];
-        if (!firstStage?.trigger) continue;
-        if (firstStage.trigger.event !== 'dialogue_ended') continue;
-        if (firstStage.trigger.targetId && firstStage.trigger.targetId !== npcId) continue;
-        acceptQuest(questId);
+        // Accept if required_npc_id matches the NPC we just talked to
+        if (template.required_npc_id) {
+          if (template.required_npc_id === npcId) {
+            acceptQuest(questId);
+            continue;
+          }
+        } else {
+          // No required_npc_id: fall back to first stage trigger check
+          const firstStage = template.stages[0];
+          if (!firstStage?.trigger) continue;
+          if (firstStage.trigger.event !== 'dialogue_ended') continue;
+          if (firstStage.trigger.targetId && firstStage.trigger.targetId !== npcId) continue;
+          acceptQuest(questId);
+        }
       }
 
       for (const [questId, progress] of Object.entries(stores.quest.getState().quests)) {
@@ -237,13 +246,15 @@ export function createQuestSystem(
       }
     });
 
-    bus.on('combat_ended', ({ outcome }) => {
+    bus.on('combat_ended', ({ outcome, enemyIds }) => {
       if (outcome !== 'victory') return;
       for (const [questId, progress] of Object.entries(stores.quest.getState().quests)) {
         if (progress.status !== 'active' || !progress.currentStageId) continue;
         const template = getTemplate(questId);
         const stage = template?.stages.find(s => s.id === progress.currentStageId);
         if (stage?.trigger?.event === 'combat_ended') {
+          const targetId = stage.trigger.targetId;
+          if (targetId && enemyIds && !enemyIds.includes(targetId)) continue;
           checkAndAdvance(questId, 'primary');
         }
       }

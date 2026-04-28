@@ -44,7 +44,7 @@ const handleCast: ActionHandler = async (action, ctx) => {
   return handleCombat(action, ctx);
 };
 
-const COMBAT_ACTIONS = new Set(['attack', 'cast', 'guard', 'flee']);
+const COMBAT_ACTIONS = new Set(['attack', 'cast', 'guard', 'flee', 'use_item']);
 
 const HANDLER_MAP: Record<string, ActionHandler> = {
   look: handleLook,

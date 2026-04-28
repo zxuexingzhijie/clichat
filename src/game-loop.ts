@@ -146,6 +146,10 @@ export function createGameLoop(
     if (saves.length === 0) return;
     await sfm.loadGame(saves[0].filePath, serializer, saveDir);
     stores.game.setState(draft => { draft.phase = 'game'; });
+    const sceneId = stores.scene.getState().sceneId;
+    if (sceneId && options?.sceneManager) {
+      await options.sceneManager.loadScene(sceneId);
+    }
   }
 
   return {

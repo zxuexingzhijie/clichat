@@ -108,7 +108,8 @@
     volatility: stable
   item_type: consumable
   value: 8
-  effect: 恢复 5 MP
+  effect: 恢复 15 MP
+  mp_restore: 15
 
 - id: item_healing_potion
   name: 治疗药水
