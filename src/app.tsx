@@ -139,6 +139,7 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
     () => createQuestSystem(
       { quest: ctx.stores.quest, relation: ctx.stores.relation, game: ctx.stores.game },
       allCodexEntries as Map<string, CodexEntry>,
+      ctx.eventBus,
     ),
     [ctx, allCodexEntries],
   );
@@ -202,6 +203,7 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
         serializer,
         saveDir,
         questSystem,
+        questStore: ctx.stores.quest,
         branchManager: {
           createBranch,
           switchBranch,

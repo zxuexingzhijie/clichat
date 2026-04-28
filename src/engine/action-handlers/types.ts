@@ -10,6 +10,8 @@ import type { Serializer } from '../../state/serializer';
 import type { BranchMeta } from '../../state/branch-store';
 import type { TurnLogEntry } from '../../state/serializer';
 import type { CodexEntry } from '../../codex/schemas/entry-types';
+import type { Store } from '../../state/create-store';
+import type { QuestState } from '../../state/quest-store';
 
 export type ActionContext = {
   readonly stores: GameLoopStores;
@@ -18,6 +20,7 @@ export type ActionContext = {
   readonly dialogueManager?: DialogueManager;
   readonly combatLoop?: CombatLoop;
   readonly questSystem?: QuestSystem;
+  readonly questStore?: Store<QuestState>;
   readonly saveFileManager?: {
     readonly quickSave: (serializer: Serializer, saveDir: string) => Promise<string>;
     readonly saveGame: (name: string, serializer: Serializer, saveDir: string) => Promise<string>;

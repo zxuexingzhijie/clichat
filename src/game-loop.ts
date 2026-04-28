@@ -5,6 +5,7 @@ import type { PlayerState } from './state/player-store';
 import type { SceneState } from './state/scene-store';
 import type { GameState } from './state/game-store';
 import type { CombatState } from './state/combat-store';
+import type { QuestState } from './state/quest-store';
 import type { EventBus } from './events/event-bus';
 import type { GameAction } from './types/game-action';
 import type { CheckResult } from './types/common';
@@ -65,6 +66,7 @@ export type GameLoopOptions = {
   readonly serializer?: Serializer;
   readonly saveDir?: string;
   readonly questSystem?: QuestSystem;
+  readonly questStore?: Store<QuestState>;
   readonly branchManager?: {
     readonly createBranch: (name: string) => BranchMeta;
     readonly switchBranch: (branchId: string) => void;
@@ -102,6 +104,7 @@ export function createGameLoop(
     serializer: options?.serializer,
     saveDir: options?.saveDir,
     questSystem: options?.questSystem,
+    questStore: options?.questStore,
     branchManager: options?.branchManager,
     turnLog: options?.turnLog,
     rng: options?.rng,
