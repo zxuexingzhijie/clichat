@@ -52,7 +52,11 @@
   3. Player can type `:branch` and branch panels render with current tree
   4. Player can type `:replay` and turn history is displayed
   5. Player can type `:map` and the ASCII map renders the current location
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 11-P01-PLAN.md — Refactor app.tsx to createGameContext(); wire save, quest, branch, turnLog into gameLoop (WIRE-01/02/03)
+- [ ] 11-P02-PLAN.md — Wire RAG retrieval planner, combat narration, mapData, branchTree props (WIRE-04/05/06/07)
+- [ ] 11-P03-PLAN.md — Wire summarizer, exploration tracker, knowledge tracker startup; fix codexDisplayEntries knowledgeStatus (WIRE-08/09/10)
 
 ### Phase 12: Combat & Save Correctness
 **Goal**: Combat resolves correctly (one enemy turn per round, flee exits cleanly, combat initiates on danger entry), spells and abilities work, and saves correctly name/timestamp/restore
@@ -116,7 +120,7 @@
 | 8. Narrative Character Creation | v1.1 | 4/4 | Complete | 2026-04-25 |
 | 9. Animation System | v1.1 | 5/5 | Complete | 2026-04-25 |
 | 10. Distribution | v1.1 | 5/5 | Complete | 2026-04-26 |
-| 11. App Wiring | v1.2 | 0/TBD | Not started | - |
+| 11. App Wiring | v1.2 | 0/3 | Not started | - |
 | 12. Combat & Save Correctness | v1.2 | 0/TBD | Not started | - |
 | 13. Dialogue & Reputation | v1.2 | 0/TBD | Not started | - |
 | 14. Quest, Memory, Scene & Codex | v1.2 | 0/TBD | Not started | - |
