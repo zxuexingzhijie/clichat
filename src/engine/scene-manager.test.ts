@@ -91,6 +91,78 @@ function createMockCodexEntries(): Map<string, CodexEntry> {
     initial_disposition: 0,
   } as CodexEntry);
 
+  entries.set('loc_tavern', {
+    id: 'loc_tavern',
+    name: '酒馆',
+    type: 'location',
+    tags: ['tavern', '黑松镇'],
+    description: '昏暗的酒馆，弥漫着酒气。',
+    epistemic: {
+      authority: 'canonical_truth',
+      truth_status: 'true',
+      scope: 'regional',
+      visibility: 'public',
+      confidence: 1.0,
+      source_type: 'authorial',
+      known_by: [],
+      contradicts: [],
+      volatility: 'stable',
+    },
+    region: '黑松镇',
+    danger_level: 1,
+    exits: ['loc_main_street'],
+    notable_npcs: ['npc_bartender'],
+    objects: [],
+  } as CodexEntry);
+
+  entries.set('npc_bartender', {
+    id: 'npc_bartender',
+    name: '酒馆老板',
+    type: 'npc',
+    tags: ['bartender', '黑松镇'],
+    description: '老陈，酒馆老板，消息灵通。',
+    epistemic: {
+      authority: 'canonical_truth',
+      truth_status: 'true',
+      scope: 'local',
+      visibility: 'public',
+      confidence: 1.0,
+      source_type: 'authorial',
+      known_by: [],
+      contradicts: [],
+      volatility: 'stable',
+    },
+    location_id: 'loc_tavern',
+    personality_tags: ['friendly'],
+    goals: [],
+    backstory: '',
+    initial_disposition: 0,
+  } as CodexEntry);
+
+  entries.set('npc_shadow_contact', {
+    id: 'npc_shadow_contact',
+    name: '暗影联络人',
+    type: 'npc',
+    tags: ['shadow', '黑松镇'],
+    description: '神秘人物，藏在酒馆角落。',
+    epistemic: {
+      authority: 'canonical_truth',
+      truth_status: 'true',
+      scope: 'local',
+      visibility: 'hidden',
+      confidence: 1.0,
+      source_type: 'authorial',
+      known_by: ['npc_bartender'],
+      contradicts: [],
+      volatility: 'stable',
+    },
+    location_id: 'loc_tavern',
+    personality_tags: ['secretive'],
+    goals: [],
+    backstory: '',
+    initial_disposition: 0,
+  } as CodexEntry);
+
   return entries;
 }
 
@@ -338,5 +410,95 @@ describe('createSceneManager', () => {
     if (result.status === 'success') {
       expect(result.narration).toContain('已有叙述');
     }
+  });
+
+  it('loadScene merges revealedNpcs whose location_id matches into npcsPresent', async () => {
+    const { createStore } = await import('../state/create-store');
+    const { getDefaultSceneState } = await import('../state/scene-store');
+    const { default: createMitt } = await import('mitt');
+    const mockBus = createMitt<import('../events/event-types').DomainEvents>();
+    const freshScene = createStore(getDefaultSceneState(), () => {});
+
+    const { gameStore } = await import('../state/game-store');
+    gameStore.setState(draft => {
+      draft.revealedNpcs = ['npc_shadow_contact'];
+    });
+
+    const codex = createMockCodexEntries();
+    const manager = createSceneManager({ scene: freshScene, eventBus: mockBus }, codex);
+
+    await manager.loadScene('loc_tavern');
+
+    const state = freshScene.getState();
+    expect(state.npcsPresent).toContain('npc_bartender');
+    expect(state.npcsPresent).toContain('npc_shadow_contact');
+
+    gameStore.setState(draft => { draft.revealedNpcs = []; });
+  });
+
+  it('loadScene does not duplicate npcs already in notable_npcs when also in revealedNpcs', async () => {
+    const { createStore } = await import('../state/create-store');
+    const { getDefaultSceneState } = await import('../state/scene-store');
+    const { default: createMitt } = await import('mitt');
+    const mockBus = createMitt<import('../events/event-types').DomainEvents>();
+    const freshScene = createStore(getDefaultSceneState(), () => {});
+
+    const { gameStore } = await import('../state/game-store');
+    gameStore.setState(draft => {
+      draft.revealedNpcs = ['npc_bartender'];
+    });
+
+    const codex = createMockCodexEntries();
+    const manager = createSceneManager({ scene: freshScene, eventBus: mockBus }, codex);
+
+    await manager.loadScene('loc_tavern');
+
+    const state = freshScene.getState();
+    const bartenderCount = state.npcsPresent.filter(id => id === 'npc_bartender').length;
+    expect(bartenderCount).toBe(1);
+
+    gameStore.setState(draft => { draft.revealedNpcs = []; });
+  });
+
+  it('dialogue_ended with npc_bartender adds npc_shadow_contact to revealedNpcs', async () => {
+    const { createStore } = await import('../state/create-store');
+    const { getDefaultSceneState } = await import('../state/scene-store');
+    const { default: createMitt } = await import('mitt');
+    const mockBus = createMitt<import('../events/event-types').DomainEvents>();
+    const freshScene = createStore(getDefaultSceneState(), () => {});
+
+    const { gameStore } = await import('../state/game-store');
+    gameStore.setState(draft => { draft.revealedNpcs = []; });
+
+    const codex = createMockCodexEntries();
+    createSceneManager({ scene: freshScene, eventBus: mockBus }, codex);
+
+    mockBus.emit('dialogue_ended', { npcId: 'npc_bartender' });
+
+    expect(gameStore.getState().revealedNpcs).toContain('npc_shadow_contact');
+
+    gameStore.setState(draft => { draft.revealedNpcs = []; });
+  });
+
+  it('dialogue_ended with npc_bartender fired twice does not duplicate npc_shadow_contact', async () => {
+    const { createStore } = await import('../state/create-store');
+    const { getDefaultSceneState } = await import('../state/scene-store');
+    const { default: createMitt } = await import('mitt');
+    const mockBus = createMitt<import('../events/event-types').DomainEvents>();
+    const freshScene = createStore(getDefaultSceneState(), () => {});
+
+    const { gameStore } = await import('../state/game-store');
+    gameStore.setState(draft => { draft.revealedNpcs = []; });
+
+    const codex = createMockCodexEntries();
+    createSceneManager({ scene: freshScene, eventBus: mockBus }, codex);
+
+    mockBus.emit('dialogue_ended', { npcId: 'npc_bartender' });
+    mockBus.emit('dialogue_ended', { npcId: 'npc_bartender' });
+
+    const count = gameStore.getState().revealedNpcs.filter(id => id === 'npc_shadow_contact').length;
+    expect(count).toBe(1);
+
+    gameStore.setState(draft => { draft.revealedNpcs = []; });
   });
 });
