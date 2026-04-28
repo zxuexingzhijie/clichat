@@ -130,8 +130,7 @@
   item_type: consumable
   value: 5
   effect: 恢复 10 HP
-
-- id: item_short_bow
+  heal_amount: 10
   name: 短弓
   type: item
   tags:
@@ -194,6 +193,46 @@
     volatility: stable
   item_type: misc
   value: 3
+
+- id: item_iron_ore
+  name: 铁矿石
+  type: item
+  tags:
+    - material
+    - common
+  description: 品质不错的铁矿石，是铁匠所需的原材料。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  item_type: misc
+  value: 5
+
+- id: item_evidence
+  name: 失踪者的遗物
+  type: item
+  tags:
+    - quest_item
+    - rare
+  description: 在黑暗山洞深处找到的破旧布包，上面绣着镇里失踪者的名字缩写。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: global
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  item_type: key_item
+  value: 0
 
 - id: item_herb_bundle
   name: 草药包

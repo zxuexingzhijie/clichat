@@ -1,4 +1,5 @@
 - id: quest_main_01
+  auto_accept: true
   name: 黑松镇的秘密
   type: quest
   quest_type: main
@@ -51,6 +52,7 @@
           description: 与镇长王德交谈，揭露真相
         - id: obj_find_evidence
           type: find_item
+          targetId: item_evidence
           description: 找到关键证据
       nextStageId: null
       completionCondition: all_objectives
@@ -59,6 +61,7 @@
       faction_guard: 20
 
 - id: quest_side_missing_ore
+  auto_accept: true
   name: 失踪的矿石
   type: quest
   quest_type: side
@@ -104,6 +107,7 @@
       npc_blacksmith: 10
 
 - id: quest_side_overdue_debt
+  auto_accept: true
   name: 拖欠的债务
   type: quest
   quest_type: side
@@ -150,6 +154,7 @@
       faction_merchants: 15
 
 - id: quest_side_wolf_bounty
+  auto_accept: true
   name: 狼群悬赏
   type: quest
   quest_type: side

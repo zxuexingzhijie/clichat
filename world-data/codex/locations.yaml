@@ -30,7 +30,7 @@
     - notice_board
     - oil_lamp
   coordinates: { x: 1, y: 2 }
-  map_icon: "H"
+  map_icon: "G"
 
 - id: loc_tavern
   name: 黑松镇·酒馆
@@ -58,12 +58,13 @@
       label: 主街
   notable_npcs:
     - npc_bartender
+    - npc_innkeeper
   objects:
     - fireplace
     - notice_board_tavern
     - barrel
   coordinates: { x: 0, y: 4 }
-  map_icon: "H"
+  map_icon: "T"
 
 - id: loc_main_street
   name: 黑松镇·主街
@@ -101,7 +102,7 @@
     - signpost
     - fountain
   coordinates: { x: 1, y: 3 }
-  map_icon: "H"
+  map_icon: "S"
 
 - id: loc_blacksmith
   name: 黑松镇·铁匠铺
@@ -133,7 +134,7 @@
     - forge
     - weapon_rack
   coordinates: { x: 1, y: 4 }
-  map_icon: "H"
+  map_icon: "B"
 
 - id: loc_market
   name: 黑松镇·集市广场
@@ -160,12 +161,13 @@
       targetId: loc_main_street
   notable_npcs:
     - npc_merchant_afu
+    - npc_beggar
   objects:
     - market_stalls
     - water_well
     - bulletin_board
   coordinates: { x: 2, y: 4 }
-  map_icon: "H"
+  map_icon: "M"
 
 - id: loc_temple
   name: 黑松镇·神殿
@@ -230,6 +232,8 @@
   objects:
     - trail_marker
     - fallen_tree
+  enemies:
+    - enemy_wolf
   coordinates: { x: 1, y: 1 }
   map_icon: "F"
 
@@ -263,6 +267,8 @@
     - ruined_tent
     - cold_campfire
     - abandoned_supplies
+  enemies:
+    - enemy_bandit
   coordinates: { x: 3, y: 1 }
   map_icon: "R"
 
@@ -294,6 +300,7 @@
     - cave_entrance
     - strange_markings
     - bone_fragments
+    - item_evidence
   enemies:
     - enemy_wolf_alpha
   coordinates: { x: 3, y: 0 }

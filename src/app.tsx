@@ -246,7 +246,7 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
       coordinates: (entry as any).coordinates ?? { x: 0, y: 0 },
       exits: ((entry as any).exits ?? []).map((ex: any) => ({
         direction: ex.direction,
-        targetId: ex.location_id,
+        targetId: ex.targetId,
       })),
       dangerLevel: (entry as any).danger_level ?? 0,
       region: (entry as any).region ?? '',
