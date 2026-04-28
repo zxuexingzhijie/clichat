@@ -97,7 +97,12 @@ Plans:
   3. After loading a save, `:look` describes the correct saved location (not a stale starting scene)
   4. Typing `:cast` outside combat returns "你现在不在战斗中" instead of routing to handleDefault
   5. Codex entries for discovered items show `已知` knowledge status; undiscovered entries show `未知`
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 14-01-PLAN.md — Extend QuestStageSchema with trigger field; create quests.yaml (QUEST-01)
+- [ ] 14-02-PLAN.md — Quest event-based stage advancement; :quest status/journal handlers (QUEST-02, QUEST-03)
+- [ ] 14-03-PLAN.md — Fix memory eviction ordering; addMemory inline max(15); scene-manager stale closure; /look re-narration (MEM-01, MEM-02, SCENE-01, SCENE-02)
+- [ ] 14-04-PLAN.md — handleCast outside combat error; tighten safety filter; CODEX-01 verified (SCENE-03, CODEX-01, CODEX-02)
 
 ### Phase 15: Content & Death Recovery
 **Goal**: Notable NPCs are present at their locations, the dark cave has an encounter, the shadow contact is discoverable, and the death screen offers a load-last-save option
@@ -128,5 +133,5 @@ Plans:
 | 11. App Wiring | v1.2 | 0/3 | Not started | - |
 | 12. Combat & Save Correctness | v1.2 | 0/4 | Not started | - |
 | 13. Dialogue & Reputation | v1.2 | 0/TBD | Not started | - |
-| 14. Quest, Memory, Scene & Codex | v1.2 | 0/TBD | Not started | - |
+| 14. Quest, Memory, Scene & Codex | v1.2 | 0/4 | Not started | - |
 | 15. Content & Death Recovery | v1.2 | 0/TBD | Not started | - |
