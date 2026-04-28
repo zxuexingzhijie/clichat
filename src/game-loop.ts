@@ -1,5 +1,7 @@
 import { createCommandParser, type CommandParser } from './input/command-parser';
 import { routeInput, type RouteInputOptions } from './input/input-router';
+import { listSaves as defaultListSaves } from './persistence/save-file-manager';
+import type { SaveListEntry } from './persistence/save-file-manager';
 import type { Store } from './state/create-store';
 import type { PlayerState } from './state/player-store';
 import type { SceneState } from './state/scene-store';
@@ -25,6 +27,7 @@ export interface GameLoop {
   readonly processInput: (input: string, options?: RouteInputOptions) => Promise<ProcessResult>;
   readonly executeAction: (action: GameAction) => Promise<ProcessResult>;
   readonly getCommandParser: () => CommandParser;
+  readonly loadLastSave: () => Promise<void>;
 }
 
 export type ProcessResult =
@@ -77,6 +80,7 @@ export type GameLoopOptions = {
     readonly replayTurns: (count: number) => readonly TurnLogEntry[];
   };
   readonly codexEntries?: Map<string, CodexEntry>;
+  readonly listSavesFn?: (saveDir: string) => Promise<SaveListEntry[]>;
 };
 
 export type GameLoopStores = {
@@ -132,9 +136,22 @@ export function createGameLoop(
     return registry.dispatch(action, actionContext);
   }
 
+  async function loadLastSave(): Promise<void> {
+    const sfm = options?.saveFileManager;
+    const serializer = options?.serializer;
+    const saveDir = options?.saveDir;
+    if (!sfm || !serializer || !saveDir) return;
+    const listFn = options?.listSavesFn ?? defaultListSaves;
+    const saves = await listFn(saveDir);
+    if (saves.length === 0) return;
+    await sfm.loadGame(saves[0].filePath, serializer, saveDir);
+    stores.game.setState(draft => { draft.phase = 'game'; });
+  }
+
   return {
     processInput,
     executeAction,
     getCommandParser: () => commandParser,
+    loadLastSave,
   };
 }

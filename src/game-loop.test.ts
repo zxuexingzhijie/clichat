@@ -8,6 +8,7 @@ import { eventBus } from './events/event-bus';
 import { createSeededRng } from './engine/dice';
 import type { CheckResult } from './types/common';
 import type { GameAction } from './types/game-action';
+import type { SaveListEntry } from './persistence/save-file-manager';
 
 const stores = { player: playerStore, scene: sceneStore, game: gameStore, combat: combatStore };
 
@@ -326,24 +327,17 @@ describe('createGameLoop options wiring', () => {
       snapshot: mock(() => '{}'),
       restore: mock(() => {}),
     };
+    const mockListSavesFn = mock((_dir: string) => Promise.resolve([
+      { filePath: '/saves/save_2024-01-02.json', meta: { saveName: 'test', timestamp: '2024-01-02T00:00:00Z', character: { name: 'Hero', race: 'human', profession: 'warrior' }, playtime: 0, locationName: '酒馆' } },
+      { filePath: '/saves/save_2024-01-01.json', meta: { saveName: 'old', timestamp: '2024-01-01T00:00:00Z', character: { name: 'Hero', race: 'human', profession: 'warrior' }, playtime: 0, locationName: '酒馆' } },
+    ] as SaveListEntry[]));
 
-    mock.module('./persistence/save-file-manager', () => ({
-      listSaves: mock(() => Promise.resolve([
-        { filePath: '/saves/save_2024-01-02.json', meta: { timestamp: '2024-01-02T00:00:00Z', name: 'test', version: 1 } },
-        { filePath: '/saves/save_2024-01-01.json', meta: { timestamp: '2024-01-01T00:00:00Z', name: 'old', version: 1 } },
-      ])),
-      quickSave: mock(() => Promise.resolve('/saves/quicksave.json')),
-      saveGame: mock(() => Promise.resolve('/saves/test.json')),
-      loadGame: mock(() => Promise.resolve()),
-    }));
-
-    const { createGameLoop: freshCreateGameLoop } = await import('./game-loop');
-
-    const loop = freshCreateGameLoop(stores, eventBus, {
+    const loop = createGameLoop(stores, eventBus, {
       rng: createSeededRng(42),
       saveFileManager: mockSaveFileManager,
       serializer: mockSerializer,
       saveDir: '/saves',
+      listSavesFn: mockListSavesFn,
     });
 
     await loop.loadLastSave();
@@ -366,21 +360,14 @@ describe('createGameLoop options wiring', () => {
       snapshot: mock(() => '{}'),
       restore: mock(() => {}),
     };
+    const mockListSavesFn = mock((_dir: string) => Promise.resolve([] as SaveListEntry[]));
 
-    mock.module('./persistence/save-file-manager', () => ({
-      listSaves: mock(() => Promise.resolve([])),
-      quickSave: mock(() => Promise.resolve('/saves/quicksave.json')),
-      saveGame: mock(() => Promise.resolve('/saves/test.json')),
-      loadGame: mock(() => Promise.resolve()),
-    }));
-
-    const { createGameLoop: freshCreateGameLoop } = await import('./game-loop');
-
-    const loop = freshCreateGameLoop(stores, eventBus, {
+    const loop = createGameLoop(stores, eventBus, {
       rng: createSeededRng(42),
       saveFileManager: mockSaveFileManager,
       serializer: mockSerializer,
       saveDir: '/saves',
+      listSavesFn: mockListSavesFn,
     });
 
     await expect(loop.loadLastSave()).resolves.toBeUndefined();
@@ -388,9 +375,7 @@ describe('createGameLoop options wiring', () => {
   });
 
   it('loadLastSave is a no-op when saveFileManager is not provided', async () => {
-    const { createGameLoop: freshCreateGameLoop } = await import('./game-loop');
-
-    const loop = freshCreateGameLoop(stores, eventBus, {
+    const loop = createGameLoop(stores, eventBus, {
       rng: createSeededRng(42),
     });
 

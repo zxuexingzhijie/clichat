@@ -211,6 +211,7 @@ describe('createGameScreenController', () => {
         })),
         processInput: mock(async () => ({ status: 'help' as const, commands: [] })),
         getCommandParser: mock(() => ({ parse: () => null })),
+        loadLastSave: mock(async () => {}),
       };
 
       const controller = createGameScreenController(
@@ -238,6 +239,7 @@ describe('createGameScreenController', () => {
         executeAction: mock(async () => { throw new Error('网络错误'); }),
         processInput: mock(async () => ({ status: 'help' as const, commands: [] })),
         getCommandParser: mock(() => ({ parse: () => null })),
+        loadLastSave: mock(async () => {}),
       };
 
       const controller = createGameScreenController(

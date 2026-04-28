@@ -1,6 +1,7 @@
 import type { ActionHandler } from './types';
 import type { Enemy } from '../../codex/schemas/entry-types';
 import type { CombatActionOptions } from '../combat-loop';
+import { listSaves, saveGame } from '../../persistence/save-file-manager';
 
 export const handleCombat: ActionHandler = async (action, ctx) => {
   if (!ctx.combatLoop) {
@@ -41,7 +42,21 @@ export const handleCombat: ActionHandler = async (action, ctx) => {
   if (combatResult.status === 'error') {
     return { status: 'error', message: combatResult.message };
   }
-  await ctx.combatLoop.checkCombatEnd();
+
+  const endResult = await ctx.combatLoop.checkCombatEnd();
+  if (
+    endResult.ended &&
+    endResult.outcome === 'defeat' &&
+    ctx.saveFileManager &&
+    ctx.serializer &&
+    ctx.saveDir
+  ) {
+    const existing = await listSaves(ctx.saveDir);
+    if (existing.length === 0) {
+      await saveGame('emergency', ctx.serializer, ctx.saveDir);
+    }
+  }
+
   const narration = ctx.stores.combat.getState().lastNarration
     ? [ctx.stores.combat.getState().lastNarration]
     : [];

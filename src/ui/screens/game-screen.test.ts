@@ -34,6 +34,7 @@ function createMockGameLoop(processResult: ProcessResult): GameLoop {
     processInput: mock(() => Promise.resolve(processResult)),
     executeAction: mock(() => Promise.resolve(processResult)),
     getCommandParser: mock(() => ({ parse: () => null })) as GameLoop['getCommandParser'],
+    loadLastSave: mock(() => Promise.resolve()),
   };
 }
 

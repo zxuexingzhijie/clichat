@@ -295,9 +295,13 @@ export function GameScreen({
     }
   }, [gameState.pendingQuit, isTyping, isInCombat, isInDialogueMode, isInOverlayPanel, inputMode, inputValue, setInputValue, setInputMode, isNarrationStreaming, skipNarration, isNpcStreaming, skipNpcDialogue, isAnyStreaming]));
 
-  useInput(useCallback((_input: string, _key: unknown) => {
-    gameStore.setState(draft => { draft.phase = 'title'; draft.pendingQuit = false; });
-  }, []), { isActive: gameState.phase === 'game_over' });
+  useInput(useCallback((input: string, _key: unknown) => {
+    if (input === 'r' || input === 'l') {
+      void gameLoop?.loadLastSave();
+    } else {
+      gameStore.setState(draft => { draft.phase = 'title'; draft.pendingQuit = false; });
+    }
+  }, [gameLoop]), { isActive: gameState.phase === 'game_over' });
 
   const sceneLines = dialogueState.active && dialogueState.mode === 'inline'
     ? [
@@ -401,7 +405,7 @@ export function GameScreen({
         <Text> </Text>
         <Text bold>{playerState.name} 的旅程就此终止。</Text>
         <Text> </Text>
-        <Text dimColor>按任意键返回标题...</Text>
+        <Text dimColor>[R] 载入最近存档  [Q] 返回标题</Text>
       </Box>
     );
   }
