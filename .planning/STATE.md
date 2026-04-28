@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Game System Integrity & Playability
-status: executing
-last_updated: "2026-04-28T01:00:00Z"
-last_activity: 2026-04-28 — Phase 15 15-02 complete (CONT-04, DEATH-01)
+status: complete
+last_updated: "2026-04-28T14:00:00Z"
+last_activity: 2026-04-28 — Phase 15 complete (15-01: NPC placement + dark cave; 15-02: revealedNpcs + shadow contact + death screen); v1.2 milestone complete
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 17
   completed_plans: 17
-  percent: 88
+  percent: 100
 ---
 
 # Project State
