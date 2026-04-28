@@ -120,6 +120,59 @@ const mockCodexEntries = new Map([
       initial_disposition: 0.3,
     },
   ],
+  [
+    'npc_faction_guard',
+    {
+      id: 'npc_faction_guard',
+      name: '派系守卫',
+      type: 'npc' as const,
+      tags: ['guard'],
+      description: '隶属守卫派系的士兵',
+      epistemic: {
+        authority: 'canonical_truth' as const,
+        truth_status: 'true' as const,
+        scope: 'local' as const,
+        visibility: 'public' as const,
+        confidence: 1.0,
+        source_type: 'authorial' as const,
+        known_by: [],
+        contradicts: [],
+        volatility: 'stable' as const,
+      },
+      location_id: 'loc_north_gate',
+      personality_tags: ['dutiful'],
+      goals: ['protect_gate'],
+      backstory: '派系士兵',
+      initial_disposition: 0.0,
+      faction: 'faction_guard',
+    },
+  ],
+  [
+    'npc_quest_chinese',
+    {
+      id: 'npc_quest_chinese',
+      name: '任务NPC',
+      type: 'npc' as const,
+      tags: ['merchant'],
+      description: '有中文任务目标的NPC',
+      epistemic: {
+        authority: 'canonical_truth' as const,
+        truth_status: 'true' as const,
+        scope: 'local' as const,
+        visibility: 'public' as const,
+        confidence: 1.0,
+        source_type: 'authorial' as const,
+        known_by: [],
+        contradicts: [],
+        volatility: 'stable' as const,
+      },
+      location_id: 'loc_tavern',
+      personality_tags: ['friendly'],
+      goals: ['调查失踪事件'],
+      backstory: '商人',
+      initial_disposition: 0.0,
+    },
+  ],
 ]);
 
 describe('createDialogueManager', () => {
@@ -288,12 +341,19 @@ describe('createDialogueManager', () => {
   });
 
   it('endDialogue flushes non-zero relationshipValue delta to RelationStore', async () => {
-    mockGenerateNpcDialogue.mockResolvedValue({
-      dialogue: '你是个值得信赖的人。',
-      emotionTag: 'happy',
-      shouldRemember: false,
-      sentiment: 'positive',
-    });
+    mockGenerateNpcDialogue
+      .mockResolvedValueOnce({
+        dialogue: '你好。',
+        emotionTag: 'neutral',
+        shouldRemember: false,
+        sentiment: 'neutral',
+      })
+      .mockResolvedValueOnce({
+        dialogue: '你是个值得信赖的人。',
+        emotionTag: 'happy',
+        shouldRemember: false,
+        sentiment: 'positive',
+      });
 
     const { relationStore } = await import('../state/relation-store');
     relationStore.setState(draft => {
@@ -306,6 +366,7 @@ describe('createDialogueManager', () => {
     });
 
     await manager.startDialogue('npc_guard');
+    await manager.processPlayerResponse(0);
     manager.endDialogue();
 
     const disposition = relationStore.getState().npcDispositions['npc_guard'];
@@ -345,5 +406,94 @@ describe('createDialogueManager', () => {
     expect(memories).toContain('最近的记忆1');
     expect(memories).toContain('最近的记忆2');
     expect(memories).toContain('重要的记忆1');
+  });
+
+  it('startDialogue sets dialogue-store relationshipValue to 0', async () => {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_guard');
+
+    const { dialogueStore } = await import('../state/dialogue-store');
+    expect(dialogueStore.getState().relationshipValue).toBe(0);
+  });
+
+  it('endDialogue writes exact integer delta (10) to relation-store after positive sentiment', async () => {
+    mockGenerateNpcDialogue
+      .mockResolvedValueOnce({
+        dialogue: '你好。',
+        emotionTag: 'neutral',
+        shouldRemember: false,
+        sentiment: 'neutral',
+      })
+      .mockResolvedValueOnce({
+        dialogue: '你是个值得信赖的人。',
+        emotionTag: 'happy',
+        shouldRemember: false,
+        sentiment: 'positive',
+      });
+
+    const { relationStore } = await import('../state/relation-store');
+    relationStore.setState(draft => {
+      draft.npcDispositions = {};
+    });
+
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_guard');
+    await manager.processPlayerResponse(0);
+    manager.endDialogue();
+
+    const disposition = relationStore.getState().npcDispositions['npc_guard'];
+    expect(disposition?.value).toBe(10);
+  });
+
+  it('endDialogue calls applyFactionReputationDelta when npc has faction', async () => {
+    mockGenerateNpcDialogue
+      .mockResolvedValueOnce({
+        dialogue: '你好。',
+        emotionTag: 'neutral',
+        shouldRemember: false,
+        sentiment: 'neutral',
+      })
+      .mockResolvedValueOnce({
+        dialogue: '好的。',
+        emotionTag: 'neutral',
+        shouldRemember: false,
+        sentiment: 'positive',
+      });
+
+    const { relationStore } = await import('../state/relation-store');
+    relationStore.setState(draft => {
+      draft.npcDispositions = {};
+      draft.factionReputations = {};
+    });
+
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_faction_guard');
+    await manager.processPlayerResponse(0);
+    manager.endDialogue();
+
+    const factionRep = relationStore.getState().factionReputations['faction_guard'];
+    expect(factionRep).toBe(5);
+  });
+
+  it('isQuestNpc returns true for NPC with Chinese goal keyword 调查', async () => {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    const result = await manager.startDialogue('npc_quest_chinese');
+    expect(result.mode).toBe('full');
   });
 });

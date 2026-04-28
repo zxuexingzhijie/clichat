@@ -5,7 +5,7 @@ import { generateNpcDialogue } from '../ai/roles/npc-actor';
 import { resolveNormalCheck } from './adjudication';
 import { GAME_CONSTANTS } from './game-constants';
 import { rollD20 } from './dice';
-import { applyReputationDelta, sentimentToDelta } from './reputation-system';
+import { applyReputationDelta, applyFactionReputationDelta, sentimentToDelta } from './reputation-system';
 import { getDefaultNpcDisposition } from '../state/relation-store';
 import type { Store } from '../state/create-store';
 import type { DialogueState } from '../state/dialogue-store';
@@ -18,7 +18,7 @@ import type { CodexEntry, Npc } from '../codex/schemas/entry-types';
 import type { NpcDialogue } from '../ai/schemas/npc-dialogue';
 import type { CheckResult, AttributeName } from '../types/common';
 
-const QUEST_GOAL_KEYWORDS = ['investigate', 'find', 'recruit', 'discover', 'locate', 'uncover'];
+const QUEST_GOAL_KEYWORDS = ['investigate', 'find', 'recruit', 'discover', 'locate', 'uncover', '调查', '寻找', '找到', '招募', '发现', '追踪', '揭露'];
 
 function isQuestNpc(npc: Npc): boolean {
   return npc.goals.some((goal) =>
@@ -224,7 +224,7 @@ export function createDialogueManager(
       draft.mode = mode;
       draft.dialogueHistory = [{ speaker: 'npc', text: npcDialogue.dialogue }];
       draft.availableResponses = responses;
-      draft.relationshipValue = npc.initial_disposition + sentimentToDelta(npcDialogue.sentiment);
+      draft.relationshipValue = 0;
       draft.emotionHint = null;
     });
 
@@ -339,10 +339,14 @@ export function createDialogueManager(
     });
 
     if (npcId && delta !== 0) {
+      const npc = queryById(codexEntries, npcId);
       stores.relation.setState(persistDraft => {
         const current = persistDraft.npcDispositions[npcId] ?? getDefaultNpcDisposition();
         persistDraft.npcDispositions[npcId] = applyReputationDelta(current, { value: delta });
       });
+      if (npc && npc.type === 'npc' && npc.faction) {
+        applyFactionReputationDelta(stores.relation, npc.faction, Math.floor(delta / 2));
+      }
     }
 
     stores.game.setState((draft) => {

@@ -62,6 +62,7 @@ export const NpcSchema = z.object({
   goals: z.array(z.string()),
   backstory: z.string(),
   initial_disposition: z.number().min(-1).max(1),
+  faction: z.string().optional(),
 });
 
 export const SpellSchema = z.object({

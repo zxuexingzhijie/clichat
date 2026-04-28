@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
+import { getAttitudeLabel } from '../../engine/reputation-system';
 
 type ResponseOption = {
   readonly id: string;
@@ -27,14 +28,6 @@ type DialoguePanelProps = {
   readonly onEscape: () => void;
   readonly isNpcThinking?: boolean;
 };
-
-function relationshipLabel(value: number): string {
-  if (value < -0.5) return '敌对';
-  if (value < -0.1) return '冷淡';
-  if (value <= 0.1) return '中立';
-  if (value <= 0.5) return '友好';
-  return '信任';
-}
 
 export function DialoguePanel({
   npcName,
@@ -76,7 +69,7 @@ export function DialoguePanel({
 
   useInput(handleInput, { isActive });
 
-  const relLabel = relationshipLabel(relationshipValue);
+  const relLabel = getAttitudeLabel(relationshipValue);
   const recentHistory = dialogueHistory.slice(-4);
   const hasMoreHistory = dialogueHistory.length > 4;
 
