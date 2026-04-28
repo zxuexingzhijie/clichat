@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Game System Integrity & Playability
 status: executing
-last_updated: "2026-04-28T13:30:00Z"
-last_activity: 2026-04-28 — Phase 14 complete (4/4 plans, QUEST-01..03, MEM-01..02, SCENE-01..03, CODEX-01..02)
+last_updated: "2026-04-28T01:00:00Z"
+last_activity: 2026-04-28 — Phase 15 15-02 complete (CONT-04, DEATH-01)
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 15
-  completed_plans: 15
-  percent: 80
+  total_plans: 17
+  completed_plans: 17
+  percent: 88
 ---
 
 # Project State
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 
 ## Current Position
 
-Phase: 14 of 15 (Quest, Memory, Scene & Codex) — COMPLETE
-Plan: 4/4 done
-Status: Ready for Phase 15
-Last activity: 2026-04-28 — Phase 14 complete (QUEST-01..03, MEM-01..02, SCENE-01..03, CODEX-01..02)
+Phase: 15 of 15 (Content & Death Recovery) — 2/2 plans done
+Plan: 2/2 done
+Status: Phase 15 complete — v1.2 milestone complete
+Last activity: 2026-04-28 — Phase 15 complete (15-01: NPC placement + dark cave enemies; 15-02: revealedNpcs + shadow contact + loadLastSave + death screen)
 
-Progress: [████████  ] 80%
+Progress: [█████████ ] 88%
 
 ## Performance Metrics
 
@@ -71,6 +71,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - SCENE-01/02: scene-manager subscribes state_restored to sync currentSceneId; handleLook(undefined) calls generateNarrationFn when available
 - SCENE-03/CODEX-02: handleCast returns '你现在不在战斗中，无法使用法术。' outside combat; STATE_OVERRIDE_PATTERN requires explicit [+-] operator (level\s*up split to separate branch)
 - CODEX-01: playerKnowledgeState already reactive in app.tsx (useState+useEffect+useMemo) — no code change needed
+- 15-02: listSavesFn injected via GameLoopOptions (not mock.module) to prevent test isolation pollution; revealedNpcs uses Zod .default([]) for backward-compatible saves; dialogue_ended listener in scene-manager owns npcsPresent merge
 
 ### Pending Todos
 
@@ -97,6 +98,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-28T10:22:40Z
-Stopped at: Completed 13-P04-PLAN.md
+Last session: 2026-04-28T01:00:00Z
+Stopped at: Completed 15-02-PLAN.md
 Resume file: None
