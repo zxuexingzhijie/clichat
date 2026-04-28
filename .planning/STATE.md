@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Game System Integrity & Playability
 status: executing
-last_updated: "2026-04-28T11:00:00.000Z"
-last_activity: 2026-04-28 — Phase 13 P01 complete (integer reputation scale + faction delta + NpcSchema faction)
+last_updated: "2026-04-28T10:06:26Z"
+last_activity: 2026-04-28 — Phase 13 P03 complete (NPC role questions + inline TextInput free-text dialogue)
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 8
-  completed_plans: 8
-  percent: 40
+  completed_plans: 9
+  percent: 45
 ---
 
 # Project State
@@ -25,19 +25,19 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 ## Current Position
 
 Phase: 13 of 15 (Dialogue & Reputation)
-Plan: P01 complete (DIAL-01/02/07, REP-01/02/03 done)
+Plan: P03 complete (DIAL-03/04/05 done)
 Status: Executing
-Last activity: 2026-04-28 — Phase 13 P01 complete (integer reputation scale + faction delta + NpcSchema faction)
+Last activity: 2026-04-28 — Phase 13 P03 complete (NPC role questions + inline TextInput free-text dialogue)
 
-Progress: [████      ] 40%
+Progress: [█████     ] 45%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 8 (v1.2)
-- Average duration: ~15 min/plan
-- Total execution time: ~2 hours
+- Total plans completed: 9 (v1.2)
+- Average duration: ~18 min/plan
+- Total execution time: ~2.3 hours
 
 **By Phase:**
 
@@ -47,6 +47,7 @@ Progress: [████      ] 40%
 | 12 (Combat & Save) | 4 | ~75 min | ~19 min |
 | 13 P02 (Dialogue & Reputation) | 1 | ~12 min | ~12 min |
 | 13 P01 (Dialogue & Reputation) | 1 | ~25 min | ~25 min |
+| 13 P03 (Dialogue & Reputation) | 1 | ~20 min | ~20 min |
 
 *Updated after each plan completion*
 
@@ -58,6 +59,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 - REP-04: RelationStore uses isRestoring flag to bypass reputation_changed during game load; GameStores.relation typed as RelationStore
 - DIAL-01/REP-01: sentimentToDelta returns integers (10/0/-10/-20); startDialogue sets relationshipValue=0; endDialogue calls applyFactionReputationDelta when npc.faction set; NpcSchema has faction field
+- DIAL-03/05: clergy added as separate key from religious; NPC_ROLE_QUESTIONS has 12 roles total
+- DIAL-04: TextInput mode toggled via onChange (no onFocus in @inkjs/ui); useInput isActive combined with !isFreeTextMode; Escape exits text mode before exiting dialogue
 
 ### Pending Todos
 
@@ -86,6 +89,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-28T11:00:00.000Z
-Stopped at: Completed 13-P01-PLAN.md
+Last session: 2026-04-28T10:06:26Z
+Stopped at: Completed 13-P03-PLAN.md
 Resume file: None
