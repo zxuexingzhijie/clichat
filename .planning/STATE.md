@@ -2,9 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Game System Integrity & Playability
-status: complete
-last_updated: "2026-04-28T14:00:00Z"
-last_activity: 2026-04-28 — Phase 15 complete (15-01: NPC placement + dark cave; 15-02: revealedNpcs + shadow contact + death screen); v1.2 milestone complete
+status: completed
+stopped_at: context exhaustion at 95% (2026-04-28)
+last_updated: "2026-04-28T17:07:22.962Z"
+last_activity: "2026-04-28 — Phase 15 complete (15-01: NPC placement + dark cave enemies; 15-02: revealedNpcs + shadow contact + loadLastSave + death screen)"
 progress:
   total_phases: 5
   completed_phases: 5
@@ -77,6 +78,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 None.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 20260429-001 | 修复记忆系统3个gap: archiveSummary接线 + codex filter + slice(0,8) + push→spread | 2026-04-29 | 79123eb | [20260429-001-memory-wiring-fix](./quick/20260429-001-memory-wiring-fix/) |
+
 ### Blockers/Concerns
 
 - WIRE-01..10 are the critical path — Phase 11 must complete before Phases 12/13/14 can begin
@@ -98,6 +105,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-28T01:00:00Z
-Stopped at: Completed 15-02-PLAN.md
+Last session: 2026-04-28T17:07:22.958Z
+Stopped at: context exhaustion at 95% (2026-04-28)
 Resume file: None
