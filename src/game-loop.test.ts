@@ -146,6 +146,7 @@ describe('createGameLoop', () => {
       completeObjective: mock(() => {}),
       advanceStage: mock(() => {}),
       failQuest: mock(() => {}),
+      completeQuest: mock(() => {}),
     };
 
     const loop = createGameLoop(stores, eventBus, { rng: createSeededRng(42), questSystem: mockQuestSystem });
@@ -162,6 +163,7 @@ describe('createGameLoop', () => {
       completeObjective: mock(() => {}),
       advanceStage: mock(() => {}),
       failQuest: mock(() => {}),
+      completeQuest: mock(() => {}),
     };
 
     const loop = createGameLoop(stores, eventBus, { rng: createSeededRng(42), questSystem: mockQuestSystem });
