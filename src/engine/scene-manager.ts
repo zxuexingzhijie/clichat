@@ -1,6 +1,7 @@
 import { queryById } from '../codex/query';
 import { assembleNarrativeContext } from '../ai/utils/context-assembler';
 import { GAME_CONSTANTS } from './game-constants';
+import { gameStore } from '../state/game-store';
 import type { Store } from '../state/create-store';
 import type { SceneState } from '../state/scene-store';
 import type { CodexEntry, Location } from '../codex/schemas/entry-types';
@@ -101,6 +102,16 @@ export function createSceneManager(
     }
   });
 
+  stores.eventBus?.on('dialogue_ended', ({ npcId }) => {
+    if (npcId === 'npc_bartender') {
+      gameStore.setState(draft => {
+        if (!draft.revealedNpcs.includes('npc_shadow_contact')) {
+          draft.revealedNpcs.push('npc_shadow_contact');
+        }
+      });
+    }
+  });
+
   async function loadScene(locationId: string): Promise<SceneManagerResult> {
     const entry = queryById(codexEntries, locationId);
 
@@ -111,10 +122,20 @@ export function createSceneManager(
     const previousSceneId = currentSceneId;
     currentSceneId = locationId;
 
+    const revealedNpcs: string[] = gameStore.getState().revealedNpcs;
+    const conditionalNpcs = revealedNpcs.filter(npcId => {
+      const npc = queryById(codexEntries, npcId);
+      return npc?.type === 'npc' && (npc as { location_id?: string }).location_id === locationId;
+    });
+    const allPresent = [...entry.notable_npcs];
+    for (const id of conditionalNpcs) {
+      if (!allPresent.includes(id)) allPresent.push(id);
+    }
+
     stores.scene.setState(draft => {
       draft.sceneId = locationId;
       draft.locationName = entry.name;
-      draft.npcsPresent = [...entry.notable_npcs];
+      draft.npcsPresent = allPresent;
       draft.exits = entry.exits.map(e => typeof e === 'string' ? e : e.targetId);
       draft.exitMap = Object.fromEntries(
         entry.exits
