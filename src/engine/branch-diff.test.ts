@@ -231,6 +231,7 @@ describe('compareBranches', () => {
         actions: [],
         npcsPresent: [],
         exits: [],
+        exitMap: {},
         objects: [],
       },
     });
@@ -242,6 +243,7 @@ describe('compareBranches', () => {
         actions: [],
         npcsPresent: [],
         exits: [],
+        exitMap: {},
         objects: [],
       },
     });

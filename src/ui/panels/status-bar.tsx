@@ -58,21 +58,21 @@ export function StatusBar({
   fields.push(<Text key="mp">  MP {mp}/{maxMp}</Text>);
 
   if (width >= 45) {
-    fields.push(<Text key="gold">  Gold {gold}</Text>);
+    fields.push(<Text key="gold">  金币 {gold}</Text>);
   }
 
   if (width >= 55) {
     const locDisplay = width < 65
       ? truncateLocation(location, 10)
       : location;
-    fields.push(<Text key="loc">  Location: {locDisplay}</Text>);
+    fields.push(<Text key="loc">  位置: {locDisplay}</Text>);
   }
 
   if (width >= 65) {
-    const questDisplay = quest ?? 'None';
+    const questDisplay = quest ?? '无';
     fields.push(
       <Text key="quest" dimColor={!quest}>
-        {'  Quest: '}{questDisplay}
+        {'  任务: '}{questDisplay}
       </Text>,
     );
   }

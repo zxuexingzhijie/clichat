@@ -16,7 +16,7 @@ import type { PlayerState } from '../state/player-store';
 import type { RelationState } from '../state/relation-store';
 import type { CodexEntry, Npc } from '../codex/schemas/entry-types';
 import type { NpcDialogue } from '../ai/schemas/npc-dialogue';
-import type { CheckResult } from '../types/common';
+import type { CheckResult, AttributeName } from '../types/common';
 
 const QUEST_GOAL_KEYWORDS = ['investigate', 'find', 'recruit', 'discover', 'locate', 'uncover'];
 
@@ -34,25 +34,81 @@ function requiresFullMode(npc: Npc): boolean {
   );
 }
 
-function buildResponses(npcName: string, mode: 'inline' | 'full') {
-  const baseResponses = [
-    { id: nanoid(), label: '"需要我帮忙吗？"', requiresCheck: false },
-    { id: nanoid(), label: '"你知道这附近发生了什么事吗？"', requiresCheck: false },
-  ];
+const NPC_ROLE_QUESTIONS: Record<string, readonly string[]> = {
+  guard:       ['"最近镇上有没有什么异常？"', '"你在这里执勤多久了？"'],
+  merchant:    ['"你这里有什么货物？"', '"最近生意怎么样？"'],
+  information_broker: ['"你知道什么值钱的消息吗？"', '"最近镇上有什么风声？"'],
+  craftsman:   ['"你能帮我修缮装备吗？"', '"你缺什么材料？"'],
+  healer:      ['"你有治疗药水吗？"', '"附近有什么危险？"'],
+  religious:   ['"神殿最近有什么活动？"', '"你们信奉哪位神明？"'],
+};
 
-  if (mode === 'full') {
-    baseResponses.push({
-      id: nanoid(),
-      label: `[心智检定 DC ${GAME_CONSTANTS.DEFAULT_DC}] 观察${npcName}的表情`,
-      requiresCheck: true,
-      checkAttribute: 'mind',
-      checkDc: GAME_CONSTANTS.DEFAULT_DC,
-    } as typeof baseResponses[0] & { checkAttribute: string; checkDc: number });
+const PERSONALITY_QUESTIONS: Record<string, string> = {
+  dutiful:     '"你的职责是什么？"',
+  friendly:    '"你在这里住多久了？"',
+  shrewd:      '"这笔交易对你有什么好处？"',
+  gruff:       '"有话直说。"',
+  gossipy:     '"最近有什么有趣的事？"',
+  cautious:    '"这里安全吗？"',
+  honest:      '"实话实说，情况怎么样？"',
+};
+
+type DialogueResponseItem = {
+  id: string;
+  label: string;
+  requiresCheck: boolean;
+  checkAttribute?: AttributeName;
+  checkDc?: number;
+};
+
+function buildResponses(npc: Npc, mode: 'inline' | 'full'): DialogueResponseItem[] {
+  const responses: DialogueResponseItem[] = [];
+
+  // add role-specific questions
+  const addedLabels = new Set<string>();
+  for (const tag of npc.tags ?? []) {
+    const questions = NPC_ROLE_QUESTIONS[tag];
+    if (questions) {
+      for (const q of questions) {
+        if (!addedLabels.has(q)) {
+          responses.push({ id: nanoid(), label: q, requiresCheck: false });
+          addedLabels.add(q);
+        }
+      }
+      break;
+    }
   }
 
-  baseResponses.push({ id: nanoid(), label: '结束对话', requiresCheck: false });
+  // add one personality-driven question if we have room
+  if (responses.length < 2) {
+    for (const tag of npc.personality_tags ?? []) {
+      const q = PERSONALITY_QUESTIONS[tag];
+      if (q && !addedLabels.has(q)) {
+        responses.push({ id: nanoid(), label: q, requiresCheck: false });
+        addedLabels.add(q);
+        break;
+      }
+    }
+  }
 
-  return baseResponses;
+  // always include a generic fallback question
+  const generic = '"你知道这附近发生了什么事吗？"';
+  if (!addedLabels.has(generic)) {
+    responses.push({ id: nanoid(), label: generic, requiresCheck: false });
+  }
+
+  if (mode === 'full') {
+    responses.push({
+      id: nanoid(),
+      label: `[心智检定 DC ${GAME_CONSTANTS.DEFAULT_DC}] 观察${npc.name}的表情`,
+      requiresCheck: true,
+      checkAttribute: 'mind' as const,
+      checkDc: GAME_CONSTANTS.DEFAULT_DC,
+    });
+  }
+
+  responses.push({ id: nanoid(), label: '结束对话', requiresCheck: false });
+  return responses;
 }
 
 function emotionTagToHint(npcName: string, emotionTag: string): string {
@@ -159,7 +215,7 @@ export function createDialogueManager(
     lastNpcEmotionTag = npcDialogue.emotionTag;
 
     const mode = requiresFullMode(npc) ? 'full' : 'inline';
-    const responses = buildResponses(npc.name, mode);
+    const responses = buildResponses(npc, mode);
 
     stores.dialogue.setState((draft) => {
       draft.active = true;
@@ -245,7 +301,7 @@ export function createDialogueManager(
       lastNpcEmotionTag = npcDialogue.emotionTag;
 
       const newRelationship = state.relationshipValue + sentimentToDelta(npcDialogue.sentiment);
-      const newResponses = buildResponses(npc.name, state.mode);
+      const newResponses = buildResponses(npc, state.mode);
 
       stores.dialogue.setState((draft) => {
         draft.dialogueHistory = [

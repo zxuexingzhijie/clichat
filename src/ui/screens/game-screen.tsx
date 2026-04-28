@@ -241,6 +241,7 @@ export function GameScreen({
   const isInOverlayPanel = OVERLAY_PHASES.has(gameState.phase);
 
   useInput(useCallback((input: string, key: { escape: boolean; tab?: boolean; return?: boolean }) => {
+    if (gameState.pendingQuit) return;
     if (inputMode === 'processing' && isAnyStreaming && (key.return || input === ' ')) {
       if (isNarrationStreaming) skipNarration();
       if (isNpcStreaming) skipNpcDialogue();
@@ -271,7 +272,11 @@ export function GameScreen({
       controller.handlePhaseSwitch('chapter_summary');
       return;
     }
-  }, [isTyping, isInCombat, isInDialogueMode, isInOverlayPanel, inputMode, inputValue, setInputValue, setInputMode, isNarrationStreaming, skipNarration, isNpcStreaming, skipNpcDialogue, isAnyStreaming]));
+  }, [gameState.pendingQuit, isTyping, isInCombat, isInDialogueMode, isInOverlayPanel, inputMode, inputValue, setInputValue, setInputMode, isNarrationStreaming, skipNarration, isNpcStreaming, skipNpcDialogue, isAnyStreaming]));
+
+  useInput(useCallback((_input: string, _key: unknown) => {
+    gameStore.setState(draft => { draft.phase = 'title'; });
+  }, []), { isActive: gameState.phase === 'game_over' });
 
   const sceneLines = dialogueState.active && dialogueState.mode === 'inline'
     ? [
@@ -364,6 +369,20 @@ export function GameScreen({
       isSpinnerDimming={isSpinnerDimming}
     />
   );
+
+  if (gameState.phase === 'game_over') {
+    return (
+      <Box flexDirection="column" width={width} height={height} borderStyle="single" justifyContent="center" alignItems="center">
+        <Text bold color="red">── 旅途终结 ──</Text>
+        <Text> </Text>
+        <Text>{combatState.lastNarration}</Text>
+        <Text> </Text>
+        <Text bold>{playerState.name} 的旅程就此终止。</Text>
+        <Text> </Text>
+        <Text dimColor>按任意键返回标题...</Text>
+      </Box>
+    );
+  }
 
   if (isWide) {
     const sceneWidth = Math.floor(innerWidth * 0.6);

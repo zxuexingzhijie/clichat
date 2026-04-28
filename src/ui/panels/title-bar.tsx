@@ -15,7 +15,7 @@ export function TitleBar({
   return (
     <Box justifyContent="space-between" paddingX={1}>
       <Text bold color="cyan">{gameName}</Text>
-      <Text dimColor>Day {day} / {timeOfDay}</Text>
+      <Text dimColor>第 {day} 天 / {timeOfDay}</Text>
     </Box>
   );
 }

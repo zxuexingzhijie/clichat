@@ -80,7 +80,7 @@ function KnowledgeStatusBadge({ status }: { readonly status: KnowledgeStatus | n
   return <Text color={config.color}>{config.label}</Text>;
 }
 
-function EntryDetail({ entry }: { readonly entry: CodexDisplayEntry }): React.ReactNode {
+function EntryDetail({ entry, entries }: { readonly entry: CodexDisplayEntry; readonly entries?: readonly CodexDisplayEntry[] }): React.ReactNode {
   const masked = isMaskedEntry(entry);
   const displayName = masked ? '???' : entry.name;
   const displayDescription = masked ? getMaskedDescription(entry.visibility) : entry.description;
@@ -105,7 +105,10 @@ function EntryDetail({ entry }: { readonly entry: CodexDisplayEntry }): React.Re
       </Box>
       {!masked && entry.relatedIds.length > 0 && (
         <Box marginTop={1}>
-          <Text color="blue">{'关联: '}{entry.relatedIds.join(', ')}</Text>
+          <Text color="blue">{'关联: '}{entry.relatedIds.map(id => {
+            const related = entries?.find(e => e.id === id);
+            return related ? related.name : id.replace(/_/g, ' ');
+          }).join('、')}</Text>
         </Box>
       )}
     </Box>
@@ -291,7 +294,7 @@ export function CodexPanel({ entries, onClose }: CodexPanelProps): React.ReactNo
     </Box>
   );
 
-  const detailContent = selectedEntry ? <EntryDetail entry={selectedEntry} /> : null;
+  const detailContent = selectedEntry ? <EntryDetail entry={selectedEntry} entries={visibleEntries} /> : null;
 
   const hintBar = <Text dimColor>{'↑↓ 选择    Tab 搜索    Enter 查看    / 过滤    Esc 返回'}</Text>;
 
@@ -303,7 +306,7 @@ export function CodexPanel({ entries, onClose }: CodexPanelProps): React.ReactNo
           <Text dimColor>Esc 返回</Text>
         </Box>
         <Box marginTop={1}>
-          <EntryDetail entry={selectedEntry} />
+          <EntryDetail entry={selectedEntry} entries={visibleEntries} />
         </Box>
         <Box marginTop={1}>
           <Text dimColor>Esc 返回列表</Text>

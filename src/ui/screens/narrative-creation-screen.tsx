@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Box, Text } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import path from 'node:path';
 import { GuardDialoguePanel } from '../components/guard-dialogue-panel';
 import { GuardNameInput } from '../components/guard-name-input';
@@ -43,6 +43,7 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
   const [guardProfile, setGuardProfile] = useState<NpcProfile | null>(null);
   const [weights, setWeights] = useState<AccumulatedWeights>(() => createInitialWeights());
   const [lastSelectionLabel, setLastSelectionLabel] = useState<string | undefined>(undefined);
+  const [selectionHistory, setSelectionHistory] = useState<Array<{ optionId: string; optionLabel: string }>>([]);
 
   const characterCreationRef = useRef<ReturnType<typeof createCharacterCreation> | null>(null);
   const resolvedPlayerStateRef = useRef<PlayerState | null>(null);
@@ -167,6 +168,7 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
 
       setWeights((prev) => accumulateWeights(prev, selectedOption.effects, phase.round - 1));
       setLastSelectionLabel(optionLabel);
+      setSelectionHistory(prev => [...prev, { optionId, optionLabel }]);
 
       eventBus.emit('narrative_creation_round_changed', { round: phase.round, totalRounds: TOTAL_ROUNDS });
 
@@ -179,6 +181,31 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
       }
     },
     [phase, dialogueConfig, npcDialogue],
+  );
+
+  useInput(
+    useCallback((_input: string, key: { escape?: boolean }) => {
+      if (!key.escape || !dialogueConfig) return;
+      if (phase.type !== 'round_selecting') return;
+      const currentRound = (phase as { round: number }).round;
+      if (currentRound <= 1) return;
+
+      const newHistory = selectionHistory.slice(0, -1);
+      setSelectionHistory(newHistory);
+
+      const newWeights = newHistory.reduce((acc, sel, idx) => {
+        const roundData = dialogueConfig.rounds[idx];
+        const option = roundData?.options.find(o => o.id === sel.optionId);
+        if (!option) return acc;
+        return accumulateWeights(acc, option.effects, idx);
+      }, createInitialWeights());
+      setWeights(newWeights);
+      setLastSelectionLabel(newHistory[newHistory.length - 1]?.optionLabel);
+
+      npcDialogue.reset();
+      setPhase({ type: 'round_streaming', round: currentRound - 1 });
+    }, [phase, dialogueConfig, selectionHistory, npcDialogue]),
+    { isActive: phase.type === 'round_selecting' },
   );
 
   const handleNameSubmitted = useCallback(
@@ -280,7 +307,9 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
             helpText={
               phase.type === 'round_streaming'
                 ? 'Enter/Space 跳过动画'
-                : '↑↓ 选择    Enter/数字 确认'
+                : (phase as { round: number }).round > 1
+                  ? '↑↓ 选择    Enter/数字 确认    Esc 返回上一步'
+                  : '↑↓ 选择    Enter/数字 确认'
             }
           />
         )}
@@ -320,7 +349,17 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
               <Text dimColor>Enter/Space 跳过</Text>
             )}
             {phase.type === 'transition_delay' && (
-              <Text dimColor>正在进入黑松镇...</Text>
+              <>
+                <Text dimColor>正在进入黑松镇...</Text>
+                {resolvedPlayerStateRef.current && (
+                  <Box marginTop={1} flexDirection="column">
+                    <Text color="cyan">你的旅人档案：</Text>
+                    <Text>  姓名：{resolvedPlayerStateRef.current.name}</Text>
+                    <Text>  种族：{resolvedPlayerStateRef.current.race}</Text>
+                    <Text>  职业：{resolvedPlayerStateRef.current.profession}</Text>
+                  </Box>
+                )}
+              </>
             )}
           </Box>
         )}

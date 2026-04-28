@@ -19,11 +19,13 @@ import { createGameLoop } from './game-loop';
 import { createSceneManager } from './engine/scene-manager';
 import { createDialogueManager } from './engine/dialogue-manager';
 import { createCombatLoop } from './engine/combat-loop';
+import { generateNarration } from './ai/roles/narrative-director';
 import { NarrativeCreationScreen } from './ui/screens/narrative-creation-screen';
 import { resolveDataDir, resolveConfigPath } from './paths';
 import { loadAllCodex } from './codex/loader';
 import { DEFAULT_START_LOCATION } from './engine/game-constants';
 import type { CodexEntry, QuestTemplate } from './codex/schemas/entry-types';
+import type { CodexDisplayEntry } from './ui/panels/codex-panel';
 
 const GameStoreCtx = createStoreContext<GameState>();
 const PlayerStoreCtx = createStoreContext<PlayerState>();
@@ -53,6 +55,22 @@ function AppInner(): React.ReactNode {
     });
   }, []);
 
+  const codexDisplayEntries = useMemo<CodexDisplayEntry[]>(() => {
+    return Array.from(allCodexEntries.values()).map(entry => ({
+      id: entry.id,
+      name: entry.name,
+      type: entry.type,
+      description: entry.description,
+      visibility: entry.epistemic.visibility,
+      authority: entry.epistemic.authority,
+      confidence: entry.epistemic.confidence,
+      sourceType: entry.epistemic.source_type,
+      tags: entry.tags,
+      relatedIds: [],
+      knowledgeStatus: null,
+    }));
+  }, [allCodexEntries]);
+
   const questTemplates = useMemo(() => {
     const templates = new Map<string, QuestTemplate>();
     for (const [id, entry] of allCodexEntries) {
@@ -64,7 +82,11 @@ function AppInner(): React.ReactNode {
   }, [allCodexEntries]);
 
   const sceneManager = useMemo(
-    () => createSceneManager({ scene: sceneStore, eventBus }, allCodexEntries as Map<string, CodexEntry>),
+    () => createSceneManager(
+      { scene: sceneStore, eventBus },
+      allCodexEntries as Map<string, CodexEntry>,
+      { generateNarrationFn: generateNarration },
+    ),
     [allCodexEntries],
   );
 
@@ -136,6 +158,7 @@ function AppInner(): React.ReactNode {
           gameLoop={gameLoop}
           dialogueManager={dialogueManager}
           combatLoop={combatLoop}
+          codexEntries={codexDisplayEntries}
         />
       </SizeGuard>
     </GameErrorBoundary>

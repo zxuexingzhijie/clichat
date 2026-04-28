@@ -220,6 +220,7 @@ export function MapPanel({
     leftArrow: boolean;
     rightArrow: boolean;
     escape: boolean;
+    return?: boolean;
   }) => {
     if (key.escape) {
       onClose();
@@ -307,7 +308,7 @@ export function MapPanel({
     </Box>
   ) : null;
 
-  const hintBar = <Text dimColor>{'↑↓←→ 移动选择    Enter 查看详情    Esc 返回'}</Text>;
+  const hintBar = <Text dimColor>{'↑↓←→ 移动选择    Esc 返回'}</Text>;
 
   if (isWide) {
     return (

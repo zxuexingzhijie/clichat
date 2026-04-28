@@ -37,10 +37,10 @@ export type GameScreenController = {
   readonly handleNpcDialogueComplete: (npcName: string, dialogue: string, currentInputMode: InputMode) => void;
   readonly handleDialogueExecute: (index: number) => void;
   readonly handleDialogueEscape: () => void;
-  readonly handleCombatExecute: (index: number) => void;
+  readonly handleCombatExecute: (index: number) => Promise<void>;
 };
 
-const COMBAT_ACTION_TYPES: readonly CombatActionType[] = ['attack', 'cast', 'guard', 'flee'];
+const COMBAT_ACTION_TYPES: readonly CombatActionType[] = ['attack', 'cast', 'guard', 'use_item', 'flee'];
 
 function capNarrationLines(lines: readonly string[]): string[] {
   return lines.length > GAME_CONSTANTS.MAX_TURN_LOG_SIZE
@@ -187,6 +187,7 @@ export function createGameScreenController(
     dialogueManager.processPlayerResponse(index).catch((err: unknown) => {
       console.error('[dialogue] processPlayerResponse failed:', err);
       eventBus.emit('ai_call_failed', { role: 'npc_actor', error: err instanceof Error ? err.message : String(err) });
+      dialogueManager.endDialogue();
       gameStore.setState(draft => { draft.phase = 'game'; });
     });
   };
@@ -196,14 +197,25 @@ export function createGameScreenController(
     dialogueManager.endDialogue();
   };
 
-  const handleCombatExecute = (index: number): void => {
+  const handleCombatExecute = async (index: number): Promise<void> => {
     if (!combatLoop) return;
     const actionType = COMBAT_ACTION_TYPES[index] ?? 'attack';
-    combatLoop.processPlayerAction(actionType).catch((err: unknown) => {
+    try {
+      const result = await combatLoop.processPlayerAction(actionType);
+      if (result.status === 'error') {
+        sceneStore.setState(draft => {
+          draft.narrationLines = capNarrationLines([...draft.narrationLines, `[战斗] ${result.message}`]);
+        });
+        return;
+      }
+      if (combatLoop.getCombatPhase() === 'enemy_turn') {
+        await combatLoop.processEnemyTurn();
+      }
+    } catch (err: unknown) {
       console.error('[combat] processPlayerAction failed:', err);
       eventBus.emit('ai_call_failed', { role: 'narrative_director', error: err instanceof Error ? err.message : String(err) });
       combatStore.setState(draft => { draft.phase = 'player_turn'; });
-    });
+    }
   };
 
   return {

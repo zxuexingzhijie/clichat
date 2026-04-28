@@ -10,7 +10,7 @@ import type { CheckResult } from '../types/common';
 import type { CodexEntry, Enemy } from '../codex/schemas/entry-types';
 import type { NarrativeContext } from '../ai/roles/narrative-director';
 
-export type CombatActionType = 'attack' | 'cast' | 'guard' | 'flee';
+export type CombatActionType = 'attack' | 'cast' | 'guard' | 'use_item' | 'flee';
 
 export type CombatActionOptions = {
   readonly targetIndex?: number;
@@ -134,6 +134,11 @@ export function createCombatLoop(
     const enemy = enemyEntry?.type === 'enemy' ? (enemyEntry as Enemy) : null;
     const enemyDc = enemy?.dc ?? GAME_CONSTANTS.DEFAULT_DC;
     const enemyDefense = enemy?.defense ?? 0;
+
+    if (actionType === 'use_item') {
+      stores.combat.setState(draft => { draft.phase = 'player_turn'; });
+      return { status: 'error', message: '背包里没有可用的物品。' };
+    }
 
     if (actionType === 'guard') {
       stores.combat.setState(draft => {
@@ -347,7 +352,7 @@ export function createCombatLoop(
         draft.lastNarration = narration;
       });
       stores.game.setState(draft => {
-        draft.phase = 'game';
+        draft.phase = 'game_over';
       });
       return { ended: true, outcome: 'defeat', narration };
     }

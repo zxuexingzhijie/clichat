@@ -74,22 +74,24 @@ export function DialoguePanel({
 
   useInput(handleInput, { isActive });
 
-  const lastNpcLine = [...dialogueHistory].reverse().find((e) => e.speaker === 'npc');
   const relLabel = relationshipLabel(relationshipValue);
+  const recentHistory = dialogueHistory.slice(-4);
 
   return (
     <Box flexDirection="column" flexGrow={1} paddingX={1}>
       <Box flexDirection="row" justifyContent="space-between">
         <Text bold color="cyan">【{npcName}】</Text>
-        <Text dimColor>关系: {relLabel} ({relationshipValue.toFixed(1)})</Text>
+        <Text dimColor>关系: {relLabel}</Text>
       </Box>
       <Text> </Text>
-      {lastNpcLine && (
-        <Text>"{lastNpcLine.text}"</Text>
-      )}
-      {!lastNpcLine && (
+      {recentHistory.length === 0 && (
         <Text dimColor>......</Text>
       )}
+      {recentHistory.map((entry, i) => (
+        <Text key={i} dimColor={entry.speaker !== 'npc'}>
+          {entry.speaker === 'npc' ? `"${entry.text}"` : `你："${entry.text}"`}
+        </Text>
+      ))}
       {emotionHint && (
         <>
           <Text> </Text>

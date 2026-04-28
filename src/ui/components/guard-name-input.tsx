@@ -2,6 +2,9 @@ import React, { useState, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { TextInput } from '@inkjs/ui';
 
+const NAME_MAX_LENGTH = 12;
+const NAME_MIN_LENGTH = 1;
+
 type GuardNameInputProps = {
   readonly guardName: string;
   readonly streamingText: string;
@@ -25,11 +28,21 @@ export function GuardNameInput({
 }: GuardNameInputProps): React.ReactNode {
   const [nameValue, setNameValue] = useState('');
   const [nameKey, setNameKey] = useState(0);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleSubmit = useCallback(
     (val: string) => {
       const trimmed = val.trim();
-      onNameSubmitted(trimmed || '\u65c5\u4eba');
+      if (trimmed.length === 0) {
+        onNameSubmitted('旅人');
+        return;
+      }
+      if (trimmed.length > NAME_MAX_LENGTH) {
+        setValidationError(`名字最多 ${NAME_MAX_LENGTH} 个字符`);
+        return;
+      }
+      setValidationError(null);
+      onNameSubmitted(trimmed);
     },
     [onNameSubmitted],
   );
@@ -80,8 +93,11 @@ export function GuardNameInput({
               onSubmit={handleSubmit}
             />
           </Box>
+          {validationError && (
+            <Text color="red">{validationError}</Text>
+          )}
           <Text> </Text>
-          <Text dimColor>{'Enter 确认    Tab 随机名字    留空为\'旅人\''}</Text>
+          <Text dimColor>{'Enter 确认    Tab 随机名字    留空为\'旅人\'    最多12字'}</Text>
         </>
       )}
 

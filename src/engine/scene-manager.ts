@@ -38,6 +38,10 @@ function isLocation(entry: CodexEntry): entry is Location {
   return entry.type === 'location';
 }
 
+function formatObjectId(id: string): string {
+  return id.replace(/_/g, ' ');
+}
+
 function buildSuggestedActions(location: Location, codexEntries: Map<string, CodexEntry>): SceneAction[] {
   const actions: SceneAction[] = [];
 
@@ -52,9 +56,11 @@ function buildSuggestedActions(location: Location, codexEntries: Map<string, Cod
   }
 
   for (const objId of location.objects) {
+    const objEntry = queryById(codexEntries, objId);
+    const objName = objEntry?.name ?? formatObjectId(objId);
     actions.push({
       id: `inspect_${objId}`,
-      label: `检查${objId}`,
+      label: `检查${objName}`,
       type: 'inspect',
     });
   }
@@ -103,6 +109,11 @@ export function createSceneManager(
       draft.locationName = entry.name;
       draft.npcsPresent = [...entry.notable_npcs];
       draft.exits = entry.exits.map(e => typeof e === 'string' ? e : e.targetId);
+      draft.exitMap = Object.fromEntries(
+        entry.exits
+          .filter((e): e is { direction: string; targetId: string } => typeof e !== 'string' && 'direction' in e)
+          .map(e => [e.direction, e.targetId]),
+      );
       draft.objects = [...entry.objects];
     });
 
@@ -238,12 +249,12 @@ export function createSceneManager(
 
   async function handleGo(direction: string): Promise<SceneManagerResult> {
     const state = stores.scene.getState();
-
-    if (!state.exits.includes(direction)) {
+    // resolve direction label → targetId first, then fall back to direct targetId match
+    const targetId = state.exitMap[direction] ?? (state.exits.includes(direction) ? direction : null);
+    if (!targetId) {
       return { status: 'error', message: '那个方向没有出路。' };
     }
-
-    return loadScene(direction);
+    return loadScene(targetId);
   }
 
   function getCurrentScene(): string | null {

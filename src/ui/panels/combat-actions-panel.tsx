@@ -65,16 +65,21 @@ export function CombatActionsPanel({
         const next = selectedIndex >= actions.length - 1 ? 0 : selectedIndex + 1;
         onSelect(next);
       } else if (key.return) {
-        onExecute(selectedIndex);
+        if (!actions[selectedIndex]?.disabled) {
+          onExecute(selectedIndex);
+        }
       } else {
         const num = parseInt(input, 10);
         if (num >= 1 && num <= actions.length) {
-          onSelect(num - 1);
-          onExecute(num - 1);
+          const idx = num - 1;
+          if (!actions[idx]?.disabled) {
+            onSelect(idx);
+            onExecute(idx);
+          }
         }
       }
     },
-    [actions.length, selectedIndex, onSelect, onExecute],
+    [actions, selectedIndex, onSelect, onExecute],
   );
 
   useInput(handleInput, { isActive });
@@ -97,7 +102,7 @@ export function CombatActionsPanel({
           </Text>
         );
       })}
-      <Text dimColor>↑↓ 选择    Enter 确认    / 输入自定义行动</Text>
+      <Text dimColor>↑↓ 选择    Enter 确认</Text>
     </Box>
   );
 }

@@ -32,6 +32,7 @@ function makeSceneStore(overrides: Partial<SceneState> = {}) {
     ],
     npcsPresent: ['guard'],
     exits: ['north'],
+    exitMap: { north: 'north' },
     objects: ['door'],
     ...overrides,
   });
