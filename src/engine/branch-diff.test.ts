@@ -199,6 +199,7 @@ describe('compareBranches', () => {
         attributes: { physique: 3, finesse: 2, mind: 1 },
         tags: ['sword_equipped'],
         equipment: { weapon: 'iron_sword', armor: null, accessory: null },
+        poisonStacks: 0,
       },
     });
     const target = makeMinimalSave({
@@ -214,6 +215,7 @@ describe('compareBranches', () => {
         attributes: { physique: 3, finesse: 2, mind: 1 },
         tags: [],
         equipment: { weapon: null, armor: null, accessory: null },
+        poisonStacks: 0,
       },
     });
     const result = compareBranches(source, target);

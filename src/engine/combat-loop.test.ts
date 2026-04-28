@@ -399,3 +399,142 @@ describe('enemy abilities (COMBAT-04)', () => {
     expect(playerStore.getState().hp).toBe(hpBefore - 2);
   });
 });
+
+describe('data-driven spell casting (COMBAT-05)', () => {
+  const FIRE_ARROW: CodexEntry = {
+    id: 'spell_fire_arrow',
+    name: '火焰箭',
+    type: 'spell',
+    tags: ['fire', 'attack', 'elemental'],
+    description: '火焰伤害',
+    epistemic: EPISTEMIC,
+    element: 'fire',
+    mp_cost: 3,
+    effect: '对单体目标造成3-5点火焰伤害',
+    requirements: [],
+    effect_type: 'damage',
+    base_value: 4,
+  };
+
+  const HEALING_LIGHT: CodexEntry = {
+    id: 'spell_healing_light',
+    name: '治愈之光',
+    type: 'spell',
+    tags: ['holy', 'healing', 'support'],
+    description: '治愈',
+    epistemic: EPISTEMIC,
+    element: 'holy',
+    mp_cost: 2,
+    effect: '恢复目标2-4点生命值',
+    requirements: [],
+    effect_type: 'heal',
+    base_value: 3,
+  };
+
+  beforeEach(() => {
+    combatStore.setState(() => getDefaultCombatState());
+    playerStore.setState(() => getDefaultPlayerState());
+  });
+
+  it('cast fire_arrow: deducts spell mp_cost (3) and deals damage', async () => {
+    const loop = createCombatLoop(
+      stores,
+      makeCodex(GOBLIN_ENTRY, FIRE_ARROW),
+      { rng: () => 0.99, generateNarrationFn: mockNarration },
+    );
+    await loop.startCombat(['goblin']);
+
+    const initialMp = playerStore.getState().mp;
+    const result = await loop.processPlayerAction('cast', { spellId: 'spell_fire_arrow' });
+
+    expect(result.status).toBe('ok');
+    expect(playerStore.getState().mp).toBe(initialMp - 3);
+    expect(combatStore.getState().enemies[0]!.hp).toBeLessThan(20);
+  });
+
+  it('cast healing_light: deducts spell mp_cost (2) and restores HP', async () => {
+    const loop = createCombatLoop(
+      stores,
+      makeCodex(GOBLIN_ENTRY, HEALING_LIGHT),
+      { rng: () => 0.99, generateNarrationFn: mockNarration },
+    );
+    await loop.startCombat(['goblin']);
+
+    playerStore.setState(draft => { draft.hp = 20; });
+    const initialMp = playerStore.getState().mp;
+    const result = await loop.processPlayerAction('cast', { spellId: 'spell_healing_light' });
+
+    expect(result.status).toBe('ok');
+    expect(playerStore.getState().mp).toBe(initialMp - 2);
+    expect(playerStore.getState().hp).toBe(23);
+  });
+
+  it('cast with insufficient MP returns 魔力不足 and does not consume MP', async () => {
+    const loop = createCombatLoop(
+      stores,
+      makeCodex(GOBLIN_ENTRY, FIRE_ARROW),
+      { rng: () => 0.99, generateNarrationFn: mockNarration },
+    );
+    await loop.startCombat(['goblin']);
+
+    playerStore.setState(draft => { draft.mp = 2; });
+    const result = await loop.processPlayerAction('cast', { spellId: 'spell_fire_arrow' });
+
+    expect(result.status).toBe('error');
+    if (result.status === 'error') {
+      expect(result.message).toContain('魔力不足');
+    }
+    expect(playerStore.getState().mp).toBe(2);
+  });
+
+  it('cast unknown spell returns 未知法术 and does not consume MP', async () => {
+    const loop = createCombatLoop(
+      stores,
+      makeCodex(GOBLIN_ENTRY),
+      { rng: () => 0.99, generateNarrationFn: mockNarration },
+    );
+    await loop.startCombat(['goblin']);
+
+    const initialMp = playerStore.getState().mp;
+    const result = await loop.processPlayerAction('cast', { spellId: 'spell_nonexistent' });
+
+    expect(result.status).toBe('error');
+    if (result.status === 'error') {
+      expect(result.message).toContain('未知法术');
+    }
+    expect(playerStore.getState().mp).toBe(initialMp);
+  });
+
+  it('cast with no spellId falls back to CAST_MP_COST constant', async () => {
+    const loop = createCombatLoop(
+      stores,
+      makeCodex(GOBLIN_ENTRY),
+      { rng: () => 0.99, generateNarrationFn: mockNarration },
+    );
+    await loop.startCombat(['goblin']);
+
+    const initialMp = playerStore.getState().mp;
+    await loop.processPlayerAction('cast');
+
+    expect(playerStore.getState().mp).toBeLessThan(initialMp);
+  });
+
+  it('cast fire_arrow narration includes spell name', async () => {
+    const narrations: string[] = [];
+    const loop = createCombatLoop(
+      stores,
+      makeCodex(GOBLIN_ENTRY, FIRE_ARROW),
+      {
+        rng: () => 0.99,
+        generateNarrationFn: async (ctx) => {
+          narrations.push(ctx.playerAction);
+          return '战斗叙述';
+        },
+      },
+    );
+    await loop.startCombat(['goblin']);
+    await loop.processPlayerAction('cast', { spellId: 'spell_fire_arrow' });
+
+    expect(narrations.some(n => n.includes('火焰箭'))).toBe(true);
+  });
+});

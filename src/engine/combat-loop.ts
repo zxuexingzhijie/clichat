@@ -14,6 +14,7 @@ export type CombatActionType = 'attack' | 'cast' | 'guard' | 'use_item' | 'flee'
 
 export type CombatActionOptions = {
   readonly targetIndex?: number;
+  readonly spellId?: string;
 };
 
 export type CombatActionResult =
@@ -155,15 +156,37 @@ export function createCombatLoop(
     }
 
     if (actionType === 'cast') {
-      if (player.mp < GAME_CONSTANTS.CAST_MP_COST) {
-        stores.combat.setState(draft => {
-          draft.phase = 'player_turn';
-        });
+      const spellId = options?.spellId;
+      const spellEntry = spellId ? codexEntries.get(spellId) : null;
+      const spell = spellEntry?.type === 'spell' ? (spellEntry as Spell) : null;
+
+      if (spellId && !spell) {
+        stores.combat.setState(draft => { draft.phase = 'player_turn'; });
+        return { status: 'error', message: '未知法术。' };
+      }
+
+      const spellMpCost = spell?.mp_cost ?? GAME_CONSTANTS.CAST_MP_COST;
+      if (player.mp < spellMpCost) {
+        stores.combat.setState(draft => { draft.phase = 'player_turn'; });
         return { status: 'error', message: '魔力不足！无法施法。' };
       }
       stores.player.setState(draft => {
-        draft.mp = draft.mp - GAME_CONSTANTS.CAST_MP_COST;
+        draft.mp = draft.mp - spellMpCost;
       });
+
+      if (spell?.effect_type === 'heal') {
+        const healAmount = spell.base_value ?? 3;
+        const currentPlayer = stores.player.getState();
+        const newHp = Math.min(currentPlayer.maxHp, currentPlayer.hp + healAmount);
+        stores.player.setState(draft => { draft.hp = newHp; });
+        const spellName = spell.name;
+        const narration = await doGenerateNarration(`施放${spellName}，恢复了生命值`, undefined);
+        stores.combat.setState(draft => {
+          draft.lastNarration = narration;
+          draft.phase = 'enemy_turn';
+        });
+        return { status: 'ok', narration };
+      }
     }
 
     let attributeName: 'physique' | 'finesse' | 'mind';
@@ -211,7 +234,12 @@ export function createCombatLoop(
     if (isSuccess && (actionType === 'attack' || actionType === 'cast')) {
       const weaponBase = actionType === 'attack'
         ? getWeaponBase(player.equipment, codexEntries)
-        : GAME_CONSTANTS.CAST_WEAPON_BASE;
+        : (() => {
+            const spellId = options?.spellId;
+            const spellEntry = spellId ? codexEntries.get(spellId) : null;
+            const spell = spellEntry?.type === 'spell' ? (spellEntry as Spell) : null;
+            return spell?.base_value ?? GAME_CONSTANTS.CAST_WEAPON_BASE;
+          })();
       const damage = calculateDamage({
         weaponBase,
         attributeModifier: attrMod,
@@ -232,7 +260,16 @@ export function createCombatLoop(
       draft.phase = 'narrating';
     });
 
-    const actionLabel = actionType === 'attack' ? '攻击' : actionType === 'cast' ? '施法' : '逃跑';
+    const actionLabel = actionType === 'attack'
+      ? '攻击'
+      : actionType === 'cast'
+        ? (() => {
+            const spellId = options?.spellId;
+            const spellEntry = spellId ? codexEntries.get(spellId) : null;
+            const spell = spellEntry?.type === 'spell' ? (spellEntry as Spell) : null;
+            return spell ? `施放${spell.name}` : '施法';
+          })()
+        : '逃跑';
     const narration = await doGenerateNarration(actionLabel, checkResult);
 
     stores.combat.setState(draft => {

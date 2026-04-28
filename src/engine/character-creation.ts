@@ -125,6 +125,7 @@ export function createCharacterCreation(codexEntries: Map<string, CodexEntry>): 
       attributes,
       tags,
       equipment,
+      poisonStacks: 0,
     };
   };
 

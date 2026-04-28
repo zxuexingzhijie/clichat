@@ -1,5 +1,6 @@
 import type { ActionHandler } from './types';
 import type { Enemy } from '../../codex/schemas/entry-types';
+import type { CombatActionOptions } from '../combat-loop';
 
 export const handleCombat: ActionHandler = async (action, ctx) => {
   if (!ctx.combatLoop) {
@@ -28,8 +29,14 @@ export const handleCombat: ActionHandler = async (action, ctx) => {
     return { status: 'error', message: '战斗中只能进行战斗行动！' };
   }
 
+  const castOptions: CombatActionOptions | undefined =
+    action.type === 'cast' && action.target
+      ? { spellId: action.target }
+      : undefined;
+
   const combatResult = await ctx.combatLoop.processPlayerAction(
     action.type as 'attack' | 'cast' | 'guard' | 'flee',
+    castOptions,
   );
   if (combatResult.status === 'error') {
     return { status: 'error', message: combatResult.message };
