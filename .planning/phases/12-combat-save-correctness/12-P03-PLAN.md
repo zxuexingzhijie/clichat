@@ -172,11 +172,11 @@ No other changes to entry-types.ts.
   <read_first>
     - src/engine/action-handlers/move-handler.ts — read fully (12 lines)
     - src/engine/combat-loop.ts — read lines 27-33 (CombatLoop interface) and lines 83-114 (startCombat)
-    - src/state/combat-store.ts — read to confirm initial state shape (active field)
+    - src/state/combat-store.ts — confirm active field name
   </read_first>
   <behavior>
-    - Test 1: handleMove — sceneManager.handleGo returns success, new scene codex entry has enemies: ['enemy_wolf'] AND combatLoop.getCombatPhase() returns non-active phase → startCombat(['enemy_wolf']) is called
-    - Test 2: handleMove — sceneManager.handleGo returns success, new scene has enemies: ['enemy_wolf'] AND getCombatPhase() returns 'player_turn' (combat active) → startCombat NOT called
+    - Test 1: handleMove — sceneManager.handleGo returns success, new scene codex entry has enemies: ['enemy_wolf'] AND combat.active === false → startCombat(['enemy_wolf']) is called
+    - Test 2: handleMove — sceneManager.handleGo returns success, new scene has enemies: ['enemy_wolf'] AND combat.active === true → startCombat NOT called
     - Test 3: handleMove — sceneManager.handleGo returns success, new scene has no enemies field → startCombat NOT called
     - Test 4: handleMove — sceneManager.handleGo returns success, enemies: [] (empty) → startCombat NOT called
     - Test 5: handleMove — sceneManager.handleGo returns error → no startCombat, returns error
@@ -226,11 +226,7 @@ The new scene's enemies are read from the codex via ActionContext. ActionContext
          const entry = ctx.codexEntries.get(newSceneId);
          const location = entry?.type === 'location' ? (entry as Location) : null;
          const enemies = location?.enemies ?? [];
-         const alreadyInCombat = ctx.combatLoop.getCombatPhase() === 'player_turn'
-           || ctx.combatLoop.getCombatPhase() === 'enemy_turn'
-           || ctx.combatLoop.getCombatPhase() === 'resolving'
-           || ctx.combatLoop.getCombatPhase() === 'narrating'
-           || ctx.combatLoop.getCombatPhase() === 'check_end';
+         const alreadyInCombat = ctx.stores.combat.getState().active;
          if (enemies.length > 0 && !alreadyInCombat) {
            await ctx.combatLoop.startCombat(enemies);
          }
@@ -239,12 +235,6 @@ The new scene's enemies are read from the codex via ActionContext. ActionContext
 
      return { status: 'action_executed', action, narration: result.narration };
    };
-   ```
-
-Note on "already in combat" detection: `combat.active` is the correct field, but getCombatPhase() returns a string, not a boolean. Check `ctx.stores.combat.getState().active` instead — this is simpler and reliable. Use:
-   ```typescript
-   const alreadyInCombat = ctx.stores.combat.getState().active;
-   if (enemies.length > 0 && !alreadyInCombat) { ... }
    ```
   </action>
   <verify>

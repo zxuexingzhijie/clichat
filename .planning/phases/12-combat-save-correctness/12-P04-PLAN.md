@@ -2,12 +2,15 @@
 phase: 12-combat-save-correctness
 plan: P04
 type: execute
-wave: 2
+wave: 3
 depends_on:
   - 12-P01
+  - 12-P03
 files_modified:
   - src/codex/schemas/entry-types.ts
   - src/engine/combat-loop.ts
+  - src/engine/action-handlers/combat-handler.ts
+  - src/state/player-store.ts
 autonomous: true
 requirements:
   - COMBAT-04
@@ -198,10 +201,11 @@ CombatState — check if it has a poisoned/debuff field:
 
 <task type="auto" tdd="true">
   <name>Task 2: Implement enemy abilities in processEnemyTurn (COMBAT-04)</name>
-  <files>src/engine/combat-loop.ts, src/state/combat-store.ts</files>
+  <files>src/engine/combat-loop.ts, src/state/combat-store.ts, src/state/player-store.ts</files>
   <read_first>
     - src/engine/combat-loop.ts — read lines 250-325 (processEnemyTurn full body) before editing
     - src/state/combat-store.ts — read fully to check for existing debuff/status fields (to know if poisoned/howl tracking exists or needs adding)
+    - src/state/player-store.ts — read fully to confirm poisonStacks field presence before adding
   </read_first>
   <behavior>
     - Test 1: enemy with abilities: ['pack_tactics'], two enemies alive → enemyAttackMod increased by 2 for that attack
@@ -213,7 +217,9 @@ CombatState — check if it has a poisoned/debuff field:
     - Test 7: enemy with abilities: ['pack_tactics'], only one enemy alive → no attack bonus
   </behavior>
   <action>
-Before editing combat-loop.ts, read combat-store.ts to check what state fields exist. If `howlActive`, `poisonStacks`, or similar fields are absent, add them:
+First run `wc -l src/engine/combat-loop.ts`. If current line count > 700, extract ability dispatch into `src/engine/combat-abilities.ts` and import from there. Otherwise proceed with inline implementation.
+
+Before editing combat-loop.ts, read combat-store.ts and player-store.ts to check what state fields exist. Only add fields that are genuinely absent.
 
 **CombatState additions needed (if absent in combat-store.ts):**
 ```typescript
@@ -286,9 +292,7 @@ for (const ability of abilities) {
   }
   ```
 
-**Player state additions:** Check player-store.ts. If `poisonStacks` does not exist, add it as `poisonStacks: number` (default 0) to PlayerStateSchema and PlayerState.
-
-**Implementation note:** Read combat-store.ts and player-store.ts fully before adding fields to confirm what already exists. Only add fields that are genuinely absent.
+**Player state additions:** If `poisonStacks` does not exist in player-store.ts, add it as `poisonStacks: number` (default 0) to PlayerStateSchema and PlayerState.
   </action>
   <verify>
     <automated>cd /Users/makoto/Downloads/work/cli && bun test src/engine/combat-loop.test.ts --bail 2>&1 | tail -30</automated>
@@ -307,7 +311,7 @@ for (const ability of abilities) {
 
 <task type="auto" tdd="true">
   <name>Task 3: Data-driven spell casting in processPlayerAction (COMBAT-05)</name>
-  <files>src/engine/combat-loop.ts</files>
+  <files>src/engine/combat-loop.ts, src/engine/action-handlers/combat-handler.ts</files>
   <read_first>
     - src/engine/combat-loop.ts — read lines 116-248 (processPlayerAction) — focus on the 'cast' block (lines ~156-166) and the attack/damage block (lines ~210-228)
     - src/engine/action-handlers/types.ts — confirm CombatActionOptions shape (has action.target passed through?)

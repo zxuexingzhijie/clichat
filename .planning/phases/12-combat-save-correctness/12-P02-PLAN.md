@@ -269,6 +269,7 @@ Do NOT modify any logic inside the try block. Only add the wrapping try/catch.
   <done>
     - processPlayerAction in combat-loop.ts has try/catch wrapping its body
     - On throw: phase resets to 'player_turn' and returns { status: 'error', message: '战斗处理出错: ...' }
+    - `grep -n "catch.*err" src/engine/combat-loop.ts` returns a line inside processPlayerAction body
     - All existing combat-loop tests pass
     - bun tsc --noEmit passes
   </done>
