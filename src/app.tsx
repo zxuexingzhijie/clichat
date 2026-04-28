@@ -1,15 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Text } from 'ink';
 import { createStoreContext } from './ui/hooks/use-store';
-import { gameStore, type GameState } from './state/game-store';
-import { playerStore, type PlayerState } from './state/player-store';
-import { sceneStore, type SceneState } from './state/scene-store';
-import { dialogueStore, type DialogueState } from './state/dialogue-store';
-import { combatStore, type CombatState } from './state/combat-store';
-import { questStore, type QuestState } from './state/quest-store';
-import { npcMemoryStore } from './state/npc-memory-store';
-import { relationStore } from './state/relation-store';
-import { eventBus } from './events/event-bus';
+import type { GameState } from './state/game-store';
+import type { PlayerState } from './state/player-store';
+import type { SceneState } from './state/scene-store';
+import type { DialogueState } from './state/dialogue-store';
+import type { CombatState } from './state/combat-store';
+import type { QuestState } from './state/quest-store';
 import { TitleScreen } from './ui/screens/title-screen';
 import { GameScreen } from './ui/screens/game-screen';
 import { SizeGuard } from './ui/components/size-guard';
@@ -26,6 +23,13 @@ import { loadAllCodex } from './codex/loader';
 import { DEFAULT_START_LOCATION } from './engine/game-constants';
 import type { CodexEntry, QuestTemplate } from './codex/schemas/entry-types';
 import type { CodexDisplayEntry } from './ui/panels/codex-panel';
+import { createGameContext } from './context/game-context';
+import type { GameContext } from './context/game-context';
+import { quickSave, saveGame, loadGame } from './persistence/save-file-manager';
+import { createSerializer } from './state/serializer';
+import { createQuestSystem } from './engine/quest-system';
+import { createBranch, switchBranch, deleteBranch } from './persistence/branch-manager';
+import { replayTurns } from './engine/turn-log';
 
 const GameStoreCtx = createStoreContext<GameState>();
 const PlayerStoreCtx = createStoreContext<PlayerState>();
@@ -36,7 +40,13 @@ const QuestStoreCtx = createStoreContext<QuestState>();
 
 export { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx, DialogueStoreCtx, CombatStoreCtx, QuestStoreCtx };
 
-function AppInner(): React.ReactNode {
+const saveDir = `${process.env.__CHRONICLE_DATA_DIR || resolveDataDir()}/saves`;
+
+interface AppInnerProps {
+  readonly ctx: GameContext;
+}
+
+function AppInner({ ctx }: AppInnerProps): React.ReactNode {
   const phase = GameStoreCtx.useStoreState((s) => s.phase);
   const setGameState = GameStoreCtx.useSetState();
 
@@ -81,38 +91,88 @@ function AppInner(): React.ReactNode {
     return templates;
   }, [allCodexEntries]);
 
+  const serializer = useMemo(
+    () => createSerializer(
+      {
+        player: ctx.stores.player,
+        scene: ctx.stores.scene,
+        combat: ctx.stores.combat,
+        game: ctx.stores.game,
+        quest: ctx.stores.quest,
+        relations: ctx.stores.relation,
+        npcMemory: ctx.stores.npcMemory,
+        exploration: ctx.stores.exploration,
+        playerKnowledge: ctx.stores.playerKnowledge,
+        turnLog: ctx.stores.turnLog,
+      },
+      () => ctx.stores.branch.getState().currentBranchId,
+      () => null,
+    ),
+    [ctx],
+  );
+
+  const questSystem = useMemo(
+    () => createQuestSystem(
+      { quest: ctx.stores.quest, relation: ctx.stores.relation, game: ctx.stores.game },
+      allCodexEntries as Map<string, CodexEntry>,
+    ),
+    [ctx, allCodexEntries],
+  );
+
   const sceneManager = useMemo(
     () => createSceneManager(
-      { scene: sceneStore, eventBus },
+      { scene: ctx.stores.scene, eventBus: ctx.eventBus },
       allCodexEntries as Map<string, CodexEntry>,
       { generateNarrationFn: generateNarration },
     ),
-    [allCodexEntries],
+    [ctx, allCodexEntries],
   );
 
   const dialogueManager = useMemo(
     () => createDialogueManager(
-      { dialogue: dialogueStore, npcMemory: npcMemoryStore, scene: sceneStore, game: gameStore, player: playerStore, relation: relationStore },
+      {
+        dialogue: ctx.stores.dialogue,
+        npcMemory: ctx.stores.npcMemory,
+        scene: ctx.stores.scene,
+        game: ctx.stores.game,
+        player: ctx.stores.player,
+        relation: ctx.stores.relation,
+      },
       allCodexEntries as Map<string, CodexEntry>,
     ),
-    [allCodexEntries],
+    [ctx, allCodexEntries],
   );
 
   const combatLoop = useMemo(
     () => createCombatLoop(
-      { combat: combatStore, player: playerStore, game: gameStore },
+      { combat: ctx.stores.combat, player: ctx.stores.player, game: ctx.stores.game },
       allCodexEntries as Map<string, CodexEntry>,
     ),
-    [allCodexEntries],
+    [ctx, allCodexEntries],
   );
 
   const gameLoop = useMemo(
     () => createGameLoop(
-      { player: playerStore, scene: sceneStore, game: gameStore, combat: combatStore },
-      eventBus,
-      { sceneManager, dialogueManager, combatLoop },
+      {
+        player: ctx.stores.player,
+        scene: ctx.stores.scene,
+        game: ctx.stores.game,
+        combat: ctx.stores.combat,
+      },
+      ctx.eventBus,
+      {
+        sceneManager,
+        dialogueManager,
+        combatLoop,
+        saveFileManager: { quickSave, saveGame, loadGame },
+        serializer,
+        saveDir,
+        questSystem,
+        branchManager: { createBranch, switchBranch, deleteBranch },
+        turnLog: { replayTurns },
+      },
     ),
-    [sceneManager, dialogueManager, combatLoop],
+    [sceneManager, dialogueManager, combatLoop, serializer, questSystem, ctx],
   );
 
   const handleStart = useCallback(() => {
@@ -122,14 +182,14 @@ function AppInner(): React.ReactNode {
   }, [setGameState]);
 
   const handleCharacterCreated = useCallback(async (newPlayerState: PlayerState) => {
-    playerStore.setState((draft) => {
+    ctx.stores.player.setState((draft) => {
       Object.assign(draft, newPlayerState);
     });
     await sceneManager.loadScene(DEFAULT_START_LOCATION);
     setGameState((draft) => {
       draft.phase = 'game';
     });
-  }, [setGameState, sceneManager]);
+  }, [setGameState, sceneManager, ctx]);
 
   if (phase === 'title') {
     return (
@@ -166,6 +226,8 @@ function AppInner(): React.ReactNode {
 }
 
 export function App(): React.ReactNode {
+  const ctx = useMemo(() => createGameContext(), []);
+
   useEffect(() => {
     initRoleConfigs(resolveConfigPath(process.env.__CHRONICLE_DATA_DIR || resolveDataDir())).catch((err) => {
       console.error('[AI Config] Failed to load ai-config.yaml, using defaults:', err instanceof Error ? err.message : String(err));
@@ -173,13 +235,13 @@ export function App(): React.ReactNode {
   }, []);
 
   return (
-    <GameStoreCtx.Provider store={gameStore}>
-      <PlayerStoreCtx.Provider store={playerStore}>
-        <SceneStoreCtx.Provider store={sceneStore}>
-          <DialogueStoreCtx.Provider store={dialogueStore}>
-            <CombatStoreCtx.Provider store={combatStore}>
-              <QuestStoreCtx.Provider store={questStore}>
-                <AppInner />
+    <GameStoreCtx.Provider store={ctx.stores.game}>
+      <PlayerStoreCtx.Provider store={ctx.stores.player}>
+        <SceneStoreCtx.Provider store={ctx.stores.scene}>
+          <DialogueStoreCtx.Provider store={ctx.stores.dialogue}>
+            <CombatStoreCtx.Provider store={ctx.stores.combat}>
+              <QuestStoreCtx.Provider store={ctx.stores.quest}>
+                <AppInner ctx={ctx} />
               </QuestStoreCtx.Provider>
             </CombatStoreCtx.Provider>
           </DialogueStoreCtx.Provider>

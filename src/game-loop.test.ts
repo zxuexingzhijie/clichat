@@ -248,3 +248,71 @@ describe('createGameLoop', () => {
     expect(result.status).toBe('action_executed');
   });
 });
+
+describe('createGameLoop options wiring', () => {
+  beforeEach(() => {
+    mockGenerateObject.mockReset();
+    resetStores();
+  });
+
+  it('/save calls saveFileManager.quickSave when no name given', async () => {
+    const mockSaveFileManager = {
+      quickSave: mock(() => Promise.resolve('/saves/quicksave.json')),
+      saveGame: mock(() => Promise.resolve('/saves/test.json')),
+      loadGame: mock(() => Promise.resolve()),
+    };
+    const mockSerializer = {
+      snapshot: mock(() => '{}'),
+      restore: mock(() => {}),
+    };
+
+    const loop = createGameLoop(stores, eventBus, {
+      rng: createSeededRng(42),
+      saveFileManager: mockSaveFileManager,
+      serializer: mockSerializer,
+      saveDir: '/saves',
+    });
+
+    const result = await loop.processInput('/save');
+
+    expect(mockSaveFileManager.quickSave).toHaveBeenCalledWith(mockSerializer, '/saves');
+    expect(mockSaveFileManager.saveGame).not.toHaveBeenCalled();
+    expect(result.status).toBe('action_executed');
+  });
+
+  it('/quest accept calls questSystem.acceptQuest with quest id', async () => {
+    const mockQuestSystem = {
+      acceptQuest: mock(() => ({ status: 'ok' as const })),
+      completeObjective: mock(() => {}),
+      advanceStage: mock(() => {}),
+      failQuest: mock(() => {}),
+      completeQuest: mock(() => {}),
+    };
+
+    const loop = createGameLoop(stores, eventBus, {
+      rng: createSeededRng(42),
+      questSystem: mockQuestSystem,
+    });
+
+    const result = await loop.processInput('/quest accept quest_wire_test');
+
+    expect(mockQuestSystem.acceptQuest).toHaveBeenCalledWith('quest_wire_test');
+    expect(result.status).toBe('action_executed');
+  });
+
+  it('/replay 3 calls turnLog.replayTurns(3)', async () => {
+    const mockTurnLog = {
+      replayTurns: mock((_count: number) => [] as readonly import('./state/serializer').TurnLogEntry[]),
+    };
+
+    const loop = createGameLoop(stores, eventBus, {
+      rng: createSeededRng(42),
+      turnLog: mockTurnLog,
+    });
+
+    const result = await loop.processInput('/replay 3');
+
+    expect(mockTurnLog.replayTurns).toHaveBeenCalledWith(3);
+    expect(result.status).toBe('action_executed');
+  });
+});
