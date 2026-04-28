@@ -273,4 +273,70 @@ describe('createSceneManager', () => {
       expect(result.message).toContain('找不到');
     }
   });
+
+  it('getCurrentScene returns sceneId from store after state_restored event', async () => {
+    const { createStore } = await import('../state/create-store');
+    const { getDefaultSceneState } = await import('../state/scene-store');
+    const { default: createMitt } = await import('mitt');
+    const { eventBus: _eb, ...rest } = await import('../events/event-bus');
+    void rest;
+    type DomainEvts = typeof _eb extends { emit: (event: infer K, ...args: infer _) => void } ? K : never;
+    void (null as unknown as DomainEvts);
+    const mockBus = createMitt<import('../events/event-types').DomainEvents>();
+
+    const freshScene = createStore(getDefaultSceneState(), () => {});
+    freshScene.setState(draft => {
+      draft.sceneId = 'loc_tavern';
+    });
+
+    const codex = createMockCodexEntries();
+    const manager = createSceneManager(
+      { scene: freshScene, eventBus: mockBus },
+      codex,
+    );
+
+    mockBus.emit('state_restored', undefined);
+
+    expect(manager.getCurrentScene()).toBe('loc_tavern');
+  });
+
+  it('handleLook with no target calls generateNarrationFn', async () => {
+    const codex = createMockCodexEntries();
+    const narrationFn = mock(async () => '重新观察场景。');
+    const retrievalFn = createMockRetrievalFn();
+
+    const manager = createSceneManager(stores, codex, {
+      generateNarrationFn: narrationFn,
+      generateRetrievalPlanFn: retrievalFn,
+    });
+
+    stores.scene.setState(draft => {
+      draft.narrationLines = ['旧叙述'];
+      draft.locationName = '黑松镇·北门';
+    });
+
+    const result = await manager.handleLook(undefined);
+
+    expect(result.status).toBe('success');
+    if (result.status === 'success') {
+      expect(result.narration).toContain('重新观察场景。');
+    }
+    expect(narrationFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('handleLook with no target returns existing lines when generateNarrationFn absent', async () => {
+    const codex = createMockCodexEntries();
+    const manager = createSceneManager(stores, codex);
+
+    stores.scene.setState(draft => {
+      draft.narrationLines = ['已有叙述'];
+    });
+
+    const result = await manager.handleLook(undefined);
+
+    expect(result.status).toBe('success');
+    if (result.status === 'success') {
+      expect(result.narration).toContain('已有叙述');
+    }
+  });
 });

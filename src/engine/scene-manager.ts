@@ -94,6 +94,13 @@ export function createSceneManager(
   const generateRetrievalPlanFn = options?.generateRetrievalPlanFn;
   let currentSceneId: string | null = null;
 
+  stores.eventBus?.on('state_restored', () => {
+    const restoredSceneId = stores.scene.getState().sceneId;
+    if (restoredSceneId) {
+      currentSceneId = restoredSceneId;
+    }
+  });
+
   async function loadScene(locationId: string): Promise<SceneManagerResult> {
     const entry = queryById(codexEntries, locationId);
 
@@ -162,8 +169,22 @@ export function createSceneManager(
 
   async function handleLook(target?: string): Promise<SceneManagerResult> {
     if (!target) {
-      const lines = stores.scene.getState().narrationLines;
-      return { status: 'success', narration: lines };
+      const state = stores.scene.getState();
+      if (generateNarrationFn) {
+        const narration = await generateNarrationFn({
+          sceneType: 'exploration',
+          codexEntries: [],
+          playerAction: 're-look',
+          recentNarration: state.narrationLines.slice(-3),
+          sceneContext: state.locationName,
+        });
+        const newLines = capNarrationLines([...state.narrationLines, narration]);
+        stores.scene.setState(draft => {
+          draft.narrationLines = newLines;
+        });
+        return { status: 'success', narration: newLines };
+      }
+      return { status: 'success', narration: state.narrationLines };
     }
 
     const state = stores.scene.getState();

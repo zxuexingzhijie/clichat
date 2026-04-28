@@ -218,4 +218,66 @@ describe('applyRetention — three-layer logic', () => {
 
     expect(record.recentMemories.length).toBe(originalRecentLength);
   });
+
+  it('evicts the lowest-importance entry when mixed importances exist', async () => {
+    const { applyRetention } = await import('./memory-persistence');
+
+    const entries: NpcMemoryRecord['recentMemories'] = Array.from({ length: 15 }, (_, i) => ({
+      id: `entry-${i}`,
+      npcId: 'npc_guard',
+      event: `event-${i}`,
+      turnNumber: i,
+      importance: 'medium' as const,
+      emotionalValence: 0,
+      participants: [],
+    }));
+    entries[0] = { ...entries[0]!, importance: 'high' };
+    entries[14] = { ...entries[14]!, importance: 'low' };
+
+    const record: NpcMemoryRecord = {
+      npcId: 'npc_guard',
+      recentMemories: entries,
+      salientMemories: [],
+      archiveSummary: '',
+      lastUpdated: new Date().toISOString(),
+      version: 0,
+    };
+
+    const result = applyRetention(record);
+
+    expect(result.recentMemories.length).toBe(14);
+    expect(result.recentMemories.some(m => m.id === 'entry-0')).toBe(true);
+    expect(result.salientMemories.length).toBe(1);
+    expect(result.salientMemories[0]?.id).toBe('entry-14');
+  });
+
+  it('when all importance is equal, evicts oldest by turnNumber', async () => {
+    const { applyRetention } = await import('./memory-persistence');
+
+    const entries = Array.from({ length: 15 }, (_, i) => ({
+      id: `entry-${i}`,
+      npcId: 'npc_guard',
+      event: `event-${i}`,
+      turnNumber: i + 10,
+      importance: 'medium' as const,
+      emotionalValence: 0,
+      participants: [],
+    }));
+    entries[7] = { ...entries[7]!, turnNumber: 1 };
+
+    const record: NpcMemoryRecord = {
+      npcId: 'npc_guard',
+      recentMemories: entries,
+      salientMemories: [],
+      archiveSummary: '',
+      lastUpdated: new Date().toISOString(),
+      version: 0,
+    };
+
+    const result = applyRetention(record);
+
+    expect(result.recentMemories.length).toBe(14);
+    expect(result.salientMemories.length).toBe(1);
+    expect(result.salientMemories[0]?.id).toBe('entry-7');
+  });
 });

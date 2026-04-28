@@ -61,3 +61,47 @@ export function createNpcMemoryStore(bus: EventBus): Store<NpcMemoryState> {
 }
 
 export const npcMemoryStore = createNpcMemoryStore(eventBus);
+
+export function addMemory(
+  store: Store<NpcMemoryState>,
+  npcId: string,
+  entry: NpcMemoryEntry,
+): void {
+  store.setState(draft => {
+    if (!draft.memories[npcId]) {
+      draft.memories[npcId] = {
+        npcId,
+        recentMemories: [],
+        salientMemories: [],
+        archiveSummary: '',
+        lastUpdated: new Date().toISOString(),
+        version: 0,
+      };
+    }
+    draft.memories[npcId]!.recentMemories = [
+      ...draft.memories[npcId]!.recentMemories,
+      entry,
+    ];
+  });
+
+  const record = store.getState().memories[npcId];
+  if (record && record.recentMemories.length > 15) {
+    const importanceOrder: Record<string, number> = { low: 0, medium: 1, high: 2 };
+    const recent = [...record.recentMemories];
+    const sorted = [...recent].sort((a, b) => {
+      const impDiff = (importanceOrder[a.importance] ?? 1) - (importanceOrder[b.importance] ?? 1);
+      if (impDiff !== 0) return impDiff;
+      return a.turnNumber - b.turnNumber;
+    });
+    const toEvict = sorted[0]!;
+    const evictIndex = recent.findIndex(m => m.id === toEvict.id);
+    const newRecent = [...recent.slice(0, evictIndex), ...recent.slice(evictIndex + 1)];
+    store.setState(draft => {
+      draft.memories[npcId] = {
+        ...draft.memories[npcId]!,
+        recentMemories: newRecent,
+        salientMemories: [...(draft.memories[npcId]?.salientMemories ?? []), toEvict],
+      };
+    });
+  }
+}

@@ -17,9 +17,16 @@ export function applyRetention(record: NpcMemoryRecord): NpcMemoryRecord {
   let archive = record.archiveSummary;
 
   if (recent.length >= 15) {
-    const promoted = recent[0]!;
-    recent = recent.slice(1);
-    salient = [...salient, promoted];
+    const importanceOrder = { low: 0, medium: 1, high: 2 };
+    const sorted = [...recent].sort((a, b) => {
+      const impDiff = importanceOrder[a.importance] - importanceOrder[b.importance];
+      if (impDiff !== 0) return impDiff;
+      return a.turnNumber - b.turnNumber;
+    });
+    const toEvict = sorted[0]!;
+    const evictIndex = recent.findIndex(m => m.id === toEvict.id);
+    recent = [...recent.slice(0, evictIndex), ...recent.slice(evictIndex + 1)];
+    salient = [...salient, toEvict];
   }
 
   if (salient.length >= 50) {
