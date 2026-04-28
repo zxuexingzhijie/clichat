@@ -1,10 +1,11 @@
-import type { NpcDisposition } from '../state/relation-store';
+import type { NpcDisposition, RelationState } from '../state/relation-store';
+import type { Store } from '../state/create-store';
 
 const SENTIMENT_DELTAS: Record<string, number> = {
-  positive: 0.2,
+  positive: 10,
   neutral: 0,
-  negative: -0.2,
-  hostile: -0.4,
+  negative: -10,
+  hostile: -20,
 };
 
 export function sentimentToDelta(sentiment: string): number {
@@ -42,4 +43,18 @@ export function filterResponsesByReputation<T extends { minReputation?: number }
     ...r,
     locked: r.minReputation !== undefined && dispositionValue < r.minReputation,
   }));
+}
+
+export function applyFactionReputationDelta(
+  relationStore: Store<RelationState>,
+  factionId: string,
+  delta: number,
+): void {
+  relationStore.setState((draft) => {
+    const current = draft.factionReputations[factionId] ?? 0;
+    draft.factionReputations = {
+      ...draft.factionReputations,
+      [factionId]: Math.max(-100, Math.min(100, current + delta)),
+    };
+  });
 }

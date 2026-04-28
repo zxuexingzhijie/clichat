@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'bun:test';
-import { getAttitudeLabel, applyReputationDelta, filterResponsesByReputation } from './reputation-system';
+import { getAttitudeLabel, applyReputationDelta, filterResponsesByReputation, sentimentToDelta, applyFactionReputationDelta } from './reputation-system';
+import type { RelationState } from '../state/relation-store';
 
 describe('getAttitudeLabel', () => {
   it('returns 敌视 for value -70', () => {
@@ -120,5 +121,69 @@ describe('filterResponsesByReputation', () => {
     const result = filterResponsesByReputation(responses, 20);
     expect(result[0]?.id).toBe('r1');
     expect(result[0]?.text).toBe('Hello');
+  });
+});
+
+describe('sentimentToDelta', () => {
+  it('returns 10 for positive', () => {
+    expect(sentimentToDelta('positive')).toBe(10);
+  });
+
+  it('returns 0 for neutral', () => {
+    expect(sentimentToDelta('neutral')).toBe(0);
+  });
+
+  it('returns -10 for negative', () => {
+    expect(sentimentToDelta('negative')).toBe(-10);
+  });
+
+  it('returns -20 for hostile', () => {
+    expect(sentimentToDelta('hostile')).toBe(-20);
+  });
+
+  it('returns 0 for unknown sentiment', () => {
+    expect(sentimentToDelta('unknown')).toBe(0);
+  });
+});
+
+describe('applyFactionReputationDelta', () => {
+  function makeRelationStore(initial: Partial<RelationState> = {}) {
+    let state: RelationState = {
+      npcDispositions: {},
+      factionReputations: {},
+      ...initial,
+    };
+    return {
+      getState: () => state,
+      setState: (updater: (draft: RelationState) => void) => {
+        const draft = { ...state, factionReputations: { ...state.factionReputations } };
+        updater(draft);
+        state = draft;
+      },
+    };
+  }
+
+  it('writes delta to factionReputations for new faction', () => {
+    const store = makeRelationStore();
+    applyFactionReputationDelta(store as never, 'faction_guard', 5);
+    expect(store.getState().factionReputations['faction_guard']).toBe(5);
+  });
+
+  it('accumulates delta on existing faction reputation', () => {
+    const store = makeRelationStore({ factionReputations: { faction_guard: 30 } });
+    applyFactionReputationDelta(store as never, 'faction_guard', 10);
+    expect(store.getState().factionReputations['faction_guard']).toBe(40);
+  });
+
+  it('clamps faction reputation at 100', () => {
+    const store = makeRelationStore({ factionReputations: { faction_guard: 95 } });
+    applyFactionReputationDelta(store as never, 'faction_guard', 20);
+    expect(store.getState().factionReputations['faction_guard']).toBe(100);
+  });
+
+  it('clamps faction reputation at -100', () => {
+    const store = makeRelationStore({ factionReputations: { faction_guard: -95 } });
+    applyFactionReputationDelta(store as never, 'faction_guard', -20);
+    expect(store.getState().factionReputations['faction_guard']).toBe(-100);
   });
 });
