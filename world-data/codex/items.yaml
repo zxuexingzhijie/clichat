@@ -131,6 +131,8 @@
   value: 5
   effect: 恢复 10 HP
   heal_amount: 10
+
+- id: item_short_bow
   name: 短弓
   type: item
   tags:
@@ -255,3 +257,4 @@
   item_type: consumable
   value: 4
   effect: 恢复 5 HP
+  heal_amount: 5

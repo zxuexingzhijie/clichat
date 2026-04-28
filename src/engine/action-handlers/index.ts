@@ -14,6 +14,7 @@ import { handleQuest } from './quest-handler';
 import { handleCost } from './cost-handler';
 import { handleQuit } from './quit-handler';
 import { handleDefault } from './default-handler';
+import { handleUseItem } from './use-item-handler';
 
 export type { ActionContext, ActionHandler };
 export { getLastReplayEntries } from './phase-handlers';
@@ -66,7 +67,7 @@ const HANDLER_MAP: Record<string, ActionHandler> = {
   guard: handleDefault,
   flee: handleDefault,
   trade: handleDefault,
-  use_item: handleDefault,
+  use_item: handleUseItem,
 };
 
 export function createDefaultRegistry(): ActionRegistry {

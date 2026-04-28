@@ -174,6 +174,10 @@ export function createSceneManager(
 
     const narrationLines = [narrationText];
 
+    if (gameStore.getState().turnCount === 0 && !previousSceneId) {
+      narrationLines.push('【提示】据说镇上最近有人失踪——酒馆的老板知道些内情。与 NPC 交谈，或输入 /help 查看所有命令。');
+    }
+
     stores.scene.setState(draft => {
       draft.narrationLines = narrationLines;
     });
