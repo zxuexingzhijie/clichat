@@ -173,6 +173,162 @@ const mockCodexEntries = new Map([
       initial_disposition: 0.0,
     },
   ],
+  [
+    'npc_innkeeper',
+    {
+      id: 'npc_innkeeper',
+      name: '客栈老板',
+      type: 'npc' as const,
+      tags: ['innkeeper'],
+      description: '客栈老板娘',
+      epistemic: {
+        authority: 'canonical_truth' as const,
+        truth_status: 'true' as const,
+        scope: 'local' as const,
+        visibility: 'public' as const,
+        confidence: 1.0,
+        source_type: 'authorial' as const,
+        known_by: [],
+        contradicts: [],
+        volatility: 'stable' as const,
+      },
+      location_id: 'loc_inn',
+      personality_tags: ['friendly'],
+      goals: ['run_inn'],
+      backstory: '经营客栈多年',
+      initial_disposition: 0.1,
+    },
+  ],
+  [
+    'npc_hunter',
+    {
+      id: 'npc_hunter',
+      name: '猎人',
+      type: 'npc' as const,
+      tags: ['hunter'],
+      description: '经验丰富的猎人',
+      epistemic: {
+        authority: 'canonical_truth' as const,
+        truth_status: 'true' as const,
+        scope: 'local' as const,
+        visibility: 'public' as const,
+        confidence: 1.0,
+        source_type: 'authorial' as const,
+        known_by: [],
+        contradicts: [],
+        volatility: 'stable' as const,
+      },
+      location_id: 'loc_forest',
+      personality_tags: ['cautious'],
+      goals: ['hunt_monsters'],
+      backstory: '在森林里打猎',
+      initial_disposition: 0.0,
+    },
+  ],
+  [
+    'npc_soldier',
+    {
+      id: 'npc_soldier',
+      name: '士兵',
+      type: 'npc' as const,
+      tags: ['military', 'guard'],
+      description: '驻扎在此的士兵',
+      epistemic: {
+        authority: 'canonical_truth' as const,
+        truth_status: 'true' as const,
+        scope: 'local' as const,
+        visibility: 'public' as const,
+        confidence: 1.0,
+        source_type: 'authorial' as const,
+        known_by: [],
+        contradicts: [],
+        volatility: 'stable' as const,
+      },
+      location_id: 'loc_barracks',
+      personality_tags: ['dutiful'],
+      goals: ['defend_town'],
+      backstory: '军队士兵',
+      initial_disposition: 0.0,
+    },
+  ],
+  [
+    'npc_priest',
+    {
+      id: 'npc_priest',
+      name: '神父',
+      type: 'npc' as const,
+      tags: ['clergy'],
+      description: '神殿的神职人员',
+      epistemic: {
+        authority: 'canonical_truth' as const,
+        truth_status: 'true' as const,
+        scope: 'local' as const,
+        visibility: 'public' as const,
+        confidence: 1.0,
+        source_type: 'authorial' as const,
+        known_by: [],
+        contradicts: [],
+        volatility: 'stable' as const,
+      },
+      location_id: 'loc_temple',
+      personality_tags: ['honest'],
+      goals: ['serve_gods'],
+      backstory: '侍奉神明',
+      initial_disposition: 0.1,
+    },
+  ],
+  [
+    'npc_beggar',
+    {
+      id: 'npc_beggar',
+      name: '乞丐',
+      type: 'npc' as const,
+      tags: ['beggar'],
+      description: '街头乞丐',
+      epistemic: {
+        authority: 'canonical_truth' as const,
+        truth_status: 'true' as const,
+        scope: 'local' as const,
+        visibility: 'public' as const,
+        confidence: 1.0,
+        source_type: 'authorial' as const,
+        known_by: [],
+        contradicts: [],
+        volatility: 'stable' as const,
+      },
+      location_id: 'loc_market',
+      personality_tags: ['cautious'],
+      goals: ['survive'],
+      backstory: '流落街头',
+      initial_disposition: 0.0,
+    },
+  ],
+  [
+    'npc_criminal',
+    {
+      id: 'npc_criminal',
+      name: '黑市商人',
+      type: 'npc' as const,
+      tags: ['underworld'],
+      description: '黑市中的神秘人物',
+      epistemic: {
+        authority: 'canonical_truth' as const,
+        truth_status: 'true' as const,
+        scope: 'local' as const,
+        visibility: 'public' as const,
+        confidence: 1.0,
+        source_type: 'authorial' as const,
+        known_by: [],
+        contradicts: [],
+        volatility: 'stable' as const,
+      },
+      location_id: 'loc_underworld',
+      personality_tags: ['shrewd'],
+      goals: ['profit'],
+      backstory: '黑市经营者',
+      initial_disposition: -0.1,
+    },
+  ],
 ]);
 
 describe('createDialogueManager', () => {
@@ -495,5 +651,104 @@ describe('createDialogueManager', () => {
 
     const result = await manager.startDialogue('npc_quest_chinese');
     expect(result.mode).toBe('full');
+  });
+
+  it('NPC with innkeeper tag gets innkeeper-specific questions containing 房间 or 住宿', async () => {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_innkeeper');
+
+    const { dialogueStore } = await import('../state/dialogue-store');
+    const options = dialogueStore.getState().availableResponses;
+    const labels = options.map(o => o.label).join(' ');
+    expect(labels).toMatch(/房间|住宿/);
+  });
+
+  it('NPC with hunter tag gets hunter-specific questions containing 猎物 or 危险', async () => {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_hunter');
+
+    const { dialogueStore } = await import('../state/dialogue-store');
+    const options = dialogueStore.getState().availableResponses;
+    const labels = options.map(o => o.label).join(' ');
+    expect(labels).toMatch(/猎物|危险/);
+  });
+
+  it('NPC with military tag gets military-specific questions containing 驻守 or 任务', async () => {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_soldier');
+
+    const { dialogueStore } = await import('../state/dialogue-store');
+    const options = dialogueStore.getState().availableResponses;
+    const labels = options.map(o => o.label).join(' ');
+    expect(labels).toMatch(/驻守|任务/);
+  });
+
+  it('NPC with clergy tag gets clergy questions', async () => {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_priest');
+
+    const { dialogueStore } = await import('../state/dialogue-store');
+    const options = dialogueStore.getState().availableResponses;
+    const labels = options.map(o => o.label).join(' ');
+    expect(labels).toMatch(/神明|神殿|庇护|服务/);
+  });
+
+  it('NPC with tags [military, guard] gets military questions (first match wins)', async () => {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_soldier');
+
+    const { dialogueStore } = await import('../state/dialogue-store');
+    const options = dialogueStore.getState().availableResponses;
+    const labels = options.map(o => o.label).join(' ');
+    expect(labels).toMatch(/任务|动向|管辖/);
+    expect(labels).not.toMatch(/执勤多久/);
+  });
+
+  it('NPC with beggar tag gets questions containing 帮助 or 施舍', async () => {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_beggar');
+
+    const { dialogueStore } = await import('../state/dialogue-store');
+    const options = dialogueStore.getState().availableResponses;
+    const labels = options.map(o => o.label).join(' ');
+    expect(labels).toMatch(/帮助|施舍/);
+  });
+
+  it('NPC with underworld tag gets questions containing 服务 or 黑市', async () => {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_criminal');
+
+    const { dialogueStore } = await import('../state/dialogue-store');
+    const options = dialogueStore.getState().availableResponses;
+    const labels = options.map(o => o.label).join(' ');
+    expect(labels).toMatch(/服务|黑市/);
   });
 });
