@@ -133,12 +133,22 @@ export const QuestObjectiveSchema = z.object({
   description: z.string(),
 });
 
+export const QuestTriggerSchema = z.object({
+  event: z.enum(['dialogue_ended', 'location_entered', 'item_found', 'combat_ended']),
+  targetId: z.string().optional(),
+  secondaryEvent: z.enum(['dialogue_ended', 'location_entered', 'item_found', 'combat_ended']).optional(),
+  secondaryTargetId: z.string().optional(),
+});
+
+export type QuestTrigger = z.infer<typeof QuestTriggerSchema>;
+
 export const QuestStageSchema = z.object({
   id: z.string().min(1),
   description: z.string(),
   objectives: z.array(QuestObjectiveSchema),
   nextStageId: z.string().nullable(),
   completionCondition: z.string().optional(),
+  trigger: QuestTriggerSchema.optional(),
 });
 
 export const QuestTemplateSchema = z.object({
