@@ -244,7 +244,7 @@ describe('createGameLoop', () => {
 
     const result = await loop.processInput('/load quicksave.json');
 
-    expect(mockSaveFileManager.loadGame).toHaveBeenCalledWith('/saves/quicksave.json', mockSerializer);
+    expect(mockSaveFileManager.loadGame).toHaveBeenCalledWith('/saves/quicksave.json', mockSerializer, '/saves');
     expect(result.status).toBe('action_executed');
   });
 });

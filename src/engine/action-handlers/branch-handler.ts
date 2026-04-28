@@ -22,10 +22,20 @@ export const handleBranch: ActionHandler = async (action, ctx) => {
     if (!ctx.branchManager) return { status: 'error', message: '分支系统未初始化' };
     try {
       ctx.branchManager.switchBranch(name);
-      return { status: 'action_executed', action, narration: [`已切换至分支「${name}」。`] };
     } catch {
       return { status: 'error', message: `分支「${name}」不存在。使用 /branch tree 查看所有分支。` };
     }
+    const branchMeta = ctx.branchManager.getBranchMeta(name);
+    const headSaveId = branchMeta?.headSaveId ?? null;
+    if (!headSaveId) {
+      return { status: 'error', message: '该分支没有存档可恢复' };
+    }
+    if (!ctx.saveFileManager || !ctx.serializer || !ctx.saveDir) {
+      return { status: 'error', message: '存档系统未初始化' };
+    }
+    const filePath = headSaveId.includes('/') ? headSaveId : `${ctx.saveDir}/${headSaveId}`;
+    await ctx.saveFileManager.loadGame(filePath, ctx.serializer, ctx.saveDir);
+    return { status: 'action_executed', action, narration: [`已切换至分支「${name}」并恢复存档。`] };
   }
 
   if (subAction === 'delete') {
