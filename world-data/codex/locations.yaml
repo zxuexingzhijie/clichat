@@ -200,7 +200,7 @@
     - incense_burner
     - ancient_relief
   coordinates: { x: 2, y: 3 }
-  map_icon: "T"
+  map_icon: "P"
 
 - id: loc_forest_road
   name: 黑松林道

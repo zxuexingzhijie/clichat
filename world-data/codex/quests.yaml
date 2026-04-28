@@ -23,6 +23,7 @@
       description: 调查关于北林失踪事件的谣言
       trigger:
         event: dialogue_ended
+        targetId: npc_bartender
       objectives:
         - id: obj_talk_any_npc
           type: talk
@@ -95,6 +96,9 @@
       nextStageId: stage_deliver
     - id: stage_deliver
       description: 将矿石交给铁匠
+      trigger:
+        event: dialogue_ended
+        targetId: npc_blacksmith
       objectives:
         - id: obj_deliver_ore
           type: talk
@@ -142,6 +146,9 @@
       nextStageId: stage_collect
     - id: stage_collect
       description: 向欠债人收回债款
+      trigger:
+        event: dialogue_ended
+        targetId: npc_beggar
       objectives:
         - id: obj_collect_debt
           type: talk
@@ -187,6 +194,9 @@
       nextStageId: stage_report
     - id: stage_report
       description: 向阿虎汇报任务完成情况
+      trigger:
+        event: dialogue_ended
+        targetId: npc_hunter
       objectives:
         - id: obj_report_hunter
           type: talk
