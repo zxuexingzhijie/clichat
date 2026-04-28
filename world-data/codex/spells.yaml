@@ -19,6 +19,8 @@
   element: fire
   mp_cost: 3
   effect: 对单体目标造成3-5点火焰伤害
+  effect_type: damage
+  base_value: 4
   requirements:
     - mind >= 3
 
@@ -43,5 +45,7 @@
   element: holy
   mp_cost: 2
   effect: 恢复目标2-4点生命值
+  effect_type: heal
+  base_value: 3
   requirements:
     - mind >= 2

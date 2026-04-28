@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { LocationSchema } from './entry-types';
+import { LocationSchema, SpellSchema } from './entry-types';
 
 const validEpistemic = {
   authority: 'canonical_truth' as const,
@@ -26,6 +26,38 @@ const validLocation = {
   notable_npcs: [],
   objects: [],
 };
+
+const validSpell = {
+  id: 'spell_test',
+  name: '测试法术',
+  type: 'spell' as const,
+  tags: ['fire', 'attack'],
+  description: '测试法术描述',
+  epistemic: validEpistemic,
+  element: 'fire',
+  mp_cost: 3,
+  effect: '造成伤害',
+  requirements: [],
+};
+
+describe('SpellSchema effect_type and base_value', () => {
+  it('parses spell with effect_type and base_value', () => {
+    const result = SpellSchema.parse({ ...validSpell, effect_type: 'damage', base_value: 4 });
+    expect(result.effect_type).toBe('damage');
+    expect(result.base_value).toBe(4);
+  });
+
+  it('parses spell without effect_type or base_value (fields are optional)', () => {
+    const result = SpellSchema.parse(validSpell);
+    expect(result.effect_type).toBeUndefined();
+    expect(result.base_value).toBeUndefined();
+  });
+
+  it('accepts all effect_type enum values', () => {
+    expect(SpellSchema.parse({ ...validSpell, effect_type: 'heal' }).effect_type).toBe('heal');
+    expect(SpellSchema.parse({ ...validSpell, effect_type: 'buff' }).effect_type).toBe('buff');
+  });
+});
 
 describe('LocationSchema enemies field', () => {
   it('accepts enemies array with one entry', () => {

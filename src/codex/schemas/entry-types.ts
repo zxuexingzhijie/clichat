@@ -71,6 +71,8 @@ export const SpellSchema = z.object({
   mp_cost: z.number(),
   effect: z.string(),
   requirements: z.array(z.string()),
+  effect_type: z.enum(['damage', 'heal', 'buff']).optional(),
+  base_value: z.number().optional(),
 });
 
 export const ItemSchema = z.object({
