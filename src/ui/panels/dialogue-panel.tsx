@@ -1,5 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Box, Text, useInput } from 'ink';
+import { TextInput } from '@inkjs/ui';
 import { getAttitudeLabel } from '../../engine/reputation-system';
 
 type ResponseOption = {
@@ -27,6 +28,7 @@ type DialoguePanelProps = {
   readonly isActive: boolean;
   readonly onEscape: () => void;
   readonly isNpcThinking?: boolean;
+  readonly onFreeTextSubmit: (text: string) => void;
 };
 
 export function DialoguePanel({
@@ -41,10 +43,17 @@ export function DialoguePanel({
   isActive,
   onEscape,
   isNpcThinking = false,
+  onFreeTextSubmit,
 }: DialoguePanelProps): React.ReactNode {
+  const [isFreeTextMode, setIsFreeTextMode] = useState(false);
+
   const handleInput = useCallback(
     (input: string, key: { upArrow?: boolean; downArrow?: boolean; return?: boolean; escape?: boolean }) => {
       if (key.escape) {
+        if (isFreeTextMode) {
+          setIsFreeTextMode(false);
+          return;
+        }
         onEscape();
         return;
       }
@@ -64,10 +73,10 @@ export function DialoguePanel({
         }
       }
     },
-    [responseOptions.length, selectedIndex, onSelect, onExecute, onEscape],
+    [responseOptions.length, selectedIndex, onSelect, onExecute, onEscape, isFreeTextMode],
   );
 
-  useInput(handleInput, { isActive });
+  useInput(handleInput, { isActive: isActive && !isFreeTextMode });
 
   const relLabel = getAttitudeLabel(relationshipValue);
   const recentHistory = dialogueHistory.slice(-4);
@@ -132,7 +141,24 @@ export function DialoguePanel({
         );
       })}
       <Text> </Text>
-      <Text dimColor>↑↓ 选择    Enter 确认    Esc 结束对话</Text>
+      <TextInput
+        placeholder="直接输入你的回应…"
+        isDisabled={isNpcThinking}
+        onChange={(value) => {
+          if (value.length > 0 && !isFreeTextMode) {
+            setIsFreeTextMode(true);
+          } else if (value.length === 0 && isFreeTextMode) {
+            setIsFreeTextMode(false);
+          }
+        }}
+        onSubmit={(text) => {
+          if (text.trim()) {
+            setIsFreeTextMode(false);
+            onFreeTextSubmit(text.trim());
+          }
+        }}
+      />
+      <Text dimColor>↑↓ 选择    Enter 确认    直接输入文字 回复NPC    Esc {isFreeTextMode ? '退出输入' : '结束对话'}</Text>
     </Box>
   );
 }

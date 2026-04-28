@@ -413,6 +413,7 @@ describe('createGameScreenController', () => {
 
       const dialogueManager: DialogueManager = {
         processPlayerResponse: mock(async (_i: number) => null),
+        processPlayerFreeText: mock(async (_t: string) => null),
         endDialogue: mock(() => {}),
         startDialogue: mock(async () => ({ mode: 'inline' as const, dialogue: '', npcName: '' } satisfies DialogueResult)),
       };
@@ -451,6 +452,7 @@ describe('createGameScreenController', () => {
 
       const dialogueManager: DialogueManager = {
         processPlayerResponse: mock(async (_i: number) => null),
+        processPlayerFreeText: mock(async (_t: string) => null),
         endDialogue: mock(() => {}),
         startDialogue: mock(async () => ({ mode: 'inline' as const, dialogue: '', npcName: '' } satisfies DialogueResult)),
       };

@@ -40,6 +40,7 @@ type PanelRouterProps = {
   readonly onDialogueSelect: (index: number) => void;
   readonly onDialogueExecute: (index: number) => void;
   readonly onDialogueEscape: () => void;
+  readonly onDialogueFreeText: (text: string) => void;
 
   readonly activeQuests: readonly QuestDisplayEntry[];
   readonly completedQuests: readonly QuestDisplayEntry[];
@@ -87,6 +88,7 @@ export function PanelRouter({
   onDialogueSelect,
   onDialogueExecute,
   onDialogueEscape,
+  onDialogueFreeText,
   activeQuests,
   completedQuests,
   failedQuests,
@@ -206,6 +208,7 @@ export function PanelRouter({
           onExecute={onDialogueExecute}
           isActive={true}
           onEscape={onDialogueEscape}
+          onFreeTextSubmit={onDialogueFreeText}
           isNpcThinking={showSpinner}
         />
       </GameErrorBoundary>

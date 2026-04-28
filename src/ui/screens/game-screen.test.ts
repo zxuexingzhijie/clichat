@@ -277,3 +277,24 @@ describe('BUG-03: SIGINT → pendingQuit', () => {
     expect(gameStore.getState().pendingQuit).toBe(false);
   });
 });
+
+describe('DIAL-04: onFreeTextSubmit wired to dialogueManager.processPlayerFreeText', () => {
+  it('GameScreen function source passes onDialogueFreeText to PanelRouter', () => {
+    const source = GameScreen.toString();
+    expect(source).toContain('onDialogueFreeText');
+  });
+
+  it('GameScreen function source calls processPlayerFreeText', () => {
+    const source = GameScreen.toString();
+    expect(source).toContain('processPlayerFreeText');
+  });
+});
+
+describe('DIAL-04: DialogueManager processPlayerFreeText', () => {
+  it('DialogueManager interface includes processPlayerFreeText method', async () => {
+    const { createDialogueManager } = await import('../../engine/dialogue-manager');
+    expect(typeof createDialogueManager).toBe('function');
+    const source = createDialogueManager.toString();
+    expect(source).toContain('processPlayerFreeText');
+  });
+});

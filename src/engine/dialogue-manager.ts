@@ -151,6 +151,7 @@ export type DialogueManagerOptions = {
 export interface DialogueManager {
   readonly startDialogue: (npcId: string) => Promise<DialogueResult>;
   readonly processPlayerResponse: (responseIndex: number) => Promise<DialogueResult | null>;
+  readonly processPlayerFreeText: (text: string) => Promise<DialogueResult | null>;
   readonly endDialogue: () => void;
 }
 
@@ -390,5 +391,71 @@ export function createDialogueManager(
     });
   }
 
-  return { startDialogue, processPlayerResponse, endDialogue };
+  async function processPlayerFreeText(text: string): Promise<DialogueResult | null> {
+    if (isProcessing) return null;
+
+    const state = stores.dialogue.getState();
+    const npcId = state.npcId;
+    if (!npcId) return null;
+
+    const entry = queryById(codexEntries, npcId);
+    if (!entry || entry.type !== 'npc') return null;
+
+    const npc = entry as Npc;
+    const memoryRecord = stores.npcMemory.getState().memories[npcId];
+    const memoryStrings: string[] = memoryRecord
+      ? [
+          ...memoryRecord.recentMemories.map((m) => m.event),
+          ...memoryRecord.salientMemories.map((m) => m.event),
+        ]
+      : [];
+    const scene = stores.scene.getState().narrationLines.join(' ');
+
+    const npcProfile = {
+      id: npc.id,
+      name: npc.name,
+      personality_tags: npc.personality_tags,
+      goals: npc.goals,
+      backstory: npc.backstory,
+    };
+
+    isProcessing = true;
+    try {
+      const npcDialogue: NpcDialogue = await doGenerateDialogue(
+        npcProfile,
+        scene,
+        text,
+        memoryStrings,
+      );
+
+      lastNpcEmotionTag = npcDialogue.emotionTag;
+
+      const newRelationship = state.relationshipValue + sentimentToDelta(npcDialogue.sentiment);
+      const newResponses = buildResponses(npc, state.mode);
+
+      stores.dialogue.setState((draft) => {
+        draft.dialogueHistory = [
+          ...state.dialogueHistory,
+          { speaker: 'player', text },
+          { speaker: 'npc', text: npcDialogue.dialogue },
+        ];
+        draft.availableResponses = newResponses;
+        draft.relationshipValue = newRelationship;
+      });
+
+      if (npcDialogue.shouldRemember) {
+        writeMemory(npcId, `玩家说: "${text.slice(0, 30)}" — ${npcDialogue.dialogue.slice(0, 50)}`);
+      }
+
+      return {
+        mode: state.mode,
+        dialogue: npcDialogue.dialogue,
+        npcName: npc.name,
+      };
+    } finally {
+      isProcessing = false;
+    }
+  }
+
+  return { startDialogue, processPlayerResponse, processPlayerFreeText, endDialogue };
 }

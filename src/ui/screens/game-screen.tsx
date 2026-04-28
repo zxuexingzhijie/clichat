@@ -236,6 +236,13 @@ export function GameScreen({
     setDialogueSelectedIndex(0);
   }, [controller]);
 
+  const handleDialogueFreeText = useCallback(
+    (text: string) => {
+      void dialogueManager?.processPlayerFreeText(text);
+    },
+    [dialogueManager],
+  );
+
   const handleCombatExecute = useCallback(
     (index: number) => {
       controller.handleCombatExecute(index);
@@ -353,6 +360,7 @@ export function GameScreen({
       onDialogueSelect={setDialogueSelectedIndex}
       onDialogueExecute={handleDialogueExecute}
       onDialogueEscape={handleDialogueEscape}
+      onDialogueFreeText={handleDialogueFreeText}
       activeQuests={activeQuests}
       completedQuests={completedQuests}
       failedQuests={failedQuests}
