@@ -111,22 +111,26 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
   }, [allCodexEntries]);
 
   const serializer = useMemo(
-    () => createSerializer(
-      {
-        player: ctx.stores.player,
-        scene: ctx.stores.scene,
-        combat: ctx.stores.combat,
-        game: ctx.stores.game,
-        quest: ctx.stores.quest,
-        relations: ctx.stores.relation,
-        npcMemory: ctx.stores.npcMemory,
-        exploration: ctx.stores.exploration,
-        playerKnowledge: ctx.stores.playerKnowledge,
-        turnLog: ctx.stores.turnLog,
-      },
-      () => ctx.stores.branch.getState().currentBranchId,
-      () => null,
-    ),
+    () => {
+      const sessionStart = Date.now();
+      return createSerializer(
+        {
+          player: ctx.stores.player,
+          scene: ctx.stores.scene,
+          combat: ctx.stores.combat,
+          game: ctx.stores.game,
+          quest: ctx.stores.quest,
+          relations: ctx.stores.relation,
+          npcMemory: ctx.stores.npcMemory,
+          exploration: ctx.stores.exploration,
+          playerKnowledge: ctx.stores.playerKnowledge,
+          turnLog: ctx.stores.turnLog,
+        },
+        () => ctx.stores.branch.getState().currentBranchId,
+        () => null,
+        () => Math.floor((Date.now() - sessionStart) / 1000),
+      );
+    },
     [ctx],
   );
 

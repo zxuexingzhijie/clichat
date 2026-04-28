@@ -13,7 +13,7 @@ import type { TurnLogState } from './turn-log-store';
 import { migrateV1ToV2, migrateV2ToV3, migrateV3ToV4 } from '../persistence/save-migrator';
 
 export interface Serializer {
-  snapshot(): string;
+  snapshot(saveName?: string): string;
   restore(json: string): void;
 }
 
@@ -101,22 +101,23 @@ export function createSerializer(
   },
   getBranchId: () => string,
   getParentSaveId: () => string | null,
+  getPlaytime: () => number = () => 0,
 ): Serializer {
   return {
-    snapshot(): string {
+    snapshot(saveName?: string): string {
       const player = stores.player.getState();
       const scene = stores.scene.getState();
       const game = stores.game.getState();
 
       const meta: SaveMeta = {
-        saveName: 'Quick Save',
+        saveName: saveName ?? 'Quick Save',
         timestamp: new Date().toISOString(),
         character: {
           name: player.name,
           race: player.race,
           profession: player.profession,
         },
-        playtime: 0,
+        playtime: getPlaytime(),
         locationName: scene.sceneId,
       };
 

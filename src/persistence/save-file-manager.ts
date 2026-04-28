@@ -35,7 +35,7 @@ function formatTimestamp(): string {
 export async function quickSave(serializer: Serializer, saveDir: string): Promise<string> {
   await ensureSaveDirExists(saveDir);
   const filePath = `${saveDir}/quicksave.json`;
-  const json = serializer.snapshot();
+  const json = serializer.snapshot('Quick Save');
   await Bun.write(filePath, json);
   return filePath;
 }
@@ -44,7 +44,7 @@ export async function saveGame(name: string, serializer: Serializer, saveDir: st
   await ensureSaveDirExists(saveDir);
   const safeName = name.replace(/[^a-zA-Z0-9\u4e00-\u9fff_-]/g, '-');
   const filePath = `${saveDir}/${safeName}_${formatTimestamp()}.json`;
-  const json = serializer.snapshot();
+  const json = serializer.snapshot(name);
   await Bun.write(filePath, json);
   return filePath;
 }
