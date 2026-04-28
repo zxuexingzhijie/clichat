@@ -16,6 +16,7 @@ import type { QuestSystem } from './engine/quest-system';
 import type { BranchMeta } from './state/branch-store';
 import type { TurnLogEntry } from './state/serializer';
 import { createDefaultRegistry, type ActionContext } from './engine/action-handlers';
+import type { CodexEntry } from './codex/schemas/entry-types';
 
 export { getLastReplayEntries } from './engine/action-handlers';
 
@@ -73,6 +74,7 @@ export type GameLoopOptions = {
   readonly turnLog?: {
     readonly replayTurns: (count: number) => readonly TurnLogEntry[];
   };
+  readonly codexEntries?: Map<string, CodexEntry>;
 };
 
 export type GameLoopStores = {
@@ -103,6 +105,7 @@ export function createGameLoop(
     branchManager: options?.branchManager,
     turnLog: options?.turnLog,
     rng: options?.rng,
+    codexEntries: options?.codexEntries,
   };
 
   async function processInput(input: string, routeOptions?: RouteInputOptions): Promise<ProcessResult> {

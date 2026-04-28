@@ -9,6 +9,7 @@ import type { QuestSystem } from '../quest-system';
 import type { Serializer } from '../../state/serializer';
 import type { BranchMeta } from '../../state/branch-store';
 import type { TurnLogEntry } from '../../state/serializer';
+import type { CodexEntry } from '../../codex/schemas/entry-types';
 
 export type ActionContext = {
   readonly stores: GameLoopStores;
@@ -34,6 +35,7 @@ export type ActionContext = {
     readonly replayTurns: (count: number) => readonly TurnLogEntry[];
   };
   readonly rng?: () => number;
+  readonly codexEntries?: Map<string, CodexEntry>;
 };
 
 export type ActionHandler = (

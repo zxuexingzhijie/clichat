@@ -209,9 +209,10 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
           getBranchMeta: (branchId: string) => branchStore.getState().branches[branchId],
         },
         turnLog: { replayTurns },
+        codexEntries: allCodexEntries as Map<string, CodexEntry>,
       },
     ),
-    [sceneManager, dialogueManager, combatLoop, serializer, questSystem, ctx],
+    [sceneManager, dialogueManager, combatLoop, serializer, questSystem, ctx, allCodexEntries],
   );
 
   const currentSceneId = SceneStoreCtx.useStoreState((s) => s.sceneId);
