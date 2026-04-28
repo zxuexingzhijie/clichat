@@ -278,3 +278,124 @@ describe('createCombatLoop', () => {
     expect(result.status).toBe('ok');
   });
 });
+
+describe('enemy abilities (COMBAT-04)', () => {
+  const makeEnemy = (id: string, abilities: string[]): CodexEntry => ({
+    id,
+    name: `敌人_${id}`,
+    type: 'enemy',
+    tags: ['enemy'],
+    description: '',
+    epistemic: EPISTEMIC,
+    hp: 20,
+    maxHp: 20,
+    attack: 1,
+    defense: 0,
+    dc: 10,
+    damage_base: 3,
+    abilities,
+    danger_level: 2,
+  });
+
+  beforeEach(() => {
+    combatStore.setState(() => getDefaultCombatState());
+    playerStore.setState(() => getDefaultPlayerState());
+  });
+
+  it('pack_tactics: +2 attack bonus when 2+ enemies alive', async () => {
+    const wolf1 = makeEnemy('wolf1', ['pack_tactics']);
+    const wolf2 = makeEnemy('wolf2', ['pack_tactics']);
+    const codex = makeCodex(wolf1, wolf2);
+    const loop = createCombatLoop(stores, codex, { rng: () => 0.5, generateNarrationFn: mockNarration });
+    await loop.startCombat(['wolf1', 'wolf2']);
+
+    await loop.processEnemyTurn();
+
+    const lastCheck = combatStore.getState().lastCheckResult;
+    expect(lastCheck).not.toBeNull();
+    expect(lastCheck!.attributeModifier).toBeGreaterThanOrEqual(3);
+  });
+
+  it('pack_tactics: no attack bonus when only 1 enemy alive', async () => {
+    const wolf1 = makeEnemy('wolf1', ['pack_tactics']);
+    const wolf2 = makeEnemy('wolf2', []);
+    const codex = makeCodex(wolf1, wolf2);
+    const loop = createCombatLoop(stores, codex, { rng: () => 0.5, generateNarrationFn: mockNarration });
+    await loop.startCombat(['wolf1', 'wolf2']);
+    combatStore.setState(draft => { draft.enemies[1]!.hp = 0; });
+
+    await loop.processEnemyTurn();
+
+    const lastCheck = combatStore.getState().lastCheckResult;
+    expect(lastCheck!.attributeModifier).toBe(1);
+  });
+
+  it('howl: sets howlActive on combat state', async () => {
+    const alpha = makeEnemy('alpha', ['howl']);
+    const loop = createCombatLoop(stores, makeCodex(alpha), { rng: () => 0.1, generateNarrationFn: mockNarration });
+    await loop.startCombat(['alpha']);
+
+    await loop.processEnemyTurn();
+
+    expect(combatStore.getState().howlActive).toBe(true);
+  });
+
+  it('backstab: round 1 forces critical_success grade', async () => {
+    const assassin = makeEnemy('assassin', ['backstab']);
+    const loop = createCombatLoop(stores, makeCodex(assassin), { rng: () => 0.1, generateNarrationFn: mockNarration });
+    await loop.startCombat(['assassin']);
+
+    combatStore.setState(draft => { draft.roundNumber = 1; });
+    await loop.processEnemyTurn();
+
+    const lastCheck = combatStore.getState().lastCheckResult;
+    expect(lastCheck!.grade).toBe('critical_success');
+  });
+
+  it('poison_blade: on hit, player.poisonStacks increases', async () => {
+    const poisoner = makeEnemy('poisoner', ['poison_blade']);
+    const loop = createCombatLoop(stores, makeCodex(poisoner), { rng: () => 0.99, generateNarrationFn: mockNarration });
+    await loop.startCombat(['poisoner']);
+
+    await loop.processEnemyTurn();
+
+    expect(playerStore.getState().poisonStacks).toBeGreaterThan(0);
+  });
+
+  it('vanish: enemy hp set to 0, attack skipped', async () => {
+    const ghost = makeEnemy('ghost', ['vanish']);
+    const loop = createCombatLoop(stores, makeCodex(ghost), { rng: () => 0.99, generateNarrationFn: mockNarration });
+    await loop.startCombat(['ghost']);
+
+    const initialHp = playerStore.getState().hp;
+    await loop.processEnemyTurn();
+
+    expect(combatStore.getState().enemies[0]!.hp).toBe(0);
+    expect(playerStore.getState().hp).toBe(initialHp);
+  });
+
+  it('unknown ability (bite) silently skipped, normal attack proceeds', async () => {
+    const biter = makeEnemy('biter', ['bite']);
+    const loop = createCombatLoop(stores, makeCodex(biter), { rng: () => 0.99, generateNarrationFn: mockNarration });
+    await loop.startCombat(['biter']);
+
+    const result = await loop.processEnemyTurn();
+
+    expect(result).toBeUndefined();
+    const lastCheck = combatStore.getState().lastCheckResult;
+    expect(lastCheck).not.toBeNull();
+  });
+
+  it('poison DoT applied at start of enemy turn when poisonStacks > 0', async () => {
+    const biter = makeEnemy('biter', []);
+    const loop = createCombatLoop(stores, makeCodex(biter), { rng: () => 0.1, generateNarrationFn: mockNarration });
+    await loop.startCombat(['biter']);
+
+    playerStore.setState(draft => { (draft as any).poisonStacks = 2; });
+    const hpBefore = playerStore.getState().hp;
+
+    await loop.processEnemyTurn();
+
+    expect(playerStore.getState().hp).toBe(hpBefore - 2);
+  });
+});

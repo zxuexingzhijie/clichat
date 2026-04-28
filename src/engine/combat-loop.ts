@@ -7,7 +7,7 @@ import type { CombatState } from '../state/combat-store';
 import type { PlayerState } from '../state/player-store';
 import type { GameState } from '../state/game-store';
 import type { CheckResult } from '../types/common';
-import type { CodexEntry, Enemy } from '../codex/schemas/entry-types';
+import type { CodexEntry, Enemy, Spell } from '../codex/schemas/entry-types';
 import type { NarrativeContext } from '../ai/roles/narrative-director';
 
 export type CombatActionType = 'attack' | 'cast' | 'guard' | 'use_item' | 'flee';
@@ -257,35 +257,106 @@ export function createCombatLoop(
 
   async function processEnemyTurn(): Promise<void> {
     const state = stores.combat.getState();
-    const player = stores.player.getState();
     const guardActive = state.guardActive;
-    const playerAC = getPlayerAC() + (guardActive ? GAME_CONSTANTS.GUARD_AC_BONUS : 0);
+    const howlActive = state.howlActive;
+    const playerAC = getPlayerAC()
+      + (guardActive ? GAME_CONSTANTS.GUARD_AC_BONUS : 0)
+      - (howlActive ? 2 : 0);
 
     stores.combat.setState(draft => {
       draft.guardActive = false;
+      draft.howlActive = false;
     });
+
+    const poisonStacks = stores.player.getState().poisonStacks ?? 0;
+    if (poisonStacks > 0) {
+      stores.player.setState(draft => {
+        draft.hp = Math.max(0, draft.hp - poisonStacks);
+      });
+    }
+
+    const aliveEnemyCount = state.enemies.filter(e => e.hp > 0).length;
 
     for (const enemy of state.enemies) {
       if (enemy.hp <= 0) continue;
 
       const enemyEntry = codexEntries.get(enemy.id);
       const enemyData = enemyEntry?.type === 'enemy' ? (enemyEntry as Enemy) : null;
-      const enemyAttackMod = enemyData?.attack ?? 0;
+      const baseAttackMod = enemyData?.attack ?? 0;
       const enemyDamageBase = enemyData?.damage_base ?? 3;
+      const abilities: string[] = enemyData?.abilities ?? [];
+
+      let abilityAttackBonus = 0;
+      let forceFirstCrit = false;
+      let shouldVanish = false;
+
+      for (const ability of abilities) {
+        switch (ability) {
+          case 'pack_tactics': {
+            if (aliveEnemyCount >= 2) {
+              abilityAttackBonus += 2;
+            }
+            break;
+          }
+          case 'howl': {
+            stores.combat.setState(draft => { draft.howlActive = true; });
+            break;
+          }
+          case 'backstab': {
+            if (state.roundNumber === 1) {
+              forceFirstCrit = true;
+            }
+            break;
+          }
+          case 'poison_blade':
+            break;
+          case 'vanish': {
+            shouldVanish = true;
+            break;
+          }
+          default:
+            break;
+        }
+      }
+
+      if (shouldVanish) {
+        stores.combat.setState(draft => {
+          const idx = draft.enemies.findIndex(e => e.id === enemy.id);
+          if (idx >= 0) draft.enemies[idx]!.hp = 0;
+        });
+        continue;
+      }
+
+      const enemyAttackMod = baseAttackMod + abilityAttackBonus;
 
       stores.combat.setState(draft => {
         draft.phase = 'resolving';
       });
 
-      const roll = rollD20(rng);
-      const checkResult = resolveNormalCheck({
-        roll,
-        attributeName: 'physique',
-        attributeModifier: enemyAttackMod,
-        skillModifier: 0,
-        environmentModifier: 0,
-        dc: playerAC,
-      });
+      let checkResult: CheckResult;
+      if (forceFirstCrit) {
+        checkResult = {
+          roll: 20,
+          total: 20 + enemyAttackMod,
+          dc: playerAC,
+          grade: 'critical_success',
+          attributeName: 'physique',
+          attributeModifier: enemyAttackMod,
+          skillModifier: 0,
+          environmentModifier: 0,
+          display: '暴击！',
+        };
+      } else {
+        const roll = rollD20(rng);
+        checkResult = resolveNormalCheck({
+          roll,
+          attributeName: 'physique',
+          attributeModifier: enemyAttackMod,
+          skillModifier: 0,
+          environmentModifier: 0,
+          dc: playerAC,
+        });
+      }
 
       stores.combat.setState(draft => {
         draft.lastCheckResult = checkResult;
@@ -294,6 +365,7 @@ export function createCombatLoop(
       const isHit = checkResult.grade !== 'failure' && checkResult.grade !== 'critical_failure';
 
       if (isHit) {
+        const player = stores.player.getState();
         const damage = calculateDamage({
           weaponBase: enemyDamageBase,
           attributeModifier: enemyAttackMod,
@@ -305,6 +377,12 @@ export function createCombatLoop(
         stores.player.setState(draft => {
           draft.hp = newHp;
         });
+
+        if (abilities.includes('poison_blade')) {
+          stores.player.setState(draft => {
+            draft.poisonStacks = (draft.poisonStacks ?? 0) + 1;
+          });
+        }
       }
 
       stores.combat.setState(draft => {

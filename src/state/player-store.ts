@@ -16,6 +16,7 @@ export const PlayerStateSchema = z.object({
   attributes: z.record(AttributeNameSchema, z.number()),
   tags: z.array(z.string()),
   equipment: z.record(z.string(), z.string().nullable()),
+  poisonStacks: z.number().default(0),
 });
 export type PlayerState = z.infer<typeof PlayerStateSchema>;
 
@@ -32,6 +33,7 @@ export function getDefaultPlayerState(): PlayerState {
     attributes: { physique: 3, finesse: 2, mind: 1 },
     tags: ['newcomer'],
     equipment: { weapon: null, armor: null, accessory: null },
+    poisonStacks: 0,
   };
 }
 

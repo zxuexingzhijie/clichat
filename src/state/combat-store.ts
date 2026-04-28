@@ -19,6 +19,7 @@ export const CombatStateSchema = z.object({
   lastCheckResult: CheckResultSchema.nullable(),
   lastNarration: z.string(),
   guardActive: z.boolean(),
+  howlActive: z.boolean(),
   outcome: z.enum(['victory', 'defeat', 'flee']).nullable(),
 });
 export type CombatState = z.infer<typeof CombatStateSchema>;
@@ -34,6 +35,7 @@ export function getDefaultCombatState(): CombatState {
     lastCheckResult: null,
     lastNarration: '',
     guardActive: false,
+    howlActive: false,
     outcome: null,
   };
 }
