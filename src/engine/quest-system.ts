@@ -5,6 +5,7 @@ import type { QuestState } from '../state/quest-store';
 import type { RelationState } from '../state/relation-store';
 import type { GameState } from '../state/game-store';
 import type { CodexEntry, QuestTemplate } from '../codex/schemas/entry-types';
+import type { EventBus } from '../events/event-bus';
 
 export type QuestResult =
   | { readonly status: 'ok' }
@@ -26,6 +27,7 @@ export function createQuestSystem(
     game: Store<GameState>;
   },
   codexEntries: Map<string, CodexEntry>,
+  bus?: EventBus,
 ): QuestSystem {
   function getTemplate(questId: string): QuestTemplate | null {
     const entry = queryById(codexEntries, questId);
@@ -113,6 +115,100 @@ export function createQuestSystem(
       }
     });
     appendQuestEvent({ questId, type: 'quest_completed', turnNumber });
+  }
+
+  const pendingConditions = new Map<string, Set<string>>();
+
+  function checkAndAdvance(questId: string, conditionKey: 'primary' | 'secondary'): void {
+    const progress = stores.quest.getState().quests[questId];
+    if (!progress || progress.status !== 'active') return;
+    const stageId = progress.currentStageId;
+    if (!stageId) return;
+    const template = getTemplate(questId);
+    const stage = template?.stages.find(s => s.id === stageId);
+    if (!stage?.trigger) return;
+    const mapKey = `${questId}:${stageId}`;
+    const pending = pendingConditions.get(mapKey) ?? new Set<string>();
+    pending.add(conditionKey);
+    pendingConditions.set(mapKey, pending);
+    const needsBoth = !!stage.trigger.secondaryEvent;
+    const canAdvance = needsBoth
+      ? pending.has('primary') && pending.has('secondary')
+      : pending.has('primary');
+    if (canAdvance && stage.nextStageId) {
+      pendingConditions.delete(mapKey);
+      advanceStage(questId, stage.nextStageId);
+    } else if (canAdvance && !stage.nextStageId) {
+      pendingConditions.delete(mapKey);
+      completeQuest(questId);
+    }
+  }
+
+  if (bus) {
+    bus.on('dialogue_ended', ({ npcId }) => {
+      for (const [questId, progress] of Object.entries(stores.quest.getState().quests)) {
+        if (progress.status !== 'active' || !progress.currentStageId) continue;
+        const template = getTemplate(questId);
+        const stage = template?.stages.find(s => s.id === progress.currentStageId);
+        if (!stage?.trigger) continue;
+        if (stage.trigger.event === 'dialogue_ended') {
+          if (!stage.trigger.targetId || stage.trigger.targetId === npcId) {
+            checkAndAdvance(questId, 'primary');
+          }
+        }
+        if (stage.trigger.secondaryEvent === 'dialogue_ended') {
+          if (!stage.trigger.secondaryTargetId || stage.trigger.secondaryTargetId === npcId) {
+            checkAndAdvance(questId, 'secondary');
+          }
+        }
+      }
+    });
+
+    bus.on('scene_changed', ({ sceneId }) => {
+      for (const [questId, progress] of Object.entries(stores.quest.getState().quests)) {
+        if (progress.status !== 'active' || !progress.currentStageId) continue;
+        const template = getTemplate(questId);
+        const stage = template?.stages.find(s => s.id === progress.currentStageId);
+        if (!stage?.trigger) continue;
+        if (stage.trigger.event === 'location_entered' && stage.trigger.targetId === sceneId) {
+          checkAndAdvance(questId, 'primary');
+        }
+        if (stage.trigger.secondaryEvent === 'location_entered' && stage.trigger.secondaryTargetId === sceneId) {
+          checkAndAdvance(questId, 'secondary');
+        }
+      }
+    });
+
+    bus.on('item_acquired', ({ itemId }) => {
+      for (const [questId, progress] of Object.entries(stores.quest.getState().quests)) {
+        if (progress.status !== 'active' || !progress.currentStageId) continue;
+        const template = getTemplate(questId);
+        const stage = template?.stages.find(s => s.id === progress.currentStageId);
+        if (!stage?.trigger) continue;
+        if (stage.trigger.event === 'item_found') {
+          if (!stage.trigger.targetId || stage.trigger.targetId === itemId) {
+            checkAndAdvance(questId, 'primary');
+          }
+        }
+        if (stage.trigger.secondaryEvent === 'item_found') {
+          if (!stage.trigger.secondaryTargetId || stage.trigger.secondaryTargetId === itemId) {
+            checkAndAdvance(questId, 'secondary');
+          }
+        }
+      }
+    });
+
+    bus.on('combat_ended', ({ outcome }) => {
+      if (outcome !== 'victory') return;
+      for (const [questId, progress] of Object.entries(stores.quest.getState().quests)) {
+        if (progress.status !== 'active' || !progress.currentStageId) continue;
+        const template = getTemplate(questId);
+        const stage = template?.stages.find(s => s.id === progress.currentStageId);
+        if (stage?.trigger?.event === 'combat_ended') {
+          checkAndAdvance(questId, 'primary');
+        }
+      }
+    });
   }
 
   return { acceptQuest, completeObjective, advanceStage, failQuest, completeQuest };
