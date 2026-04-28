@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Game System Integrity & Playability
 status: executing
-last_updated: "2026-04-28T10:06:26Z"
-last_activity: 2026-04-28 — Phase 13 P03 complete (NPC role questions + inline TextInput free-text dialogue)
+last_updated: "2026-04-28T10:22:40Z"
+last_activity: 2026-04-28 — Phase 13 P04 complete (remove hardcoded sentiment; streaming completion in useEffect; double-fire guards)
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 8
-  completed_plans: 9
-  percent: 45
+  completed_plans: 10
+  percent: 50
 ---
 
 # Project State
@@ -25,19 +25,19 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 ## Current Position
 
 Phase: 13 of 15 (Dialogue & Reputation)
-Plan: P03 complete (DIAL-03/04/05 done)
+Plan: P04 complete (DIAL-03/06/07 done)
 Status: Executing
-Last activity: 2026-04-28 — Phase 13 P03 complete (NPC role questions + inline TextInput free-text dialogue)
+Last activity: 2026-04-28 — Phase 13 P04 complete (remove hardcoded sentiment; streaming completion in useEffect; double-fire guards)
 
-Progress: [█████     ] 45%
+Progress: [█████     ] 50%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 9 (v1.2)
+- Total plans completed: 10 (v1.2)
 - Average duration: ~18 min/plan
-- Total execution time: ~2.3 hours
+- Total execution time: ~2.4 hours
 
 **By Phase:**
 
@@ -48,6 +48,7 @@ Progress: [█████     ] 45%
 | 13 P02 (Dialogue & Reputation) | 1 | ~12 min | ~12 min |
 | 13 P01 (Dialogue & Reputation) | 1 | ~25 min | ~25 min |
 | 13 P03 (Dialogue & Reputation) | 1 | ~20 min | ~20 min |
+| 13 P04 (Dialogue & Reputation) | 1 | ~4 min | ~4 min |
 
 *Updated after each plan completion*
 
@@ -61,6 +62,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - DIAL-01/REP-01: sentimentToDelta returns integers (10/0/-10/-20); startDialogue sets relationshipValue=0; endDialogue calls applyFactionReputationDelta when npc.faction set; NpcSchema has faction field
 - DIAL-03/05: clergy added as separate key from religious; NPC_ROLE_QUESTIONS has 12 roles total
 - DIAL-04: TextInput mode toggled via onChange (no onFocus in @inkjs/ui); useInput isActive combined with !isFreeTextMode; Escape exits text mode before exiting dialogue
+- DIAL-03/06/07: ExtractedNpcMetadata.sentiment is optional (undefined = no detection); isAllDefaults uses !extracted.sentiment; streaming completion in useEffect with completionFiredRef; hasFiredRef guards handleNpcDialogueComplete
 
 ### Pending Todos
 
@@ -89,6 +91,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-28T10:06:26Z
-Stopped at: Completed 13-P03-PLAN.md
+Last session: 2026-04-28T10:22:40Z
+Stopped at: Completed 13-P04-PLAN.md
 Resume file: None
