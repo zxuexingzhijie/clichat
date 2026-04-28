@@ -1,6 +1,6 @@
 # Requirements — v1.2 Game System Integrity & Playability
 
-> Milestone goal: Fix 50 known issues spanning code bugs, missing wiring, misaligned systems,
+> Milestone goal: Fix 46 known issues spanning code bugs, missing wiring, misaligned systems,
 > gameplay dead ends, and content gaps. No new features — restore all existing systems to
 > correct, playable state.
 
@@ -112,8 +112,55 @@
 
 ## Traceability
 
-> Filled by roadmapper.
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| WIRE-01 | Phase 11 | Pending |
+| WIRE-02 | Phase 11 | Pending |
+| WIRE-03 | Phase 11 | Pending |
+| WIRE-04 | Phase 11 | Pending |
+| WIRE-05 | Phase 11 | Pending |
+| WIRE-06 | Phase 11 | Pending |
+| WIRE-07 | Phase 11 | Pending |
+| WIRE-08 | Phase 11 | Pending |
+| WIRE-09 | Phase 11 | Pending |
+| WIRE-10 | Phase 11 | Pending |
+| COMBAT-01 | Phase 12 | Pending |
+| COMBAT-02 | Phase 12 | Pending |
+| COMBAT-03 | Phase 12 | Pending |
+| COMBAT-04 | Phase 12 | Pending |
+| COMBAT-05 | Phase 12 | Pending |
+| COMBAT-06 | Phase 12 | Pending |
+| SAVE-01 | Phase 12 | Pending |
+| SAVE-02 | Phase 12 | Pending |
+| SAVE-03 | Phase 12 | Pending |
+| DIAL-01 | Phase 13 | Pending |
+| DIAL-02 | Phase 13 | Pending |
+| DIAL-03 | Phase 13 | Pending |
+| DIAL-04 | Phase 13 | Pending |
+| DIAL-05 | Phase 13 | Pending |
+| DIAL-06 | Phase 13 | Pending |
+| DIAL-07 | Phase 13 | Pending |
+| REP-01 | Phase 13 | Pending |
+| REP-02 | Phase 13 | Pending |
+| REP-03 | Phase 13 | Pending |
+| REP-04 | Phase 13 | Pending |
+| QUEST-01 | Phase 14 | Pending |
+| QUEST-02 | Phase 14 | Pending |
+| QUEST-03 | Phase 14 | Pending |
+| MEM-01 | Phase 14 | Pending |
+| MEM-02 | Phase 14 | Pending |
+| SCENE-01 | Phase 14 | Pending |
+| SCENE-02 | Phase 14 | Pending |
+| SCENE-03 | Phase 14 | Pending |
+| CODEX-01 | Phase 14 | Pending |
+| CODEX-02 | Phase 14 | Pending |
+| CONT-01 | Phase 15 | Pending |
+| CONT-02 | Phase 15 | Pending |
+| CONT-03 | Phase 15 | Pending |
+| CONT-04 | Phase 15 | Pending |
+| CONT-05 | Phase 15 | Pending |
+| DEATH-01 | Phase 15 | Pending |
 
 ---
 
-*Last updated: 2026-04-28 — v1.2 milestone start*
+*Last updated: 2026-04-28 — v1.2 roadmap created*
