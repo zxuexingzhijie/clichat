@@ -72,6 +72,9 @@ export function assembleNarrativeContext(
   };
 }
 
+// Dead code: assembleNpcContext and assembleFilteredNpcContext have no production callers.
+// assembleNpcContext also has a stale .slice(0,3) cap. Do not wire these without updating
+// the cap and ensuring the return type aligns with the NpcActorOptions-based dialogue path.
 export function assembleNpcContext(
   npcProfile: NpcProfile,
   memories: readonly NpcMemory[],

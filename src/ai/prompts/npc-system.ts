@@ -27,6 +27,7 @@ export type NpcUserPromptContext = {
   readonly emotionHint?: string;
   readonly archiveSummary?: string;
   readonly relevantCodex?: readonly string[];
+  readonly conversationHistory?: readonly { readonly speaker: string; readonly text: string }[];
 };
 
 export function buildNpcUserPrompt(context: NpcUserPromptContext): string {
@@ -40,9 +41,16 @@ export function buildNpcUserPrompt(context: NpcUserPromptContext): string {
     ? `\n当前相关世界知识：\n${context.relevantCodex.map((c) => `- ${c}`).join('\n')}`
     : '';
 
+  const historySection = context.conversationHistory?.length
+    ? `\n本轮对话历史：\n${context.conversationHistory
+        .slice(-6)
+        .map((h) => `${h.speaker === 'player' ? '玩家' : '你'}：${h.text}`)
+        .join('\n')}`
+    : '';
+
   return `场景：${context.scene}
 玩家动作：${context.playerAction}
-你对这个玩家的记忆：${memoriesText}${archiveSection}${codexSection}
+你对这个玩家的记忆：${memoriesText}${archiveSection}${codexSection}${historySection}
 当前情绪倾向：${context.emotionHint ?? '中立'}
 请以角色身份回应。`;
 }

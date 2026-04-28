@@ -189,10 +189,25 @@ export function createDialogueManager(
   let isProcessing = false;
   let lastNpcEmotionTag = 'neutral';
 
-  function buildNpcCallOptions(
+  function buildNpcLlmContext(
     npc: Npc,
     memoryRecord: NpcMemoryRecord | undefined,
-  ): { archiveSummary?: string; relevantCodex?: readonly string[] } {
+    dialogueHistory: readonly { readonly speaker: string; readonly text: string }[],
+  ): {
+    memoryStrings: readonly string[];
+    archiveSummary: string | undefined;
+    relevantCodex: readonly string[];
+    conversationHistory: readonly { readonly speaker: string; readonly text: string }[];
+  } {
+    const IMPORTANCE_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
+    const combined = [
+      ...(memoryRecord?.recentMemories ?? []),
+      ...(memoryRecord?.salientMemories ?? []),
+    ].sort((a, b) => {
+      const imp = (IMPORTANCE_ORDER[a.importance] ?? 1) - (IMPORTANCE_ORDER[b.importance] ?? 1);
+      return imp !== 0 ? imp : b.turnNumber - a.turnNumber;
+    });
+    const memoryStrings = combined.map((m) => m.event);
     const archiveSummary = memoryRecord?.archiveSummary || undefined;
 
     const npcFilterCtx: NpcFilterContext = {
@@ -202,11 +217,10 @@ export function createDialogueManager(
       npcLocationId: npc.location_id,
       npcRegion: '',
     };
-
     const filtered = filterCodexForNpc(Array.from(codexEntries.values()), npcFilterCtx);
     const relevantCodex = filtered.slice(0, 3).map((e) => e.description.slice(0, 150));
 
-    return { archiveSummary, relevantCodex };
+    return { memoryStrings, archiveSummary, relevantCodex, conversationHistory: dialogueHistory };
   }
 
   async function startDialogue(npcId: string): Promise<DialogueResult> {
@@ -218,13 +232,8 @@ export function createDialogueManager(
 
     const npc = entry as Npc;
     const memoryRecord = stores.npcMemory.getState().memories[npcId];
-    const memoryStrings: string[] = memoryRecord
-      ? [
-          ...memoryRecord.recentMemories.map((m) => m.event),
-          ...memoryRecord.salientMemories.map((m) => m.event),
-        ]
-      : [];
     const scene = stores.scene.getState().narrationLines.join(' ');
+    const { memoryStrings, archiveSummary, relevantCodex, conversationHistory } = buildNpcLlmContext(npc, memoryRecord, []);
 
     const npcProfile = {
       id: npc.id,
@@ -239,7 +248,7 @@ export function createDialogueManager(
       scene,
       'greet',
       memoryStrings,
-      buildNpcCallOptions(npc, memoryRecord),
+      { archiveSummary, relevantCodex, conversationHistory },
     );
 
     lastNpcEmotionTag = npcDialogue.emotionTag;
@@ -259,7 +268,7 @@ export function createDialogueManager(
     });
 
     if (npcDialogue.shouldRemember) {
-      writeMemory(npcId, `与玩家初次对话: ${npcDialogue.dialogue.slice(0, 50)}`);
+      writeMemory(npcId, `与玩家初次对话: ${npcDialogue.dialogue.slice(0, 50)}`, 'low');
     }
 
     stores.game.setState((draft) => {
@@ -303,13 +312,8 @@ export function createDialogueManager(
     }
 
     const memoryRecord = stores.npcMemory.getState().memories[npcId];
-    const memoryStrings: string[] = memoryRecord
-      ? [
-          ...memoryRecord.recentMemories.map((m) => m.event),
-          ...memoryRecord.salientMemories.map((m) => m.event),
-        ]
-      : [];
     const scene = stores.scene.getState().narrationLines.join(' ');
+    const { memoryStrings, archiveSummary, relevantCodex, conversationHistory } = buildNpcLlmContext(npc, memoryRecord, state.dialogueHistory);
 
     const npcProfile = {
       id: npc.id,
@@ -326,7 +330,7 @@ export function createDialogueManager(
         scene,
         response.label,
         memoryStrings,
-        buildNpcCallOptions(npc, memoryRecord),
+        { archiveSummary, relevantCodex, conversationHistory },
       );
 
       lastNpcEmotionTag = npcDialogue.emotionTag;
@@ -385,7 +389,7 @@ export function createDialogueManager(
     });
   }
 
-  function writeMemory(npcId: string, event: string): void {
+  function writeMemory(npcId: string, event: string, importance: 'low' | 'medium' | 'high' = 'medium'): void {
     const turnNumber = stores.game.getState().turnCount;
 
     stores.npcMemory.setState((draft) => {
@@ -395,7 +399,7 @@ export function createDialogueManager(
         npcId,
         event,
         turnNumber,
-        importance: 'medium' as const,
+        importance,
         emotionalValence: 0,
         participants: ['player', npcId],
       };
@@ -427,13 +431,8 @@ export function createDialogueManager(
 
     const npc = entry as Npc;
     const memoryRecord = stores.npcMemory.getState().memories[npcId];
-    const memoryStrings: string[] = memoryRecord
-      ? [
-          ...memoryRecord.recentMemories.map((m) => m.event),
-          ...memoryRecord.salientMemories.map((m) => m.event),
-        ]
-      : [];
     const scene = stores.scene.getState().narrationLines.join(' ');
+    const { memoryStrings, archiveSummary, relevantCodex, conversationHistory } = buildNpcLlmContext(npc, memoryRecord, state.dialogueHistory);
 
     const npcProfile = {
       id: npc.id,
@@ -450,7 +449,7 @@ export function createDialogueManager(
         scene,
         text,
         memoryStrings,
-        buildNpcCallOptions(npc, memoryRecord),
+        { archiveSummary, relevantCodex, conversationHistory },
       );
 
       lastNpcEmotionTag = npcDialogue.emotionTag;

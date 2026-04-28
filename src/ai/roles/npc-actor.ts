@@ -8,6 +8,7 @@ export type NpcActorOptions = {
   readonly maxRetries?: number;
   readonly archiveSummary?: string;
   readonly relevantCodex?: readonly string[];
+  readonly conversationHistory?: readonly { readonly speaker: string; readonly text: string }[];
 };
 
 export async function generateNpcDialogue(
@@ -25,6 +26,7 @@ export async function generateNpcDialogue(
     memories,
     archiveSummary: options?.archiveSummary,
     relevantCodex: options?.relevantCodex,
+    conversationHistory: options?.conversationHistory,
   });
 
   try {
@@ -60,6 +62,7 @@ export async function* streamNpcDialogue(
     memories,
     archiveSummary: options?.archiveSummary,
     relevantCodex: options?.relevantCodex,
+    conversationHistory: options?.conversationHistory,
   });
 
   try {

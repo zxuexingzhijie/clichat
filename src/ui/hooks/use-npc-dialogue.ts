@@ -12,6 +12,9 @@ export type NpcDialogueContext = {
   readonly scene: string;
   readonly playerAction: string;
   readonly memories: readonly string[];
+  readonly archiveSummary?: string;
+  readonly relevantCodex?: readonly string[];
+  readonly conversationHistory?: readonly { readonly speaker: string; readonly text: string }[];
 };
 
 export type UseNpcDialogueReturn = {
@@ -43,7 +46,11 @@ export function useNpcDialogue(): UseNpcDialogueReturn {
       npcName: npcProfile.name,
     });
 
-    streaming.start(streamNpcDialogue(npcProfile, scene, playerAction, memories));
+    streaming.start(streamNpcDialogue(npcProfile, scene, playerAction, memories, {
+      archiveSummary: context.archiveSummary,
+      relevantCodex: context.relevantCodex,
+      conversationHistory: context.conversationHistory,
+    }));
   }, [streaming.start]);
 
   const originalReset = streaming.reset;
@@ -78,6 +85,11 @@ export function useNpcDialogue(): UseNpcDialogueReturn {
             ctx.scene,
             ctx.playerAction,
             ctx.memories,
+            {
+              archiveSummary: ctx.archiveSummary,
+              relevantCodex: ctx.relevantCodex,
+              conversationHistory: ctx.conversationHistory,
+            },
           ).then(result => {
             setMetadata({ ...result, dialogue: fullText });
           }).catch(() => {
