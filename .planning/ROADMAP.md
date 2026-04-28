@@ -37,7 +37,7 @@
 - [ ] **Phase 11: App Wiring** — Wire all missing injections in app.tsx so every game system is connected at startup
 - [ ] **Phase 12: Combat & Save Correctness** — Fix double enemy turn, flee bug, combat initiation, abilities, spells, and save/branch state issues
 - [ ] **Phase 13: Dialogue & Reputation** — Fix reputation scale mismatch, inline dialogue, NPC role questions, streaming sentiment, and faction writes
-- [ ] **Phase 14: Quest, Memory, Scene & Codex** — Create quests.yaml, fix quest routing, scene closure, /look, /cast routing, memory eviction, and codex display
+- [ ] **Phase 14: Quest, Memory, Scene & Codex** — Create quests.yaml, fix quest routing, scene closure, /look, /cast routing, memory eviction, and codex display (4 plans)
 - [ ] **Phase 15: Content & Death Recovery** — Fill notable_npcs arrays, add dark cave content, wire shadow contact discovery, fix death screen
 
 ## Phase Details
