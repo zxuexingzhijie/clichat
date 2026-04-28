@@ -68,7 +68,12 @@ Plans:
   3. Walking into a danger area or attacking an enemy NPC initiates combat
   4. Casting a healing spell restores HP; spell name appears in narration
   5. Saving a game stores the custom name; loading a branch restores its game state
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 12-P01-PLAN.md — Parametrize snapshot() saveName/playtime; fix branch switch loadGame; fix load-handler saveDir arg; fix ActionContext types (SAVE-01/02/03)
+- [ ] 12-P02-PLAN.md — Delete unconditional processEnemyTurn; add flee/outcome guard; wrap processPlayerAction in try/catch (COMBAT-01/02/06)
+- [ ] 12-P03-PLAN.md — Add LocationSchema enemies field; auto combat trigger on move; explicit :attack NPC initiation (COMBAT-03)
+- [ ] 12-P04-PLAN.md — Implement enemy abilities (pack_tactics/howl/backstab/poison_blade/vanish); data-driven spell cast (COMBAT-04/05)
 
 ### Phase 13: Dialogue & Reputation
 **Goal**: Reputation values use a consistent scale end-to-end, inline dialogue lets the player respond, NPC role questions cover all role types, and streaming dialogue correctly extracts sentiment
@@ -121,7 +126,7 @@ Plans:
 | 9. Animation System | v1.1 | 5/5 | Complete | 2026-04-25 |
 | 10. Distribution | v1.1 | 5/5 | Complete | 2026-04-26 |
 | 11. App Wiring | v1.2 | 0/3 | Not started | - |
-| 12. Combat & Save Correctness | v1.2 | 0/TBD | Not started | - |
+| 12. Combat & Save Correctness | v1.2 | 0/4 | Not started | - |
 | 13. Dialogue & Reputation | v1.2 | 0/TBD | Not started | - |
 | 14. Quest, Memory, Scene & Codex | v1.2 | 0/TBD | Not started | - |
 | 15. Content & Death Recovery | v1.2 | 0/TBD | Not started | - |
