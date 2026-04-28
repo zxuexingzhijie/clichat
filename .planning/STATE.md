@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Game System Integrity & Playability
 status: executing
-last_updated: "2026-04-28T12:30:00Z"
-last_activity: 2026-04-28 — Phase 14 plan 01 complete (14-01: QuestTriggerSchema + quests.yaml)
+last_updated: "2026-04-28T13:30:00Z"
+last_activity: 2026-04-28 — Phase 14 complete (4/4 plans, QUEST-01..03, MEM-01..02, SCENE-01..03, CODEX-01..02)
 progress:
   total_phases: 5
-  completed_phases: 3
-  total_plans: 11
-  completed_plans: 11
-  percent: 60
+  completed_phases: 4
+  total_plans: 15
+  completed_plans: 15
+  percent: 80
 ---
 
 # Project State
@@ -20,24 +20,24 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-28)
 
 **Core value:** The player must feel they are in a persistent, consistent world that remembers them -- not a chatbot that reinvents the universe every turn.
-**Current focus:** v1.2 Phase 13 — Dialogue & Reputation
+**Current focus:** v1.2 Phase 15 (next)
 
 ## Current Position
 
 Phase: 14 of 15 (Quest, Memory, Scene & Codex) — COMPLETE
 Plan: 4/4 done
 Status: Ready for Phase 15
-Last activity: 2026-04-28 — Phase 14 complete (QUEST-01..03, MEM-01..02, SCENE-01..03, CODEX-01)
+Last activity: 2026-04-28 — Phase 14 complete (QUEST-01..03, MEM-01..02, SCENE-01..03, CODEX-01..02)
 
-Progress: [██████    ] 60%
+Progress: [████████  ] 80%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 10 (v1.2)
-- Average duration: ~18 min/plan
-- Total execution time: ~2.4 hours
+- Total plans completed: 15 (v1.2)
+- Average duration: ~15 min/plan
+- Total execution time: ~3.7 hours
 
 **By Phase:**
 
@@ -49,6 +49,8 @@ Progress: [██████    ] 60%
 | 13 P01 (Dialogue & Reputation) | 1 | ~25 min | ~25 min |
 | 13 P03 (Dialogue & Reputation) | 1 | ~20 min | ~20 min |
 | 13 P04 (Dialogue & Reputation) | 1 | ~4 min | ~4 min |
+| 14 Wave 1 (Quest Schema, Memory Fix, handleCast) | 3 | ~24 min | ~8 min |
+| 14 Wave 2 (Quest Events + Commands) | 1 | ~8 min | ~8 min |
 
 *Updated after each plan completion*
 
@@ -63,6 +65,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - DIAL-03/05: clergy added as separate key from religious; NPC_ROLE_QUESTIONS has 12 roles total
 - DIAL-04: TextInput mode toggled via onChange (no onFocus in @inkjs/ui); useInput isActive combined with !isFreeTextMode; Escape exits text mode before exiting dialogue
 - DIAL-03/06/07: ExtractedNpcMetadata.sentiment is optional (undefined = no detection); isAllDefaults uses !extracted.sentiment; streaming completion in useEffect with completionFiredRef; hasFiredRef guards handleNpcDialogueComplete
+- QUEST-01: faction_guard used (faction_town_guard not in factions.yaml); item_iron_ore used as targetId string (not yet in items.yaml)
+- QUEST-02: createQuestSystem accepts optional bus (EventBus); pendingConditions Map tracks multi-condition stages; questStore added to ActionContext (GameLoopStores had no quest field)
+- MEM-01: applyRetention evicts lowest-importance first (low<medium<high), oldest by turnNumber on tie; addMemory in npc-memory-store inlines sort logic to avoid circular import
+- SCENE-01/02: scene-manager subscribes state_restored to sync currentSceneId; handleLook(undefined) calls generateNarrationFn when available
+- SCENE-03/CODEX-02: handleCast returns '你现在不在战斗中，无法使用法术。' outside combat; STATE_OVERRIDE_PATTERN requires explicit [+-] operator (level\s*up split to separate branch)
+- CODEX-01: playerKnowledgeState already reactive in app.tsx (useState+useEffect+useMemo) — no code change needed
 
 ### Pending Todos
 
@@ -72,8 +80,6 @@ None.
 
 - WIRE-01..10 are the critical path — Phase 11 must complete before Phases 12/13/14 can begin
 - DIAL-01 and REP-01 are the same code fix — must be implemented together in Phase 13
-- QUEST-01 (quests.yaml creation) must land before QUEST-02/03 can be implemented
-- quests.yaml does not currently exist — Phase 14 starts with a file creation task
 
 ### Previous Milestone Context (v1.1)
 
