@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Game System Integrity & Playability
 status: executing
-last_updated: "2026-04-28T10:00:00.000Z"
-last_activity: 2026-04-28 — Phase 12 complete (4/4 plans, SAVE-01..03 + COMBAT-01..06)
+last_updated: "2026-04-28T10:20:00.000Z"
+last_activity: 2026-04-28 — Phase 13 P02 complete (REP-04: restoreState bypasses reputation_changed)
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 8
+  completed_plans: 8
   percent: 40
 ---
 
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 ## Current Position
 
 Phase: 13 of 15 (Dialogue & Reputation)
-Plan: 0 of TBD in current phase
-Status: Ready to discuss/plan
-Last activity: 2026-04-28 — Phase 12 complete (4/4 plans, SAVE-01..03 + COMBAT-01..06)
+Plan: P02 complete (REP-04 done)
+Status: Executing
+Last activity: 2026-04-28 — Phase 13 P02 complete (REP-04: restoreState bypasses reputation_changed)
 
 Progress: [████      ] 40%
 
@@ -35,7 +35,7 @@ Progress: [████      ] 40%
 
 **Velocity:**
 
-- Total plans completed: 7 (v1.2)
+- Total plans completed: 8 (v1.2)
 - Average duration: ~15 min/plan
 - Total execution time: ~2 hours
 
@@ -45,6 +45,7 @@ Progress: [████      ] 40%
 |-------|-------|-------|----------|
 | 11 (App Wiring) | 3 | ~45 min | ~15 min |
 | 12 (Combat & Save) | 4 | ~75 min | ~19 min |
+| 13 P02 (Dialogue & Reputation) | 1 | ~12 min | ~12 min |
 
 *Updated after each plan completion*
 
@@ -53,6 +54,8 @@ Progress: [████      ] 40%
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
+
+- REP-04: RelationStore uses isRestoring flag to bypass reputation_changed during game load; GameStores.relation typed as RelationStore
 
 ### Pending Todos
 
@@ -80,6 +83,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-28T07:02:44.738Z
-Stopped at: context exhaustion at 90% (2026-04-28)
+Last session: 2026-04-28T10:20:00.000Z
+Stopped at: Completed 13-P02-PLAN.md
 Resume file: None
