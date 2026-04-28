@@ -3,7 +3,8 @@ import { callGenerateObject } from '../utils/ai-caller';
 import { SafetyFilterResultSchema, type SafetyFilterResult } from '../schemas/safety-filter';
 import { SAFETY_SYSTEM_PROMPT } from '../prompts/safety-system';
 
-const STATE_OVERRIDE_PATTERN = /(获得|失去|HP|MP|金币|等级|升级|gained|lost|level\s*up|gold|experience)\s*[+\-]?\d+/i;
+const STATE_OVERRIDE_PATTERN =
+  /level\s*up\s*\d+|(获得|失去|HP|MP|金币|等级|升级|gained|lost|gold|experience)\s*[+\-]\d+/i;
 
 export type SafetyFilterOptions = {
   readonly maxRetries?: number;

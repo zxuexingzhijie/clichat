@@ -36,6 +36,13 @@ export function createActionRegistry(
   };
 }
 
+const handleCast: ActionHandler = async (action, ctx) => {
+  if (!ctx.stores.combat.getState().active) {
+    return { status: 'error', message: '你现在不在战斗中，无法使用法术。' };
+  }
+  return handleCombat(action, ctx);
+};
+
 const COMBAT_ACTIONS = new Set(['attack', 'cast', 'guard', 'flee']);
 
 const HANDLER_MAP: Record<string, ActionHandler> = {
@@ -55,7 +62,7 @@ const HANDLER_MAP: Record<string, ActionHandler> = {
   cost: handleCost,
   quit: handleQuit,
   attack: handleDefault,
-  cast: handleDefault,
+  cast: handleCast,
   guard: handleDefault,
   flee: handleDefault,
   trade: handleDefault,

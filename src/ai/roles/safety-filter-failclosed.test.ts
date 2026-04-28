@@ -74,4 +74,20 @@ describe('safety filter — fail-closed + bilingual', () => {
     expect(result.safe).toBe(false);
     expect(result.category).toBe('prompt_injection');
   });
+
+  it('does NOT block narrative reward text without operator: 你获得了10枚金币', async () => {
+    const result = await checkSafety('你获得了10枚金币');
+    expect(result.safe).toBe(true);
+  });
+
+  it('does NOT block narrative combat result: 你击败了狼，获得50经验', async () => {
+    const result = await checkSafety('你击败了狼，获得50经验');
+    expect(result.safe).toBe(true);
+  });
+
+  it('still blocks explicit operator pattern: 获得+10金币', async () => {
+    const result = await checkSafety('获得+10金币');
+    expect(result.safe).toBe(false);
+    expect(result.category).toBe('state_override');
+  });
 });
