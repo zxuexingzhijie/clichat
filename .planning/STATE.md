@@ -4,7 +4,7 @@ milestone: v1.2
 milestone_name: Game System Integrity & Playability
 status: executing
 last_updated: "2026-04-28T12:00:00Z"
-last_activity: 2026-04-28 — Phase 13 complete (4/4 plans, DIAL-01..07 + REP-01..04)
+last_activity: 2026-04-28 — Phase 14 plan 04 complete (14-04: handleCast + safety-filter tighten + CODEX-01 confirmed)
 progress:
   total_phases: 5
   completed_phases: 3
@@ -24,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 
 ## Current Position
 
-Phase: 13 of 15 (Dialogue & Reputation) — COMPLETE
+Phase: 14 of 15 (Quest, Memory, Scene & Codex) — COMPLETE
 Plan: 4/4 done
-Status: Ready for Phase 14
-Last activity: 2026-04-28 — Phase 13 complete (DIAL-01..07 + REP-01..04)
+Status: Ready for Phase 15
+Last activity: 2026-04-28 — Phase 14 complete (QUEST-01..03, MEM-01..02, SCENE-01..03, CODEX-01)
 
 Progress: [██████    ] 60%
 
