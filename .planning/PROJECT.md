@@ -14,6 +14,22 @@ animation feedback, and npm + Homebrew distribution.
 The player must feel they are in a **persistent, consistent world that remembers them** — not
 a chatbot that reinvents the universe every turn.
 
+## Current Milestone: v1.2 Game System Integrity & Playability
+
+**Goal:** Fix 50 known issues — restore all wired systems, combat, dialogue, quest, save/branch, reputation, content gaps to correct playable state.
+
+**Target features:**
+- App initialization wiring (save/quest/branch/map/RAG/summarizer all connected)
+- Combat system correctness (double enemy turn, flee bug, combat initiation, abilities, spells)
+- Dialogue system correctness (reputation scale, inline mode, NPC role questions, streaming sentiment)
+- Quest system completeness (quests.yaml content, command routing, stage triggers)
+- Save/branch correctness (saveName, branch-switch restores state, path traversal fix)
+- Reputation & memory data integrity (scale mismatch, faction writes, load event suppression)
+- World content gaps (notable_npcs arrays, dark cave, shadow contact discovery)
+- Death recovery option
+
+---
+
 ## Current State (v1.1)
 
 - **Shipped:** 2026-04-26
