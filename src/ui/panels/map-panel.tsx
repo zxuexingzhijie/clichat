@@ -25,7 +25,7 @@ type MapPanelProps = {
 
 const DANGER_LABELS: Record<number, string> = {
   0: '安全',
-  1: '低',
+  1: '极低',
   2: '低',
   3: '中',
   4: '中',
@@ -308,7 +308,7 @@ export function MapPanel({
     </Box>
   ) : null;
 
-  const hintBar = <Text dimColor>{'↑↓←→ 切换地点    Esc 返回'}</Text>;
+  const hintBar = <Text dimColor>{'↑↓ 上一/下一地点    Esc 返回'}</Text>;
 
   if (isWide) {
     return (

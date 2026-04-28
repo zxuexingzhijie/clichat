@@ -140,7 +140,7 @@ export function ReplayPanel({ entries, onClose }: ReplayPanelProps): React.React
 
   const hintBar = (
     <Text dimColor>
-      {'↑↓/p/n 选择  PgUp/PgDn 翻页  Enter 展开细节  Esc 返回'}
+      {'↑↓/p/n 选择  PgUp/PgDn 翻页  Enter/空格 展开细节  Esc 返回'}
     </Text>
   );
 

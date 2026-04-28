@@ -14,11 +14,11 @@ export function InlineConfirm({
 }: InlineConfirmProps): React.ReactNode {
   const optionText = defaultOption === 'y' ? '(Y/n)' : '(y/N)';
 
-  useInput(useCallback((input: string, key: { return: boolean }) => {
+  useInput(useCallback((input: string, key: { return: boolean; escape: boolean }) => {
     const lower = input.toLowerCase();
     if (lower === 'y') {
       onConfirm(true);
-    } else if (lower === 'n') {
+    } else if (lower === 'n' || key.escape) {
       onConfirm(false);
     } else if (key.return) {
       onConfirm(defaultOption === 'y');

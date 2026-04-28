@@ -65,7 +65,7 @@ function buildTreeLines(
             <Text>{headSave.saveName} ({headSave.gameTime}, {headSave.location})</Text>
           </>
         )}
-        {isCurrent && <Text color="cyan">    ← current</Text>}
+        {isCurrent && <Text color="cyan">    ← 当前</Text>}
       </Box>
     );
 
@@ -102,11 +102,25 @@ function buildTreeLines(
   return lines;
 }
 
-function DetailPane({ node, save }: {
+function DetailPane({ node, save, tree }: {
   readonly node: BranchDisplayNode;
   readonly save: BranchSaveInfo | undefined;
+  readonly tree: readonly BranchDisplayNode[];
 }): React.ReactNode {
   const displaySave = save ?? (node.saves.length > 0 ? node.saves[0] : undefined);
+
+  function findNode(nodes: readonly BranchDisplayNode[], id: string): BranchDisplayNode | undefined {
+    for (const n of nodes) {
+      if (n.branchMeta.id === id) return n;
+      const found = findNode(n.children, id);
+      if (found) return found;
+    }
+    return undefined;
+  }
+
+  const parentName = node.branchMeta.parentBranchId
+    ? (findNode(tree, node.branchMeta.parentBranchId)?.branchMeta.name ?? node.branchMeta.parentBranchId)
+    : null;
 
   return (
     <Box flexDirection="column" paddingX={1} borderStyle="single" borderColor="gray">
@@ -127,8 +141,8 @@ function DetailPane({ node, save }: {
       ) : (
         <Text dimColor>当前分支尚无存档。游戏会自动保存，或使用 /save 手动存档。</Text>
       )}
-      {node.branchMeta.parentBranchId && (
-        <Text dimColor>从 {node.branchMeta.parentBranchId} 分出</Text>
+      {parentName && (
+        <Text dimColor>从 {parentName} 分出</Text>
       )}
     </Box>
   );
@@ -144,6 +158,7 @@ export function BranchTreePanel({
   switchMessage,
 }: BranchTreePanelProps): React.ReactNode {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [confirmPending, setConfirmPending] = useState(false);
 
   const flatLines = useMemo(
     () => buildTreeLines(tree, currentBranchId, '', true, true),
@@ -183,17 +198,25 @@ export function BranchTreePanel({
     return: boolean;
   }) => {
     if (key.escape) {
+      if (confirmPending) { setConfirmPending(false); return; }
       onClose();
     } else if (key.upArrow) {
+      setConfirmPending(false);
       setSelectedIndex(prev => Math.max(0, prev - 1));
     } else if (key.downArrow) {
+      setConfirmPending(false);
       setSelectedIndex(prev => Math.min(flatLines.length - 1, prev + 1));
     } else if (input === 'c' && selectedLine) {
       onCompare(selectedLine.branchId);
     } else if (key.return && selectedLine) {
-      onSwitch(selectedLine.branchId);
+      if (!confirmPending) {
+        setConfirmPending(true);
+      } else {
+        setConfirmPending(false);
+        onSwitch(selectedLine.branchId);
+      }
     }
-  }, [onClose, onCompare, onSwitch, flatLines.length, selectedLine]));
+  }, [onClose, onCompare, onSwitch, flatLines.length, selectedLine, confirmPending]));
 
   return (
     <Box flexDirection="column" flexGrow={1} paddingX={1}>
@@ -222,7 +245,7 @@ export function BranchTreePanel({
           </Box>
           <Box width="40%">
             {selectedNode && (
-              <DetailPane node={selectedNode} save={selectedSave} />
+              <DetailPane node={selectedNode} save={selectedSave} tree={tree} />
             )}
           </Box>
         </Box>
@@ -242,7 +265,10 @@ export function BranchTreePanel({
       )}
 
       <Box marginTop={1}>
-        <Text dimColor>↑↓ 选择节点    Enter 切换分支    c 对比    Esc 返回</Text>
+        {confirmPending
+          ? <Text color="yellow">再按 Enter 确认切换分支，Esc 取消</Text>
+          : <Text dimColor>↑↓ 选择节点    Enter 切换分支    c 对比    Esc 返回</Text>
+        }
       </Box>
       {switchMessage && (
         <Box marginTop={1}>

@@ -21,14 +21,15 @@ export function useGameEventToasts(): { readonly toast: ToastData | null } {
     const onQuestStarted: EventHandler<'quest_started'> = (p) =>
       showToast({ message: `新任务: ${p.questTitle}`, color: 'cyan', icon: '!' });
     const onQuestCompleted: EventHandler<'quest_completed'> = (p) =>
-      showToast({ message: `任务完成: ${p.questId}`, color: 'green', icon: '*' });
+      showToast({ message: `任务完成: ${p.questId.replace(/^quest_/, '').replace(/_/g, ' ')}`, color: 'green', icon: '*' });
     const onQuestFailed: EventHandler<'quest_failed'> = (p) =>
-      showToast({ message: `任务失败: ${p.questId}`, color: 'red', icon: 'x' });
+      showToast({ message: `任务失败: ${p.questId.replace(/^quest_/, '').replace(/_/g, ' ')}`, color: 'red', icon: 'x' });
     const onKnowledgeDiscovered: EventHandler<'knowledge_discovered'> = (p) => {
+      const name = p.entryId.replace(/^[a-z]+_/, '').replace(/_/g, ' ');
       if (p.codexEntryId) {
-        showToast({ message: `图鉴解锁: ${p.entryId}`, color: 'magenta', icon: '+' });
+        showToast({ message: `图鉴解锁: ${name}`, color: 'magenta', icon: '+' });
       } else {
-        showToast({ message: `发现新知识: ${p.entryId}`, color: 'blue', icon: '?' });
+        showToast({ message: `发现新知识: ${name}`, color: 'blue', icon: '?' });
       }
     };
     const onGoldChanged: EventHandler<'gold_changed'> = (p) => {

@@ -26,7 +26,7 @@ rounds:
         effects:
           raceId: race_dwarf
           professionWeights:
-            prof_rogue: 1
+            prof_adventurer: 1
           backgroundWeights: {}
           tags: [mountain_origin]
 

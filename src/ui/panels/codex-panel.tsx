@@ -52,6 +52,28 @@ function getTypeLabel(type: string): string {
   return TYPE_LABELS[type] ?? type;
 }
 
+const AUTHORITY_LABELS: Record<string, string> = {
+  canonical_truth: '权威正典',
+  regional_lore: '地域传说',
+  npc_testimony: 'NPC证词',
+  player_inference: '玩家推断',
+  rumor: '街头流言',
+};
+
+const SOURCE_TYPE_LABELS: Record<string, string> = {
+  authorial: '世界设定',
+  discovered: '探索发现',
+  npc_told: 'NPC告知',
+  inferred: '推断所得',
+};
+
+function getConfidenceLabel(confidence: number): string {
+  if (confidence >= 0.9) return '极高';
+  if (confidence >= 0.7) return '高';
+  if (confidence >= 0.4) return '中';
+  return '低';
+}
+
 function isVisibleEntry(entry: CodexDisplayEntry): boolean {
   return entry.visibility !== 'forbidden';
 }
@@ -91,9 +113,9 @@ function EntryDetail({ entry, entries }: { readonly entry: CodexDisplayEntry; re
       {!masked && (
         <Text dimColor>
           {'类型: '}{getTypeLabel(entry.type)}
-          {'  权威: '}{entry.authority}
-          {'  可信度: '}{entry.confidence}
-          {'  来源: '}{entry.sourceType}
+          {'  权威: '}{AUTHORITY_LABELS[entry.authority] ?? entry.authority}
+          {'  可信度: '}{getConfidenceLabel(entry.confidence)}
+          {'  来源: '}{SOURCE_TYPE_LABELS[entry.sourceType] ?? entry.sourceType}
         </Text>
       )}
       <Box marginTop={1}>
@@ -158,6 +180,8 @@ export function CodexPanel({ entries, onClose }: CodexPanelProps): React.ReactNo
     return: boolean;
     tab: boolean;
   }) => {
+    if (input === '?') return;
+
     if (key.escape) {
       if (showDetailNarrow) {
         setShowDetailNarrow(false);
@@ -296,7 +320,7 @@ export function CodexPanel({ entries, onClose }: CodexPanelProps): React.ReactNo
 
   const detailContent = selectedEntry ? <EntryDetail entry={selectedEntry} entries={visibleEntries} /> : null;
 
-  const hintBar = <Text dimColor>{'↑↓ 选择    Tab 搜索(字母)    Enter 查看    Esc 返回'}</Text>;
+  const hintBar = <Text dimColor>{'↑↓ 选择    [/] 切换分类    Tab 搜索    Enter 查看    Esc 返回'}</Text>;
 
   if (!isWide && showDetailNarrow && selectedEntry) {
     return (

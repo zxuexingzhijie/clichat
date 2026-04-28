@@ -25,6 +25,7 @@ type DialoguePanelProps = {
   readonly onExecute: (index: number) => void;
   readonly isActive: boolean;
   readonly onEscape: () => void;
+  readonly isNpcThinking?: boolean;
 };
 
 function relationshipLabel(value: number): string {
@@ -46,6 +47,7 @@ export function DialoguePanel({
   onExecute,
   isActive,
   onEscape,
+  isNpcThinking = false,
 }: DialoguePanelProps): React.ReactNode {
   const handleInput = useCallback(
     (input: string, key: { upArrow?: boolean; downArrow?: boolean; return?: boolean; escape?: boolean }) => {
@@ -107,6 +109,9 @@ export function DialoguePanel({
         <Text> </Text>
       </Box>
       <Text> </Text>
+      {isNpcThinking && (
+        <Text dimColor>（思考中...）</Text>
+      )}
       {responseOptions.map((option, i) => {
         const isSelected = i === selectedIndex;
         return (

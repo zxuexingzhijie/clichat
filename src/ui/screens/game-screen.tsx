@@ -322,7 +322,6 @@ export function GameScreen({
     <CombatActionsPanel
       playerMp={playerState.mp}
       canFlee={combatState.active && combatState.outcome === null}
-      hasItems={false}
       selectedIndex={combatSelectedIndex}
       onSelect={setCombatSelectedIndex}
       onExecute={handleCombatExecute}
@@ -367,7 +366,7 @@ export function GameScreen({
       chapterSummaries={getRecentChapterSummaries()}
       width={width}
       sceneLines={sceneLines}
-      streamingText={isNarrationStreaming ? streamingText : isNpcStreaming ? `${dialogueState.npcName}："${npcStreamingText}` : undefined}
+      streamingText={isNarrationStreaming ? streamingText : isNpcStreaming ? `${dialogueState.npcName}：${npcStreamingText}` : undefined}
       isStreaming={isAnyStreaming}
       showSpinner={showSpinnerWithDim}
       spinnerContext={spinnerContext}
@@ -382,7 +381,7 @@ export function GameScreen({
       <Box flexDirection="column" width={width} height={height} borderStyle="single" justifyContent="center" alignItems="center">
         <Text bold color="red">── 旅途终结 ──</Text>
         <Text> </Text>
-        <Text>{combatState.lastNarration}</Text>
+        <Text>{combatState.lastNarration.length > 0 ? combatState.lastNarration : '你倒下了，生命就此走到了尽头。'}</Text>
         <Text> </Text>
         <Text bold>{playerState.name} 的旅程就此终止。</Text>
         <Text> </Text>

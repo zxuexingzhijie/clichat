@@ -27,7 +27,7 @@ function renderQuestEntry(entry: QuestDisplayEntry): React.ReactNode {
       <Text bold>{template.name}</Text>
       {currentStage && <Text dimColor>  {currentStage.description}</Text>}
       {progress.discoveredClues.map(clue => (
-        <Text key={clue} color="green">  ✓ {clue}</Text>
+        <Text key={clue} color="green">  ✓ {clue.replace(/^clue_/, '').replace(/_/g, ' ')}</Text>
       ))}
       {pendingObjectives.map(obj => (
         <Text key={obj.id} dimColor>  □ {obj.description}</Text>

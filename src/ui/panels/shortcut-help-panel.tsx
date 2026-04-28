@@ -24,6 +24,7 @@ const PANEL_SHORTCUTS: readonly ShortcutEntry[] = [
   { key: 'j', description: '打开任务日志', command: '/journal' },
   { key: 'c', description: '打开知识典籍', command: '/codex' },
   { key: 'b', description: '打开分支树', command: '/branch tree' },
+  { key: 'S', description: '查看章节总结', command: '/chapter' },
 ];
 
 const NAV_SHORTCUTS: readonly ShortcutEntry[] = [

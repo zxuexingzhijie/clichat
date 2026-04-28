@@ -78,7 +78,7 @@ export function StatusBar({
   }
 
   if (width >= 85 && lastTurnTokens && lastTurnTokens > 0) {
-    fields.push(<Text key="tokens" dimColor>{'  T:'}{lastTurnTokens}</Text>);
+    fields.push(<Text key="tokens" dimColor>{'  词元:'}{lastTurnTokens}</Text>);
   }
 
   return (

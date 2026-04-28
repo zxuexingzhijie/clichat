@@ -60,7 +60,7 @@ export function CombatStatusBar({
     enemyMaxHp = primaryEnemy.maxHp;
     enemyHpRatio = enemyMaxHp > 0 ? enemyHp / enemyMaxHp : 1;
     const displayName = isNarrow
-      ? truncateName(primaryEnemy.name, 4)
+      ? truncateName(primaryEnemy.name, 8)
       : primaryEnemy.name;
     enemyDisplay = extraCount > 0 ? `${displayName}+${extraCount}` : displayName;
   }

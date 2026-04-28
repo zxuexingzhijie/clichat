@@ -206,6 +206,7 @@ export function PanelRouter({
           onExecute={onDialogueExecute}
           isActive={true}
           onEscape={onDialogueEscape}
+          isNpcThinking={showSpinner}
         />
       </GameErrorBoundary>
     );

@@ -1,5 +1,7 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Box, Text, useInput } from 'ink';
+
+const PAGE_SIZE = 3;
 
 type ChapterSummaryPanelProps = {
   readonly summaries: readonly string[];
@@ -7,9 +9,16 @@ type ChapterSummaryPanelProps = {
 };
 
 export function ChapterSummaryPanel({ summaries, onClose }: ChapterSummaryPanelProps): React.ReactNode {
-  useInput(useCallback((_input: string, key: { escape: boolean }) => {
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const visibleSummaries = summaries.slice(scrollOffset, scrollOffset + PAGE_SIZE);
+  const canScrollUp = scrollOffset > 0;
+  const canScrollDown = scrollOffset + PAGE_SIZE < summaries.length;
+
+  useInput(useCallback((_input: string, key: { escape: boolean; pageUp?: boolean; pageDown?: boolean }) => {
     if (key.escape) { onClose(); return; }
-  }, [onClose]));
+    if (key.pageUp) setScrollOffset(prev => Math.max(0, prev - PAGE_SIZE));
+    if (key.pageDown) setScrollOffset(prev => canScrollDown ? prev + PAGE_SIZE : prev);
+  }, [onClose, canScrollDown]));
 
   if (summaries.length === 0) {
     return (
@@ -31,14 +40,16 @@ export function ChapterSummaryPanel({ summaries, onClose }: ChapterSummaryPanelP
         <Text bold color="cyan">{'【章节总结】'}</Text>
         <Text dimColor>Esc 返回</Text>
       </Box>
+      {canScrollUp && <Text dimColor>PgUp 查看更早章节</Text>}
       <Box marginTop={1} flexDirection="column">
-        {summaries.map((summary, i) => (
-          <Box key={i} flexDirection="column" marginBottom={1}>
-            <Text bold dimColor>{'━━━ 第'}{i + 1}{'章 ━━━'}</Text>
+        {visibleSummaries.map((summary, i) => (
+          <Box key={scrollOffset + i} flexDirection="column" marginBottom={1}>
+            <Text bold dimColor>{'━━━ 第'}{scrollOffset + i + 1}{'章 ━━━'}</Text>
             <Text>{summary}</Text>
           </Box>
         ))}
       </Box>
+      {canScrollDown && <Text dimColor>PgDn 查看更多章节</Text>}
     </Box>
   );
 }

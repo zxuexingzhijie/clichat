@@ -75,7 +75,7 @@ export function ScenePanel({
     <Box flexDirection="column" flexGrow={1} paddingX={1}>
       {toast && <ToastBanner toast={toast} />}
       {canScrollUp && (
-        <Text dimColor>↑ PgUp 向上滚动  ({totalLines - maxVisible - scrollOffset + maxVisible} / {totalLines})</Text>
+        <Text dimColor>PgUp 查看历史  ({totalLines - maxVisible - scrollOffset + 1}–{totalLines - scrollOffset} / {totalLines})</Text>
       )}
       {showSpinner && !streamingText ? (
         <SceneSpinner context={spinnerContext ?? 'narration'} isDimming={isSpinnerDimming} />
