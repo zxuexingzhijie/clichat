@@ -78,30 +78,21 @@ export function addMemory(
         version: 0,
       };
     }
-    draft.memories[npcId]!.recentMemories = [
-      ...draft.memories[npcId]!.recentMemories,
-      entry,
-    ];
+    const record = draft.memories[npcId]!;
+    const appended = [...record.recentMemories, entry];
+    if (appended.length > 15) {
+      const importanceOrder: Record<string, number> = { low: 0, medium: 1, high: 2 };
+      const sorted = [...appended].sort((a, b) => {
+        const impDiff = (importanceOrder[a.importance] ?? 1) - (importanceOrder[b.importance] ?? 1);
+        if (impDiff !== 0) return impDiff;
+        return a.turnNumber - b.turnNumber;
+      });
+      const toEvict = sorted[0]!;
+      const evictIndex = appended.findIndex(m => m.id === toEvict.id);
+      record.recentMemories = [...appended.slice(0, evictIndex), ...appended.slice(evictIndex + 1)];
+      record.salientMemories = [...record.salientMemories, toEvict];
+    } else {
+      record.recentMemories = appended;
+    }
   });
-
-  const record = store.getState().memories[npcId];
-  if (record && record.recentMemories.length > 15) {
-    const importanceOrder: Record<string, number> = { low: 0, medium: 1, high: 2 };
-    const recent = [...record.recentMemories];
-    const sorted = [...recent].sort((a, b) => {
-      const impDiff = (importanceOrder[a.importance] ?? 1) - (importanceOrder[b.importance] ?? 1);
-      if (impDiff !== 0) return impDiff;
-      return a.turnNumber - b.turnNumber;
-    });
-    const toEvict = sorted[0]!;
-    const evictIndex = recent.findIndex(m => m.id === toEvict.id);
-    const newRecent = [...recent.slice(0, evictIndex), ...recent.slice(evictIndex + 1)];
-    store.setState(draft => {
-      draft.memories[npcId] = {
-        ...draft.memories[npcId]!,
-        recentMemories: newRecent,
-        salientMemories: [...(draft.memories[npcId]?.salientMemories ?? []), toEvict],
-      };
-    });
-  }
 }
