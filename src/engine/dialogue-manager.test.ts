@@ -971,4 +971,118 @@ describe('createDialogueManager', () => {
     await manager.startDialogue('npc_captain');
     expect(() => manager.endDialogue()).not.toThrow();
   });
+
+  describe('adjudicateTalkResult integration', () => {
+    it('processPlayerResponse with sentiment positive — relationshipValue increases by 10', async () => {
+      mockGenerateNpcDialogue
+        .mockResolvedValueOnce({
+          dialogue: '你好。',
+          emotionTag: 'neutral',
+          shouldRemember: false,
+          sentiment: 'neutral',
+        })
+        .mockResolvedValueOnce({
+          dialogue: '你是个值得信赖的人。',
+          emotionTag: 'happy',
+          shouldRemember: false,
+          sentiment: 'positive',
+        });
+
+      const manager = createDialogueManager(stores, mockCodexEntries, {
+        generateNpcDialogueFn: mockGenerateNpcDialogue,
+        adjudicateFn: mockAdjudicate,
+      });
+
+      await manager.startDialogue('npc_guard');
+      const before = dialogueStore.getState().relationshipValue;
+      await manager.processPlayerResponse(0);
+      const after = dialogueStore.getState().relationshipValue;
+
+      expect(after - before).toBe(10);
+    });
+
+    it('processPlayerResponse with sentiment hostile — relationshipValue decreases by 20', async () => {
+      mockGenerateNpcDialogue
+        .mockResolvedValueOnce({
+          dialogue: '你好。',
+          emotionTag: 'neutral',
+          shouldRemember: false,
+          sentiment: 'neutral',
+        })
+        .mockResolvedValueOnce({
+          dialogue: '走开！',
+          emotionTag: 'angry',
+          shouldRemember: false,
+          sentiment: 'hostile',
+        });
+
+      const manager = createDialogueManager(stores, mockCodexEntries, {
+        generateNpcDialogueFn: mockGenerateNpcDialogue,
+        adjudicateFn: mockAdjudicate,
+      });
+
+      await manager.startDialogue('npc_guard');
+      const before = dialogueStore.getState().relationshipValue;
+      await manager.processPlayerResponse(0);
+      const after = dialogueStore.getState().relationshipValue;
+
+      expect(after - before).toBe(-20);
+    });
+
+    it('processPlayerFreeText with sentiment negative — relationshipValue decreases by 10', async () => {
+      mockGenerateNpcDialogue
+        .mockResolvedValueOnce({
+          dialogue: '你好。',
+          emotionTag: 'neutral',
+          shouldRemember: false,
+          sentiment: 'neutral',
+        })
+        .mockResolvedValueOnce({
+          dialogue: '我不喜欢你的态度。',
+          emotionTag: 'angry',
+          shouldRemember: false,
+          sentiment: 'negative',
+        });
+
+      const manager = createDialogueManager(stores, mockCodexEntries, {
+        generateNpcDialogueFn: mockGenerateNpcDialogue,
+        adjudicateFn: mockAdjudicate,
+      });
+
+      await manager.startDialogue('npc_guard');
+      const before = dialogueStore.getState().relationshipValue;
+      await manager.processPlayerFreeText('你好吗？');
+      const after = dialogueStore.getState().relationshipValue;
+
+      expect(after - before).toBe(-10);
+    });
+
+    it('processPlayerFreeText with sentiment neutral — relationshipValue unchanged', async () => {
+      mockGenerateNpcDialogue
+        .mockResolvedValueOnce({
+          dialogue: '你好。',
+          emotionTag: 'neutral',
+          shouldRemember: false,
+          sentiment: 'neutral',
+        })
+        .mockResolvedValueOnce({
+          dialogue: '没什么特别的。',
+          emotionTag: 'neutral',
+          shouldRemember: false,
+          sentiment: 'neutral',
+        });
+
+      const manager = createDialogueManager(stores, mockCodexEntries, {
+        generateNpcDialogueFn: mockGenerateNpcDialogue,
+        adjudicateFn: mockAdjudicate,
+      });
+
+      await manager.startDialogue('npc_guard');
+      const before = dialogueStore.getState().relationshipValue;
+      await manager.processPlayerFreeText('怎么了？');
+      const after = dialogueStore.getState().relationshipValue;
+
+      expect(after - before).toBe(0);
+    });
+  });
 });
