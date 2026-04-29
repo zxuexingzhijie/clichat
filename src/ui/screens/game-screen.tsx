@@ -156,6 +156,17 @@ export function GameScreen({
   const [dialogueSelectedIndex, setDialogueSelectedIndex] = useState(0);
   const [combatSelectedIndex, setCombatSelectedIndex] = useState(0);
   const [lastTurnTokens, setLastTurnTokens] = useState(0);
+  const [chapterSummaries, setChapterSummaries] = useState(() => getRecentChapterSummaries());
+
+  useEffect(() => {
+    const handler = (p: { taskId: string; type: string }) => {
+      if (p.type === 'chapter_summary') {
+        setChapterSummaries(getRecentChapterSummaries().slice());
+      }
+    };
+    eventBus.on('summarizer_task_completed', handler);
+    return () => { eventBus.off('summarizer_task_completed', handler); };
+  }, []);
 
   useEffect(() => {
     return costSessionStore.subscribe(() => {
@@ -376,7 +387,7 @@ export function GameScreen({
       readSaveData={readSaveData}
       saveDir={saveDir}
       replayEntries={replayEntries}
-      chapterSummaries={getRecentChapterSummaries()}
+      chapterSummaries={chapterSummaries}
       width={width}
       sceneLines={sceneLines}
       streamingText={isNarrationStreaming ? streamingText : undefined}
