@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Game System Integrity & Playability
 status: completed
-stopped_at: context exhaustion at 95% (2026-04-28)
-last_updated: "2026-04-28T17:07:22.962Z"
+stopped_at: context exhaustion at 90% (2026-04-29)
+last_updated: "2026-04-29T08:34:37.147Z"
 last_activity: "2026-04-28 — Phase 15 complete (15-01: NPC placement + dark cave enemies; 15-02: revealedNpcs + shadow contact + loadLastSave + death screen)"
 progress:
   total_phases: 5
@@ -105,6 +105,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-28T17:07:22.958Z
-Stopped at: context exhaustion at 95% (2026-04-28)
+Last session: 2026-04-29T08:34:37.136Z
+Stopped at: context exhaustion at 90% (2026-04-29)
 Resume file: None
