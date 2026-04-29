@@ -1,5 +1,5 @@
 ---
-status: root_cause_found
+status: resolved
 slug: memory-system-design-gap
 trigger: 记忆系统实现与设计文档不符 — 调查 NPC 记忆系统的实际实现，对比 CLAUDE.md 中的四层记忆架构设计，找出差距和问题
 created: 2026-04-29
@@ -108,7 +108,7 @@ root_cause: >
   epistemic-filtering pipeline are implemented but bypassed for dialogue,
   so codex context and Truth/Cognition separation are absent from NPC turns.
 
-fix: not applied (goal = find_root_cause_only)
+fix: applied via quick task 20260429-001 (memory-wiring-fix)
 verification: >
   Fix would pass if: (a) NPC response references information from >3 turns ago,
   (b) NPC response references codex facts relevant to the scene,

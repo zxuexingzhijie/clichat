@@ -4,8 +4,8 @@ milestone: v1.3
 milestone_name: Story Mainline & Narrative System
 status: completed
 stopped_at: ~
-last_updated: "2026-04-29T18:00:00Z"
-last_activity: "2026-04-29 — Phase 16 complete (P01: narrativeState+SaveDataV5; P02: AI prompt injection; P03: 6-stage quest arc; P04: NPC knowledge_profile+trust; P05: description_overrides)"
+last_updated: "2026-04-30T00:00:00Z"
+last_activity: "2026-04-30 — quick tasks all registered; memory-system-design-gap resolved (fixed by 20260429-001); v1.3 ready for milestone archive"
 progress:
   total_phases: 5
   completed_phases: 5
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 
 ## Current Position
 
-Phase: 15 of 15 (Content & Death Recovery) — 2/2 plans done
-Plan: 2/2 done
-Status: Phase 15 complete — v1.2 milestone complete
-Last activity: 2026-04-28 — Phase 15 complete (15-01: NPC placement + dark cave enemies; 15-02: revealedNpcs + shadow contact + loadLastSave + death screen)
+Phase: 16 of 16 (Story Mainline & Narrative System) — 5/5 plans done
+Plan: 5/5 done
+Status: Phase 16 complete — v1.3 milestone complete; ready for archive
+Last activity: 2026-04-29 — Phase 16 complete (P01: narrativeState+SaveDataV5; P02: AI prompt injection; P03: 6-stage quest arc; P04: NPC knowledge_profile+trust; P05: description_overrides)
 
-Progress: [█████████ ] 88%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -82,12 +82,23 @@ None.
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 20260428-A | YAML content fixes (exits field, NPC placement, enemies, items, map icons) | 2026-04-28 | 4fc5708 | [20260428-game-fixes](./quick/20260428-game-fixes/) |
+| 20260428-B | Quest auto-accept + completeQuest faction reputation rewards | 2026-04-28 | e899162 | [20260428-game-fixes](./quick/20260428-game-fixes/) |
+| 20260428-C | use_item consumable handler + onboarding hint | 2026-04-28 | bac1e9e | [20260428-game-fixes](./quick/20260428-game-fixes/) |
+| 20260428-D | ComparePanel props fix + quest/save wiring | 2026-04-28 | (see SUMMARY-D) | [20260428-game-fixes](./quick/20260428-game-fixes/) |
+| 20260428-E | Additional game fixes wave E | 2026-04-28 | (see SUMMARY-E) | [20260428-game-fixes](./quick/20260428-game-fixes/) |
+| 20260428-F | completeQuest gold/relation_delta rewards + item pickup + state_restored emit | 2026-04-28 | 944027f | [20260428-game-fixes](./quick/20260428-game-fixes/) |
 | 20260429-001 | 修复记忆系统3个gap: archiveSummary接线 + codex filter + slice(0,8) + push→spread | 2026-04-29 | 79123eb | [20260429-001-memory-wiring-fix](./quick/20260429-001-memory-wiring-fix/) |
+
+### Debug Sessions Resolved
+
+| Session | Root Cause | Resolution | Date |
+|---------|-----------|------------|------|
+| memory-system-design-gap | dialogue-manager bypassed archiveSummary + codex filter; slice(0,3) hard cap | Fixed by quick task 20260429-001 | 2026-04-29 |
 
 ### Blockers/Concerns
 
-- WIRE-01..10 are the critical path — Phase 11 must complete before Phases 12/13/14 can begin
-- DIAL-01 and REP-01 are the same code fix — must be implemented together in Phase 13
+None — all known blockers resolved.
 
 ### Previous Milestone Context (v1.1)
 
@@ -105,6 +116,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-29T16:02:14Z
-Stopped at: 16-P04 complete — NPC knowledge_profile YAML + dialogue trust injection + route-lock flag wiring
+Last session: 2026-04-30T00:00:00Z
+Stopped at: v1.3 pre-archive cleanup — quick tasks registered, memory-system-design-gap resolved
 Resume file: None
