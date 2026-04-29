@@ -1,36 +1,36 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.3
-milestone_name: Story Mainline & Narrative System
-status: completed
+milestone: v1.4
+milestone_name: AI Quality & Game Completeness
+status: in_progress
 stopped_at: ~
-last_updated: "2026-04-30T00:00:00Z"
-last_activity: "2026-04-30 — quick tasks all registered; memory-system-design-gap resolved (fixed by 20260429-001); v1.3 ready for milestone archive"
+last_updated: "2026-04-30T01:00:00Z"
+last_activity: "2026-04-30 — v1.4 milestone started; requirements and roadmap defining"
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 17
-  completed_plans: 17
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-28)
+See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** The player must feel they are in a persistent, consistent world that remembers them -- not a chatbot that reinvents the universe every turn.
-**Current focus:** v1.2 Phase 15 (next)
+**Current focus:** v1.4 — defining requirements and roadmap
 
 ## Current Position
 
-Phase: 16 of 16 (Story Mainline & Narrative System) — 5/5 plans done
-Plan: 5/5 done
-Status: Phase 16 complete — v1.3 milestone complete; ready for archive
-Last activity: 2026-04-29 — Phase 16 complete (P01: narrativeState+SaveDataV5; P02: AI prompt injection; P03: 6-stage quest arc; P04: NPC knowledge_profile+trust; P05: description_overrides)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements for v1.4
+Last activity: 2026-04-30 — Milestone v1.4 started; 4 focus areas selected (arch fix, multi-turn dialogue, code quality, game features)
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 

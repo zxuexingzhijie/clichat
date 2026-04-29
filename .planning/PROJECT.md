@@ -15,16 +15,15 @@ location descriptions driven by world flags.
 The player must feel they are in a **persistent, consistent world that remembers them** — not
 a chatbot that reinvents the universe every turn.
 
-## Next Milestone: v1.4 (TBD)
+## Current Milestone: v1.4 AI Quality & Game Completeness
 
-Planning in progress. Run `/gsd-new-milestone` to define scope.
+**Goal:** Fix critical AI architecture violations discovered in code audit, implement true multi-turn NPC dialogue, and complete deferred game features for a publishable build.
 
-Candidate areas (from deferred items):
-- True multi-turn dialogue (ai-caller.ts `messages[]` support)
-- Live API session UAT (/cost, /replay, summarizer)
-- Enemy loot drop system
-- OWNER placeholder replacement for npm publish
-- Journey turn granularity (travel, camp, resupply)
+**Target features:**
+- Architecture fix: wire narrativeContext into NPC Actor + route sentiment through Rules Engine
+- True multi-turn NPC dialogue via messages[] standard API structure
+- Narrative Director generateObject + intent-classifier cost tracking + summarizer graceful shutdown
+- Enemy loot drop system, OWNER placeholder replacement, Live API UAT
 
 ---
 
@@ -82,9 +81,16 @@ Candidate areas (from deferred items):
 
 ### Active
 
+- [ ] Wire narrativeContext into NPC Actor (npc-actor.ts `void` bug) — v1.4 (ARCH-01)
+- [ ] Route NPC sentiment through Rules Engine, not direct delta — v1.4 (ARCH-02)
+- [ ] True multi-turn NPC dialogue via messages[] — v1.4 (DIAL-01)
+- [ ] Narrative Director generateObject + schema constraints — v1.4 (AI-05)
+- [ ] intent-classifier cost tracking (route through ai-caller.ts) — v1.4 (AI-06)
+- [ ] summarizer graceful shutdown (AbortSignal) — v1.4 (AI-07)
+- [ ] Enemy loot drop system — v1.4 (GAME-01)
+- [ ] Replace OWNER placeholders in distribution files before first publish — v1.4 (DIST-01)
+- [ ] Live session validation of /cost, /replay, background summarizer (carry-over) — v1.4 (UAT-01)
 - [ ] CJK text rendering audit in live terminal (partial mitigation via string-width)
-- [ ] Live session validation of /cost, /replay, background summarizer (carry-over)
-- [ ] Replace OWNER placeholders in distribution files before first publish
 
 ### Out of Scope
 
