@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { TextInput } from '@inkjs/ui';
 import { getAttitudeLabel } from '../../engine/reputation-system';
@@ -46,12 +46,18 @@ export function DialoguePanel({
   onFreeTextSubmit,
 }: DialoguePanelProps): React.ReactNode {
   const [isFreeTextMode, setIsFreeTextMode] = useState(false);
+  const isFreeTextModeRef = useRef(false);
+
+  const setFreeTextMode = useCallback((value: boolean) => {
+    isFreeTextModeRef.current = value;
+    setIsFreeTextMode(value);
+  }, []);
 
   const handleInput = useCallback(
     (input: string, key: { upArrow?: boolean; downArrow?: boolean; return?: boolean; escape?: boolean }) => {
       if (key.escape) {
-        if (isFreeTextMode) {
-          setIsFreeTextMode(false);
+        if (isFreeTextModeRef.current) {
+          setFreeTextMode(false);
           return;
         }
         onEscape();
@@ -73,7 +79,7 @@ export function DialoguePanel({
         }
       }
     },
-    [responseOptions.length, selectedIndex, onSelect, onExecute, onEscape, isFreeTextMode],
+    [responseOptions.length, selectedIndex, onSelect, onExecute, onEscape, setFreeTextMode],
   );
 
   useInput(handleInput, { isActive: isActive && !isFreeTextMode });
@@ -145,15 +151,15 @@ export function DialoguePanel({
         placeholder="直接输入你的回应…"
         isDisabled={isNpcThinking}
         onChange={(value) => {
-          if (value.length > 0 && !isFreeTextMode) {
-            setIsFreeTextMode(true);
-          } else if (value.length === 0 && isFreeTextMode) {
-            setIsFreeTextMode(false);
+          if (value.length > 0 && !isFreeTextModeRef.current) {
+            setFreeTextMode(true);
+          } else if (value.length === 0 && isFreeTextModeRef.current) {
+            setFreeTextMode(false);
           }
         }}
         onSubmit={(text) => {
           if (text.trim()) {
-            setIsFreeTextMode(false);
+            setFreeTextMode(false);
             onFreeTextSubmit(text.trim());
           }
         }}
