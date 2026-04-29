@@ -1,5 +1,6 @@
 import { npcMemoryStore } from '../../state/npc-memory-store';
 import { sceneStore } from '../../state/scene-store';
+import { getTurnLog } from '../../engine/turn-log';
 import {
   dequeuePending,
   markRunning,
@@ -67,7 +68,11 @@ async function dispatchTask(task: SummarizerTask): Promise<void> {
   }
 
   if (task.type === 'turn_log_compress') {
-    const result = await generateTurnLogCompress([]);
+    const allEntries = getTurnLog();
+    const entries = task.entryIds.length > 0
+      ? allEntries.filter(e => task.entryIds.includes(String(e.turnNumber)))
+      : allEntries.slice(-20);
+    const result = await generateTurnLogCompress(entries);
     recentTurnCompressBlocks.push(result);
     return;
   }
