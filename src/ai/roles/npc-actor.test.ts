@@ -22,7 +22,7 @@ mock.module('../providers', () => ({
   }),
 }));
 
-const { generateNpcDialogue } = await import('./npc-actor');
+const { generateNpcDialogue, streamNpcDialogue } = await import('./npc-actor');
 
 describe('generateNpcDialogue', () => {
   beforeEach(() => {
@@ -95,5 +95,77 @@ describe('generateNpcDialogue', () => {
     );
     expect(result).toEqual(expected);
     expect(mockGenerateObject).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('narrativeContext forwarding', () => {
+  const npcProfile = {
+    id: 'npc_test',
+    name: '测试NPC',
+    personality_tags: ['cautious'],
+    goals: ['survive'],
+    backstory: '一个普通的商人',
+    knowledgeProfile: {
+      trust_gates: [{ min_trust: 5, reveals: '将军的秘密' }],
+    },
+  };
+
+  beforeEach(() => {
+    mockGenerateObject.mockReset();
+    mockGenerateObject.mockResolvedValue({ object: {
+      dialogue: '...',
+      emotionTag: 'neutral',
+      shouldRemember: false,
+      sentiment: 'neutral',
+    }, usage: mockUsage });
+  });
+
+  it('generateNpcDialogue with narrativeContext — system arg contains act/atmosphere text', async () => {
+    await generateNpcDialogue(
+      npcProfile,
+      '铁匠铺内',
+      '打招呼',
+      [],
+      undefined,
+      { storyAct: 'act3', atmosphereTags: ['沉重', '末日'] },
+      0,
+    );
+    const callArgs = (mockGenerateObject.mock.calls[0] as unknown as [Record<string, unknown>])[0];
+    expect(callArgs.system).toContain('当前故事阶段：act3');
+    expect(callArgs.system).toContain('沉重、末日');
+  });
+
+  it('generateNpcDialogue without narrativeContext — system arg does NOT contain 当前故事阶段', async () => {
+    await generateNpcDialogue(
+      npcProfile,
+      '铁匠铺内',
+      '打招呼',
+      [],
+    );
+    const callArgs = (mockGenerateObject.mock.calls[0] as unknown as [Record<string, unknown>])[0];
+    expect(callArgs.system).not.toContain('当前故事阶段');
+  });
+
+  it('streamNpcDialogue with trustLevel=7 and narrativeContext — streamText system contains trust-gate and act paragraph', async () => {
+    const mockStreamText = (await import('ai')).streamText as ReturnType<typeof mock>;
+    mockStreamText.mockReturnValueOnce({ textStream: (async function* () {})() });
+
+    const chunks: string[] = [];
+    for await (const chunk of streamNpcDialogue(
+      npcProfile,
+      '铁匠铺内',
+      '打招呼',
+      [],
+      undefined,
+      { storyAct: 'act1', atmosphereTags: ['紧张'] },
+      7,
+    )) {
+      chunks.push(chunk);
+    }
+
+    const streamCalls = mockStreamText.mock.calls;
+    const lastCallArgs = (streamCalls[streamCalls.length - 1] as unknown as [Record<string, unknown>])[0];
+    expect(lastCallArgs.system).toContain('将军的秘密');
+    expect(lastCallArgs.system).toContain('当前故事阶段：act1');
   });
 });
