@@ -1,6 +1,6 @@
 import type { LanguageModel } from 'ai';
 import { google } from '@ai-sdk/google';
-import { openai } from '@ai-sdk/openai';
+import { openai, createOpenAI } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { createDeepSeek } from '@ai-sdk/deepseek';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
@@ -39,12 +39,17 @@ const openaiCompatible = createOpenAICompatible({
   apiKey: process.env.OPENAI_COMPATIBLE_API_KEY ?? 'not-needed',
 });
 
+const alibaba = createOpenAI({
+  baseURL: process.env.ALIBABA_BASE_URL ?? 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+  apiKey: process.env.ALIBABA_API_KEY ?? '',
+});
+
 const PROVIDER_FACTORIES: Record<string, (modelId: string) => LanguageModel> = {
   google: (id) => google(id) as unknown as LanguageModel,
   openai: (id) => openai(id) as unknown as LanguageModel,
   anthropic: (id) => anthropic(id) as unknown as LanguageModel,
   deepseek: (id) => deepseek(id) as unknown as LanguageModel,
-  alibaba: (id) => openai.call({ baseURL: process.env.ALIBABA_BASE_URL ?? 'https://dashscope.aliyuncs.com/compatible-mode/v1', apiKey: process.env.ALIBABA_API_KEY ?? '' }, id) as unknown as LanguageModel,
+  alibaba: (id) => alibaba(id) as unknown as LanguageModel,
   'openai-compatible': (id) => openaiCompatible(id) as unknown as LanguageModel,
 };
 
