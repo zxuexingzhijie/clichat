@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: Game System Integrity & Playability
+milestone: v1.3
+milestone_name: Story Mainline & Narrative System
 status: completed
-stopped_at: context exhaustion at 90% (2026-04-29)
-last_updated: "2026-04-29T08:34:37.147Z"
+stopped_at: 16-P04 complete — NPC knowledge_profile YAML + dialogue trust injection + route-lock flag wiring
+last_updated: "2026-04-29T16:02:14Z"
 last_activity: "2026-04-28 — Phase 15 complete (15-01: NPC placement + dark cave enemies; 15-02: revealedNpcs + shadow contact + loadLastSave + death screen)"
 progress:
   total_phases: 5
@@ -105,6 +105,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-29T08:34:37.136Z
-Stopped at: 16-P02 complete — act-aware narrative prompt + NPC trust-gated disclosure + narrativeStore wiring
+Last session: 2026-04-29T16:02:14Z
+Stopped at: 16-P04 complete — NPC knowledge_profile YAML + dialogue trust injection + route-lock flag wiring
 Resume file: None
