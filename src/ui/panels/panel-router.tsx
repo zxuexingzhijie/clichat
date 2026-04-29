@@ -20,7 +20,8 @@ import type { CombatState } from '../../state/combat-store';
 import type { LocationMapData } from './map-panel';
 import type { CodexDisplayEntry } from './codex-panel';
 import type { BranchDisplayNode } from './branch-tree-panel';
-import type { BranchDiffResult } from '../../engine/branch-diff';
+import type { BranchMeta } from '../../state/branch-store';
+import type { SaveDataV3 } from '../../state/serializer';
 import type { ToastData } from '../hooks/use-toast';
 import type { SpinnerContext } from '../components/scene-spinner';
 import type { TurnLogEntry } from '../../state/serializer';
@@ -58,8 +59,9 @@ type PanelRouterProps = {
   readonly branchTree?: readonly BranchDisplayNode[];
   readonly currentBranchId?: string;
 
-  readonly branchDiffResult?: BranchDiffResult;
-  readonly compareBranchNames?: { readonly source: string; readonly target: string };
+  readonly branches?: Record<string, BranchMeta>;
+  readonly readSaveData?: (fileName: string, saveDir: string) => Promise<SaveDataV3>;
+  readonly saveDir?: string;
 
   readonly replayEntries: readonly TurnLogEntry[];
   readonly chapterSummaries: readonly string[];
@@ -97,8 +99,9 @@ export function PanelRouter({
   codexEntries,
   branchTree,
   currentBranchId,
-  branchDiffResult,
-  compareBranchNames,
+  branches,
+  readSaveData,
+  saveDir,
   replayEntries,
   chapterSummaries,
   width,
@@ -156,15 +159,15 @@ export function PanelRouter({
         switchMessage={switchMessage ?? undefined}
       />
     ) : null,
-    compare: (
+    compare: branches && readSaveData && saveDir ? (
       <ComparePanel
-        branches={{}}
-        readSaveData={async () => { throw new Error('not wired'); }}
-        saveDir=""
+        branches={branches}
+        readSaveData={readSaveData}
+        saveDir={saveDir}
         onClose={onClose}
         width={width}
       />
-    ),
+    ) : <Box><Text dimColor>正在初始化...</Text></Box>,
     inventory: <InventoryPanel onClose={onClose} />,
     shortcuts: <ShortcutHelpPanel onClose={onClose} />,
     replay: <ReplayPanel entries={[...replayEntries]} onClose={onClose} />,
@@ -173,7 +176,7 @@ export function PanelRouter({
     activeQuests, completedQuests, failedQuests, onClose,
     mapData, codexEntries,
     branchTree, currentBranchId, onPhaseSwitch,
-    branchDiffResult, compareBranchNames,
+    branches, readSaveData, saveDir,
     replayEntries, chapterSummaries,
     width, handleSwitchBranch, switchMessage,
   ]);

@@ -33,7 +33,8 @@ import type { QuestTemplate } from '../../codex/schemas/entry-types';
 import type { LocationMapData } from '../panels/map-panel';
 import type { CodexDisplayEntry } from '../panels/codex-panel';
 import type { BranchDisplayNode } from '../panels/branch-tree-panel';
-import type { BranchDiffResult } from '../../engine/branch-diff';
+import type { BranchMeta } from '../../state/branch-store';
+import type { SaveDataV3 } from '../../state/serializer';
 
 const OVERLAY_PHASES = new Set(['journal', 'map', 'codex', 'inventory', 'branch_tree', 'compare', 'shortcuts', 'replay', 'chapter_summary']);
 
@@ -50,8 +51,9 @@ type GameScreenProps = {
   readonly codexEntries?: readonly CodexDisplayEntry[];
   readonly branchTree?: readonly BranchDisplayNode[];
   readonly currentBranchId?: string;
-  readonly branchDiffResult?: BranchDiffResult;
-  readonly compareBranchNames?: { readonly source: string; readonly target: string };
+  readonly branches?: Record<string, BranchMeta>;
+  readonly readSaveData?: (fileName: string, saveDir: string) => Promise<SaveDataV3>;
+  readonly saveDir?: string;
 };
 
 export function GameScreen({
@@ -63,8 +65,9 @@ export function GameScreen({
   codexEntries,
   branchTree,
   currentBranchId,
-  branchDiffResult,
-  compareBranchNames,
+  branches,
+  readSaveData,
+  saveDir,
 }: GameScreenProps): React.ReactNode {
   const gameState = GameStoreCtx.useStoreState((s) => s);
   const playerState = PlayerStoreCtx.useStoreState((s) => s);
@@ -380,8 +383,9 @@ export function GameScreen({
       codexEntries={codexEntries}
       branchTree={branchTree}
       currentBranchId={currentBranchId}
-      branchDiffResult={branchDiffResult}
-      compareBranchNames={compareBranchNames}
+      branches={branches}
+      readSaveData={readSaveData}
+      saveDir={saveDir}
       replayEntries={replayEntries}
       chapterSummaries={getRecentChapterSummaries()}
       width={width}

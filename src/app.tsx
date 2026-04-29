@@ -25,7 +25,7 @@ import type { CodexEntry, QuestTemplate } from './codex/schemas/entry-types';
 import type { CodexDisplayEntry } from './ui/panels/codex-panel';
 import { createGameContext } from './context/game-context';
 import type { GameContext } from './context/game-context';
-import { quickSave, saveGame, loadGame } from './persistence/save-file-manager';
+import { quickSave, saveGame, loadGame, readSaveData, getSaveDir } from './persistence/save-file-manager';
 import { createSerializer } from './state/serializer';
 import { createQuestSystem } from './engine/quest-system';
 import { createBranch, switchBranch, deleteBranch } from './persistence/branch-manager';
@@ -337,8 +337,9 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
           mapData={mapData}
           branchTree={branchTree}
           currentBranchId={branchState.currentBranchId}
-          branchDiffResult={undefined}
-          compareBranchNames={undefined}
+          branches={branchState.branches}
+          readSaveData={readSaveData}
+          saveDir={saveDir}
         />
       </SizeGuard>
     </GameErrorBoundary>
