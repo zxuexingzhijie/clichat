@@ -44,10 +44,10 @@ function formatObjectId(id: string): string {
   return id.replace(/_/g, ' ');
 }
 
-function buildSuggestedActions(location: Location, codexEntries: Map<string, CodexEntry>): SceneAction[] {
+function buildSuggestedActions(location: Location, presentNpcIds: readonly string[], codexEntries: Map<string, CodexEntry>): SceneAction[] {
   const actions: SceneAction[] = [];
 
-  for (const npcId of location.notable_npcs) {
+  for (const npcId of presentNpcIds) {
     const npc = queryById(codexEntries, npcId);
     const npcName = npc?.name ?? npcId;
     actions.push({
@@ -123,6 +123,12 @@ export function createSceneManager(
               draft.npcsPresent = [...draft.npcsPresent, newNpcId];
             }
           });
+          const locEntry = currentSceneId ? queryById(codexEntries, currentSceneId) : null;
+          if (locEntry && isLocation(locEntry)) {
+            const updatedNpcs = stores.scene.getState().npcsPresent;
+            const updatedActions = buildSuggestedActions(locEntry, updatedNpcs, codexEntries);
+            stores.scene.setState(draft => { draft.actions = updatedActions; });
+          }
         }
       }
     }
@@ -198,7 +204,7 @@ export function createSceneManager(
       draft.narrationLines = narrationLines;
     });
 
-    const actions = buildSuggestedActions(entry, codexEntries);
+    const actions = buildSuggestedActions(entry, allPresent, codexEntries);
     stores.scene.setState(draft => {
       draft.actions = actions;
     });

@@ -180,7 +180,7 @@ describe('createGameScreenController', () => {
       const gameLoop: GameLoop = {
         executeAction: mock(async () => ({
           status: 'action_executed' as const,
-          action: { type: 'talk' as const, target: 'guard', modifiers: {}, source: 'action_select' as const },
+          action: { type: 'inspect' as const, target: 'notice_board', modifiers: {}, source: 'action_select' as const },
           narration: [],
         })),
         processInput: mock(async () => ({ status: 'help' as const, commands: [] })),

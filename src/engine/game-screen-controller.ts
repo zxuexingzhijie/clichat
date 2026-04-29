@@ -88,7 +88,7 @@ export function createGameScreenController(
         return;
       }
 
-      if (result.status === 'action_executed' && result.narration.length > 0) {
+      if (result.status === 'action_executed' && result.action.type === 'talk') {
         setInputMode?.('action_select');
         return;
       }
@@ -132,7 +132,7 @@ export function createGameScreenController(
           draft.narrationLines = capNarrationLines([...draft.narrationLines, ...result.commands]);
         });
         setInputMode?.('action_select');
-      } else if (result.status === 'action_executed' && result.narration.length > 0) {
+      } else if (result.status === 'action_executed' && result.action.type === 'talk') {
         setInputMode?.('action_select');
       } else {
         const sceneState = sceneStore.getState();
@@ -182,9 +182,12 @@ export function createGameScreenController(
     }
   };
 
-  const handleDialogueExecute = (index: number): void => {
+  const handleDialogueExecute = async (index: number): Promise<void> => {
     if (!dialogueManager) return;
-    dialogueManager.processPlayerResponse(index).catch((err: unknown) => {
+    setInputMode?.('processing');
+    try {
+      await dialogueManager.processPlayerResponse(index);
+    } catch (err: unknown) {
       console.error('[dialogue] processPlayerResponse failed:', err);
       eventBus.emit('ai_call_failed', { role: 'npc_actor', error: err instanceof Error ? err.message : String(err) });
       sceneStore.setState(draft => {
@@ -192,7 +195,9 @@ export function createGameScreenController(
       });
       dialogueManager.endDialogue();
       gameStore.setState(draft => { draft.phase = 'game'; });
-    });
+    } finally {
+      setInputMode?.('action_select');
+    }
   };
 
   const handleDialogueEscape = (): void => {
