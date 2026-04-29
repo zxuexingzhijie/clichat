@@ -529,3 +529,155 @@ describe('createQuestSystem — event-based advancement', () => {
     expect(questStore.getState().quests['quest_auto_accept_2']?.acceptedAt).toBe(acceptedAt);
   });
 });
+
+describe('createQuestSystem — conditional_next_stages', () => {
+  beforeEach(resetStores);
+
+  const mockQuestConditional = {
+    id: 'quest_conditional',
+    type: 'quest' as const,
+    name: '条件分支任务',
+    tags: ['main'],
+    description: '根据旗帜决定下一阶段',
+    epistemic: {
+      authority: 'canonical_truth' as const,
+      truth_status: 'true' as const,
+      scope: 'local' as const,
+      visibility: 'public' as const,
+      confidence: 1.0,
+      source_type: 'authorial' as const,
+      known_by: [],
+      contradicts: [],
+      volatility: 'stable' as const,
+    },
+    quest_type: 'main' as const,
+    stages: [
+      {
+        id: 'stage_decision',
+        description: '做出选择',
+        objectives: [],
+        nextStageId: 'stage_default',
+        trigger: { event: 'dialogue_ended' as const, targetId: 'npc_captain' },
+        conditional_next_stages: [
+          { condition_flag: 'justice_score_locked', nextStageId: 'stage_consequence_justice' },
+          { condition_flag: 'shadow_score_locked', nextStageId: 'stage_consequence_shadow' },
+        ],
+      },
+      { id: 'stage_default', description: '默认结局', objectives: [], nextStageId: null },
+      { id: 'stage_consequence_justice', description: '正义结局', objectives: [], nextStageId: null },
+      { id: 'stage_consequence_shadow', description: '暗影结局', objectives: [], nextStageId: null },
+    ],
+    rewards: {},
+  };
+
+  const mockQuestConditionValue = {
+    id: 'quest_condition_value',
+    type: 'quest' as const,
+    name: '精确值条件任务',
+    tags: ['main'],
+    description: '根据旗帜精确值决定分支',
+    epistemic: {
+      authority: 'canonical_truth' as const,
+      truth_status: 'true' as const,
+      scope: 'local' as const,
+      visibility: 'public' as const,
+      confidence: 1.0,
+      source_type: 'authorial' as const,
+      known_by: [],
+      contradicts: [],
+      volatility: 'stable' as const,
+    },
+    quest_type: 'side' as const,
+    stages: [
+      {
+        id: 'stage_01',
+        description: '检查精确值',
+        objectives: [],
+        nextStageId: 'stage_fallback',
+        trigger: { event: 'dialogue_ended' as const, targetId: 'npc_elder' },
+        conditional_next_stages: [
+          { condition_flag: 'route_score', condition_value: 3, nextStageId: 'stage_exact_match' },
+        ],
+      },
+      { id: 'stage_fallback', description: '回退阶段', objectives: [], nextStageId: null },
+      { id: 'stage_exact_match', description: '精确匹配阶段', objectives: [], nextStageId: null },
+    ],
+    rewards: {},
+  };
+
+  it('conditional_next_stages with matching flag routes to that stage', async () => {
+    const { createQuestSystem } = await import('./quest-system');
+    const bus = mitt<DomainEvents>();
+    const entries = new Map<string, any>([['quest_conditional', mockQuestConditional]]);
+    const questSystem = createQuestSystem(stores, entries, bus);
+
+    questSystem.acceptQuest('quest_conditional');
+    questStore.setState(draft => {
+      const p = draft.quests['quest_conditional'];
+      if (p) p.flags = { justice_score_locked: true };
+    });
+
+    bus.emit('dialogue_ended', { npcId: 'npc_captain' });
+
+    expect(questStore.getState().quests['quest_conditional']?.currentStageId).toBe('stage_consequence_justice');
+  });
+
+  it('conditional_next_stages with no matching flag falls back to nextStageId', async () => {
+    const { createQuestSystem } = await import('./quest-system');
+    const bus = mitt<DomainEvents>();
+    const entries = new Map<string, any>([['quest_conditional', mockQuestConditional]]);
+    const questSystem = createQuestSystem(stores, entries, bus);
+
+    questSystem.acceptQuest('quest_conditional');
+
+    bus.emit('dialogue_ended', { npcId: 'npc_captain' });
+
+    expect(questStore.getState().quests['quest_conditional']?.currentStageId).toBe('stage_default');
+  });
+
+  it('conditional_next_stages with condition_value matches only exact value', async () => {
+    const { createQuestSystem } = await import('./quest-system');
+    const bus = mitt<DomainEvents>();
+    const entries = new Map<string, any>([['quest_condition_value', mockQuestConditionValue]]);
+    const questSystem = createQuestSystem(stores, entries, bus);
+
+    questSystem.acceptQuest('quest_condition_value');
+    questStore.setState(draft => {
+      const p = draft.quests['quest_condition_value'];
+      if (p) p.flags = { route_score: 3 };
+    });
+
+    bus.emit('dialogue_ended', { npcId: 'npc_elder' });
+
+    expect(questStore.getState().quests['quest_condition_value']?.currentStageId).toBe('stage_exact_match');
+  });
+
+  it('condition_value does NOT match when value differs', async () => {
+    const { createQuestSystem } = await import('./quest-system');
+    const bus = mitt<DomainEvents>();
+    const entries = new Map<string, any>([['quest_condition_value', mockQuestConditionValue]]);
+    const questSystem = createQuestSystem(stores, entries, bus);
+
+    questSystem.acceptQuest('quest_condition_value');
+    questStore.setState(draft => {
+      const p = draft.quests['quest_condition_value'];
+      if (p) p.flags = { route_score: 2 };
+    });
+
+    bus.emit('dialogue_ended', { npcId: 'npc_elder' });
+
+    expect(questStore.getState().quests['quest_condition_value']?.currentStageId).toBe('stage_fallback');
+  });
+
+  it('existing linear stage advancement still works without conditional_next_stages', async () => {
+    const { createQuestSystem } = await import('./quest-system');
+    const bus = mitt<DomainEvents>();
+    const entries = new Map<string, any>([['quest_dialogue_trigger', mockQuestWithDialogueTrigger]]);
+    const questSystem = createQuestSystem(stores, entries, bus);
+
+    questSystem.acceptQuest('quest_dialogue_trigger');
+    bus.emit('dialogue_ended', { npcId: 'npc_innkeeper' });
+
+    expect(questStore.getState().quests['quest_dialogue_trigger']?.currentStageId).toBe('stage_02');
+  });
+});

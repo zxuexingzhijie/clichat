@@ -144,11 +144,19 @@ export const QuestTriggerSchema = z.object({
 
 export type QuestTrigger = z.infer<typeof QuestTriggerSchema>;
 
+export const ConditionalNextStageSchema = z.object({
+  condition_flag: z.string(),
+  condition_value: z.unknown().optional(),
+  nextStageId: z.string(),
+});
+export type ConditionalNextStage = z.infer<typeof ConditionalNextStageSchema>;
+
 export const QuestStageSchema = z.object({
   id: z.string().min(1),
   description: z.string(),
   objectives: z.array(QuestObjectiveSchema),
   nextStageId: z.string().nullable(),
+  conditional_next_stages: z.array(ConditionalNextStageSchema).optional(),
   completionCondition: z.string().optional(),
   trigger: QuestTriggerSchema.optional(),
 });

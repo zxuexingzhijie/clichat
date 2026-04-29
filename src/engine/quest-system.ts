@@ -7,7 +7,7 @@ import type { QuestState } from '../state/quest-store';
 import type { RelationState } from '../state/relation-store';
 import type { PlayerState } from '../state/player-store';
 import type { GameState } from '../state/game-store';
-import type { CodexEntry, QuestTemplate } from '../codex/schemas/entry-types';
+import type { CodexEntry, QuestStage, QuestTemplate } from '../codex/schemas/entry-types';
 import type { EventBus } from '../events/event-bus';
 
 export type QuestResult =
@@ -158,6 +158,20 @@ export function createQuestSystem(
     }
   }
 
+  function resolveNextStage(stage: QuestStage, flags: Record<string, unknown>): string | null {
+    if (stage.conditional_next_stages?.length) {
+      for (const cond of stage.conditional_next_stages) {
+        const flagValue = flags[cond.condition_flag];
+        if (cond.condition_value !== undefined) {
+          if (flagValue === cond.condition_value) return cond.nextStageId;
+        } else {
+          if (flagValue) return cond.nextStageId;
+        }
+      }
+    }
+    return stage.nextStageId;
+  }
+
   const pendingConditions = new Map<string, Set<string>>();
 
   function checkAndAdvance(questId: string, conditionKey: 'primary' | 'secondary'): void {
@@ -176,10 +190,11 @@ export function createQuestSystem(
     const canAdvance = needsBoth
       ? pending.has('primary') && pending.has('secondary')
       : pending.has('primary');
-    if (canAdvance && stage.nextStageId) {
+    const nextStageId = resolveNextStage(stage, progress.flags);
+    if (canAdvance && nextStageId) {
       pendingConditions.delete(mapKey);
-      advanceStage(questId, stage.nextStageId);
-    } else if (canAdvance && !stage.nextStageId) {
+      advanceStage(questId, nextStageId);
+    } else if (canAdvance && !nextStageId) {
       pendingConditions.delete(mapKey);
       completeQuest(questId);
     }

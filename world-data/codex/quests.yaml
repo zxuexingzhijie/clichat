@@ -28,9 +28,20 @@
         - id: obj_talk_any_npc
           type: talk
           description: 与任意NPC交谈，打听谣言
-      nextStageId: stage_investigate
-    - id: stage_investigate
-      description: 追查线索，深入黑暗洞穴
+      nextStageId: stage_disappearances
+    - id: stage_disappearances
+      description: 深入调查——失踪者的共同点，矿路封锁的真相
+      trigger:
+        event: location_entered
+        targetId: loc_abandoned_camp
+      objectives:
+        - id: obj_visit_camp_or_beggar
+          type: visit_location
+          targetId: loc_abandoned_camp
+          description: 前往废弃营地调查（或与瞎子孙交谈获得线索）
+      nextStageId: stage_truth_in_forest
+    - id: stage_truth_in_forest
+      description: 洞穴中的古代符文——与五年前的狼灾相同；月华认出了它们
       trigger:
         event: location_entered
         targetId: loc_dark_cave
@@ -38,24 +49,76 @@
         - id: obj_enter_cave
           type: visit_location
           targetId: loc_dark_cave
-          description: 进入黑暗洞穴调查
-      nextStageId: stage_expose
-    - id: stage_expose
-      description: 揭露狼灾真相
+          description: 进入黑暗洞穴
+        - id: obj_talk_priestess
+          type: talk
+          targetId: npc_priestess
+          description: 与月华交谈，了解符文含义
+      nextStageId: stage_mayor_secret
+    - id: stage_mayor_secret
+      description: 镇长的秘密——五年前的交易，外来势力的回归
       trigger:
-        event: item_found
-        targetId: item_evidence
-        secondaryEvent: dialogue_ended
-        secondaryTargetId: npc_elder
+        event: dialogue_ended
+        targetId: npc_elder
       objectives:
-        - id: obj_talk_elder
+        - id: obj_confront_elder
           type: talk
           targetId: npc_elder
-          description: 与镇长王德交谈，揭露真相
-        - id: obj_find_evidence
-          type: find_item
-          targetId: item_evidence
-          description: 找到关键证据
+          description: 以证据质问王德（或通过阿鬼迂回接近）
+      nextStageId: stage_allies_decision
+    - id: stage_allies_decision
+      description: 三条路线：义之道（陈铁柱）/ 和之道（王德）/ 暗之道（阿鬼）
+      trigger:
+        event: dialogue_ended
+        targetId: npc_captain
+      objectives:
+        - id: obj_talk_priestess_alliance
+          type: talk
+          targetId: npc_priestess
+          description: 与月华商议对策
+        - id: obj_choose_alliance
+          type: talk
+          description: 选择盟友：陈铁柱（义）、王德（和）、或阿鬼（暗）
+      conditional_next_stages:
+        - condition_flag: justice_score_locked
+          nextStageId: stage_consequence_justice
+        - condition_flag: shadow_score_locked
+          nextStageId: stage_consequence_shadow
+        - condition_flag: pragmatism_score_locked
+          nextStageId: stage_consequence_harmony
+      nextStageId: stage_consequence_harmony
+    - id: stage_consequence_justice
+      description: 义之道结局——真相公开，陈铁柱独自哭泣，镇子将面临震荡
+      trigger:
+        event: dialogue_ended
+        targetId: npc_captain
+      objectives:
+        - id: obj_confront_captain
+          type: talk
+          targetId: npc_captain
+          description: 与陈铁柱完成对质对话
+      nextStageId: null
+    - id: stage_consequence_harmony
+      description: 和之道结局——秘密被压制，月华沉默，瞎子孙消失
+      trigger:
+        event: dialogue_ended
+        targetId: npc_elder
+      objectives:
+        - id: obj_agreement_elder
+          type: talk
+          targetId: npc_elder
+          description: 与王德完成压制协议
+      nextStageId: null
+    - id: stage_consequence_shadow
+      description: 暗之道结局——阿鬼请玩家喝酒，地下势力永久扎根黑松镇
+      trigger:
+        event: dialogue_ended
+        targetId: npc_shadow_contact
+      objectives:
+        - id: obj_deal_shadow
+          type: talk
+          targetId: npc_shadow_contact
+          description: 与阿鬼完成交易
       nextStageId: null
   rewards:
     reputation_delta:
@@ -71,7 +134,7 @@
   tags:
     - side
     - 黑松镇
-  description: 铁匠老赵急需矿石，听说北林废弃矿洞里还有存货。
+  description: 铁匠老赵急需矿石，听说北林废弃矿洞里还有存货。（Stage 2后：矿路被故意封锁，阻止外人发现洞穴）
   epistemic:
     authority: canonical_truth
     truth_status: "true"
@@ -121,7 +184,7 @@
   tags:
     - side
     - 黑松镇
-  description: 阿福被人欠着一笔旧账，他需要人帮忙讨回来。
+  description: 阿福被人欠着一笔旧账，他需要人帮忙讨回来。（Stage 4后：瞎子孙的"债"是封口费，他是关键证人）
   epistemic:
     authority: canonical_truth
     truth_status: "true"
@@ -170,7 +233,7 @@
   tags:
     - side
     - 黑松镇
-  description: 猎人阿虎请求帮忙清除北林中异常活跃的狼群。
+  description: 猎人阿虎请求帮忙清除北林中异常活跃的狼群。（Stage 3后：猎狼只是治标，狼群异常来自洞穴祭祀地）
   epistemic:
     authority: canonical_truth
     truth_status: "true"
