@@ -67,3 +67,23 @@ Code fully implemented (637 tests pass, 27/27 verification truths).
 
 - Roadmap: `.planning/milestones/v1.0-ROADMAP.md`
 - Requirements: `.planning/milestones/v1.0-REQUIREMENTS.md`
+
+## v1.3 — Story Mainline & Narrative System
+
+**Shipped:** 2026-04-29
+**Phase:** 16 | **Plans:** 5
+
+### Delivered
+
+Persistent narrative arc system: story state tracks acts/worldFlags/atmosphereTags; 8-stage main quest with 3 conditional endings; act-aware AI prompt injection; NPC trust-gated knowledge disclosure for 7 story NPCs; deterministic location description overrides driven by worldFlags.
+
+### Key Accomplishments
+
+1. narrativeState store + SaveDataV5 + quest_stage_advanced event watcher
+2. Act-aware narrative prompts + NPC trust-gated knowledge disclosure
+3. quest_main_01 6-stage arc (3 endings: justice/harmony/shadow)
+4. NPC knowledge_profile YAML + dialogue trust injection + route-lock flags
+5. Location description_overrides + worldFlags priority resolution (no LLM)
+
+**Tests at ship:** 1062 pass, 0 fail
+**Known deferred items at close:** 3 (see STATE.md Deferred Items)

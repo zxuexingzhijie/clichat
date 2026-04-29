@@ -6,39 +6,38 @@ Chronicle is an AI-driven CLI interactive novel game — a text RPG where AI han
 and NPC behavior while a deterministic Rules Engine controls truth, state, and game pacing.
 Chinese-first, CLI-first, single-player. Players interact through dual-input (structured
 commands + natural language), manage story forks like git branches, and explore a persistent
-world with long-memory NPCs. v1.1 ships with streaming output, cinematic character creation,
-animation feedback, and npm + Homebrew distribution.
+world with long-memory NPCs. v1.3 ships with a full story mainline (6-stage quest arc, 3
+endings), act-aware AI prompts, NPC trust-gated knowledge disclosure, and deterministic
+location descriptions driven by world flags.
 
 ## Core Value
 
 The player must feel they are in a **persistent, consistent world that remembers them** — not
 a chatbot that reinvents the universe every turn.
 
-## Current Milestone: v1.2 Game System Integrity & Playability
+## Next Milestone: v1.4 (TBD)
 
-**Goal:** Fix 50 known issues — restore all wired systems, combat, dialogue, quest, save/branch, reputation, content gaps to correct playable state.
+Planning in progress. Run `/gsd-new-milestone` to define scope.
 
-**Target features:**
-- App initialization wiring (save/quest/branch/map/RAG/summarizer all connected)
-- Combat system correctness (double enemy turn, flee bug, combat initiation, abilities, spells)
-- Dialogue system correctness (reputation scale, inline mode, NPC role questions, streaming sentiment)
-- Quest system completeness (quests.yaml content, command routing, stage triggers)
-- Save/branch correctness (saveName, branch-switch restores state, path traversal fix)
-- Reputation & memory data integrity (scale mismatch, faction writes, load event suppression)
-- World content gaps (notable_npcs arrays, dark cave, shadow contact discovery)
-- Death recovery option
+Candidate areas (from deferred items):
+- True multi-turn dialogue (ai-caller.ts `messages[]` support)
+- Live API session UAT (/cost, /replay, summarizer)
+- Enemy loot drop system
+- OWNER placeholder replacement for npm publish
+- Journey turn granularity (travel, camp, resupply)
 
 ---
 
-## Current State (v1.1)
+## Current State (v1.3)
 
-- **Shipped:** 2026-04-26
-- **Codebase:** ~22,200 lines TypeScript, Bun runtime, React + Ink
-- **Test suite:** 744 tests, 0 failures
+- **Shipped:** 2026-04-29
+- **Codebase:** ~31,293 lines TypeScript, Bun runtime, React + Ink
+- **Test suite:** 1062 tests, 0 failures
 - **AI providers:** Multi-provider via YAML config (Google, OpenAI, Anthropic, Qwen, DeepSeek)
-- **World:** Classic Fantasy — 9 locations, 4 factions, 15+ NPCs, main quest + side quests
+- **World:** Classic Fantasy — 9 locations, 4 factions, 15+ NPCs, 8-stage main quest (3 endings) + 4 side quests
 - **Distribution:** npm (chronicle-cli), Homebrew tap, GitHub Actions CI/CD
-- **Known gaps:** OWNER placeholders in distribution files (user replaces before publish); live API UAT deferred
+- **Narrative system:** narrativeStore (act1/act2/act3 + worldFlags); act-aware AI prompts; NPC trust-gated disclosure; location description overrides
+- **Known gaps:** OWNER placeholders in distribution files; live API UAT deferred; ai-caller.ts single-turn only
 
 ## Requirements
 
@@ -74,7 +73,12 @@ a chatbot that reinvents the universe every turn.
 - ✓ Narrative character creation via guard intercept scene — v1.1 (NCC-01–04)
 - ✓ Animation system (title, spinner, transitions, combat flash, toast) — v1.1 (ANIM-01–05)
 - ✓ npm + Homebrew distribution with CI/CD release pipeline — v1.1 (DIST-01–05)
-- ✓ Chapter summary display wired to game-screen UI — v1.1 (CARRY-02)
+- ✓ All 46 v1.2 game system integrity fixes (WIRE/COMBAT/DIAL/QUEST/SAVE/REP/MEM/SCENE/CODEX/CONT/DEATH) — v1.2
+- ✓ NarrativeState store (currentAct/atmosphereTags/worldFlags/playerKnowledgeLevel) + SaveDataV5 migration — v1.3 (D-01–05)
+- ✓ Act-aware narrative prompts + NPC trust-gated knowledge disclosure — v1.3 (D-06–09)
+- ✓ quest_main_01 6-stage arc with 3 conditional endings (justice/harmony/shadow) — v1.3 (D-10–14)
+- ✓ NPC knowledge_profile for 7 story NPCs + dialogue trust injection + route-lock flags — v1.3 (D-15–20)
+- ✓ Location description_overrides with worldFlags priority resolution (no LLM call) — v1.3 (D-21–24)
 
 ### Active
 
@@ -135,9 +139,14 @@ a chatbot that reinvents the universe every turn.
 | Animation hooks as pure-logic + React wrappers | Testable without React Testing Library | Good — timer-dependent tests run fast |
 | CLI env var propagation for data dir | Single env var __CHRONICLE_DATA_DIR shared by all consumers | Good — no import changes needed |
 | Segment-based traversal guard | path.normalize resolves '..' away; split detects it | Good — security-correct |
-| GitHub Actions fan-out pattern | publish-npm and build-binaries parallel after quality-gate | Good — reduces pipeline time |
+| NarrativeState as separate store | Keeps narrative arc out of GameState; restores independently | ✓ Good — clean separation, V5 migration trivial |
+| SaveDataV4 union for compareBranches | branch-diff accepts V4|V5 without breaking existing code | ✓ Good — no downstream breakage |
+| OVERRIDE_PRIORITY hardcoded in code | Avoids data migration when priority changes | ✓ Good — easy to iterate |
+| quest field optional in createDialogueManager | Backward-compatible with existing test fixtures | ✓ Good — no test regressions |
+| ai-caller.ts single-turn only | Original design; multi-turn serialized to strings | ⚠ Revisit — true multi-turn deferred to v1.4 |
 
-## Evolution
+---
+*Last updated: 2026-04-30 after v1.3 milestone*
 
 **After each phase transition** (via `/gsd-transition`):
 1. Requirements invalidated? → Move to Out of Scope with reason

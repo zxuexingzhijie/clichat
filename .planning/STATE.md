@@ -108,11 +108,16 @@ None — all known blockers resolved.
 
 ## Deferred Items
 
+Items acknowledged and deferred at v1.3 milestone close on 2026-04-30:
+
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
 | UAT | Live API session validation (/cost, /replay, summarizer) | Carried | v1.1 close |
 | Dist | Replace OWNER placeholders before first npm publish | Carried | v1.1 close |
 | Bug | use-game-input.test.ts: getPanelActionForKey 'i' returns null (pre-existing) | Deferred | Phase 13 P01 |
+| UAT | Phase 05: HUMAN-UAT.md [deferred] — game flow manual testing | acknowledged | v1.3 close |
+| Verification | Phase 05: VERIFICATION.md [human_needed] — live game session UAT | acknowledged | v1.3 close |
+| Verification | Phase 12: VERIFICATION.md [human_needed] — combat system live UAT | acknowledged | v1.3 close |
 
 ## Session Continuity
 
