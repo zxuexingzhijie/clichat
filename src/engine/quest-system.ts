@@ -153,6 +153,9 @@ export function createQuestSystem(
       }
     }
     appendQuestEvent({ questId, type: 'quest_completed', turnNumber });
+    if (template?.quest_type === 'main') {
+      stores.game.setState(draft => { draft.phase = 'victory'; });
+    }
   }
 
   const pendingConditions = new Map<string, Set<string>>();

@@ -43,8 +43,10 @@
     - id: stage_expose
       description: 揭露狼灾真相
       trigger:
-        event: dialogue_ended
-        targetId: npc_elder
+        event: item_found
+        targetId: item_evidence
+        secondaryEvent: dialogue_ended
+        secondaryTargetId: npc_elder
       objectives:
         - id: obj_talk_elder
           type: talk
@@ -55,7 +57,6 @@
           targetId: item_evidence
           description: 找到关键证据
       nextStageId: null
-      completionCondition: all_objectives
   rewards:
     reputation_delta:
       faction_guard: 20

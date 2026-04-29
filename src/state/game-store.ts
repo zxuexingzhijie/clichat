@@ -4,7 +4,7 @@ import { eventBus } from '../events/event-bus';
 import type { EventBus } from '../events/event-bus';
 import { TimeOfDaySchema } from '../types/common';
 
-export const GamePhaseSchema = z.enum(['title', 'narrative_creation', 'game', 'combat', 'dialogue', 'journal', 'map', 'codex', 'inventory', 'branch_tree', 'compare', 'shortcuts', 'replay', 'cost', 'chapter_summary', 'game_over']);
+export const GamePhaseSchema = z.enum(['title', 'narrative_creation', 'game', 'combat', 'dialogue', 'journal', 'map', 'codex', 'inventory', 'branch_tree', 'compare', 'shortcuts', 'replay', 'cost', 'chapter_summary', 'game_over', 'victory']);
 
 export const GameStateSchema = z.object({
   day: z.number().int().min(1),

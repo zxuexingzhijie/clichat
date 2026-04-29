@@ -306,6 +306,10 @@ export function GameScreen({
     }
   }, [gameLoop]), { isActive: gameState.phase === 'game_over' });
 
+  useInput(useCallback((_input: string, _key: unknown) => {
+    gameStore.setState(draft => { draft.phase = 'title'; draft.pendingQuit = false; });
+  }, []), { isActive: gameState.phase === 'victory' });
+
   const sceneLines = dialogueState.active && dialogueState.mode === 'inline'
     ? [
         ...sceneState.narrationLines,
@@ -410,6 +414,22 @@ export function GameScreen({
         <Text bold>{playerState.name} 的旅程就此终止。</Text>
         <Text> </Text>
         <Text dimColor>[R] 载入最近存档  [Q] 返回标题</Text>
+      </Box>
+    );
+  }
+
+  if (gameState.phase === 'victory') {
+    return (
+      <Box flexDirection="column" width={width} height={height} borderStyle="single" justifyContent="center" alignItems="center">
+        <Text bold color="yellow">★ 黑松镇的秘密 ★</Text>
+        <Text> </Text>
+        <Text bold color="green">— 故事终章 —</Text>
+        <Text> </Text>
+        <Text>你揭露了黑松镇背后隐藏已久的真相，</Text>
+        <Text>狼灾的根源终于大白于天下。</Text>
+        <Text>镇民们将永远记得这位勇敢的旅人。</Text>
+        <Text> </Text>
+        <Text dimColor>[任意键] 返回标题</Text>
       </Box>
     );
   }
