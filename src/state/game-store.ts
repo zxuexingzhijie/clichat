@@ -17,6 +17,10 @@ export const GameStateSchema = z.object({
   isDarkTheme: z.boolean(),
   pendingQuit: z.boolean(),
   revealedNpcs: z.array(z.string()).default([]),
+  compareSpec: z.object({
+    source: z.string(),
+    target: z.string(),
+  }).nullable().default(null),
 });
 export type GameState = z.infer<typeof GameStateSchema>;
 
@@ -29,6 +33,7 @@ export function getDefaultGameState(): GameState {
     isDarkTheme: true,
     pendingQuit: false,
     revealedNpcs: [],
+    compareSpec: null,
   };
 }
 

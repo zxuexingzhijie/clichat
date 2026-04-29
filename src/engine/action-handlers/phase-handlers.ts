@@ -23,7 +23,16 @@ export const handleCodex: ActionHandler = async (action, ctx) => {
 };
 
 export const handleCompare: ActionHandler = async (action, ctx) => {
-  ctx.stores.game.setState(draft => { draft.phase = 'compare'; });
+  const parts = (action.target ?? '').trim().split(/\s+/).filter(Boolean);
+  const compareSpec = parts.length >= 2
+    ? { source: parts[0]!, target: parts[1]! }
+    : null;
+
+  ctx.stores.game.setState(draft => {
+    draft.phase = 'compare';
+    draft.compareSpec = compareSpec;
+  });
+
   return { status: 'action_executed', action, narration: [] };
 };
 

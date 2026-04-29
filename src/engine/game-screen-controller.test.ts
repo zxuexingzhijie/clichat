@@ -18,6 +18,7 @@ function makeGameStore(overrides: Partial<GameState> = {}) {
     isDarkTheme: true,
     pendingQuit: false,
     revealedNpcs: [],
+    compareSpec: null,
     ...overrides,
   });
 }
