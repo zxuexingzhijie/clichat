@@ -105,7 +105,9 @@ export function useStreamingText(): UseStreamingTextReturn {
         if (!cancelledRef.current) {
           bufferRef.current?.flush();
           bufferRef.current?.dispose();
-          setStreamingText(fullTextRef.current);
+          if (!skippedRef.current) {
+            setStreamingText(fullTextRef.current);
+          }
           setIsStreaming(false);
         }
       }
