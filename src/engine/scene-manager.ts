@@ -1,10 +1,10 @@
 import { queryById } from '../codex/query';
 import { assembleNarrativeContext } from '../ai/utils/context-assembler';
 import { GAME_CONSTANTS } from './game-constants';
-import { gameStore } from '../state/game-store';
-import { playerStore } from '../state/player-store';
 import type { Store } from '../state/create-store';
 import type { SceneState } from '../state/scene-store';
+import type { GameState } from '../state/game-store';
+import type { PlayerState } from '../state/player-store';
 import type { CodexEntry, Location } from '../codex/schemas/entry-types';
 import type { NarrativeContext } from '../ai/roles/narrative-director';
 import type { RetrievalPlan } from '../ai/schemas/retrieval-plan';
@@ -88,7 +88,7 @@ function capNarrationLines(lines: readonly string[]): string[] {
 }
 
 export function createSceneManager(
-  stores: { scene: Store<SceneState>; eventBus?: EventBus },
+  stores: { scene: Store<SceneState>; game: Store<GameState>; player: Store<PlayerState>; eventBus?: EventBus },
   codexEntries: Map<string, CodexEntry>,
   options?: SceneManagerOptions,
 ): SceneManager {
@@ -109,7 +109,7 @@ export function createSceneManager(
   stores.eventBus?.on('dialogue_ended', ({ npcId }) => {
     if (npcId === 'npc_bartender') {
       const newNpcId = 'npc_shadow_contact';
-      gameStore.setState(draft => {
+      stores.game.setState(draft => {
         if (!draft.revealedNpcs.includes(newNpcId)) {
           draft.revealedNpcs.push(newNpcId);
         }
@@ -138,7 +138,7 @@ export function createSceneManager(
     const previousSceneId = currentSceneId;
     currentSceneId = locationId;
 
-    const revealedNpcs: string[] = gameStore.getState().revealedNpcs;
+    const revealedNpcs: string[] = stores.game.getState().revealedNpcs;
     const conditionalNpcs = revealedNpcs.filter(npcId => {
       const npc = queryById(codexEntries, npcId);
       return npc?.type === 'npc' && (npc as { location_id?: string }).location_id === locationId;
@@ -190,7 +190,7 @@ export function createSceneManager(
 
     const narrationLines = [narrationText];
 
-    if (gameStore.getState().turnCount === 0 && !previousSceneId) {
+    if (stores.game.getState().turnCount === 0 && !previousSceneId) {
       narrationLines.push('【提示】据说镇上最近有人失踪——酒馆的老板知道些内情。与 NPC 交谈，或输入 /help 查看所有命令。');
     }
 
@@ -268,7 +268,7 @@ export function createSceneManager(
     }
 
     if (codexEntry?.type === 'item') {
-      playerStore.setState(draft => {
+      stores.player.setState(draft => {
         if (!draft.tags.includes(`item:${target}`)) {
           draft.tags = [...draft.tags, `item:${target}`];
         }

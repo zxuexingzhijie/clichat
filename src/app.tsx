@@ -146,7 +146,7 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
 
   const sceneManager = useMemo(
     () => createSceneManager(
-      { scene: ctx.stores.scene, eventBus: ctx.eventBus },
+      { scene: ctx.stores.scene, game: ctx.stores.game, player: ctx.stores.player, eventBus: ctx.eventBus },
       allCodexEntries as Map<string, CodexEntry>,
       {
         generateNarrationFn: generateNarration,

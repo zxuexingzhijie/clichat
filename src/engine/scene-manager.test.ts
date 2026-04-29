@@ -13,8 +13,10 @@ mock.module('@ai-sdk/openai', () => ({
 
 const { createSceneManager } = await import('./scene-manager');
 const { sceneStore, getDefaultSceneState } = await import('../state/scene-store');
+const { gameStore } = await import('../state/game-store');
+const { playerStore } = await import('../state/player-store');
 
-const stores = { scene: sceneStore };
+const stores = { scene: sceneStore, game: gameStore, player: playerStore };
 
 function createMockCodexEntries(): Map<string, CodexEntry> {
   const entries = new Map<string, CodexEntry>();
@@ -363,7 +365,7 @@ describe('createSceneManager', () => {
 
     const codex = createMockCodexEntries();
     const manager = createSceneManager(
-      { scene: freshScene, eventBus: mockBus },
+      { scene: freshScene, game: gameStore, player: playerStore, eventBus: mockBus },
       codex,
     );
 
@@ -425,7 +427,7 @@ describe('createSceneManager', () => {
     });
 
     const codex = createMockCodexEntries();
-    const manager = createSceneManager({ scene: freshScene, eventBus: mockBus }, codex);
+    const manager = createSceneManager({ scene: freshScene, game: gameStore, player: playerStore, eventBus: mockBus }, codex);
 
     await manager.loadScene('loc_tavern');
 
@@ -449,7 +451,7 @@ describe('createSceneManager', () => {
     });
 
     const codex = createMockCodexEntries();
-    const manager = createSceneManager({ scene: freshScene, eventBus: mockBus }, codex);
+    const manager = createSceneManager({ scene: freshScene, game: gameStore, player: playerStore, eventBus: mockBus }, codex);
 
     await manager.loadScene('loc_tavern');
 
@@ -471,7 +473,7 @@ describe('createSceneManager', () => {
     gameStore.setState(draft => { draft.revealedNpcs = []; });
 
     const codex = createMockCodexEntries();
-    createSceneManager({ scene: freshScene, eventBus: mockBus }, codex);
+    createSceneManager({ scene: freshScene, game: gameStore, player: playerStore, eventBus: mockBus }, codex);
 
     mockBus.emit('dialogue_ended', { npcId: 'npc_bartender' });
 
@@ -491,7 +493,7 @@ describe('createSceneManager', () => {
     gameStore.setState(draft => { draft.revealedNpcs = []; });
 
     const codex = createMockCodexEntries();
-    createSceneManager({ scene: freshScene, eventBus: mockBus }, codex);
+    createSceneManager({ scene: freshScene, game: gameStore, player: playerStore, eventBus: mockBus }, codex);
 
     mockBus.emit('dialogue_ended', { npcId: 'npc_bartender' });
     mockBus.emit('dialogue_ended', { npcId: 'npc_bartender' });
