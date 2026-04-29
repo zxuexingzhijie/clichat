@@ -47,6 +47,7 @@ const HELP_COMMANDS: readonly string[] = [
   '/guard — 防御',
   '/flee — 逃跑',
   '/trade <npc> — 与NPC交易',
+  '/load list — 查看存档列表',
   '/save [name] — 保存游戏',
   '/branch [create|switch|tree|delete] [name] — 分支管理',
   '/compare [spec] — 对比分支差异',

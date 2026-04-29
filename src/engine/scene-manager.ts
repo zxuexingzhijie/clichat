@@ -101,6 +101,9 @@ export function createSceneManager(
     if (restoredSceneId) {
       currentSceneId = restoredSceneId;
     }
+    stores.scene.setState(draft => {
+      draft.narrationLines = [...draft.narrationLines, '【系统】已载入存档，欢迎回来。'];
+    });
   });
 
   stores.eventBus?.on('dialogue_ended', ({ npcId }) => {

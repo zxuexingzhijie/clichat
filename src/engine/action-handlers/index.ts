@@ -66,7 +66,7 @@ const HANDLER_MAP: Record<string, ActionHandler> = {
   cast: handleCast,
   guard: handleDefault,
   flee: handleDefault,
-  trade: handleDefault,
+  trade: async (action) => ({ status: 'action_executed', action, narration: ['交易功能尚未开放。'] }),
   use_item: handleUseItem,
 };
 
