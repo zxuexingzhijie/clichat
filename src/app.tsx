@@ -293,6 +293,7 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
     const cleanup = initKnowledgeTracker(
       { playerKnowledge: ctx.stores.playerKnowledge, game: ctx.stores.game },
       ctx.eventBus,
+      allCodexEntries,
     );
     return cleanup;
   }, [ctx, allCodexEntries]);

@@ -4,6 +4,7 @@ import type { Store } from '../state/create-store';
 import type { PlayerKnowledgeState } from '../state/player-knowledge-store';
 import type { GameState } from '../state/game-store';
 import type { EventBus } from '../events/event-bus';
+import type { CodexEntry } from '../codex/schemas/entry-types';
 
 const STATUS_RANK: Record<KnowledgeStatus, number> = {
   heard: 0,
@@ -64,13 +65,16 @@ export function addKnowledge(
 export function initKnowledgeTracker(
   stores: { playerKnowledge: Store<PlayerKnowledgeState>; game: Store<GameState> },
   eventBus: EventBus,
+  codexEntries?: ReadonlyMap<string, CodexEntry>,
 ): () => void {
   const onDialogueEnded = ({ npcId }: { npcId: string }) => {
+    const npcEntry = codexEntries?.get(npcId);
+    const npcName = npcEntry?.name ?? npcId;
     addKnowledge(stores, {
       codexEntryId: npcId,
       source: 'dialogue',
       knowledgeStatus: 'heard',
-      description: `与 ${npcId} 的对话`,
+      description: `与${npcName}的对话`,
       credibility: 0.6,
     });
   };
