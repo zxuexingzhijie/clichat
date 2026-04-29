@@ -10,6 +10,8 @@ import type { NarrativeContext } from '../ai/roles/narrative-director';
 import type { RetrievalPlan } from '../ai/schemas/retrieval-plan';
 import type { SceneAction } from '../state/scene-store';
 import type { EventBus } from '../events/event-bus';
+import type { NarrativeStore } from '../state/narrative-state';
+import type { NarrativePromptContext } from '../ai/prompts/narrative-system';
 
 export type SceneManagerResult =
   | { readonly status: 'success'; readonly narration: readonly string[] }
@@ -26,7 +28,14 @@ type GenerateRetrievalPlanFn = (context: {
 export type SceneManagerOptions = {
   readonly generateNarrationFn?: GenerateNarrationFn;
   readonly generateRetrievalPlanFn?: GenerateRetrievalPlanFn;
+  readonly narrativeStore?: NarrativeStore;
 };
+
+function getNarrativeContext(narrativeStore?: NarrativeStore): NarrativePromptContext | undefined {
+  if (!narrativeStore) return undefined;
+  const { currentAct, atmosphereTags } = narrativeStore.getState();
+  return { storyAct: currentAct, atmosphereTags };
+}
 
 export type SceneManager = {
   readonly loadScene: (locationId: string) => Promise<SceneManagerResult>;
@@ -208,6 +217,7 @@ export function createSceneManager(
         playerAction: 'enter_scene',
         recentNarration: [],
         sceneContext: entry.description,
+        narrativeContext: getNarrativeContext(options?.narrativeStore),
       });
     }
 
@@ -241,6 +251,7 @@ export function createSceneManager(
           playerAction: 're-look',
           recentNarration: state.narrationLines.slice(-3),
           sceneContext: state.locationName,
+          narrativeContext: getNarrativeContext(options?.narrativeStore),
         });
         const newLines = capNarrationLines([...state.narrationLines, narration]);
         stores.scene.setState(draft => {
@@ -266,6 +277,7 @@ export function createSceneManager(
         playerAction: `look at ${target}`,
         recentNarration: state.narrationLines.slice(-3),
         sceneContext: state.locationName,
+        narrativeContext: getNarrativeContext(options?.narrativeStore),
       });
 
       const newLines = capNarrationLines([...state.narrationLines, narration]);
@@ -323,6 +335,7 @@ export function createSceneManager(
         playerAction: `inspect ${target}`,
         recentNarration: state.narrationLines.slice(-3),
         sceneContext: description,
+        narrativeContext: getNarrativeContext(options?.narrativeStore),
       });
 
       const newLines = capNarrationLines([...state.narrationLines, narration]);

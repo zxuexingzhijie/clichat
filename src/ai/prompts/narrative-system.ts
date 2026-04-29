@@ -33,12 +33,41 @@ const SCENE_STYLES: Record<SceneType, { style: string; perspective: string }> = 
   },
 };
 
-export function buildNarrativeSystemPrompt(sceneType: SceneType): string {
+export type NarrativePromptContext = {
+  readonly storyAct: 'act1' | 'act2' | 'act3';
+  readonly atmosphereTags: readonly string[];
+  readonly recentNarration?: readonly string[];
+};
+
+const ACT_TONE_GUIDANCE: Record<string, string> = {
+  act1: '第一幕提示：场景是日常的，但有轻微不安。避免惊悚语气，保持克制。',
+  act2: '第二幕提示：读者已知出了什么问题，但细节还不清楚。用悬疑和信息空缺制造张力。',
+  act3: '第三幕提示：玩家掌握了真相。场景描述可带沉重感——同样的地方，已有不同的含义。',
+};
+
+export function buildNarrativeSystemPrompt(
+  sceneType: SceneType,
+  narrativeContext?: NarrativePromptContext,
+): string {
   const config = SCENE_STYLES[sceneType];
-  return `你是一个中文奇幻RPG游戏的叙述者。
+  const base = `你是一个中文奇幻RPG游戏的叙述者。
 ${CORE_CONSTRAINTS}
 - 视角：${config.perspective}
 - 风格：${config.style}`;
+
+  if (!narrativeContext) return base;
+
+  const actLabel = { act1: '第一幕', act2: '第二幕', act3: '第三幕' }[narrativeContext.storyAct];
+  const atmosphereStr = narrativeContext.atmosphereTags.join('、');
+  const toneGuidance = ACT_TONE_GUIDANCE[narrativeContext.storyAct] ?? '';
+
+  const narrativeParagraph = `\n当前叙事氛围：${atmosphereStr}（用这些词语的语气和意象）\n故事进程：${actLabel}\n${toneGuidance}`;
+
+  const recentSection = narrativeContext.recentNarration?.length
+    ? `\n最近叙述（保持语气和意象的连贯性，避免重复同一词语）：\n${narrativeContext.recentNarration.slice(-3).join('\n')}`
+    : '';
+
+  return base + narrativeParagraph + recentSection;
 }
 
 export type NarrativeUserPromptContext = {

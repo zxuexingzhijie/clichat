@@ -504,4 +504,50 @@ describe('createSceneManager', () => {
 
     gameStore.setState(draft => { draft.revealedNpcs = []; });
   });
+
+  it('with narrativeStore passes narrativeContext.storyAct to generateNarrationFn', async () => {
+    const codex = createMockCodexEntries();
+    let capturedContext: { narrativeContext?: { storyAct: string } } | undefined;
+    const narrationFn = mock(async (ctx: { narrativeContext?: { storyAct: string } }) => {
+      capturedContext = ctx;
+      return '叙述文本。';
+    });
+    const retrievalFn = createMockRetrievalFn();
+
+    const narrativeStore = {
+      getState: () => ({ currentAct: 'act2' as const, atmosphereTags: ['dread'], recentNarration: [] }),
+      setState: () => {},
+      subscribe: () => () => {},
+      restoreState: () => {},
+    };
+
+    const manager = createSceneManager(stores, codex, {
+      generateNarrationFn: narrationFn,
+      generateRetrievalPlanFn: retrievalFn,
+      narrativeStore,
+    });
+
+    await manager.loadScene('loc_north_gate');
+
+    expect(capturedContext?.narrativeContext?.storyAct).toBe('act2');
+  });
+
+  it('without narrativeStore passes narrativeContext undefined to generateNarrationFn', async () => {
+    const codex = createMockCodexEntries();
+    let capturedContext: { narrativeContext?: unknown } | undefined;
+    const narrationFn = mock(async (ctx: { narrativeContext?: unknown }) => {
+      capturedContext = ctx;
+      return '叙述文本。';
+    });
+    const retrievalFn = createMockRetrievalFn();
+
+    const manager = createSceneManager(stores, codex, {
+      generateNarrationFn: narrationFn,
+      generateRetrievalPlanFn: retrievalFn,
+    });
+
+    await manager.loadScene('loc_north_gate');
+
+    expect(capturedContext?.narrativeContext).toBeUndefined();
+  });
 });

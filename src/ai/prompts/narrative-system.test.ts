@@ -1,0 +1,104 @@
+import { describe, it, expect } from 'bun:test';
+import { buildNarrativeSystemPrompt } from './narrative-system';
+
+describe('buildNarrativeSystemPrompt', () => {
+  it('called without narrativeContext returns same result as original function', () => {
+    const result = buildNarrativeSystemPrompt('exploration');
+    expect(result).toContain('你是一个中文奇幻RPG游戏的叙述者');
+    expect(result).toContain('视角');
+    expect(result).toContain('风格');
+    expect(result).not.toContain('第一幕');
+    expect(result).not.toContain('第二幕');
+    expect(result).not.toContain('第三幕');
+  });
+
+  it('called with storyAct act2 includes 第二幕 and act2 tone guidance', () => {
+    const result = buildNarrativeSystemPrompt('exploration', {
+      storyAct: 'act2',
+      atmosphereTags: ['dread'],
+    });
+    expect(result).toContain('第二幕');
+    expect(result).toContain('第二幕提示');
+    expect(result).toContain('悬疑');
+  });
+
+  it('called with storyAct act1 includes 第一幕 and act1 tone guidance', () => {
+    const result = buildNarrativeSystemPrompt('exploration', {
+      storyAct: 'act1',
+      atmosphereTags: [],
+    });
+    expect(result).toContain('第一幕');
+    expect(result).toContain('第一幕提示');
+    expect(result).toContain('克制');
+  });
+
+  it('called with storyAct act3 includes 第三幕 and act3 tone guidance', () => {
+    const result = buildNarrativeSystemPrompt('combat', {
+      storyAct: 'act3',
+      atmosphereTags: [],
+    });
+    expect(result).toContain('第三幕');
+    expect(result).toContain('第三幕提示');
+    expect(result).toContain('沉重感');
+  });
+
+  it('called with atmosphereTags includes them joined with 、', () => {
+    const result = buildNarrativeSystemPrompt('exploration', {
+      storyAct: 'act2',
+      atmosphereTags: ['dread', 'urgency'],
+    });
+    expect(result).toContain('dread、urgency');
+  });
+
+  it('called with single atmosphere tag does not add 、', () => {
+    const result = buildNarrativeSystemPrompt('exploration', {
+      storyAct: 'act1',
+      atmosphereTags: ['calm'],
+    });
+    expect(result).toContain('calm');
+    expect(result).not.toContain('calm、');
+  });
+
+  it('called with recentNarration includes 避免重复 instruction and the lines', () => {
+    const result = buildNarrativeSystemPrompt('exploration', {
+      storyAct: 'act1',
+      atmosphereTags: ['calm'],
+      recentNarration: ['第一段叙述', '第二段叙述'],
+    });
+    expect(result).toContain('避免重复同一词语');
+    expect(result).toContain('第一段叙述');
+    expect(result).toContain('第二段叙述');
+  });
+
+  it('called with empty recentNarration omits the recent section', () => {
+    const result = buildNarrativeSystemPrompt('exploration', {
+      storyAct: 'act1',
+      atmosphereTags: ['calm'],
+      recentNarration: [],
+    });
+    expect(result).not.toContain('避免重复同一词语');
+    expect(result).not.toContain('最近叙述（保持语气');
+  });
+
+  it('recentNarration keeps only the last 3 entries', () => {
+    const result = buildNarrativeSystemPrompt('exploration', {
+      storyAct: 'act1',
+      atmosphereTags: [],
+      recentNarration: ['一', '二', '三', '四'],
+    });
+    expect(result).not.toContain('\n一\n');
+    expect(result).toContain('二');
+    expect(result).toContain('三');
+    expect(result).toContain('四');
+  });
+
+  it('success criteria: storyAct act2 with atmosphereTags dread and urgency', () => {
+    const result = buildNarrativeSystemPrompt('exploration', {
+      storyAct: 'act2',
+      atmosphereTags: ['dread', 'urgency'],
+    });
+    expect(result).toContain('第二幕');
+    expect(result).toContain('dread');
+    expect(result).toContain('urgency');
+  });
+});

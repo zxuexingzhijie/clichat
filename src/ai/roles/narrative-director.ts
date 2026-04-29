@@ -5,6 +5,7 @@ import {
   buildNarrativeUserPrompt,
   type SceneType,
   type NarrativeUserPromptContext,
+  type NarrativePromptContext,
 } from '../prompts/narrative-system';
 import { getFallbackNarration } from '../utils/fallback';
 
@@ -15,6 +16,7 @@ export type NarrativeContext = {
   readonly playerAction: string;
   readonly recentNarration: readonly string[];
   readonly sceneContext: string;
+  readonly narrativeContext?: NarrativePromptContext;
 };
 
 export type NarrativeOptions = {
@@ -26,7 +28,7 @@ export async function* streamNarration(
   options?: NarrativeOptions,
 ): AsyncGenerator<string> {
   const config = getRoleConfig('narrative-director');
-  const system = buildNarrativeSystemPrompt(context.sceneType);
+  const system = buildNarrativeSystemPrompt(context.sceneType, context.narrativeContext);
   const prompt = buildNarrativeUserPrompt(context as NarrativeUserPromptContext);
 
   try {
@@ -50,7 +52,7 @@ export async function generateNarration(
   options?: NarrativeOptions,
 ): Promise<string> {
   const config = getRoleConfig('narrative-director');
-  const system = buildNarrativeSystemPrompt(context.sceneType);
+  const system = buildNarrativeSystemPrompt(context.sceneType, context.narrativeContext);
   const prompt = buildNarrativeUserPrompt(context as NarrativeUserPromptContext);
 
   try {

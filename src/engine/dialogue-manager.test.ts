@@ -751,4 +751,56 @@ describe('createDialogueManager', () => {
     const labels = options.map(o => o.label).join(' ');
     expect(labels).toMatch(/服务|黑市/);
   });
+
+  it('with narrativeStore passes narrativeContext to doGenerateDialogue', async () => {
+    let capturedNarrativeCtx: unknown = 'not-called';
+    const trackingDialogueFn = mock((...args: unknown[]) => {
+      capturedNarrativeCtx = args[5];
+      return Promise.resolve({
+        dialogue: '测试对白。',
+        emotionTag: 'neutral',
+        shouldRemember: false,
+        sentiment: 'neutral',
+      });
+    });
+
+    const narrativeStore = {
+      getState: () => ({ currentAct: 'act2' as const, atmosphereTags: ['dread'], recentNarration: [] }),
+      setState: () => {},
+      subscribe: () => () => {},
+      restoreState: () => {},
+    };
+
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: trackingDialogueFn as typeof import('../ai/roles/npc-actor').generateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+      narrativeStore,
+    });
+
+    await manager.startDialogue('npc_guard');
+
+    expect(capturedNarrativeCtx).toEqual({ storyAct: 'act2', atmosphereTags: ['dread'] });
+  });
+
+  it('without narrativeStore passes undefined narrativeContext to doGenerateDialogue', async () => {
+    let capturedNarrativeCtx: unknown = 'not-called';
+    const trackingDialogueFn = mock((...args: unknown[]) => {
+      capturedNarrativeCtx = args[5];
+      return Promise.resolve({
+        dialogue: '测试对白。',
+        emotionTag: 'neutral',
+        shouldRemember: false,
+        sentiment: 'neutral',
+      });
+    });
+
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: trackingDialogueFn as typeof import('../ai/roles/npc-actor').generateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_guard');
+
+    expect(capturedNarrativeCtx).toBeUndefined();
+  });
 });

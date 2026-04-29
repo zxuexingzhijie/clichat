@@ -20,6 +20,8 @@ import type { CodexEntry, Npc } from '../codex/schemas/entry-types';
 import type { NpcDialogue } from '../ai/schemas/npc-dialogue';
 import type { NpcFilterContext } from '../ai/utils/npc-knowledge-filter';
 import type { CheckResult, AttributeName } from '../types/common';
+import type { NarrativeStore } from '../state/narrative-state';
+import type { NarrativePromptContext } from '../ai/prompts/narrative-system';
 
 const QUEST_GOAL_KEYWORDS = ['investigate', 'find', 'recruit', 'discover', 'locate', 'uncover', '调查', '寻找', '找到', '招募', '发现', '追踪', '揭露'];
 
@@ -251,6 +253,7 @@ export type DialogueResult = {
 export type DialogueManagerOptions = {
   readonly generateNpcDialogueFn?: typeof generateNpcDialogue;
   readonly adjudicateFn?: (action: { type: string; target?: string }) => CheckResult;
+  readonly narrativeStore?: NarrativeStore;
 };
 
 export interface DialogueManager {
@@ -273,6 +276,13 @@ export function createDialogueManager(
   options?: DialogueManagerOptions,
 ): DialogueManager {
   const doGenerateDialogue = options?.generateNpcDialogueFn ?? generateNpcDialogue;
+
+  function getDialogueNarrativeContext(): NarrativePromptContext | undefined {
+    if (!options?.narrativeStore) return undefined;
+    const { currentAct, atmosphereTags } = options.narrativeStore.getState();
+    return { storyAct: currentAct, atmosphereTags };
+  }
+
   const doAdjudicate =
     options?.adjudicateFn ??
     ((action: { type: string }) => {
@@ -352,6 +362,7 @@ export function createDialogueManager(
       'greet',
       memoryStrings,
       { archiveSummary, relevantCodex, conversationHistory },
+      getDialogueNarrativeContext(),
     );
 
     lastNpcEmotionTag = npcDialogue.emotionTag;
@@ -434,6 +445,7 @@ export function createDialogueManager(
         response.label,
         memoryStrings,
         { archiveSummary, relevantCodex, conversationHistory },
+        getDialogueNarrativeContext(),
       );
 
       lastNpcEmotionTag = npcDialogue.emotionTag;
@@ -537,6 +549,7 @@ export function createDialogueManager(
         text,
         memoryStrings,
         { archiveSummary, relevantCodex, conversationHistory },
+        getDialogueNarrativeContext(),
       );
 
       lastNpcEmotionTag = npcDialogue.emotionTag;

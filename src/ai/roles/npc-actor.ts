@@ -3,6 +3,7 @@ import { callGenerateObject, callStreamText } from '../utils/ai-caller';
 import { NpcDialogueSchema, type NpcDialogue } from '../schemas/npc-dialogue';
 import { buildNpcSystemPrompt, buildNpcUserPrompt, type NpcProfile } from '../prompts/npc-system';
 import { getFallbackDialogue } from '../utils/fallback';
+import type { NarrativePromptContext } from '../prompts/narrative-system';
 
 export type NpcActorOptions = {
   readonly maxRetries?: number;
@@ -17,9 +18,12 @@ export async function generateNpcDialogue(
   playerAction: string,
   memories: readonly string[],
   options?: NpcActorOptions,
+  narrativeContext?: NarrativePromptContext,
 ): Promise<NpcDialogue> {
   const config = getRoleConfig('npc-actor');
-  const system = buildNpcSystemPrompt(npcProfile);
+  const trustLevel = 0;
+  const system = buildNpcSystemPrompt(npcProfile, trustLevel);
+  void narrativeContext;
   const prompt = buildNpcUserPrompt({
     scene,
     playerAction,
