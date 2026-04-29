@@ -37,12 +37,30 @@ export type ComparePanelProps = {
   readonly width?: number;
 };
 
+type SelectingState = { stage: 'selecting'; leftFocus: boolean; leftIdx: number; rightIdx: number; confirmedSource: string | null; confirmedTarget: string | null };
+
 type CompareState =
-  | { stage: 'selecting'; leftFocus: boolean; leftIdx: number; rightIdx: number; confirmedSource: string | null; confirmedTarget: string | null }
+  | SelectingState
   | { stage: 'loading' }
   | { stage: 'summarizing'; diffResult: BranchDiffResult }
   | { stage: 'ready'; diffResult: BranchDiffResult; narrativeSummary: string; sourceName: string; targetName: string }
   | { stage: 'error'; message: string; lastSource?: string; lastTarget?: string };
+
+export type { SelectingState };
+
+export function buildInitialState(compareSpec: { source: string; target: string } | null | undefined): CompareState {
+  if (compareSpec) {
+    return { stage: 'loading' };
+  }
+  return {
+    stage: 'selecting',
+    leftFocus: true,
+    leftIdx: 0,
+    rightIdx: 0,
+    confirmedSource: null,
+    confirmedTarget: null,
+  };
+}
 
 function groupByCategory(diffs: readonly DiffItem[]): Map<DiffCategory, readonly DiffItem[]> {
   const groups = new Map<DiffCategory, DiffItem[]>();
@@ -147,14 +165,7 @@ export function ComparePanel({
     [branches],
   );
 
-  const [state, setState] = useState<CompareState>(() => ({
-    stage: 'selecting',
-    leftFocus: true,
-    leftIdx: 0,
-    rightIdx: 0,
-    confirmedSource: null,
-    confirmedTarget: null,
-  }));
+  const [state, setState] = useState<CompareState>(() => buildInitialState(compareSpec));
 
   const [viewMode, setViewMode] = useState<ViewMode>('unified');
 
@@ -214,7 +225,7 @@ export function ComparePanel({
     }
   }, [compareSpec, runCompare]);
 
-  useInput(useCallback((input: string, key: {
+  useInput((input: string, key: {
     escape: boolean;
     tab: boolean;
     upArrow: boolean;
@@ -249,20 +260,16 @@ export function ComparePanel({
           return { ...prev, rightIdx: Math.min(maxIdx, prev.rightIdx + 1) };
         });
       } else if (key.return) {
-        setState(prev => {
-          if (prev.stage !== 'selecting') return prev;
-          if (prev.leftFocus) {
-            const sourceName = branchList[prev.leftIdx]?.name ?? null;
-            const newState = { ...prev, confirmedSource: sourceName, leftFocus: false };
-            return newState;
+        if (state.leftFocus) {
+          const newConfirmedSource = branchList[state.leftIdx]?.name ?? null;
+          setState({ ...state, confirmedSource: newConfirmedSource, leftFocus: false });
+        } else {
+          const newConfirmedTarget = branchList[state.rightIdx]?.name ?? null;
+          setState({ ...state, confirmedTarget: newConfirmedTarget });
+          if (state.confirmedSource && newConfirmedTarget) {
+            void runCompare(state.confirmedSource, newConfirmedTarget);
           }
-          const targetName = branchList[prev.rightIdx]?.name ?? null;
-          const newState = { ...prev, confirmedTarget: targetName };
-          if (newState.confirmedSource && newState.confirmedTarget) {
-            void runCompare(newState.confirmedSource, newState.confirmedTarget);
-          }
-          return newState;
-        });
+        }
       }
     } else if (state.stage === 'ready') {
       if (key.escape) {
@@ -288,7 +295,7 @@ export function ComparePanel({
         }
       }
     }
-  }, [state, onClose, isWide, branchList, runCompare]));
+  });
 
   if (state.stage === 'selecting') {
     const { leftFocus, leftIdx, rightIdx, confirmedSource } = state;

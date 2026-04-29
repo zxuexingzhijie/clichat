@@ -153,3 +153,35 @@ describe('ComparePanel: CATEGORY_ORDER', () => {
     expect(typeof branchDiff.compareBranches).toBe('function');
   });
 });
+
+describe('buildInitialState', () => {
+  it('returns selecting stage when compareSpec is null', async () => {
+    const { buildInitialState } = await import('./compare-panel');
+    const result = buildInitialState(null);
+    expect(result.stage).toBe('selecting');
+  });
+
+  it('returns selecting stage when compareSpec is undefined', async () => {
+    const { buildInitialState } = await import('./compare-panel');
+    const result = buildInitialState(undefined);
+    expect(result.stage).toBe('selecting');
+  });
+
+  it('returns loading stage when compareSpec is provided', async () => {
+    const { buildInitialState } = await import('./compare-panel');
+    const result = buildInitialState({ source: 'main', target: 'chapter2' });
+    expect(result.stage).toBe('loading');
+  });
+
+  it('selecting stage has correct initial values', async () => {
+    const { buildInitialState } = await import('./compare-panel');
+    const result = buildInitialState(null);
+    if (result.stage === 'selecting') {
+      expect(result.leftFocus).toBe(true);
+      expect(result.leftIdx).toBe(0);
+      expect(result.rightIdx).toBe(0);
+      expect(result.confirmedSource).toBeNull();
+      expect(result.confirmedTarget).toBeNull();
+    }
+  });
+});
