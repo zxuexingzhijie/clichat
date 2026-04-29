@@ -5,9 +5,9 @@ milestone_name: AI Quality & Game Completeness
 status: in_progress
 stopped_at: ~
 last_updated: "2026-04-30T01:00:00Z"
-last_activity: "2026-04-30 — v1.4 milestone started; requirements and roadmap defining"
+last_activity: "2026-04-30 — v1.4 roadmap created; phases 17–21 defined"
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** The player must feel they are in a persistent, consistent world that remembers them -- not a chatbot that reinvents the universe every turn.
-**Current focus:** v1.4 — defining requirements and roadmap
+**Current focus:** v1.4 — roadmap defined, ready to plan Phase 17
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 17 (NPC Architecture Fix) — Not started
 Plan: —
-Status: Defining requirements for v1.4
-Last activity: 2026-04-30 — Milestone v1.4 started; 4 focus areas selected (arch fix, multi-turn dialogue, code quality, game features)
+Status: Roadmap defined, ready for /gsd-plan-phase 17
+Last activity: 2026-04-30 — Roadmap created; phases 17–21 derived from requirements
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -112,8 +112,8 @@ Items acknowledged and deferred at v1.3 milestone close on 2026-04-30:
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| UAT | Live API session validation (/cost, /replay, summarizer) | Carried | v1.1 close |
-| Dist | Replace OWNER placeholders before first npm publish | Carried | v1.1 close |
+| UAT | Live API session validation (/cost, /replay, summarizer) | Carried to Phase 21 | v1.1 close |
+| Dist | Replace OWNER placeholders before first npm publish | Carried to Phase 21 | v1.1 close |
 | Bug | use-game-input.test.ts: getPanelActionForKey 'i' returns null (pre-existing) | Deferred | Phase 13 P01 |
 | UAT | Phase 05: HUMAN-UAT.md [deferred] — game flow manual testing | acknowledged | v1.3 close |
 | Verification | Phase 05: VERIFICATION.md [human_needed] — live game session UAT | acknowledged | v1.3 close |
@@ -122,5 +122,5 @@ Items acknowledged and deferred at v1.3 milestone close on 2026-04-30:
 ## Session Continuity
 
 Last session: 2026-04-30T00:00:00Z
-Stopped at: v1.3 pre-archive cleanup — quick tasks registered, memory-system-design-gap resolved
+Stopped at: v1.4 roadmap defined — phases 17–21 written to ROADMAP.md
 Resume file: None
