@@ -35,7 +35,7 @@ import type { CodexDisplayEntry } from '../panels/codex-panel';
 import type { BranchDisplayNode } from '../panels/branch-tree-panel';
 import type { BranchDiffResult } from '../../engine/branch-diff';
 
-const OVERLAY_PHASES = new Set(['journal', 'map', 'codex', 'branch_tree', 'compare', 'shortcuts', 'replay', 'chapter_summary']);
+const OVERLAY_PHASES = new Set(['journal', 'map', 'codex', 'inventory', 'branch_tree', 'compare', 'shortcuts', 'replay', 'chapter_summary']);
 
 type GameScreenProps = {
   readonly questTemplates: ReadonlyMap<string, QuestTemplate>;
@@ -285,7 +285,7 @@ export function GameScreen({
       return;
     }
     const panelAction = getPanelActionForKey(input, isTyping);
-    const validPhases = new Set<string>(['map', 'journal', 'codex', 'branch_tree', 'compare', 'shortcuts']);
+    const validPhases = new Set<string>(['map', 'journal', 'codex', 'inventory', 'branch_tree', 'compare', 'shortcuts']);
     if (panelAction && validPhases.has(panelAction) && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
       controller.handlePhaseSwitch(panelAction as GameState['phase']);
     }

@@ -11,6 +11,7 @@ import { ComparePanel } from './compare-panel';
 import { ShortcutHelpPanel } from './shortcut-help-panel';
 import { ReplayPanel } from './replay-panel';
 import { ChapterSummaryPanel } from './chapter-summary-panel';
+import { InventoryPanel } from './inventory-panel';
 import { CheckResultLine } from './check-result-line';
 import { switchBranch } from '../../persistence/branch-manager';
 import type { GameState } from '../../state/game-store';
@@ -165,6 +166,7 @@ export function PanelRouter({
         width={width}
       />
     ) : null,
+    inventory: <InventoryPanel onClose={onClose} />,
     shortcuts: <ShortcutHelpPanel onClose={onClose} />,
     replay: <ReplayPanel entries={[...replayEntries]} onClose={onClose} />,
     chapter_summary: <ChapterSummaryPanel summaries={[...chapterSummaries]} onClose={onClose} />,
