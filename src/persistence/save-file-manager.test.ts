@@ -227,7 +227,7 @@ describe('listSaves', () => {
 
 describe('readSaveData', () => {
   const mockSaveData = {
-    version: 4,
+    version: 5,
     meta: { saveName: 'Test', timestamp: '2026-01-01T00:00:00.000Z', character: { name: 'Hero', race: 'Human', profession: 'Warrior' }, playtime: 0, locationName: 'North Gate' },
     branchId: 'main',
     parentSaveId: null,
@@ -242,6 +242,7 @@ describe('readSaveData', () => {
     exploration: { locations: {} },
     playerKnowledge: { entries: {} },
     turnLog: [],
+    narrativeState: { currentAct: 'act1', atmosphereTags: ['mundane', 'curious'], worldFlags: {}, playerKnowledgeLevel: 0 },
   };
 
   beforeEach(() => {
@@ -258,10 +259,10 @@ describe('readSaveData', () => {
     }
   });
 
-  it('returns parsed SaveDataV4 without calling serializer.restore', async () => {
+  it('returns parsed SaveDataV5 without calling serializer.restore', async () => {
     const saveDir = '/tmp/saves';
     const result = await readSaveData('test-save.json', saveDir);
-    expect(result.version).toBe(4);
+    expect(result.version).toBe(5);
     expect(result.branchId).toBe('main');
   });
 
