@@ -98,9 +98,7 @@ export function GameScreen({
   } = useAiNarration();
 
   const {
-    streamingText: npcStreamingText,
     isStreaming: isNpcStreaming,
-    metadata: npcMetadata,
     skipToEnd: skipNpcDialogue,
     reset: resetNpcDialogue,
   } = useNpcDialogue();
@@ -113,7 +111,6 @@ export function GameScreen({
   const [spinnerDimoutComplete, setSpinnerDimoutComplete] = useState(false);
   const wasProcessingRef = useRef(false);
   const wasNarrationStreamingRef = useRef(false);
-  const hasFiredRef = useRef(false);
 
   const controller = useMemo(
     () => createGameScreenController(
@@ -182,19 +179,6 @@ export function GameScreen({
       controller.handleNarrationError(narrationError);
     }
   }, [narrationError, controller]);
-
-  useEffect(() => {
-    if (isNpcStreaming) {
-      hasFiredRef.current = false;
-    }
-  }, [isNpcStreaming]);
-
-  useEffect(() => {
-    if (!isNpcStreaming && npcMetadata && npcStreamingText.length > 0 && !hasFiredRef.current) {
-      hasFiredRef.current = true;
-      controller.handleNpcDialogueComplete(dialogueState.npcName, npcMetadata.dialogue, inputMode);
-    }
-  }, [isNpcStreaming, npcMetadata, npcStreamingText, controller, dialogueState.npcName, inputMode]);
 
   const innerWidth = width - 2;
   const timeLabel = TIME_OF_DAY_LABELS[gameState.timeOfDay] ?? gameState.timeOfDay;
@@ -395,7 +379,7 @@ export function GameScreen({
       chapterSummaries={getRecentChapterSummaries()}
       width={width}
       sceneLines={sceneLines}
-      streamingText={isNarrationStreaming ? streamingText : isNpcStreaming ? `${dialogueState.npcName}：${npcStreamingText}` : undefined}
+      streamingText={isNarrationStreaming ? streamingText : undefined}
       isStreaming={isAnyStreaming}
       showSpinner={showSpinnerWithDim}
       spinnerContext={spinnerContext}
