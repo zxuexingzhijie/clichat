@@ -21,6 +21,18 @@ export interface QuestSystem {
   readonly advanceStage: (questId: string, stageId: string) => void;
   readonly failQuest: (questId: string) => void;
   readonly completeQuest: (questId: string) => void;
+  readonly cleanup: () => void;
+}
+
+export function createNoopQuestSystem(): QuestSystem {
+  return {
+    acceptQuest: () => ({ status: 'error', reason: 'codex not loaded' }),
+    completeObjective: () => undefined,
+    advanceStage: () => undefined,
+    failQuest: () => undefined,
+    completeQuest: () => undefined,
+    cleanup: () => undefined,
+  };
 }
 
 export function createQuestSystem(
@@ -170,22 +182,22 @@ export function createQuestSystem(
     }
   }
 
+  let cleanup = () => {};
+
   if (bus) {
-    bus.on('dialogue_ended', ({ npcId }) => {
+    const onDialogueEnded = ({ npcId }: { npcId: string }) => {
       for (const [questId, entry] of codexEntries) {
         if (entry.type !== 'quest') continue;
         const template = entry as QuestTemplate;
         if (!template.auto_accept) continue;
         const progress = stores.quest.getState().quests[questId];
         if (progress && progress.status !== 'failed') continue;
-        // Accept if required_npc_id matches the NPC we just talked to
         if (template.required_npc_id) {
           if (template.required_npc_id === npcId) {
             acceptQuest(questId);
             continue;
           }
         } else {
-          // No required_npc_id: fall back to first stage trigger check
           const firstStage = template.stages[0];
           if (!firstStage?.trigger) continue;
           if (firstStage.trigger.event !== 'dialogue_ended') continue;
@@ -210,9 +222,9 @@ export function createQuestSystem(
           }
         }
       }
-    });
+    };
 
-    bus.on('scene_changed', ({ sceneId }) => {
+    const onSceneChanged = ({ sceneId }: { sceneId: string }) => {
       for (const [questId, progress] of Object.entries(stores.quest.getState().quests)) {
         if (progress.status !== 'active' || !progress.currentStageId) continue;
         const template = getTemplate(questId);
@@ -225,9 +237,9 @@ export function createQuestSystem(
           checkAndAdvance(questId, 'secondary');
         }
       }
-    });
+    };
 
-    bus.on('item_acquired', ({ itemId }) => {
+    const onItemAcquired = ({ itemId }: { itemId: string }) => {
       for (const [questId, progress] of Object.entries(stores.quest.getState().quests)) {
         if (progress.status !== 'active' || !progress.currentStageId) continue;
         const template = getTemplate(questId);
@@ -244,9 +256,9 @@ export function createQuestSystem(
           }
         }
       }
-    });
+    };
 
-    bus.on('combat_ended', ({ outcome, enemyIds }) => {
+    const onCombatEnded = ({ outcome, enemyIds }: { outcome: string; enemyIds?: string[] }) => {
       if (outcome !== 'victory') return;
       for (const [questId, progress] of Object.entries(stores.quest.getState().quests)) {
         if (progress.status !== 'active' || !progress.currentStageId) continue;
@@ -258,8 +270,20 @@ export function createQuestSystem(
           checkAndAdvance(questId, 'primary');
         }
       }
-    });
+    };
+
+    bus.on('dialogue_ended', onDialogueEnded);
+    bus.on('scene_changed', onSceneChanged);
+    bus.on('item_acquired', onItemAcquired);
+    bus.on('combat_ended', onCombatEnded);
+
+    cleanup = () => {
+      bus.off('dialogue_ended', onDialogueEnded);
+      bus.off('scene_changed', onSceneChanged);
+      bus.off('item_acquired', onItemAcquired);
+      bus.off('combat_ended', onCombatEnded);
+    };
   }
 
-  return { acceptQuest, completeObjective, advanceStage, failQuest, completeQuest };
+  return { acceptQuest, completeObjective, advanceStage, failQuest, completeQuest, cleanup };
 }

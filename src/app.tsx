@@ -27,7 +27,7 @@ import { createGameContext } from './context/game-context';
 import type { GameContext } from './context/game-context';
 import { quickSave, saveGame, loadGame, readSaveData, getSaveDir } from './persistence/save-file-manager';
 import { createSerializer } from './state/serializer';
-import { createQuestSystem } from './engine/quest-system';
+import { createQuestSystem, createNoopQuestSystem } from './engine/quest-system';
 import { createBranch, switchBranch, deleteBranch } from './persistence/branch-manager';
 import { branchStore } from './state/branch-store';
 import { replayTurns } from './engine/turn-log';
@@ -136,13 +136,20 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
   );
 
   const questSystem = useMemo(
-    () => createQuestSystem(
-      { quest: ctx.stores.quest, relation: ctx.stores.relation, game: ctx.stores.game, player: ctx.stores.player },
-      allCodexEntries as Map<string, CodexEntry>,
-      ctx.eventBus,
-    ),
+    () => {
+      if (allCodexEntries.size === 0) return createNoopQuestSystem();
+      return createQuestSystem(
+        { quest: ctx.stores.quest, relation: ctx.stores.relation, game: ctx.stores.game, player: ctx.stores.player },
+        allCodexEntries as Map<string, CodexEntry>,
+        ctx.eventBus,
+      );
+    },
     [ctx, allCodexEntries],
   );
+
+  useEffect(() => {
+    return () => { questSystem.cleanup(); };
+  }, [questSystem]);
 
   const sceneManager = useMemo(
     () => createSceneManager(
