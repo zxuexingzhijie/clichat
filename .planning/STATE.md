@@ -106,5 +106,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-04-29T08:34:37.136Z
-Stopped at: context exhaustion at 90% (2026-04-29)
+Stopped at: 16-P02 complete — act-aware narrative prompt + NPC trust-gated disclosure + narrativeStore wiring
 Resume file: None
