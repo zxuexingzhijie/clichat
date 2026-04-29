@@ -73,13 +73,20 @@ export function restoreQuestEventLog(events: QuestEvent[]): void {
   });
 }
 
+export type QuestStore = Store<QuestState> & {
+  restoreState: (data: QuestState) => void;
+};
+
 export function createQuestStore(
   bus: EventBus,
   deps: { getGameState: () => GameState },
-): Store<QuestState> {
-  return createStore<QuestState>(
+): QuestStore {
+  let isRestoring = false;
+
+  const store = createStore<QuestState>(
     getDefaultQuestState(),
     ({ newState, oldState }) => {
+      if (isRestoring) return;
       const turnNumber = deps.getGameState().turnCount;
 
       for (const questId of Object.keys(newState.quests)) {
@@ -135,6 +142,14 @@ export function createQuestStore(
       }
     },
   );
+
+  function restoreState(data: QuestState): void {
+    isRestoring = true;
+    store.setState(draft => { Object.assign(draft, data); });
+    isRestoring = false;
+  }
+
+  return { ...store, restoreState };
 }
 
 export const questStore = createQuestStore(eventBus, {

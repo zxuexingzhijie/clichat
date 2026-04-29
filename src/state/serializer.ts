@@ -4,7 +4,7 @@ import { PlayerStateSchema, type PlayerState } from './player-store';
 import { SceneStateSchema, type SceneState } from './scene-store';
 import { CombatStateSchema, type CombatState } from './combat-store';
 import { GameStateSchema, type GameState } from './game-store';
-import { QuestStateSchema, QuestEventSchema, type QuestState, type QuestEvent } from './quest-store';
+import { QuestStateSchema, QuestEventSchema, type QuestState, type QuestEvent, type QuestStore } from './quest-store';
 import { RelationStateSchema, type RelationState, type RelationStore } from './relation-store';
 import { NpcMemoryStateSchema, type NpcMemoryState } from './npc-memory-store';
 import { ExplorationStateSchema, type ExplorationState } from './exploration-store';
@@ -92,7 +92,7 @@ export function createSerializer(
     scene: Store<SceneState>;
     combat: Store<CombatState>;
     game: Store<GameState>;
-    quest: Store<QuestState>;
+    quest: QuestStore;
     relations: RelationStore;
     npcMemory: Store<NpcMemoryState>;
     exploration: Store<ExplorationState>;
@@ -165,13 +165,12 @@ export function createSerializer(
       stores.scene.setState(draft => { Object.assign(draft, data.scene); });
       stores.combat.setState(draft => { Object.assign(draft, data.combat); });
       stores.game.setState(draft => { Object.assign(draft, data.game); });
-      stores.quest.setState(draft => { Object.assign(draft, data.quest); });
+      stores.quest.restoreState(data.quest);
       stores.relations.restoreState(data.relations);
       stores.npcMemory.setState(draft => { Object.assign(draft, data.npcMemorySnapshot); });
       stores.exploration.setState(draft => { Object.assign(draft, data.exploration); });
       stores.playerKnowledge.setState(draft => { Object.assign(draft, data.playerKnowledge); });
 
-      stores.quest.setState(draft => { draft.eventLog = data.questEventLog; });
       stores.turnLog.setState(draft => { draft.entries = data.turnLog; });
     },
   };
