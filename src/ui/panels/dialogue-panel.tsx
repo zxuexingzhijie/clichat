@@ -158,7 +158,7 @@ export function DialoguePanel({
           }
         }}
       />
-      <Text dimColor>↑↓ 选择    Enter 确认    直接输入文字 回复NPC    Esc {isFreeTextMode ? '退出输入' : '结束对话'}</Text>
+      <Text dimColor>↑↓ 选择    Enter 确认    直接输入 与NPC对话    Esc {isFreeTextMode ? '退出输入' : '结束对话'}</Text>
     </Box>
   );
 }
