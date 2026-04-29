@@ -8,3 +8,4 @@ export const NpcDialogueSchema = z.object({
 });
 
 export type NpcDialogue = z.infer<typeof NpcDialogueSchema>;
+export type NpcSentiment = NpcDialogue['sentiment'];

@@ -2,6 +2,8 @@ import type { GameAction } from "../types/game-action.ts";
 import type { AttributeName, CheckResult } from "../types/common.ts";
 import { resolveNormalCheck } from "./adjudication.ts";
 import { rollD20 } from "./dice.ts";
+import { sentimentToDelta } from "./reputation-system.ts";
+import type { NpcSentiment } from "../ai/schemas/npc-dialogue.ts";
 
 export interface ActionContext {
   attributeModifier: number;
@@ -25,4 +27,12 @@ export function resolveAction(
     environmentModifier: context.environmentModifier,
     dc: context.dc,
   });
+}
+
+export type TalkResult = {
+  readonly relationshipDelta: number;
+};
+
+export function adjudicateTalkResult(sentiment: NpcSentiment): TalkResult {
+  return { relationshipDelta: sentimentToDelta(sentiment) };
 }
