@@ -4,14 +4,14 @@ milestone: v1.4
 milestone_name: AI Quality & Game Completeness
 status: in_progress
 stopped_at: ~
-last_updated: "2026-04-30T01:00:00Z"
-last_activity: "2026-04-30 — v1.4 roadmap created; phases 17–21 defined"
+last_updated: "2026-04-29T17:40:00Z"
+last_activity: "2026-04-29 — Phase 17 P01 complete: narrativeContext wired into buildNpcSystemPrompt + npc-actor"
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 2
+  completed_plans: 1
+  percent: 5
 ---
 
 # Project State
@@ -21,22 +21,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** The player must feel they are in a persistent, consistent world that remembers them -- not a chatbot that reinvents the universe every turn.
-**Current focus:** v1.4 — roadmap defined, ready to plan Phase 17
+**Current focus:** v1.4 — Phase 17 P01 complete, P02 next
 
 ## Current Position
 
-Phase: 17 (NPC Architecture Fix) — Not started
-Plan: —
-Status: Roadmap defined, ready for /gsd-plan-phase 17
-Last activity: 2026-04-30 — Roadmap created; phases 17–21 derived from requirements
+Phase: 17 (NPC Architecture Fix) — P01 complete
+Plan: P02 next
+Status: P01 shipped — narrativeContext wired; P02 (adjudicateTalkResult fix) ready
+Last activity: 2026-04-29 — 17-P01 complete: buildNpcSystemPrompt narrativeContext param + npc-actor fix
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 5%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 15 (v1.2)
+- Total plans completed: 15 (v1.2) + 1 (v1.4 P01)
 - Average duration: ~15 min/plan
 - Total execution time: ~3.7 hours
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 | 13 P04 (Dialogue & Reputation) | 1 | ~4 min | ~4 min |
 | 14 Wave 1 (Quest Schema, Memory Fix, handleCast) | 3 | ~24 min | ~8 min |
 | 14 Wave 2 (Quest Events + Commands) | 1 | ~8 min | ~8 min |
+| 17 P01 (NPC Architecture Fix) | 1 | ~3 min | ~3 min |
 
 *Updated after each plan completion*
 
@@ -73,6 +74,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - SCENE-03/CODEX-02: handleCast returns '你现在不在战斗中，无法使用法术。' outside combat; STATE_OVERRIDE_PATTERN requires explicit [+-] operator (level\s*up split to separate branch)
 - CODEX-01: playerKnowledgeState already reactive in app.tsx (useState+useEffect+useMemo) — no code change needed
 - 15-02: listSavesFn injected via GameLoopOptions (not mock.module) to prevent test isolation pollution; revealedNpcs uses Zod .default([]) for backward-compatible saves; dialogue_ended listener in scene-manager owns npcsPresent merge
+- 17-P01: storyAct used as raw identifier (act1/act2/act3) in NPC system prompt — no translation to 第一幕 etc
 
 ### Pending Todos
 
@@ -121,6 +123,6 @@ Items acknowledged and deferred at v1.3 milestone close on 2026-04-30:
 
 ## Session Continuity
 
-Last session: 2026-04-30T00:00:00Z
-Stopped at: v1.4 roadmap defined — phases 17–21 written to ROADMAP.md
+Last session: 2026-04-29T17:40:00Z
+Stopped at: Completed 17-P01-PLAN.md — narrativeContext wiring fix shipped
 Resume file: None
