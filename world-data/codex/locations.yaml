@@ -227,8 +227,7 @@
       targetId: loc_north_gate
     - direction: east
       targetId: loc_abandoned_camp
-  notable_npcs:
-    - npc_hunter
+  notable_npcs: []
   objects:
     - trail_marker
     - fallen_tree
@@ -267,6 +266,7 @@
     - ruined_tent
     - cold_campfire
     - abandoned_supplies
+    - item_iron_ore
   enemies:
     - enemy_bandit
   coordinates: { x: 3, y: 1 }

@@ -89,6 +89,8 @@
   abilities:
     - slash
     - dirty_trick
+  loot:
+    - item_iron_sword
   danger_level: 3
 
 - id: enemy_bandit_archer
@@ -119,6 +121,8 @@
   abilities:
     - ranged_shot
     - retreat
+  loot:
+    - item_short_bow
   danger_level: 3
 
 - id: enemy_shadow_assassin
@@ -150,4 +154,7 @@
     - backstab
     - vanish
     - poison_blade
+  loot:
+    - item_lockpick_set
+    - item_healing_potion
   danger_level: 5
