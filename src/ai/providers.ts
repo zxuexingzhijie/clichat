@@ -13,7 +13,8 @@ export type AiRole =
   | 'retrieval-planner'
   | 'safety-filter'
   | 'summarizer'
-  | 'quest-planner';
+  | 'quest-planner'
+  | 'branch-narrator';
 
 export type ModelPricing = {
   readonly price_per_1k_input_tokens?: number;
@@ -54,6 +55,7 @@ const DEFAULT_ROLE_CONFIGS: Record<AiRole, RoleConfig> = {
   'safety-filter': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.0, maxTokens: 50, providerName: 'google' },
   'summarizer': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.3, maxTokens: 800, providerName: 'google' },
   'quest-planner': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.6, maxTokens: 2000, providerName: 'google' },
+  'branch-narrator': { model: () => google('gemini-2.0-flash') as unknown as LanguageModel, temperature: 0.7, maxTokens: 200, providerName: 'google' },
 };
 
 let runtimeRoleConfigs: Record<AiRole, RoleConfig> = { ...DEFAULT_ROLE_CONFIGS };
