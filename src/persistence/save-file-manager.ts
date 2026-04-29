@@ -79,8 +79,10 @@ export async function listSaves(saveDir: string): Promise<SaveListEntry[]> {
       if (meta) {
         entries.push({ filePath, meta });
       }
-    } catch {
-      // Skip files that cannot be parsed
+    } catch (err) {
+      if (fileName !== 'branches.json') {
+        console.error(`[SaveManager] Failed to read save file ${fileName}:`, err instanceof Error ? err.message : String(err));
+      }
     }
   }
 
