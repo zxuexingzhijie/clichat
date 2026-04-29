@@ -21,7 +21,7 @@ import type { LocationMapData } from './map-panel';
 import type { CodexDisplayEntry } from './codex-panel';
 import type { BranchDisplayNode } from './branch-tree-panel';
 import type { BranchMeta } from '../../state/branch-store';
-import type { SaveDataV3 } from '../../state/serializer';
+import type { SaveDataV4 } from '../../state/serializer';
 import type { ToastData } from '../hooks/use-toast';
 import type { SpinnerContext } from '../components/scene-spinner';
 import type { TurnLogEntry } from '../../state/serializer';

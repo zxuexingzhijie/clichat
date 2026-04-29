@@ -513,6 +513,7 @@ export function createCombatLoop(
   }
 
   async function checkCombatEnd(): Promise<CombatEndResult> {
+    if (!stores.combat.getState().active) return { ended: false };
     const player = stores.player.getState();
 
     if (allEnemiesDead()) {

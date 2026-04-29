@@ -509,7 +509,7 @@ describe('createGameScreenController', () => {
 
       controller.handleCombatExecute(1);
 
-      expect(combatLoop.processPlayerAction).toHaveBeenCalledWith('cast');
+      expect(combatLoop.processPlayerAction).toHaveBeenCalledWith('cast', { spellId: 'spell_fire_arrow' });
     });
 
     it('defaults to attack for out-of-bounds index', () => {
@@ -533,7 +533,7 @@ describe('createGameScreenController', () => {
 
       controller.handleCombatExecute(99);
 
-      expect(combatLoop.processPlayerAction).toHaveBeenCalledWith('attack');
+      expect(combatLoop.processPlayerAction).toHaveBeenCalledWith('attack', undefined);
     });
 
     it('does nothing if combatLoop is not provided', () => {

@@ -40,7 +40,7 @@ export type GameScreenController = {
   readonly handleCombatExecute: (index: number) => Promise<void>;
 };
 
-const COMBAT_ACTION_TYPES: readonly CombatActionType[] = ['attack', 'cast', 'guard', 'use_item', 'flee'];
+const COMBAT_ACTION_TYPES: readonly CombatActionType[] = ['attack', 'cast', 'guard', 'flee'];
 
 function capNarrationLines(lines: readonly string[]): string[] {
   return lines.length > GAME_CONSTANTS.MAX_TURN_LOG_SIZE
@@ -204,7 +204,8 @@ export function createGameScreenController(
     if (!combatLoop) return;
     const actionType = COMBAT_ACTION_TYPES[index] ?? 'attack';
     try {
-      const result = await combatLoop.processPlayerAction(actionType);
+      const opts = actionType === 'cast' ? { spellId: 'spell_fire_arrow' } : undefined;
+      const result = await combatLoop.processPlayerAction(actionType, opts);
       if (result.status === 'error') {
         sceneStore.setState(draft => {
           draft.narrationLines = capNarrationLines([...draft.narrationLines, `[战斗] ${result.message}`]);

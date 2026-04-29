@@ -3,7 +3,7 @@ import { Box, Text, useInput } from 'ink';
 import { Spinner } from '@inkjs/ui';
 import { GameStoreCtx } from '../../app';
 import type { BranchMeta } from '../../state/branch-store';
-import type { SaveDataV3 } from '../../state/serializer';
+import type { SaveDataV4 } from '../../state/serializer';
 import { compareBranches } from '../../engine/branch-diff';
 import type { DiffCategory, DiffItem, BranchDiffResult } from '../../engine/branch-diff';
 import { generateBranchNarrative } from '../../ai/roles/branch-narrator';

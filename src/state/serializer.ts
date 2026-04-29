@@ -11,6 +11,8 @@ import { ExplorationStateSchema, type ExplorationState } from './exploration-sto
 import { PlayerKnowledgeStateSchema, type PlayerKnowledgeState } from './player-knowledge-store';
 import type { TurnLogState } from './turn-log-store';
 import { migrateV1ToV2, migrateV2ToV3, migrateV3ToV4 } from '../persistence/save-migrator';
+import { restoreQuestEventLog } from './quest-store';
+import { restoreTurnLog } from '../engine/turn-log';
 
 export interface Serializer {
   snapshot(saveName?: string): string;
@@ -175,6 +177,8 @@ export function createSerializer(
       stores.playerKnowledge.setState(draft => { Object.assign(draft, data.playerKnowledge); });
 
       stores.turnLog.setState(draft => { draft.entries = data.turnLog; });
+      restoreQuestEventLog((data.questEventLog ?? []) as QuestEvent[]);
+      restoreTurnLog(data.turnLog ?? []);
     },
   };
 }
