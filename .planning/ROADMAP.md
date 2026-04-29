@@ -4,7 +4,8 @@
 
 - ✅ **v1.0 MVP** — Phases 1–5 (shipped 2026-04-22) — [archive](.planning/milestones/v1.0-ROADMAP.md)
 - ✅ **v1.1 Playability & Distribution** — Phases 6–10 (shipped 2026-04-26) — [archive](.planning/milestones/v1.1-ROADMAP.md)
-- 🚧 **v1.2 Game System Integrity & Playability** — Phases 11–15 (in progress)
+- ✅ **v1.2 Game System Integrity & Playability** — Phases 11–15 (shipped 2026-04-29)
+- ✅ **v1.3 Story Mainline & Narrative System** — Phase 16 (shipped 2026-04-29)
 
 ## Phases
 
@@ -30,7 +31,7 @@
 
 </details>
 
-### 🚧 v1.2 Game System Integrity & Playability (In Progress)
+### 🚧 v1.2 Game System Integrity & Playability (Shipped)
 
 **Milestone Goal:** Fix 46 known issues — restore save/quest/branch/map/RAG wiring, combat correctness, dialogue/reputation integrity, quest content, memory eviction, scene/codex correctness, and world content gaps to correct playable state.
 
@@ -138,3 +139,4 @@ Plans:
 | 13. Dialogue & Reputation | v1.2 | 0/TBD | Not started | - |
 | 14. Quest, Memory, Scene & Codex | v1.2 | 4/4 | Complete | 2026-04-28 |
 | 15. Content & Death Recovery | v1.2 | 2/2 | Complete | 2026-04-28 |
+| 16. Story Mainline & Narrative System | v1.3 | 5/5 | Complete | 2026-04-29 |

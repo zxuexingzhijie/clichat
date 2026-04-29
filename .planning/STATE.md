@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Story Mainline & Narrative System
 status: completed
-stopped_at: 16-P04 complete — NPC knowledge_profile YAML + dialogue trust injection + route-lock flag wiring
-last_updated: "2026-04-29T16:02:14Z"
-last_activity: "2026-04-28 — Phase 15 complete (15-01: NPC placement + dark cave enemies; 15-02: revealedNpcs + shadow contact + loadLastSave + death screen)"
+stopped_at: ~
+last_updated: "2026-04-29T18:00:00Z"
+last_activity: "2026-04-29 — Phase 16 complete (P01: narrativeState+SaveDataV5; P02: AI prompt injection; P03: 6-stage quest arc; P04: NPC knowledge_profile+trust; P05: description_overrides)"
 progress:
   total_phases: 5
   completed_phases: 5
