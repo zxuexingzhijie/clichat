@@ -89,10 +89,10 @@ export async function listSaves(saveDir: string): Promise<SaveListEntry[]> {
   );
 }
 
-export async function readSaveData(filePath: string, saveDir?: string): Promise<SaveDataV3> {
-  const dir = saveDir ?? getSaveDir();
-  const resolved = path.resolve(dir, filePath);
-  if (!resolved.startsWith(path.resolve(dir) + path.sep) && resolved !== path.resolve(dir)) {
+export async function readSaveData(fileName: string, saveDir: string): Promise<SaveDataV3> {
+  const resolvedDir = path.resolve(saveDir);
+  const resolved = path.isAbsolute(fileName) ? path.resolve(fileName) : path.resolve(resolvedDir, fileName);
+  if (!resolved.startsWith(resolvedDir + path.sep) && resolved !== resolvedDir) {
     throw new Error('Invalid save file path: path traversal detected');
   }
   const raw = await Bun.file(resolved).json();

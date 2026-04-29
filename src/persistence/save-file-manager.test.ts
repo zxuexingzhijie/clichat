@@ -267,6 +267,6 @@ describe('readSaveData', () => {
 
   it('rejects path traversal attempts', async () => {
     const saveDir = '/tmp/saves';
-    await expect(readSaveData('../../../etc/passwd', saveDir)).rejects.toThrow();
+    await expect(readSaveData('../../../etc/passwd', saveDir)).rejects.toThrow('path traversal');
   });
 });
