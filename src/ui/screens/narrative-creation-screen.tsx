@@ -241,8 +241,8 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
 
       const playerState = characterCreationRef.current.buildCharacter({
         name,
-        raceId: resolved.raceId,
-        professionId: resolved.professionId,
+        raceId: resolved.raceId || 'race_human',
+        professionId: resolved.professionId || dialogueConfig.archetypePriority.profession[0] || 'prof_adventurer',
         backgroundIds: resolved.backgroundIds,
       });
 
