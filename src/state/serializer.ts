@@ -151,12 +151,15 @@ export function createSerializer(
 
       const migrated = migrateV3ToV4(migrateV2ToV3(migrateV1ToV2(raw)));
 
-      const result = SaveDataV4Schema.safeParse(migrated);
-      if (!result.success) {
-        const firstIssue = result.error.issues?.[0];
+      const v4Result = SaveDataV4Schema.safeParse(migrated);
+      const v3Fallback = v4Result.success ? null : SaveDataV3Schema.safeParse(migrated);
+      const result = v4Result.success ? v4Result : v3Fallback;
+
+      if (!result || !result.success) {
+        const firstIssue = v4Result.error?.issues?.[0];
         const detail = firstIssue
           ? `${firstIssue.path.join('.')} — ${firstIssue.message}`
-          : result.error.message;
+          : v4Result.error?.message ?? 'unknown error';
         throw new Error(`Invalid save data: ${detail}`);
       }
 
