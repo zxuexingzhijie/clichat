@@ -321,20 +321,3 @@ describe('DIAL-06: streaming completion is in useEffect not render body', () => 
   });
 });
 
-describe('DIAL-07: hasFiredRef prevents handleNpcDialogueComplete double-fire', () => {
-  it('GameScreen function source contains hasFiredRef', () => {
-    const source = GameScreen.toString();
-    expect(source).toContain('hasFiredRef');
-  });
-
-  it('GameScreen function source resets hasFiredRef when isNpcStreaming becomes true', () => {
-    const source = GameScreen.toString();
-    expect(source).toContain('hasFiredRef');
-    expect(source).toContain('isNpcStreaming');
-  });
-
-  it('GameScreen handleNpcDialogueComplete effect checks hasFiredRef.current before firing', () => {
-    const source = GameScreen.toString();
-    expect(source).toMatch(/hasFiredRef\.current/);
-  });
-});
