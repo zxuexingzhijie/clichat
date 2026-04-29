@@ -45,7 +45,6 @@
       trigger:
         event: dialogue_ended
         targetId: npc_elder
-        secondaryEvent: item_found
       objectives:
         - id: obj_talk_elder
           type: talk
