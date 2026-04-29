@@ -263,6 +263,9 @@ export function createCombatLoop(
         stores.game.setState(draft => {
           draft.phase = 'game';
         });
+        stores.player.setState(draft => {
+          draft.poisonStacks = 0;
+        });
         return { status: 'ok', checkResult, narration: '你成功逃脱了战斗！', outcome: 'flee' };
       }
     }
@@ -384,6 +387,25 @@ export function createCombatLoop(
           case 'poison_blade':
             break;
           case 'vanish': {
+            shouldVanish = true;
+            break;
+          }
+          case 'bite':
+          case 'slash':
+          case 'dirty_trick':
+          case 'ranged_shot': {
+            abilityAttackBonus += 1;
+            break;
+          }
+          case 'pack_leader': {
+            abilityAttackBonus += 3;
+            break;
+          }
+          case 'retreat': {
+            stores.combat.setState(draft => {
+              const idx = draft.enemies.findIndex(e => e.id === enemy.id);
+              if (idx >= 0) draft.enemies[idx]!.hp = 0;
+            });
             shouldVanish = true;
             break;
           }
@@ -515,6 +537,9 @@ export function createCombatLoop(
       stores.game.setState(draft => {
         draft.phase = 'game';
       });
+      stores.player.setState(draft => {
+        draft.poisonStacks = 0;
+      });
       return { ended: true, outcome: 'victory', narration };
     }
 
@@ -528,6 +553,9 @@ export function createCombatLoop(
       });
       stores.game.setState(draft => {
         draft.phase = 'game_over';
+      });
+      stores.player.setState(draft => {
+        draft.poisonStacks = 0;
       });
       return { ended: true, outcome: 'defeat', narration };
     }

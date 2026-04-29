@@ -43,6 +43,16 @@ export const handleCombat: ActionHandler = async (action, ctx) => {
     return { status: 'error', message: combatResult.message };
   }
 
+  if (
+    ctx.combatLoop.getCombatPhase() === 'enemy_turn' &&
+    combatResult.status === 'ok' &&
+    combatResult.outcome !== 'flee' &&
+    combatResult.outcome !== 'victory' &&
+    combatResult.outcome !== 'defeat'
+  ) {
+    await ctx.combatLoop.processEnemyTurn();
+  }
+
   const endResult = await ctx.combatLoop.checkCombatEnd();
   if (
     endResult.ended &&
