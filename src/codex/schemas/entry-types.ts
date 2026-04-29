@@ -43,6 +43,7 @@ export const LocationSchema = z.object({
   coordinates: z.object({ x: z.number(), y: z.number() }).optional(),
   map_icon: z.string().optional(),
   enemies: z.array(z.string()).optional(),
+  description_overrides: z.record(z.string(), z.string()).optional(),
 });
 
 export const FactionSchema = z.object({

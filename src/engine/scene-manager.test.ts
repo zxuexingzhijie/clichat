@@ -1,5 +1,5 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
-import type { CodexEntry } from '../codex/schemas/entry-types';
+import type { CodexEntry, Location } from '../codex/schemas/entry-types';
 
 mock.module('ai', () => ({
   generateObject: mock(() => Promise.resolve({ object: {} })),
@@ -12,7 +12,7 @@ mock.module('@ai-sdk/openai', () => ({
   createOpenAI: () => () => 'mock-model',
 }));
 
-const { createSceneManager } = await import('./scene-manager');
+const { createSceneManager, selectLocationDescription } = await import('./scene-manager');
 const { sceneStore, getDefaultSceneState } = await import('../state/scene-store');
 const { gameStore } = await import('../state/game-store');
 const { playerStore } = await import('../state/player-store');
@@ -549,5 +549,203 @@ describe('createSceneManager', () => {
     await manager.loadScene('loc_north_gate');
 
     expect(capturedContext?.narrativeContext).toBeUndefined();
+  });
+});
+
+function makeLocationWithOverrides(overrides?: Record<string, string>): Location {
+  return {
+    id: 'loc_test',
+    name: '测试地点',
+    type: 'location',
+    tags: [],
+    description: '默认描述',
+    epistemic: {
+      authority: 'canonical_truth',
+      truth_status: 'true',
+      scope: 'local',
+      visibility: 'public',
+      confidence: 1.0,
+      source_type: 'authorial',
+      known_by: [],
+      contradicts: [],
+      volatility: 'stable',
+    },
+    region: '测试',
+    danger_level: 0,
+    exits: [],
+    notable_npcs: [],
+    objects: [],
+    description_overrides: overrides,
+  };
+}
+
+describe('selectLocationDescription', () => {
+  it('returns override text when matching worldFlag is true', () => {
+    const location = makeLocationWithOverrides({ mayor_secret_known: '秘密揭晓后的描述' });
+    const result = selectLocationDescription(location, { mayor_secret_known: true });
+    expect(result).toBe('秘密揭晓后的描述');
+  });
+
+  it('returns location.description when no worldFlags match', () => {
+    const location = makeLocationWithOverrides({ mayor_secret_known: '秘密揭晓后的描述' });
+    const result = selectLocationDescription(location, {});
+    expect(result).toBe('默认描述');
+  });
+
+  it('returns location.description when no description_overrides defined', () => {
+    const location = makeLocationWithOverrides(undefined);
+    const result = selectLocationDescription(location, { mayor_secret_known: true });
+    expect(result).toBe('默认描述');
+  });
+
+  it('returns location.description when worldFlag is false', () => {
+    const location = makeLocationWithOverrides({ mayor_secret_known: '秘密揭晓后的描述' });
+    const result = selectLocationDescription(location, { mayor_secret_known: false });
+    expect(result).toBe('默认描述');
+  });
+
+  it('applies priority order — act3_confrontation wins over mayor_secret_known when both present', () => {
+    const location = makeLocationWithOverrides({
+      act3_confrontation: '第三幕对峙描述',
+      mayor_secret_known: '秘密揭晓后的描述',
+    });
+    const result = selectLocationDescription(location, {
+      act3_confrontation: true,
+      mayor_secret_known: true,
+    });
+    expect(result).toBe('第三幕对峙描述');
+  });
+
+  it('falls through to lower priority override when higher priority flag is false', () => {
+    const location = makeLocationWithOverrides({
+      act3_confrontation: '第三幕对峙描述',
+      mayor_secret_known: '秘密揭晓后的描述',
+    });
+    const result = selectLocationDescription(location, {
+      act3_confrontation: false,
+      mayor_secret_known: true,
+    });
+    expect(result).toBe('秘密揭晓后的描述');
+  });
+});
+
+describe('handleLook override path', () => {
+  beforeEach(() => {
+    sceneStore.setState(() => Object.assign({}, getDefaultSceneState()));
+  });
+
+  it('returns override text without calling generateNarrationFn when worldFlag matches', async () => {
+    const codex = createMockCodexEntries();
+    // Add description_overrides to loc_tavern in the mock codex
+    codex.set('loc_tavern', {
+      ...(codex.get('loc_tavern') as CodexEntry),
+      description_overrides: { mayor_secret_known: '知晓秘密后的酒馆描述' },
+    } as CodexEntry);
+
+    const narrationFn = mock(async () => 'LLM叙述');
+    const narrativeStore = {
+      getState: () => ({ currentAct: 'act2' as const, atmosphereTags: [], worldFlags: { mayor_secret_known: true }, playerKnowledgeLevel: 0 }),
+      setState: () => {},
+      subscribe: () => () => {},
+      restoreState: () => {},
+    };
+
+    const { createStore } = await import('../state/create-store');
+    const { getDefaultSceneState: gds } = await import('../state/scene-store');
+    const freshScene = createStore(gds(), () => {});
+    freshScene.setState(draft => {
+      draft.sceneId = 'loc_tavern';
+      draft.narrationLines = ['初始叙述'];
+    });
+
+    const manager = createSceneManager(
+      { scene: freshScene, game: gameStore, player: playerStore },
+      codex,
+      { generateNarrationFn: narrationFn, narrativeStore },
+    );
+
+    const result = await manager.handleLook();
+
+    expect(result.status).toBe('success');
+    if (result.status === 'success') {
+      expect(result.narration).toContain('知晓秘密后的酒馆描述');
+    }
+    expect(narrationFn).not.toHaveBeenCalled();
+  });
+
+  it('calls generateNarrationFn when no worldFlag matches override', async () => {
+    const codex = createMockCodexEntries();
+    codex.set('loc_tavern', {
+      ...(codex.get('loc_tavern') as CodexEntry),
+      description_overrides: { mayor_secret_known: '知晓秘密后的酒馆描述' },
+    } as CodexEntry);
+
+    const narrationFn = mock(async () => 'LLM叙述');
+    const narrativeStore = {
+      getState: () => ({ currentAct: 'act1' as const, atmosphereTags: [], worldFlags: {}, playerKnowledgeLevel: 0 }),
+      setState: () => {},
+      subscribe: () => () => {},
+      restoreState: () => {},
+    };
+
+    const { createStore } = await import('../state/create-store');
+    const { getDefaultSceneState: gds } = await import('../state/scene-store');
+    const freshScene = createStore(gds(), () => {});
+    freshScene.setState(draft => {
+      draft.sceneId = 'loc_tavern';
+      draft.narrationLines = [];
+    });
+
+    const manager = createSceneManager(
+      { scene: freshScene, game: gameStore, player: playerStore },
+      codex,
+      { generateNarrationFn: narrationFn, narrativeStore },
+    );
+
+    const result = await manager.handleLook();
+
+    expect(result.status).toBe('success');
+    expect(narrationFn).toHaveBeenCalledTimes(1);
+    if (result.status === 'success') {
+      expect(result.narration).toContain('LLM叙述');
+    }
+  });
+});
+
+describe('loadScene with worldFlags override', () => {
+  beforeEach(() => {
+    sceneStore.setState(() => Object.assign({}, getDefaultSceneState()));
+  });
+
+  it('uses override description in loadScene when worldFlag matches', async () => {
+    const codex = createMockCodexEntries();
+    codex.set('loc_tavern', {
+      ...(codex.get('loc_tavern') as CodexEntry),
+      description_overrides: { ritual_site_active: '仪式进行中的酒馆' },
+    } as CodexEntry);
+
+    const narrativeStore = {
+      getState: () => ({ currentAct: 'act2' as const, atmosphereTags: [], worldFlags: { ritual_site_active: true }, playerKnowledgeLevel: 0 }),
+      setState: () => {},
+      subscribe: () => () => {},
+      restoreState: () => {},
+    };
+
+    const { createStore } = await import('../state/create-store');
+    const { getDefaultSceneState: gds } = await import('../state/scene-store');
+    const freshScene = createStore(gds(), () => {});
+
+    const manager = createSceneManager(
+      { scene: freshScene, game: gameStore, player: playerStore },
+      codex,
+      { narrativeStore },
+    );
+
+    const result = await manager.loadScene('loc_tavern');
+
+    expect(result.status).toBe('success');
+    if (result.status === 'success') {
+      expect(result.narration).toContain('仪式进行中的酒馆');
+    }
   });
 });

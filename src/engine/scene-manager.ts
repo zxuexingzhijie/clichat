@@ -49,6 +49,29 @@ function isLocation(entry: CodexEntry): entry is Location {
   return entry.type === 'location';
 }
 
+const OVERRIDE_PRIORITY = [
+  'act3_confrontation',
+  'mayor_arrested',
+  'truth_suppressed',
+  'shadow_deal_made',
+  'mayor_secret_known',
+  'ritual_site_active',
+] as const;
+
+export function selectLocationDescription(
+  location: Location,
+  worldFlags: Record<string, boolean>,
+): string {
+  if (location.description_overrides) {
+    for (const key of OVERRIDE_PRIORITY) {
+      if (worldFlags[key] && location.description_overrides[key]) {
+        return location.description_overrides[key]!;
+      }
+    }
+  }
+  return location.description;
+}
+
 function formatObjectId(id: string): string {
   return id.replace(/_/g, ' ');
 }
@@ -193,7 +216,8 @@ export function createSceneManager(
       draft.objects = [...entry.objects];
     });
 
-    let narrationText = entry.description;
+    const worldFlags = options?.narrativeStore?.getState().worldFlags ?? {};
+    let narrationText = selectLocationDescription(entry, worldFlags);
 
     if (generateRetrievalPlanFn && generateNarrationFn) {
       const retrievalPlan = await generateRetrievalPlanFn({
@@ -244,6 +268,20 @@ export function createSceneManager(
   async function handleLook(target?: string): Promise<SceneManagerResult> {
     if (!target) {
       const state = stores.scene.getState();
+      const worldFlags = options?.narrativeStore?.getState().worldFlags ?? {};
+      const locationEntry = stores.scene.getState().sceneId
+        ? queryById(codexEntries, stores.scene.getState().sceneId!)
+        : null;
+
+      if (locationEntry && isLocation(locationEntry)) {
+        const override = selectLocationDescription(locationEntry, worldFlags);
+        if (override !== locationEntry.description) {
+          const newLines = capNarrationLines([...state.narrationLines, override]);
+          stores.scene.setState(draft => { draft.narrationLines = newLines; });
+          return { status: 'success', narration: newLines };
+        }
+      }
+
       if (generateNarrationFn) {
         const narration = await generateNarrationFn({
           sceneType: 'exploration',

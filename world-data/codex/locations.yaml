@@ -31,6 +31,10 @@
     - oil_lamp
   coordinates: { x: 1, y: 2 }
   map_icon: "G"
+  description_overrides:
+    act3_confrontation: "黑松镇北门。陈铁柱站在城门口，背对着你，油灯的光把他的影子拉得很长。守卫们假装什么都没看见。"
+    mayor_secret_known: "黑松镇北门。石砌的城门还是一样巍峨，但你现在知道，五年前的那场灾难里，有多少人从这里出去，再也没回来。"
+    ritual_site_active: "黑松镇北门。守卫比平时少了两人。陈铁柱的脸色比昨天更难看，他盯着北边的林子，一言不发。"
 
 - id: loc_tavern
   name: 黑松镇·酒馆
@@ -65,6 +69,10 @@
     - barrel
   coordinates: { x: 0, y: 4 }
   map_icon: "T"
+  description_overrides:
+    act3_confrontation: "松木桶酒馆。炉火还是一样地烧着，老陈擦着杯子，不看你。每个人都在等待那个没有人说出口的结局。"
+    mayor_secret_known: "松木桶酒馆。炉火还是一样地燃着，但你知道这份暖意是用什么换来的。烟火气里有什么东西沉了下去。"
+    ritual_site_active: "松木桶酒馆。人声比平时稀少——又有人昨晚没有回来。老陈倒酒的手顿了一下，没有说什么。"
 
 - id: loc_main_street
   name: 黑松镇·主街
@@ -103,6 +111,10 @@
     - fountain
   coordinates: { x: 1, y: 3 }
   map_icon: "S"
+  description_overrides:
+    act3_confrontation: "黑松镇主街。叫卖声和人声一如往常，但有什么东西不对劲。没有人正眼看你——或者，每个人都在看你，只是你没有注意到。"
+    mayor_secret_known: "黑松镇主街。熙攘的人群，热闹的集市。镇长的宅邸就在街的那一头，你知道里面坐着一个守了多少年秘密的老人。"
+    truth_suppressed: "黑松镇主街。一切如常。风声、叫卖声、孩子的笑声。什么都没发生。这就是和之道的代价：什么都没发生。"
 
 - id: loc_blacksmith
   name: 黑松镇·铁匠铺
