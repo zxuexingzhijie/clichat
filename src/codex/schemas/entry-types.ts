@@ -54,6 +54,17 @@ export const FactionSchema = z.object({
   rivals: z.array(z.string()),
 });
 
+export const NpcTrustGateSchema = z.object({
+  min_trust: z.number().int().min(0).max(10),
+  reveals: z.string(),
+});
+
+export const NpcKnowledgeProfileSchema = z.object({
+  always_knows: z.array(z.string()).optional(),
+  hidden_knowledge: z.array(z.string()).optional(),
+  trust_gates: z.array(NpcTrustGateSchema).optional(),
+});
+
 export const NpcSchema = z.object({
   ...baseFields,
   type: z.literal("npc"),
@@ -63,6 +74,7 @@ export const NpcSchema = z.object({
   backstory: z.string(),
   initial_disposition: z.number().min(-1).max(1),
   faction: z.string().optional(),
+  knowledge_profile: NpcKnowledgeProfileSchema.optional(),
 });
 
 export const SpellSchema = z.object({
@@ -197,6 +209,8 @@ export type Race = z.infer<typeof RaceSchema>;
 export type Profession = z.infer<typeof ProfessionSchema>;
 export type Location = z.infer<typeof LocationSchema>;
 export type Faction = z.infer<typeof FactionSchema>;
+export type NpcTrustGate = z.infer<typeof NpcTrustGateSchema>;
+export type NpcKnowledgeProfile = z.infer<typeof NpcKnowledgeProfileSchema>;
 export type Npc = z.infer<typeof NpcSchema>;
 export type Spell = z.infer<typeof SpellSchema>;
 export type Item = z.infer<typeof ItemSchema>;

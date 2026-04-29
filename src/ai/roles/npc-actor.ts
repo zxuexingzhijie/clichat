@@ -19,9 +19,9 @@ export async function generateNpcDialogue(
   memories: readonly string[],
   options?: NpcActorOptions,
   narrativeContext?: NarrativePromptContext,
+  trustLevel: number = 0,
 ): Promise<NpcDialogue> {
   const config = getRoleConfig('npc-actor');
-  const trustLevel = 0;
   const system = buildNpcSystemPrompt(npcProfile, trustLevel);
   void narrativeContext;
   const prompt = buildNpcUserPrompt({

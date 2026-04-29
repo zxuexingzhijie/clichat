@@ -1,6 +1,8 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import type { NpcDialogue } from '../ai/schemas/npc-dialogue';
 import type { CheckResult } from '../types/common';
+import { createStore } from '../state/create-store';
+import type { QuestState } from '../state/quest-store';
 
 const mockGenerateNpcDialogue = mock((): Promise<NpcDialogue> =>
   Promise.resolve({
@@ -327,6 +329,40 @@ const mockCodexEntries = new Map([
       goals: ['profit'],
       backstory: '黑市经营者',
       initial_disposition: -0.1,
+    },
+  ],
+  [
+    'npc_elder',
+    {
+      id: 'npc_elder',
+      name: '镇长·王德',
+      type: 'npc' as const,
+      tags: ['official', '黑松镇'],
+      description: '花白胡须的矮胖老人',
+      epistemic: {
+        authority: 'canonical_truth' as const,
+        truth_status: 'true' as const,
+        scope: 'local' as const,
+        visibility: 'public' as const,
+        confidence: 1.0,
+        source_type: 'authorial' as const,
+        known_by: [],
+        contradicts: [],
+        volatility: 'stable' as const,
+      },
+      location_id: 'loc_main_street',
+      personality_tags: ['diplomatic', 'cautious', 'authoritative'],
+      goals: ['maintain_order', 'secure_trade_routes', 'hide_town_secret'],
+      backstory: '王德做了二十年镇长',
+      initial_disposition: 0.1,
+      knowledge_profile: {
+        always_knows: ['黑松镇日常事务和历史'],
+        hidden_knowledge: ['五年前他与外来势力达成了秘密协议'],
+        trust_gates: [
+          { min_trust: 5, reveals: '五年前的狼灾处理方式有些不寻常' },
+          { min_trust: 7, reveals: '他知道失踪事件与五年前的某些旧事有关联' },
+        ],
+      },
     },
   ],
 ]);
@@ -802,5 +838,137 @@ describe('createDialogueManager', () => {
     await manager.startDialogue('npc_guard');
 
     expect(capturedNarrativeCtx).toBeUndefined();
+  });
+
+  it('startDialogue with personalTrust=90 passes trustLevel >= 9 to generateNpcDialogue', async () => {
+    const { relationStore } = await import('../state/relation-store');
+    relationStore.setState((draft) => {
+      draft.npcDispositions['npc_elder'] = {
+        value: 0,
+        publicReputation: 0,
+        personalTrust: 90,
+        fear: 0,
+        infamy: 0,
+        credibility: 0,
+      };
+    });
+
+    let capturedTrustLevel: unknown = undefined;
+    const trackingDialogueFn = mock((...args: unknown[]) => {
+      capturedTrustLevel = args[6];
+      return Promise.resolve({
+        dialogue: '测试对白。',
+        emotionTag: 'neutral',
+        shouldRemember: false,
+        sentiment: 'neutral',
+      });
+    });
+
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: trackingDialogueFn as typeof import('../ai/roles/npc-actor').generateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_elder');
+
+    expect(typeof capturedTrustLevel).toBe('number');
+    expect(capturedTrustLevel as number).toBeGreaterThanOrEqual(9);
+  });
+
+  it('startDialogue with no disposition entry passes trustLevel <= 5 to generateNpcDialogue', async () => {
+    const { relationStore } = await import('../state/relation-store');
+    relationStore.setState((draft) => {
+      delete draft.npcDispositions['npc_elder'];
+    });
+
+    let capturedTrustLevel: unknown = undefined;
+    const trackingDialogueFn = mock((...args: unknown[]) => {
+      capturedTrustLevel = args[6];
+      return Promise.resolve({
+        dialogue: '测试对白。',
+        emotionTag: 'neutral',
+        shouldRemember: false,
+        sentiment: 'neutral',
+      });
+    });
+
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: trackingDialogueFn as typeof import('../ai/roles/npc-actor').generateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_elder');
+
+    expect(typeof capturedTrustLevel).toBe('number');
+    expect(capturedTrustLevel as number).toBeLessThanOrEqual(5);
+  });
+
+  it('endDialogue with npc_captain at stage_allies_decision sets justice_score_locked', async () => {
+    const questStore = createStore<QuestState>({
+      quests: {
+        quest_main_01: {
+          status: 'active',
+          currentStageId: 'stage_allies_decision',
+          completedObjectives: [],
+          discoveredClues: [],
+          flags: {},
+          acceptedAt: 1,
+          completedAt: null,
+        },
+      },
+      eventLog: [],
+    });
+
+    const manager = createDialogueManager(
+      { ...stores, quest: questStore },
+      mockCodexEntries,
+      { generateNpcDialogueFn: mockGenerateNpcDialogue, adjudicateFn: mockAdjudicate },
+    );
+
+    await manager.startDialogue('npc_captain');
+    manager.endDialogue();
+
+    expect(questStore.getState().quests['quest_main_01']?.flags['justice_score_locked']).toBe(true);
+  });
+
+  it('endDialogue with npc_bartender at stage_allies_decision does NOT set any route flag', async () => {
+    const questStore = createStore<QuestState>({
+      quests: {
+        quest_main_01: {
+          status: 'active',
+          currentStageId: 'stage_allies_decision',
+          completedObjectives: [],
+          discoveredClues: [],
+          flags: {},
+          acceptedAt: 1,
+          completedAt: null,
+        },
+      },
+      eventLog: [],
+    });
+
+    const manager = createDialogueManager(
+      { ...stores, quest: questStore },
+      mockCodexEntries,
+      { generateNpcDialogueFn: mockGenerateNpcDialogue, adjudicateFn: mockAdjudicate },
+    );
+
+    await manager.startDialogue('npc_bartender');
+    manager.endDialogue();
+
+    const flags = questStore.getState().quests['quest_main_01']?.flags ?? {};
+    expect(flags['justice_score_locked']).toBeUndefined();
+    expect(flags['shadow_score_locked']).toBeUndefined();
+    expect(flags['pragmatism_score_locked']).toBeUndefined();
+  });
+
+  it('endDialogue without quest store present does not throw', async () => {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_captain');
+    expect(() => manager.endDialogue()).not.toThrow();
   });
 });

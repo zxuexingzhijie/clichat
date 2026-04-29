@@ -16,6 +16,7 @@ import type { SceneState } from '../state/scene-store';
 import type { GameState } from '../state/game-store';
 import type { PlayerState } from '../state/player-store';
 import type { RelationState } from '../state/relation-store';
+import type { QuestState } from '../state/quest-store';
 import type { CodexEntry, Npc } from '../codex/schemas/entry-types';
 import type { NpcDialogue } from '../ai/schemas/npc-dialogue';
 import type { NpcFilterContext } from '../ai/utils/npc-knowledge-filter';
@@ -271,11 +272,40 @@ export function createDialogueManager(
     game: Store<GameState>;
     player: Store<PlayerState>;
     relation: Store<RelationState>;
+    quest?: Store<QuestState>;
   },
   codexEntries: Map<string, CodexEntry>,
   options?: DialogueManagerOptions,
 ): DialogueManager {
   const doGenerateDialogue = options?.generateNpcDialogueFn ?? generateNpcDialogue;
+
+  function tryLockRouteFlag(npcId: string, questStore: Store<QuestState> | undefined): void {
+    if (!questStore) return;
+    const progress = questStore.getState().quests['quest_main_01'];
+    if (!progress || progress.currentStageId !== 'stage_allies_decision') return;
+
+    if (npcId === 'npc_captain') {
+      questStore.setState((draft) => {
+        const p = draft.quests['quest_main_01'];
+        if (p) p.flags = { ...p.flags, justice_score_locked: true };
+      });
+    } else if (npcId === 'npc_shadow_contact') {
+      questStore.setState((draft) => {
+        const p = draft.quests['quest_main_01'];
+        if (p) p.flags = { ...p.flags, shadow_score_locked: true };
+      });
+    } else if (npcId === 'npc_elder') {
+      questStore.setState((draft) => {
+        const p = draft.quests['quest_main_01'];
+        if (p) p.flags = { ...p.flags, pragmatism_score_locked: true };
+      });
+    }
+  }
+
+  function getTrustLevel(npcId: string): number {
+    const personalTrust = stores.relation.getState().npcDispositions[npcId]?.personalTrust ?? 0;
+    return Math.round(Math.max(0, Math.min(10, (personalTrust + 100) / 20)));
+  }
 
   function getDialogueNarrativeContext(): NarrativePromptContext | undefined {
     if (!options?.narrativeStore) return undefined;
@@ -354,6 +384,7 @@ export function createDialogueManager(
       personality_tags: npc.personality_tags,
       goals: npc.goals,
       backstory: npc.backstory,
+      knowledgeProfile: npc.knowledge_profile,
     };
 
     const npcDialogue: NpcDialogue = await doGenerateDialogue(
@@ -363,6 +394,7 @@ export function createDialogueManager(
       memoryStrings,
       { archiveSummary, relevantCodex, conversationHistory },
       getDialogueNarrativeContext(),
+      getTrustLevel(npcId),
     );
 
     lastNpcEmotionTag = npcDialogue.emotionTag;
@@ -435,6 +467,7 @@ export function createDialogueManager(
       personality_tags: npc.personality_tags,
       goals: npc.goals,
       backstory: npc.backstory,
+      knowledgeProfile: npc.knowledge_profile,
     };
 
     isProcessing = true;
@@ -446,6 +479,7 @@ export function createDialogueManager(
         memoryStrings,
         { archiveSummary, relevantCodex, conversationHistory },
         getDialogueNarrativeContext(),
+        getTrustLevel(npcId),
       );
 
       lastNpcEmotionTag = npcDialogue.emotionTag;
@@ -483,6 +517,8 @@ export function createDialogueManager(
   function endDialogue(): void {
     const npcId = stores.dialogue.getState().npcId;
     const delta = stores.dialogue.getState().relationshipValue;
+
+    tryLockRouteFlag(npcId ?? '', stores.quest);
 
     stores.dialogue.setState((draft) => {
       Object.assign(draft, getDefaultDialogueState());
@@ -539,6 +575,7 @@ export function createDialogueManager(
       personality_tags: npc.personality_tags,
       goals: npc.goals,
       backstory: npc.backstory,
+      knowledgeProfile: npc.knowledge_profile,
     };
 
     isProcessing = true;
@@ -550,6 +587,7 @@ export function createDialogueManager(
         memoryStrings,
         { archiveSummary, relevantCodex, conversationHistory },
         getDialogueNarrativeContext(),
+        getTrustLevel(npcId),
       );
 
       lastNpcEmotionTag = npcDialogue.emotionTag;

@@ -179,6 +179,7 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
         game: ctx.stores.game,
         player: ctx.stores.player,
         relation: ctx.stores.relation,
+        quest: ctx.stores.quest,
       },
       allCodexEntries as Map<string, CodexEntry>,
     ),

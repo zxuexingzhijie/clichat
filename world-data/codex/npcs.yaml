@@ -55,6 +55,18 @@
     - stay_neutral
   backstory: 继承了父亲的酒馆，经营已有二十年。与镇上几乎所有人都有交情，包括暗影行会的人。
   initial_disposition: 0.3
+  knowledge_profile:
+    always_knows:
+      - 镇上的日常消息和八卦
+      - 酒馆里谁来谁往
+    hidden_knowledge:
+      - 他知道阿鬼的真实身份是暗影行会联络人
+      - 他曾目睹五年前的一些异常交易往来
+    trust_gates:
+      - min_trust: 5
+        reveals: 镇上某些人知道的比说出来的要多得多
+      - min_trust: 7
+        reveals: 阿鬼不只是个酒鬼，他背后有人，最近接到了新任务
 
 - id: npc_blacksmith
   name: 铁匠·老赵
@@ -111,6 +123,18 @@
     - protect_forest_secrets
   backstory: 林婆婆在黑松镇行医四十余年，救人无数。她对北林的草药分布了如指掌，却从不愿谈起林中深处的事。有人说她年轻时曾是某个秘密组织的成员。
   initial_disposition: 0.2
+  knowledge_profile:
+    always_knows:
+      - 北林草药分布和林中路径
+      - 镇上的医疗需求
+    hidden_knowledge:
+      - 她年轻时曾是一个秘密组织的成员，那个组织专门守护古代遗址不被滥用
+      - 她知道洞穴是禁地，但她没有阻止任何人，因为她已经老了
+    trust_gates:
+      - min_trust: 5
+        reveals: 北林深处有些地方，她从不在天黑后靠近
+      - min_trust: 7
+        reveals: 洞穴里的东西，有些人曾经守护过它，后来不守了
 
 - id: npc_captain
   name: 守卫队长·陈铁柱
@@ -139,6 +163,17 @@
     - investigate_disappearances
   backstory: 陈铁柱原是王都禁军，因得罪上官被调至边镇。他对黑松镇已有感情，但近来连续有猎人和旅客失踪，让他寝食难安。他怀疑北林中有异变。
   initial_disposition: 0.0
+  knowledge_profile:
+    always_knows:
+      - 失踪案调查的现有进展
+      - 守卫队的部署和巡逻情况
+    hidden_knowledge:
+      - 他一直怀疑有内鬼在阻挠他的调查，但还没查到是谁
+    trust_gates:
+      - min_trust: 5
+        reveals: 他调查失踪案时，某些线索莫名其妙地消失了
+      - min_trust: 7
+        reveals: 他怀疑镇长知道的比说的多，但不愿意在没有证据时提出指控
 
 - id: npc_merchant_afu
   name: 杂货商·阿福
@@ -195,6 +230,18 @@
     - guard_ancient_knowledge
   backstory: 月华三年前从远方的神殿来到黑松镇，接管了荒废已久的小神殿。她从不提起自己的来历，但她对古代符文的了解远超常人。镇民们敬她却也畏她。
   initial_disposition: 0.2
+  knowledge_profile:
+    always_knows:
+      - 古代符文的含义和历史
+      - 神殿的日常事务
+    hidden_knowledge:
+      - 她三年前来黑松镇，是因为感知到了古代符文活动的回响
+      - 她见过与洞穴中完全相同的符文——五年前，在另一个地方
+    trust_gates:
+      - min_trust: 5
+        reveals: 她来黑松镇不是偶然的，是被某种力量引导而来
+      - min_trust: 7
+        reveals: 洞穴里的符文她认识——这不是第一次有人用它们了
 
 - id: npc_hunter
   name: 猎人·阿虎
@@ -279,6 +326,18 @@
     - gather_information
   backstory: 没人知道瞎子孙是什么时候来到黑松镇的。他自称双目失明，但对镇上的一切动静了如指掌。有人说他以前是个大人物，也有人说他只是个疯老头。
   initial_disposition: -0.2
+  knowledge_profile:
+    always_knows:
+      - 镇上所有人的行踪和消息
+      - 五年前失踪者的名字
+    hidden_knowledge:
+      - 阿福所谓的"债"是他当年在场见证了某笔交易后收到的封口费
+      - 他知道那笔交易的另一方是谁
+    trust_gates:
+      - min_trust: 5
+        reveals: 失踪的那些人，都问过同一件事
+      - min_trust: 7
+        reveals: 阿福的那笔账，和五年前有件事脱不了干系
 
 - id: npc_shadow_contact
   name: 暗影行会联络人·阿鬼
@@ -309,6 +368,18 @@
     - maintain_secrecy
   backstory: 阿鬼是暗影行会在黑松镇的联络人，表面上只是个酒鬼，实际上掌握着地下世界的情报网络。只有酒馆老板老陈知道他的真实身份。他最近接到上面的命令，在物色新的"人才"。
   initial_disposition: -0.3
+  knowledge_profile:
+    always_knows:
+      - 地下势力在黑松镇的活动
+      - 各方势力的把柄和筹码
+    hidden_knowledge:
+      - 他接到的命令是等待合适的人选，接管黑松镇的地下网络
+      - 外来势力的身份和他们真正的目的
+    trust_gates:
+      - min_trust: 6
+        reveals: 他最近有笔生意，需要一个不怕麻烦的合伙人
+      - min_trust: 8
+        reveals: 镇上正在发生的事和五年前一模一样，但这次有人想要的更多
 
 - id: npc_elder
   name: 镇长·王德
@@ -338,3 +409,15 @@
     - hide_town_secret
   backstory: 王德做了二十年镇长，把黑松镇从一个穷乡僻壤治理成繁忙的贸易中转站。但他守着一个秘密——五年前的狼灾并非天灾，而是有人蓄意引来的，而他知道是谁。
   initial_disposition: 0.1
+  knowledge_profile:
+    always_knows:
+      - 黑松镇日常事务和历史
+      - 五年前狼灾的官方说法
+    hidden_knowledge:
+      - 五年前他与外来势力达成了秘密协议，用贡品换取狼灾平息
+      - 现在同一势力卷土重来，索要更多利益
+    trust_gates:
+      - min_trust: 5
+        reveals: 五年前的狼灾处理方式有些不寻常，他做了一些困难的决定
+      - min_trust: 7
+        reveals: 他知道失踪事件与五年前的某些旧事有关联
