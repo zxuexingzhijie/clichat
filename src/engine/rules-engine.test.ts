@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { resolveNormalCheck, resolveOpposedCheck, resolveProbabilityCheck, resolvePlotCriticalCheck } from "./adjudication.ts";
-import { resolveAction } from "./rules-engine.ts";
+import { resolveAction, adjudicateTalkResult } from "./rules-engine.ts";
 import { createSeededRng } from "./dice.ts";
 
 describe("adjudication - normal check", () => {
@@ -99,6 +99,29 @@ describe("adjudication - plot critical", () => {
     });
     expect(result.narrativeHint).toBeDefined();
     expect(result.narrativeHint.length).toBeGreaterThan(0);
+  });
+});
+
+describe("adjudicateTalkResult", () => {
+  test("'positive' returns { relationshipDelta: 10 }", () => {
+    expect(adjudicateTalkResult('positive')).toEqual({ relationshipDelta: 10 });
+  });
+
+  test("'neutral' returns { relationshipDelta: 0 }", () => {
+    expect(adjudicateTalkResult('neutral')).toEqual({ relationshipDelta: 0 });
+  });
+
+  test("'negative' returns { relationshipDelta: -10 }", () => {
+    expect(adjudicateTalkResult('negative')).toEqual({ relationshipDelta: -10 });
+  });
+
+  test("'hostile' returns { relationshipDelta: -20 }", () => {
+    expect(adjudicateTalkResult('hostile')).toEqual({ relationshipDelta: -20 });
+  });
+
+  test("return value has only the relationshipDelta field", () => {
+    const result = adjudicateTalkResult('positive');
+    expect(Object.keys(result)).toEqual(['relationshipDelta']);
   });
 });
 
