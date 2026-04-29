@@ -8,6 +8,7 @@ import { GAME_CONSTANTS } from './game-constants';
 import { rollD20 } from './dice';
 import { applyReputationDelta, applyFactionReputationDelta, sentimentToDelta } from './reputation-system';
 import { getDefaultNpcDisposition } from '../state/relation-store';
+import { addMemory } from '../state/npc-memory-store';
 import type { Store } from '../state/create-store';
 import type { DialogueState } from '../state/dialogue-store';
 import type { NpcMemoryState, NpcMemoryRecord } from '../state/npc-memory-store';
@@ -391,32 +392,16 @@ export function createDialogueManager(
 
   function writeMemory(npcId: string, event: string, importance: 'low' | 'medium' | 'high' = 'medium'): void {
     const turnNumber = stores.game.getState().turnCount;
-
-    stores.npcMemory.setState((draft) => {
-      const existing = draft.memories[npcId];
-      const newEntry = {
-        id: nanoid(),
-        npcId,
-        event,
-        turnNumber,
-        importance,
-        emotionalValence: 0,
-        participants: ['player', npcId],
-      };
-      if (existing) {
-        existing.recentMemories = [...existing.recentMemories, newEntry];
-        existing.lastUpdated = new Date().toISOString();
-      } else {
-        draft.memories[npcId] = {
-          npcId,
-          recentMemories: [newEntry],
-          salientMemories: [],
-          archiveSummary: '',
-          version: 0,
-          lastUpdated: new Date().toISOString(),
-        };
-      }
-    });
+    const newEntry = {
+      id: nanoid(),
+      npcId,
+      event,
+      turnNumber,
+      importance,
+      emotionalValence: 0,
+      participants: ['player', npcId],
+    };
+    addMemory(stores.npcMemory, npcId, newEntry);
   }
 
   async function processPlayerFreeText(text: string): Promise<DialogueResult | null> {
