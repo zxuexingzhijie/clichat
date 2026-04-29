@@ -1,6 +1,6 @@
 import { describe, it, expect, mock, beforeEach, afterEach, spyOn } from 'bun:test';
 import path from 'node:path';
-import { _fs, getSaveDir, ensureSaveDirExists, quickSave, saveGame, loadGame, listSaves } from './save-file-manager';
+import { _fs, getSaveDir, ensureSaveDirExists, quickSave, saveGame, loadGame, listSaves, readSaveData } from './save-file-manager';
 
 const mockBunWrite = mock(() => Promise.resolve(0));
 const mockBunFile = mock((filePath: string) => ({
@@ -222,5 +222,51 @@ describe('listSaves', () => {
     const results = await listSaves('/tmp/saves');
     expect(results[0]?.meta.saveName).toBe('New Save');
     expect(results[1]?.meta.saveName).toBe('Old Save');
+  });
+});
+
+describe('readSaveData', () => {
+  const mockSaveData = {
+    version: 3,
+    meta: { saveName: 'Test', timestamp: '2026-01-01T00:00:00.000Z', character: { name: 'Hero', race: 'Human', profession: 'Warrior' }, playtime: 0, locationName: 'North Gate' },
+    branchId: 'main',
+    parentSaveId: null,
+    player: { name: 'Hero', race: 'human', profession: 'warrior', hp: 100, maxHp: 100, mp: 50, maxMp: 50, gold: 0, attributes: { physique: 3, finesse: 2, mind: 1 }, tags: [], equipment: { weapon: null, armor: null, accessory: null }, poisonStacks: 0 },
+    scene: { sceneId: 'north_gate', locationName: 'North Gate', narrationLines: [], actions: [], npcsPresent: [], exits: [], exitMap: {}, objects: [] },
+    combat: { active: false, turnOrder: [], currentTurnIndex: 0, enemies: [], roundNumber: 0, phase: 'init', lastCheckResult: null, lastNarration: '', guardActive: false, howlActive: false, outcome: null },
+    game: { day: 1, timeOfDay: 'night', phase: 'game', turnCount: 0, isDarkTheme: true, pendingQuit: false, revealedNpcs: [] },
+    quest: { quests: {}, eventLog: [] },
+    relations: { npcDispositions: {}, factionReputations: {} },
+    npcMemorySnapshot: { memories: {} },
+    questEventLog: [],
+    exploration: { locations: {} },
+    playerKnowledge: { entries: {} },
+    turnLog: [],
+  };
+
+  beforeEach(() => {
+    if (typeof Bun !== 'undefined') {
+      (Bun as unknown as Record<string, unknown>).file = mock((_path: string) => ({
+        json: async () => mockSaveData,
+      }));
+    }
+  });
+
+  afterEach(() => {
+    if (typeof Bun !== 'undefined' && originalBunFile) {
+      (Bun as unknown as Record<string, unknown>).file = originalBunFile;
+    }
+  });
+
+  it('returns parsed SaveDataV3 without calling serializer.restore', async () => {
+    const saveDir = '/tmp/saves';
+    const result = await readSaveData('test-save.json', saveDir);
+    expect(result.version).toBe(3);
+    expect(result.branchId).toBe('main');
+  });
+
+  it('rejects path traversal attempts', async () => {
+    const saveDir = '/tmp/saves';
+    await expect(readSaveData('../../../etc/passwd', saveDir)).rejects.toThrow();
   });
 });
