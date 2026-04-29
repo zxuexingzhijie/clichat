@@ -249,7 +249,12 @@ export function GameScreen({
 
   const handleDialogueFreeText = useCallback(
     (text: string) => {
-      void dialogueManager?.processPlayerFreeText(text);
+      dialogueManager?.processPlayerFreeText(text).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        sceneStore.setState(draft => {
+          draft.narrationLines = [...draft.narrationLines, `[对话错误] ${msg}`];
+        });
+      });
     },
     [dialogueManager],
   );
