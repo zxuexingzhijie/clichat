@@ -193,6 +193,10 @@ export function createCombatLoop(
 
     if (actionType === 'cast') {
       const spellId = options?.spellId;
+      if (!spellId) {
+        stores.combat.setState(draft => { draft.phase = 'player_turn'; });
+        return { status: 'error', message: '请指定法术名称。' };
+      }
       const spellEntry = spellId ? codexEntries.get(spellId) : null;
       const spell = spellEntry?.type === 'spell' ? (spellEntry as Spell) : null;
 
