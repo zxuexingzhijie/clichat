@@ -177,7 +177,7 @@ export function createQuestSystem(
         const template = entry as QuestTemplate;
         if (!template.auto_accept) continue;
         const progress = stores.quest.getState().quests[questId];
-        if (progress) continue;
+        if (progress && progress.status !== 'failed') continue;
         // Accept if required_npc_id matches the NPC we just talked to
         if (template.required_npc_id) {
           if (template.required_npc_id === npcId) {
