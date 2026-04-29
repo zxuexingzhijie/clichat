@@ -14,8 +14,11 @@ mock.module('@ai-sdk/google', () => ({
   google: () => 'mock-model',
 }));
 
+const mockGenerateObject = mock(() => Promise.resolve({ object: {}, usage: mockUsage }));
+
 mock.module('ai', () => ({
   generateText: mockGenerateText,
+  generateObject: mockGenerateObject,
   streamText: mockStreamText,
 }));
 

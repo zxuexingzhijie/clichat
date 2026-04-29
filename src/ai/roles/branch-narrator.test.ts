@@ -1,5 +1,14 @@
-import { describe, it, expect, mock } from 'bun:test';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import type { BranchDiffResult } from '../../engine/branch-diff';
+
+const mockUsage = { inputTokens: 10, outputTokens: 20, totalTokens: 30 };
+const mockGenerateText = mock(() => Promise.resolve({ text: '在这条支线中，你选择了帮助猎人，声望更高但错过了暗影刺客的线索。', usage: mockUsage }));
+
+mock.module('ai', () => ({
+  generateText: mockGenerateText,
+  generateObject: mock(() => Promise.resolve({ object: {}, usage: mockUsage })),
+  streamText: mock(() => ({ textStream: (async function* () {})(), usage: Promise.resolve(mockUsage) })),
+}));
 
 mock.module('../providers', () => ({
   getRoleConfig: () => ({
@@ -10,11 +19,10 @@ mock.module('../providers', () => ({
   }),
 }));
 
-mock.module('../utils/ai-caller', () => ({
-  callGenerateText: async () => ({ text: '在这条支线中，你选择了帮助猎人，声望更高但错过了暗影刺客的线索。' }),
-}));
+mock.module('../../state/cost-session-store', () => ({ recordUsage: mock(() => {}) }));
+mock.module('../../events/event-bus', () => ({ eventBus: { emit: mock(() => {}) } }));
 
-import { generateBranchNarrative } from './branch-narrator';
+const { generateBranchNarrative } = await import('./branch-narrator');
 
 const mockDiff: BranchDiffResult = {
   diffs: [
@@ -27,6 +35,11 @@ const mockDiff: BranchDiffResult = {
 };
 
 describe('generateBranchNarrative', () => {
+  beforeEach(() => {
+    mockGenerateText.mockReset();
+    mockGenerateText.mockImplementation(() => Promise.resolve({ text: '在这条支线中，你选择了帮助猎人，声望更高但错过了暗影刺客的线索。', usage: mockUsage }));
+  });
+
   it('returns LLM-generated narrative string', async () => {
     const result = await generateBranchNarrative('main', 'hunter-path', mockDiff);
     expect(typeof result).toBe('string');
@@ -34,11 +47,8 @@ describe('generateBranchNarrative', () => {
   });
 
   it('returns empty string on LLM error', async () => {
-    mock.module('../utils/ai-caller', () => ({
-      callGenerateText: async () => { throw new Error('LLM timeout'); },
-    }));
-    const { generateBranchNarrative: gen } = await import('./branch-narrator?t=' + Date.now());
-    const result = await gen('main', 'hunter-path', mockDiff);
+    mockGenerateText.mockImplementation(() => Promise.reject(new Error('LLM timeout')));
+    const result = await generateBranchNarrative('main', 'hunter-path', mockDiff);
     expect(result).toBe('');
   });
 });
