@@ -120,6 +120,108 @@ function buildResponses(npc: Npc, mode: 'inline' | 'full'): DialogueResponseItem
   return responses;
 }
 
+const LOCATION_KEYWORDS = ['矿', '森林', '山', '街', '镇', '村', '城', '营地', '神殿', '酒馆', '城门', '北门', '地下', '废墟'];
+const PERSON_KEYWORDS = ['他说', '她说', '听说', '有人', '那个人', '那家伙', '老板', '队长', '大人'];
+const SECRET_KEYWORDS = ['秘密', '内情', '隐瞒', '不敢说', '不方便', '不能说', '消息', '风声', '传言'];
+
+function buildContextualResponses(npc: Npc, mode: 'inline' | 'full', npcDialogue: NpcDialogue): DialogueResponseItem[] {
+  const text = npcDialogue.dialogue;
+  const contextual: DialogueResponseItem[] = [];
+  const addedLabels = new Set<string>();
+
+  // emotion-driven follow-ups
+  if (npcDialogue.emotionTag === 'suspicious' || npcDialogue.emotionTag === 'fearful') {
+    const q = '"你在担心什么？"';
+    contextual.push({ id: nanoid(), label: q, requiresCheck: false });
+    addedLabels.add(q);
+  }
+  if (npcDialogue.emotionTag === 'angry') {
+    const q = '"你为什么这么生气？"';
+    contextual.push({ id: nanoid(), label: q, requiresCheck: false });
+    addedLabels.add(q);
+  }
+
+  // content-driven: location mention
+  if (contextual.length < 2) {
+    for (const kw of LOCATION_KEYWORDS) {
+      if (text.includes(kw)) {
+        const q = `"你说的${kw}那边，具体是什么情况？"`;
+        if (!addedLabels.has(q)) {
+          contextual.push({ id: nanoid(), label: q, requiresCheck: false });
+          addedLabels.add(q);
+          break;
+        }
+      }
+    }
+  }
+
+  // content-driven: someone mentioned
+  if (contextual.length < 2) {
+    for (const kw of PERSON_KEYWORDS) {
+      if (text.includes(kw)) {
+        const q = '"你说的那个人，还有什么我不知道的？"';
+        if (!addedLabels.has(q)) {
+          contextual.push({ id: nanoid(), label: q, requiresCheck: false });
+          addedLabels.add(q);
+          break;
+        }
+      }
+    }
+  }
+
+  // content-driven: hints at hidden info
+  if (contextual.length < 2) {
+    for (const kw of SECRET_KEYWORDS) {
+      if (text.includes(kw)) {
+        const q = '"这件事你知道多少，能告诉我吗？"';
+        if (!addedLabels.has(q)) {
+          contextual.push({ id: nanoid(), label: q, requiresCheck: false });
+          addedLabels.add(q);
+          break;
+        }
+      }
+    }
+  }
+
+  // shouldRemember: NPC flagged this as important — prompt deeper probe
+  if (npcDialogue.shouldRemember && contextual.length < 2) {
+    const q = '"这件事听起来很重要，能跟我详细说说吗？"';
+    if (!addedLabels.has(q)) {
+      contextual.push({ id: nanoid(), label: q, requiresCheck: false });
+      addedLabels.add(q);
+    }
+  }
+
+  // fill remaining slots from static role questions
+  for (const tag of npc.tags ?? []) {
+    if (contextual.length >= 2) break;
+    const questions = NPC_ROLE_QUESTIONS[tag];
+    if (questions) {
+      for (const q of questions) {
+        if (contextual.length >= 2) break;
+        if (!addedLabels.has(q)) {
+          contextual.push({ id: nanoid(), label: q, requiresCheck: false });
+          addedLabels.add(q);
+        }
+      }
+      break;
+    }
+  }
+
+  if (mode === 'full') {
+    contextual.push({
+      id: nanoid(),
+      label: `[心智检定 DC ${GAME_CONSTANTS.DEFAULT_DC}] 观察${npc.name}的表情`,
+      requiresCheck: true,
+      checkAttribute: 'mind' as const,
+      checkDc: GAME_CONSTANTS.DEFAULT_DC,
+    });
+  }
+
+  contextual.push({ id: nanoid(), label: '结束对话', requiresCheck: false });
+  return contextual;
+}
+
 function emotionTagToHint(npcName: string, emotionTag: string): string {
   switch (emotionTag) {
     case 'suspicious':
@@ -337,7 +439,7 @@ export function createDialogueManager(
       lastNpcEmotionTag = npcDialogue.emotionTag;
 
       const newRelationship = state.relationshipValue + sentimentToDelta(npcDialogue.sentiment);
-      const newResponses = buildResponses(npc, state.mode);
+      const newResponses = buildContextualResponses(npc, state.mode, npcDialogue);
 
       stores.dialogue.setState((draft) => {
         draft.dialogueHistory = [
@@ -440,7 +542,7 @@ export function createDialogueManager(
       lastNpcEmotionTag = npcDialogue.emotionTag;
 
       const newRelationship = state.relationshipValue + sentimentToDelta(npcDialogue.sentiment);
-      const newResponses = buildResponses(npc, state.mode);
+      const newResponses = buildContextualResponses(npc, state.mode, npcDialogue);
 
       stores.dialogue.setState((draft) => {
         draft.dialogueHistory = [
