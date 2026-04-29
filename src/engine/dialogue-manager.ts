@@ -4,9 +4,10 @@ import { getDefaultDialogueState } from '../state/dialogue-store';
 import { generateNpcDialogue } from '../ai/roles/npc-actor';
 import { filterCodexForNpc } from '../ai/utils/npc-knowledge-filter';
 import { resolveNormalCheck } from './adjudication';
+import { adjudicateTalkResult } from './rules-engine';
 import { GAME_CONSTANTS } from './game-constants';
 import { rollD20 } from './dice';
-import { applyReputationDelta, applyFactionReputationDelta, sentimentToDelta } from './reputation-system';
+import { applyReputationDelta, applyFactionReputationDelta } from './reputation-system';
 import { getDefaultNpcDisposition } from '../state/relation-store';
 import { addMemory } from '../state/npc-memory-store';
 import type { Store } from '../state/create-store';
@@ -484,7 +485,8 @@ export function createDialogueManager(
 
       lastNpcEmotionTag = npcDialogue.emotionTag;
 
-      const newRelationship = state.relationshipValue + sentimentToDelta(npcDialogue.sentiment);
+      const talkResult = adjudicateTalkResult(npcDialogue.sentiment);
+      const newRelationship = state.relationshipValue + talkResult.relationshipDelta;
       const newResponses = buildContextualResponses(npc, state.mode, npcDialogue);
 
       stores.dialogue.setState((draft) => {
@@ -592,7 +594,8 @@ export function createDialogueManager(
 
       lastNpcEmotionTag = npcDialogue.emotionTag;
 
-      const newRelationship = state.relationshipValue + sentimentToDelta(npcDialogue.sentiment);
+      const talkResult = adjudicateTalkResult(npcDialogue.sentiment);
+      const newRelationship = state.relationshipValue + talkResult.relationshipDelta;
       const newResponses = buildContextualResponses(npc, state.mode, npcDialogue);
 
       stores.dialogue.setState((draft) => {
