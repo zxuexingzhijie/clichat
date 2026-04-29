@@ -191,7 +191,7 @@ export function createQuestSystem(
         const template = entry as QuestTemplate;
         if (!template.auto_accept) continue;
         const progress = stores.quest.getState().quests[questId];
-        if (progress && progress.status !== 'failed') continue;
+        if (progress && (progress.status === 'active' || progress.status === 'completed')) continue;
         if (template.required_npc_id) {
           if (template.required_npc_id === npcId) {
             acceptQuest(questId);
