@@ -50,7 +50,7 @@ export function createCombatStore(bus: EventBus): Store<CombatState> {
         });
       }
       if (!newState.active && oldState.active) {
-        bus.emit('combat_ended', { outcome: newState.outcome ?? 'victory', enemyIds: newState.enemies.map(e => e.id) });
+        bus.emit('combat_ended', { outcome: newState.outcome ?? 'victory', enemyIds: newState.enemies.filter(e => e.hp <= 0).map(e => e.id) });
       }
       if (newState.currentTurnIndex !== oldState.currentTurnIndex) {
         const currentActorId = newState.turnOrder[newState.currentTurnIndex] ?? 'player';
