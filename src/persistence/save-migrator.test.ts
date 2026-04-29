@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'bun:test';
-import { migrateV1ToV2, migrateV2ToV3 } from './save-migrator';
+import { migrateV1ToV2, migrateV2ToV3, migrateV4ToV5 } from './save-migrator';
 import { getDefaultQuestState } from '../state/quest-store';
 import { getDefaultRelationState } from '../state/relation-store';
 import { getDefaultNpcMemoryState } from '../state/npc-memory-store';
+import { getDefaultNarrativeState } from '../state/narrative-state';
 
 const validV1 = {
   version: 1,
@@ -156,6 +157,73 @@ describe('migrateV2ToV3', () => {
 
   it('returns primitive input unchanged', () => {
     const result = migrateV2ToV3('string');
+    expect(result).toBe('string');
+  });
+});
+
+const validV4 = {
+  version: 4,
+  meta: {
+    saveName: 'V4 Save',
+    timestamp: '2026-03-01T00:00:00.000Z',
+    character: { name: 'Hero', race: 'Human', profession: 'Warrior' },
+    playtime: 60,
+    locationName: 'village_square',
+  },
+  branchId: 'main',
+  parentSaveId: null,
+  player: { name: 'Hero', race: 'Human', profession: 'Warrior', hp: 30, maxHp: 30, mp: 8, maxMp: 8, gold: 12, attributes: {}, tags: [], equipment: {} },
+  scene: { sceneId: 'village_square', description: '', characters: [], exits: [] },
+  combat: { active: false, roundNumber: 0, enemies: [], turnOrder: [], currentTurnIndex: 0, log: [] },
+  game: { day: 1, timeOfDay: 'morning', phase: 'game', turnCount: 0, isDarkTheme: true },
+  quest: { quests: {}, activeQuestId: null },
+  relations: { npcRelations: {}, factionRelations: {} },
+  npcMemorySnapshot: { memories: {} },
+  questEventLog: [],
+  exploration: { locations: {} },
+  playerKnowledge: { entries: {} },
+  turnLog: [],
+};
+
+describe('migrateV4ToV5', () => {
+  it('returns object with version: 5 for valid v4 input', () => {
+    const result = migrateV4ToV5(validV4) as Record<string, unknown>;
+    expect(result['version']).toBe(5);
+  });
+
+  it('adds narrativeState with default currentAct: act1', () => {
+    const result = migrateV4ToV5(validV4) as Record<string, unknown>;
+    const narrativeState = result['narrativeState'] as Record<string, unknown>;
+    expect(narrativeState).toBeDefined();
+    expect(narrativeState['currentAct']).toBe('act1');
+  });
+
+  it('adds narrativeState matching getDefaultNarrativeState()', () => {
+    const result = migrateV4ToV5(validV4) as Record<string, unknown>;
+    expect(result['narrativeState']).toEqual(getDefaultNarrativeState());
+  });
+
+  it('preserves all existing V4 fields', () => {
+    const result = migrateV4ToV5(validV4) as Record<string, unknown>;
+    expect(result['meta']).toEqual(validV4.meta);
+    expect(result['branchId']).toBe('main');
+    expect(result['player']).toEqual(validV4.player);
+    expect(result['turnLog']).toEqual([]);
+  });
+
+  it('returns non-v4 object unchanged (identity)', () => {
+    const v5obj = { version: 5, someField: 'value' };
+    const result = migrateV4ToV5(v5obj);
+    expect(result).toBe(v5obj);
+  });
+
+  it('returns null input unchanged', () => {
+    const result = migrateV4ToV5(null);
+    expect(result).toBe(null);
+  });
+
+  it('returns primitive input unchanged', () => {
+    const result = migrateV4ToV5('string');
     expect(result).toBe('string');
   });
 });

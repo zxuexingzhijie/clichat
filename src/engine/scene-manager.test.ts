@@ -515,7 +515,7 @@ describe('createSceneManager', () => {
     const retrievalFn = createMockRetrievalFn();
 
     const narrativeStore = {
-      getState: () => ({ currentAct: 'act2' as const, atmosphereTags: ['dread'], recentNarration: [] }),
+      getState: () => ({ currentAct: 'act2' as const, atmosphereTags: ['dread'], worldFlags: {}, playerKnowledgeLevel: 0 }),
       setState: () => {},
       subscribe: () => () => {},
       restoreState: () => {},

@@ -14,6 +14,7 @@ import { explorationStore } from '../state/exploration-store';
 import { playerKnowledgeStore } from '../state/player-knowledge-store';
 import { createStore } from '../state/create-store';
 import { getDefaultTurnLogState, type TurnLogState } from '../state/turn-log-store';
+import { createNarrativeStore } from '../state/narrative-state';
 import { loadCodexFile } from '../codex/loader';
 import { resolve } from 'node:path';
 import { IntentSchema } from '../types/intent';
@@ -149,6 +150,7 @@ describe('Phase 1 Success Criteria', () => {
         exploration: explorationStore,
         playerKnowledge: playerKnowledgeStore,
         turnLog: createStore<TurnLogState>(getDefaultTurnLogState()),
+        narrativeStore: createNarrativeStore(),
       }, () => 'main', () => null);
 
       const original = serializer.snapshot();
@@ -173,12 +175,13 @@ describe('Phase 1 Success Criteria', () => {
         exploration: explorationStore,
         playerKnowledge: playerKnowledgeStore,
         turnLog: createStore<TurnLogState>(getDefaultTurnLogState()),
+        narrativeStore: createNarrativeStore(),
       }, () => 'main', () => null);
 
       const snap1 = serializer.snapshot();
       const parsed = JSON.parse(snap1);
 
-      expect(parsed.version).toBe(4);
+      expect(parsed.version).toBe(5);
       expect(parsed.player).toBeDefined();
       expect(parsed.scene).toBeDefined();
       expect(parsed.combat).toBeDefined();
@@ -197,6 +200,7 @@ describe('Phase 1 Success Criteria', () => {
         exploration: explorationStore,
         playerKnowledge: playerKnowledgeStore,
         turnLog: createStore<TurnLogState>(getDefaultTurnLogState()),
+        narrativeStore: createNarrativeStore(),
       }, () => 'main', () => null);
 
       expect(() => serializer.restore('not json at all')).toThrow('Invalid save data');

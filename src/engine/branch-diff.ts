@@ -1,4 +1,6 @@
-import type { SaveDataV3 } from '../state/serializer';
+import type { SaveDataV4, SaveDataV5 } from '../state/serializer';
+
+type SaveDataCompare = SaveDataV4 | SaveDataV5;
 
 export type DiffCategory = 'quest' | 'npc_relation' | 'inventory' | 'location' | 'faction' | 'knowledge';
 export type DiffMarker = '+' | '-' | '~';
@@ -36,7 +38,7 @@ const HIGH_IMPACT_KNOWLEDGE_TRANSITIONS = new Set([
   'suspected->contradicted',
 ]);
 
-export function compareBranches(source: SaveDataV3, target: SaveDataV3): BranchDiffResult {
+export function compareBranches(source: SaveDataCompare, target: SaveDataCompare): BranchDiffResult {
   const diffs: DiffItem[] = [];
 
   compareQuests(source, target, diffs);
@@ -52,7 +54,7 @@ export function compareBranches(source: SaveDataV3, target: SaveDataV3): BranchD
   return { diffs, totalCount: diffs.length, highImpactCount, summary };
 }
 
-function compareQuests(source: SaveDataV3, target: SaveDataV3, diffs: DiffItem[]): void {
+function compareQuests(source: SaveDataCompare, target: SaveDataCompare, diffs: DiffItem[]): void {
   const sourceQuests = source.quest.quests;
   const targetQuests = target.quest.quests;
   const allKeys = new Set([...Object.keys(sourceQuests), ...Object.keys(targetQuests)]);
@@ -94,7 +96,7 @@ function compareQuests(source: SaveDataV3, target: SaveDataV3, diffs: DiffItem[]
   }
 }
 
-function compareNpcRelations(source: SaveDataV3, target: SaveDataV3, diffs: DiffItem[]): void {
+function compareNpcRelations(source: SaveDataCompare, target: SaveDataCompare, diffs: DiffItem[]): void {
   const srcDisps = source.relations.npcDispositions;
   const tgtDisps = target.relations.npcDispositions;
   const allKeys = new Set([...Object.keys(srcDisps), ...Object.keys(tgtDisps)]);
@@ -136,7 +138,7 @@ function compareNpcRelations(source: SaveDataV3, target: SaveDataV3, diffs: Diff
   }
 }
 
-function compareInventory(source: SaveDataV3, target: SaveDataV3, diffs: DiffItem[]): void {
+function compareInventory(source: SaveDataCompare, target: SaveDataCompare, diffs: DiffItem[]): void {
   const srcEquipped = new Set<string>();
   const tgtEquipped = new Set<string>();
 
@@ -225,7 +227,7 @@ function compareInventory(source: SaveDataV3, target: SaveDataV3, diffs: DiffIte
   }
 }
 
-function compareLocation(source: SaveDataV3, target: SaveDataV3, diffs: DiffItem[]): void {
+function compareLocation(source: SaveDataCompare, target: SaveDataCompare, diffs: DiffItem[]): void {
   if (source.scene.sceneId !== target.scene.sceneId) {
     diffs.push({
       category: 'location',
@@ -239,7 +241,7 @@ function compareLocation(source: SaveDataV3, target: SaveDataV3, diffs: DiffItem
   }
 }
 
-function compareFactionReputation(source: SaveDataV3, target: SaveDataV3, diffs: DiffItem[]): void {
+function compareFactionReputation(source: SaveDataCompare, target: SaveDataCompare, diffs: DiffItem[]): void {
   const srcFactions = source.relations.factionReputations;
   const tgtFactions = target.relations.factionReputations;
   const allKeys = new Set([...Object.keys(srcFactions), ...Object.keys(tgtFactions)]);
@@ -281,7 +283,7 @@ function compareFactionReputation(source: SaveDataV3, target: SaveDataV3, diffs:
   }
 }
 
-function compareKnowledge(source: SaveDataV3, target: SaveDataV3, diffs: DiffItem[]): void {
+function compareKnowledge(source: SaveDataCompare, target: SaveDataCompare, diffs: DiffItem[]): void {
   const srcEntries = source.playerKnowledge.entries;
   const tgtEntries = target.playerKnowledge.entries;
   const allKeys = new Set([...Object.keys(srcEntries), ...Object.keys(tgtEntries)]);

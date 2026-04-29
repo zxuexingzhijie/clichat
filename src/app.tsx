@@ -126,6 +126,7 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
           exploration: ctx.stores.exploration,
           playerKnowledge: ctx.stores.playerKnowledge,
           turnLog: ctx.stores.turnLog,
+          narrativeStore: ctx.stores.narrative,
         },
         () => ctx.stores.branch.getState().currentBranchId,
         () => null,

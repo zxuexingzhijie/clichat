@@ -1,0 +1,53 @@
+transitions:
+  - on_stage: stage_rumor
+    set_act: act1
+    set_atmosphere: [mundane, curious, unsettled]
+    set_knowledge_level: 0
+    set_world_flags: {}
+
+  - on_stage: stage_disappearances
+    set_act: act1
+    set_atmosphere: [mundane, curious, unsettled]
+    set_knowledge_level: 1
+    set_world_flags: {}
+
+  - on_stage: stage_truth_in_forest
+    set_act: act2
+    set_atmosphere: [dread, mystery, urgency]
+    set_knowledge_level: 2
+    set_world_flags:
+      ritual_site_active: true
+
+  - on_stage: stage_mayor_secret
+    set_act: act2
+    set_atmosphere: [dread, fractured_trust, urgency]
+    set_knowledge_level: 3
+    set_world_flags:
+      mayor_secret_known: true
+
+  - on_stage: stage_allies_decision
+    set_act: act3
+    set_atmosphere: [confrontation, grief, weight_of_truth]
+    set_knowledge_level: 4
+    set_world_flags: {}
+
+  - on_stage: stage_consequence_justice
+    set_act: act3
+    set_atmosphere: [consequence, regret, grief]
+    set_knowledge_level: 5
+    set_world_flags:
+      mayor_arrested: true
+
+  - on_stage: stage_consequence_harmony
+    set_act: act3
+    set_atmosphere: [consequence, regret, silence]
+    set_knowledge_level: 5
+    set_world_flags:
+      truth_suppressed: true
+
+  - on_stage: stage_consequence_shadow
+    set_act: act3
+    set_atmosphere: [consequence, regret, shadow]
+    set_knowledge_level: 5
+    set_world_flags:
+      shadow_deal_made: true

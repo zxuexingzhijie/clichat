@@ -10,7 +10,8 @@ import { NpcMemoryStateSchema, type NpcMemoryState } from './npc-memory-store';
 import { ExplorationStateSchema, type ExplorationState } from './exploration-store';
 import { PlayerKnowledgeStateSchema, type PlayerKnowledgeState } from './player-knowledge-store';
 import type { TurnLogState } from './turn-log-store';
-import { migrateV1ToV2, migrateV2ToV3, migrateV3ToV4 } from '../persistence/save-migrator';
+import { migrateV1ToV2, migrateV2ToV3, migrateV3ToV4, migrateV4ToV5 } from '../persistence/save-migrator';
+import { NarrativeStateSchema, type NarrativeState, type NarrativeStore } from './narrative-state';
 import { restoreQuestEventLog } from './quest-store';
 import { restoreTurnLog } from '../engine/turn-log';
 
@@ -88,6 +89,12 @@ export const SaveDataV4Schema = SaveDataV3Schema.extend({
 });
 export type SaveDataV4 = z.infer<typeof SaveDataV4Schema>;
 
+export const SaveDataV5Schema = SaveDataV4Schema.extend({
+  version: z.literal(5),
+  narrativeState: NarrativeStateSchema,
+});
+export type SaveDataV5 = z.infer<typeof SaveDataV5Schema>;
+
 export function createSerializer(
   stores: {
     player: Store<PlayerState>;
@@ -100,6 +107,7 @@ export function createSerializer(
     exploration: Store<ExplorationState>;
     playerKnowledge: Store<PlayerKnowledgeState>;
     turnLog: Store<TurnLogState>;
+    narrativeStore: NarrativeStore;
   },
   getBranchId: () => string,
   getParentSaveId: () => string | null,
@@ -123,8 +131,8 @@ export function createSerializer(
         locationName: scene.sceneId,
       };
 
-      const data: SaveDataV4 = {
-        version: 4,
+      const data: SaveDataV5 = {
+        version: 5,
         meta,
         branchId: getBranchId(),
         parentSaveId: getParentSaveId(),
@@ -139,6 +147,7 @@ export function createSerializer(
         exploration: stores.exploration.getState(),
         playerKnowledge: stores.playerKnowledge.getState(),
         turnLog: stores.turnLog.getState().entries,
+        narrativeState: stores.narrativeStore.getState(),
       };
       return JSON.stringify(data);
     },
@@ -151,17 +160,18 @@ export function createSerializer(
         throw new Error('Invalid save data: malformed JSON');
       }
 
-      const migrated = migrateV3ToV4(migrateV2ToV3(migrateV1ToV2(raw)));
+      const migrated = migrateV4ToV5(migrateV3ToV4(migrateV2ToV3(migrateV1ToV2(raw))));
 
-      const v4Result = SaveDataV4Schema.safeParse(migrated);
-      const v3Fallback = v4Result.success ? null : SaveDataV3Schema.safeParse(migrated);
-      const result = v4Result.success ? v4Result : v3Fallback;
+      const v5Result = SaveDataV5Schema.safeParse(migrated);
+      const v4Result = v5Result.success ? null : SaveDataV4Schema.safeParse(migrated);
+      const v3Fallback = (v5Result.success || v4Result?.success) ? null : SaveDataV3Schema.safeParse(migrated);
+      const result = v5Result.success ? v5Result : (v4Result?.success ? v4Result : v3Fallback);
 
       if (!result || !result.success) {
-        const firstIssue = v4Result.error?.issues?.[0];
+        const firstIssue = v5Result.error?.issues?.[0];
         const detail = firstIssue
           ? `${firstIssue.path.join('.')} — ${firstIssue.message}`
-          : v4Result.error?.message ?? 'unknown error';
+          : v5Result.error?.message ?? 'unknown error';
         throw new Error(`Invalid save data: ${detail}`);
       }
 
@@ -179,6 +189,10 @@ export function createSerializer(
       stores.turnLog.setState(draft => { draft.entries = data.turnLog; });
       restoreQuestEventLog((data.questEventLog ?? []) as QuestEvent[]);
       restoreTurnLog(data.turnLog ?? []);
+
+      if (v5Result.success) {
+        stores.narrativeStore.restoreState((data as SaveDataV5).narrativeState);
+      }
     },
   };
 }

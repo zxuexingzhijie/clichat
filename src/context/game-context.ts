@@ -15,6 +15,8 @@ import { createPlayerKnowledgeStore, type PlayerKnowledgeState } from '../state/
 import { createBranchStore, type BranchState } from '../state/branch-store';
 import { createCostSessionStore, type CostSessionState } from '../state/cost-session-store';
 import { createTurnLogStore, type TurnLogState } from '../state/turn-log-store';
+import { createNarrativeStore, type NarrativeStore } from '../state/narrative-state';
+import { createNarrativeStateWatcher } from '../engine/narrative-state-watcher';
 
 export type GameStores = {
   readonly player: Store<PlayerState>;
@@ -30,6 +32,7 @@ export type GameStores = {
   readonly branch: Store<BranchState>;
   readonly costSession: Store<CostSessionState>;
   readonly turnLog: Store<TurnLogState>;
+  readonly narrative: NarrativeStore;
 };
 
 export type GameContext = {
@@ -41,6 +44,7 @@ export function createGameContext(): GameContext {
   const eventBus: EventBus = mitt<DomainEvents>();
 
   const gameStore = createGameStore(eventBus);
+  const narrativeStore = createNarrativeStore();
   const stores: GameStores = {
     player: createPlayerStore(eventBus),
     scene: createSceneStore(eventBus),
@@ -55,7 +59,10 @@ export function createGameContext(): GameContext {
     branch: createBranchStore(eventBus),
     costSession: createCostSessionStore(eventBus),
     turnLog: createTurnLogStore(eventBus),
+    narrative: narrativeStore,
   };
+
+  createNarrativeStateWatcher(narrativeStore, eventBus);
 
   return { stores, eventBus };
 }

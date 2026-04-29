@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'bun:test';
 import { compareBranches, type DiffItem } from './branch-diff';
-import type { SaveDataV3 } from '../state/serializer';
+import type { SaveDataV4 } from '../state/serializer';
 
-function makeMinimalSave(overrides: Partial<SaveDataV3> = {}): SaveDataV3 {
+function makeMinimalSave(overrides: Partial<SaveDataV4> = {}): SaveDataV4 {
   return {
-    version: 3,
+    version: 4,
     meta: {
       saveName: 'test',
       timestamp: '2026-01-01T00:00:00Z',
@@ -62,7 +62,7 @@ function makeMinimalSave(overrides: Partial<SaveDataV3> = {}): SaveDataV3 {
     playerKnowledge: { entries: {} },
     turnLog: [],
     ...overrides,
-  } as SaveDataV3;
+  } as SaveDataV4;
 }
 
 describe('compareBranches', () => {

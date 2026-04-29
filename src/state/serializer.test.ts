@@ -10,7 +10,8 @@ import { getDefaultNpcMemoryState, type NpcMemoryState } from './npc-memory-stor
 import { getDefaultExplorationState, type ExplorationState } from './exploration-store';
 import { getDefaultPlayerKnowledgeState, type PlayerKnowledgeState } from './player-knowledge-store';
 import { getDefaultTurnLogState, type TurnLogState } from './turn-log-store';
-import { createSerializer, SaveDataV2Schema, SaveDataV3Schema, SaveDataV4Schema, SaveMetaSchema, TurnLogEntrySchema } from './serializer';
+import { createSerializer, SaveDataV2Schema, SaveDataV3Schema, SaveDataV4Schema, SaveDataV5Schema, SaveMetaSchema, TurnLogEntrySchema } from './serializer';
+import { createNarrativeStore, getDefaultNarrativeState } from './narrative-state';
 import { eventBus } from '../events/event-bus';
 
 function freshStores() {
@@ -27,6 +28,7 @@ function freshStores() {
     exploration: createStore<ExplorationState>(getDefaultExplorationState()),
     playerKnowledge: createStore<PlayerKnowledgeState>(getDefaultPlayerKnowledgeState()),
     turnLog: createStore<TurnLogState>(getDefaultTurnLogState()),
+    narrativeStore: createNarrativeStore(),
   };
 }
 
@@ -35,11 +37,11 @@ function freshSerializer() {
 }
 
 describe('createSerializer', () => {
-  it('snapshot returns JSON with required v4 keys', () => {
+  it('snapshot returns JSON with required v5 keys', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
 
-    expect(parsed).toHaveProperty('version', 4);
+    expect(parsed).toHaveProperty('version', 5);
     expect(parsed).toHaveProperty('meta');
     expect(parsed).toHaveProperty('branchId');
     expect(parsed).toHaveProperty('parentSaveId');
@@ -54,6 +56,7 @@ describe('createSerializer', () => {
     expect(parsed).toHaveProperty('exploration');
     expect(parsed).toHaveProperty('playerKnowledge');
     expect(parsed).toHaveProperty('turnLog');
+    expect(parsed).toHaveProperty('narrativeState');
   });
 
   it('snapshot reflects modified store state', () => {
@@ -173,10 +176,10 @@ describe('SaveDataV2Schema', () => {
 });
 
 describe('createSerializer v2 specific', () => {
-  it('snapshot produces JSON parseable to v4 schema', () => {
+  it('snapshot produces JSON parseable to v5 schema', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
-    const result = SaveDataV4Schema.safeParse(parsed);
+    const result = SaveDataV5Schema.safeParse(parsed);
     expect(result.success).toBe(true);
   });
 
@@ -375,10 +378,10 @@ describe('snapshot() saveName and getPlaytime (SAVE-01)', () => {
 
   it('quickSave uses saveName "Quick Save" and saveGame uses the provided name', () => {
     // Tested by verifying the snapshot arg flows through to meta — covered by the 3 tests above.
-    // This test verifies snapshot still validates against SaveDataV4Schema when called with a name.
+    // This test verifies snapshot still validates against SaveDataV5Schema when called with a name.
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot('Chapter 1'));
-    const result = SaveDataV4Schema.safeParse(parsed);
+    const result = SaveDataV5Schema.safeParse(parsed);
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.meta.saveName).toBe('Chapter 1');
@@ -387,10 +390,10 @@ describe('snapshot() saveName and getPlaytime (SAVE-01)', () => {
 });
 
 describe('createSerializer v4 migration', () => {
-  it('snapshot produces JSON with version: 4', () => {
+  it('snapshot produces JSON with version: 5', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
-    expect(parsed).toHaveProperty('version', 4);
+    expect(parsed).toHaveProperty('version', 5);
   });
 
   it('restore accepts a v3 save and migrates it to v4', () => {
@@ -441,6 +444,7 @@ describe('serializer.restore() does not emit reputation_changed (REP-04)', () =>
       exploration: createStore<ExplorationState>(getDefaultExplorationState()),
       playerKnowledge: createStore<PlayerKnowledgeState>(getDefaultPlayerKnowledgeState()),
       turnLog: createStore<TurnLogState>(getDefaultTurnLogState()),
+      narrativeStore: createNarrativeStore(),
     };
 
     const snapStores = freshStores();
@@ -458,5 +462,125 @@ describe('serializer.restore() does not emit reputation_changed (REP-04)', () =>
 
     expect(emitSpy).not.toHaveBeenCalledWith('reputation_changed', expect.anything());
     expect(stores.relations.getState().npcDispositions['npc_guard']?.value).toBe(50);
+  });
+});
+
+describe('SaveDataV5Schema and V5 serializer', () => {
+  it('snapshot() includes version: 5 and narrativeState.currentAct === act1', () => {
+    const serializer = freshSerializer();
+    const parsed = JSON.parse(serializer.snapshot());
+    expect(parsed.version).toBe(5);
+    expect(parsed.narrativeState).toBeDefined();
+    expect(parsed.narrativeState.currentAct).toBe('act1');
+  });
+
+  it('restore() round-trips narrativeState.worldFlags correctly for a V5 save', () => {
+    const stores = freshStores();
+    const serializer = createSerializer(stores, () => 'main', () => null);
+
+    stores.narrativeStore.setState(draft => {
+      draft.worldFlags['ritual_site_active'] = true;
+      draft.currentAct = 'act2';
+      draft.playerKnowledgeLevel = 3;
+    });
+
+    const snap = serializer.snapshot();
+    const stores2 = freshStores();
+    const serializer2 = createSerializer(stores2, () => 'main', () => null);
+    serializer2.restore(snap);
+
+    expect(stores2.narrativeStore.getState().worldFlags['ritual_site_active']).toBe(true);
+    expect(stores2.narrativeStore.getState().currentAct).toBe('act2');
+    expect(stores2.narrativeStore.getState().playerKnowledgeLevel).toBe(3);
+  });
+
+  it('restore() succeeds on a V4 snapshot via migration without calling narrativeStore.restoreState directly', () => {
+    const v4Snap = JSON.stringify({
+      version: 4,
+      meta: {
+        saveName: 'V4 Save',
+        timestamp: '2026-01-01T00:00:00.000Z',
+        character: { name: 'Hero', race: 'Human', profession: 'Warrior' },
+        playtime: 0,
+        locationName: 'village_square',
+      },
+      branchId: 'main',
+      parentSaveId: null,
+      player: getDefaultPlayerState(),
+      scene: getDefaultSceneState(),
+      combat: getDefaultCombatState(),
+      game: getDefaultGameState(),
+      quest: getDefaultQuestState(),
+      relations: getDefaultRelationState(),
+      npcMemorySnapshot: getDefaultNpcMemoryState(),
+      questEventLog: [],
+      exploration: getDefaultExplorationState(),
+      playerKnowledge: getDefaultPlayerKnowledgeState(),
+      turnLog: [],
+    });
+
+    const stores = freshStores();
+    const serializer = createSerializer(stores, () => 'main', () => null);
+    expect(() => serializer.restore(v4Snap)).not.toThrow();
+    expect(stores.player.getState().hp).toBe(30);
+    expect(stores.narrativeStore.getState().currentAct).toBe('act1');
+  });
+
+  it('SaveDataV5Schema validates a full V5 object', () => {
+    const v5 = {
+      version: 5,
+      meta: {
+        saveName: 'V5 Save',
+        timestamp: '2026-01-01T00:00:00.000Z',
+        character: { name: 'Hero', race: 'Human', profession: 'Warrior' },
+        playtime: 0,
+        locationName: 'town',
+      },
+      branchId: 'main',
+      parentSaveId: null,
+      player: getDefaultPlayerState(),
+      scene: getDefaultSceneState(),
+      combat: getDefaultCombatState(),
+      game: getDefaultGameState(),
+      quest: getDefaultQuestState(),
+      relations: getDefaultRelationState(),
+      npcMemorySnapshot: getDefaultNpcMemoryState(),
+      questEventLog: [],
+      exploration: getDefaultExplorationState(),
+      playerKnowledge: getDefaultPlayerKnowledgeState(),
+      turnLog: [],
+      narrativeState: getDefaultNarrativeState(),
+    };
+    const result = SaveDataV5Schema.safeParse(v5);
+    expect(result.success).toBe(true);
+  });
+
+  it('SaveDataV5Schema rejects a V4 object (wrong version literal)', () => {
+    const v4 = {
+      version: 4,
+      meta: {
+        saveName: 'V4 Save',
+        timestamp: '2026-01-01T00:00:00.000Z',
+        character: { name: 'Hero', race: 'Human', profession: 'Warrior' },
+        playtime: 0,
+        locationName: 'town',
+      },
+      branchId: 'main',
+      parentSaveId: null,
+      player: getDefaultPlayerState(),
+      scene: getDefaultSceneState(),
+      combat: getDefaultCombatState(),
+      game: getDefaultGameState(),
+      quest: getDefaultQuestState(),
+      relations: getDefaultRelationState(),
+      npcMemorySnapshot: getDefaultNpcMemoryState(),
+      questEventLog: [],
+      exploration: getDefaultExplorationState(),
+      playerKnowledge: getDefaultPlayerKnowledgeState(),
+      turnLog: [],
+      narrativeState: getDefaultNarrativeState(),
+    };
+    const result = SaveDataV5Schema.safeParse(v4);
+    expect(result.success).toBe(false);
   });
 });

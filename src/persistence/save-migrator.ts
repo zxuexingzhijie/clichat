@@ -1,6 +1,7 @@
 import { getDefaultQuestState } from '../state/quest-store';
 import { getDefaultRelationState } from '../state/relation-store';
 import { getDefaultNpcMemoryState } from '../state/npc-memory-store';
+import { getDefaultNarrativeState } from '../state/narrative-state';
 
 function buildMetaFromV1(data: Record<string, unknown>): unknown {
   const player = data['player'] as Record<string, unknown> | undefined;
@@ -40,6 +41,17 @@ export function migrateV3ToV4(raw: unknown): unknown {
   return {
     ...data,
     version: 4,
+  };
+}
+
+export function migrateV4ToV5(raw: unknown): unknown {
+  if (typeof raw !== 'object' || raw === null) return raw;
+  const data = raw as Record<string, unknown>;
+  if (data['version'] !== 4) return raw;
+  return {
+    ...data,
+    version: 5,
+    narrativeState: getDefaultNarrativeState(),
   };
 }
 
