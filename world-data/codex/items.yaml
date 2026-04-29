@@ -259,3 +259,43 @@
   value: 4
   effect: 恢复 5 HP
   heal_amount: 5
+
+- id: notice_board
+  name: 公告栏
+  type: item
+  tags:
+    - scenery
+    - information
+  description: 镇子入口处的木制公告栏，上面张贴着通缉令、失踪人口启事和悬赏任务。其中一张写着：「急寻：三日前失踪的矿工王二，知情者重赏。」
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  item_type: misc
+  value: 0
+
+- id: oil_lamp
+  name: 油灯
+  type: item
+  tags:
+    - scenery
+    - lighting
+  description: 城门两侧各有一盏铁制油灯，火焰在夜风中摇曳。灯柱上刻有黑松镇的徽记——一株松树。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: local
+    visibility: public
+    confidence: 1.0
+    source_type: authorial
+    known_by: []
+    contradicts: []
+    volatility: stable
+  item_type: misc
+  value: 0

@@ -44,10 +44,14 @@ function formatObjectId(id: string): string {
   return id.replace(/_/g, ' ');
 }
 
-function buildSuggestedActions(location: Location, presentNpcIds: readonly string[], codexEntries: Map<string, CodexEntry>): SceneAction[] {
+function buildSuggestedActions(location: Location, codexEntries: Map<string, CodexEntry>): SceneAction[] {
+  return buildSuggestedActionsFromNpcs(location.notable_npcs, location, codexEntries);
+}
+
+function buildSuggestedActionsFromNpcs(npcIds: readonly string[], location: Location, codexEntries: Map<string, CodexEntry>): SceneAction[] {
   const actions: SceneAction[] = [];
 
-  for (const npcId of presentNpcIds) {
+  for (const npcId of npcIds) {
     const npc = queryById(codexEntries, npcId);
     const npcName = npc?.name ?? npcId;
     actions.push({
@@ -123,13 +127,26 @@ export function createSceneManager(
               draft.npcsPresent = [...draft.npcsPresent, newNpcId];
             }
           });
-          const locEntry = currentSceneId ? queryById(codexEntries, currentSceneId) : null;
-          if (locEntry && isLocation(locEntry)) {
-            const updatedNpcs = stores.scene.getState().npcsPresent;
-            const updatedActions = buildSuggestedActions(locEntry, updatedNpcs, codexEntries);
-            stores.scene.setState(draft => { draft.actions = updatedActions; });
-          }
         }
+      }
+    }
+
+    if (currentSceneId) {
+      const entry = queryById(codexEntries, currentSceneId);
+      if (entry && isLocation(entry)) {
+        const revealedNpcs: string[] = stores.game.getState().revealedNpcs;
+        const conditionalNpcs = revealedNpcs.filter(id => {
+          const npc = queryById(codexEntries, id);
+          return npc?.type === 'npc' && (npc as { location_id?: string }).location_id === currentSceneId;
+        });
+        const allPresent = [...entry.notable_npcs];
+        for (const id of conditionalNpcs) {
+          if (!allPresent.includes(id)) allPresent.push(id);
+        }
+        const actions = buildSuggestedActionsFromNpcs(allPresent, entry, codexEntries);
+        stores.scene.setState(draft => {
+          draft.actions = actions;
+        });
       }
     }
   });
@@ -204,7 +221,7 @@ export function createSceneManager(
       draft.narrationLines = narrationLines;
     });
 
-    const actions = buildSuggestedActions(entry, allPresent, codexEntries);
+    const actions = buildSuggestedActions(entry, codexEntries);
     stores.scene.setState(draft => {
       draft.actions = actions;
     });
