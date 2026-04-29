@@ -156,16 +156,15 @@ export function PanelRouter({
         switchMessage={switchMessage ?? undefined}
       />
     ) : null,
-    compare: branchDiffResult && compareBranchNames ? (
+    compare: (
       <ComparePanel
-        sourceBranchName={compareBranchNames.source}
-        targetBranchName={compareBranchNames.target}
-        diffResult={branchDiffResult}
-        narrativeSummary=""
+        branches={{}}
+        readSaveData={async () => { throw new Error('not wired'); }}
+        saveDir=""
         onClose={onClose}
         width={width}
       />
-    ) : null,
+    ),
     inventory: <InventoryPanel onClose={onClose} />,
     shortcuts: <ShortcutHelpPanel onClose={onClose} />,
     replay: <ReplayPanel entries={[...replayEntries]} onClose={onClose} />,

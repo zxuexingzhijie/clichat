@@ -1,6 +1,12 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
+import { Spinner } from '@inkjs/ui';
+import { GameStoreCtx } from '../../app';
+import type { BranchMeta } from '../../state/branch-store';
+import type { SaveDataV3 } from '../../state/serializer';
+import { compareBranches } from '../../engine/branch-diff';
 import type { DiffCategory, DiffItem, BranchDiffResult } from '../../engine/branch-diff';
+import { generateBranchNarrative } from '../../ai/roles/branch-narrator';
 import { DiffLine } from '../components/diff-line';
 
 const CATEGORY_LABELS: Record<DiffCategory, string> = {
@@ -23,14 +29,20 @@ const CATEGORY_ORDER: readonly DiffCategory[] = [
 
 type ViewMode = 'unified' | 'side-by-side';
 
-type ComparePanelProps = {
-  readonly sourceBranchName: string;
-  readonly targetBranchName: string;
-  readonly diffResult: BranchDiffResult;
-  readonly narrativeSummary: string;
+export type ComparePanelProps = {
+  readonly branches: Record<string, BranchMeta>;
+  readonly readSaveData: (fileName: string, saveDir: string) => Promise<SaveDataV3>;
+  readonly saveDir: string;
   readonly onClose: () => void;
   readonly width?: number;
 };
+
+type CompareState =
+  | { stage: 'selecting'; leftFocus: boolean; leftIdx: number; rightIdx: number; confirmedSource: string | null; confirmedTarget: string | null }
+  | { stage: 'loading' }
+  | { stage: 'summarizing'; diffResult: BranchDiffResult }
+  | { stage: 'ready'; diffResult: BranchDiffResult; narrativeSummary: string; sourceName: string; targetName: string }
+  | { stage: 'error'; message: string; lastSource?: string; lastTarget?: string };
 
 function groupByCategory(diffs: readonly DiffItem[]): Map<DiffCategory, readonly DiffItem[]> {
   const groups = new Map<DiffCategory, DiffItem[]>();
@@ -121,32 +133,226 @@ function SideBySideView({
 }
 
 export function ComparePanel({
-  sourceBranchName,
-  targetBranchName,
-  diffResult,
-  narrativeSummary,
+  branches,
+  readSaveData,
+  saveDir,
   onClose,
   width = 80,
 }: ComparePanelProps): React.ReactNode {
-  const [viewMode, setViewMode] = useState<ViewMode>('unified');
+  const compareSpec = GameStoreCtx.useStoreState(s => s.compareSpec);
   const isWide = width >= 100;
 
-  const grouped = useMemo(
-    () => groupByCategory(diffResult.diffs),
-    [diffResult.diffs],
+  const branchList = useMemo(
+    () => Object.values(branches).sort((a, b) => a.name.localeCompare(b.name)),
+    [branches],
   );
 
-  useInput(useCallback((_input: string, key: {
+  const [state, setState] = useState<CompareState>(() => ({
+    stage: 'selecting',
+    leftFocus: true,
+    leftIdx: 0,
+    rightIdx: 0,
+    confirmedSource: null,
+    confirmedTarget: null,
+  }));
+
+  const [viewMode, setViewMode] = useState<ViewMode>('unified');
+
+  const runCompare = useCallback(async (sourceName: string, targetName: string) => {
+    setState({ stage: 'loading' });
+
+    const sourceMeta = branchList.find(b => b.name === sourceName);
+    const targetMeta = branchList.find(b => b.name === targetName);
+
+    if (!sourceMeta) {
+      setState({ stage: 'error', message: `未找到分支: ${sourceName}`, lastSource: sourceName, lastTarget: targetName });
+      return;
+    }
+    if (!targetMeta) {
+      setState({ stage: 'error', message: `未找到分支: ${targetName}`, lastSource: sourceName, lastTarget: targetName });
+      return;
+    }
+    if (!sourceMeta.headSaveId) {
+      setState({ stage: 'error', message: `分支 ${sourceName} 没有存档`, lastSource: sourceName, lastTarget: targetName });
+      return;
+    }
+    if (!targetMeta.headSaveId) {
+      setState({ stage: 'error', message: `分支 ${targetName} 没有存档`, lastSource: sourceName, lastTarget: targetName });
+      return;
+    }
+
+    let sourceData: SaveDataV3;
+    let targetData: SaveDataV3;
+
+    try {
+      [sourceData, targetData] = await Promise.all([
+        readSaveData(sourceMeta.headSaveId, saveDir),
+        readSaveData(targetMeta.headSaveId, saveDir),
+      ]);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setState({ stage: 'error', message: `加载存档失败: ${msg}`, lastSource: sourceName, lastTarget: targetName });
+      return;
+    }
+
+    const diffResult = compareBranches(sourceData, targetData);
+    setState({ stage: 'summarizing', diffResult });
+
+    let narrativeSummary = '';
+    try {
+      narrativeSummary = await generateBranchNarrative(sourceName, targetName, diffResult);
+    } catch {
+      // narrative is optional; proceed with empty summary
+    }
+
+    setState({ stage: 'ready', diffResult, narrativeSummary, sourceName, targetName });
+  }, [branchList, readSaveData, saveDir]);
+
+  useEffect(() => {
+    if (compareSpec) {
+      void runCompare(compareSpec.source, compareSpec.target);
+    }
+  }, [compareSpec, runCompare]);
+
+  useInput(useCallback((input: string, key: {
     escape: boolean;
     tab: boolean;
+    upArrow: boolean;
+    downArrow: boolean;
+    leftArrow: boolean;
+    rightArrow: boolean;
+    return: boolean;
   }) => {
-    if (key.escape) {
-      onClose();
-    } else if (key.tab && isWide) {
-      setViewMode(prev => prev === 'unified' ? 'side-by-side' : 'unified');
+    if (state.stage === 'selecting') {
+      if (key.escape) {
+        onClose();
+      } else if (key.leftArrow || key.rightArrow) {
+        setState(prev => {
+          if (prev.stage !== 'selecting') return prev;
+          return { ...prev, leftFocus: !prev.leftFocus };
+        });
+      } else if (key.upArrow) {
+        setState(prev => {
+          if (prev.stage !== 'selecting') return prev;
+          if (prev.leftFocus) {
+            return { ...prev, leftIdx: Math.max(0, prev.leftIdx - 1) };
+          }
+          return { ...prev, rightIdx: Math.max(0, prev.rightIdx - 1) };
+        });
+      } else if (key.downArrow) {
+        setState(prev => {
+          if (prev.stage !== 'selecting') return prev;
+          const maxIdx = branchList.length - 1;
+          if (prev.leftFocus) {
+            return { ...prev, leftIdx: Math.min(maxIdx, prev.leftIdx + 1) };
+          }
+          return { ...prev, rightIdx: Math.min(maxIdx, prev.rightIdx + 1) };
+        });
+      } else if (key.return) {
+        setState(prev => {
+          if (prev.stage !== 'selecting') return prev;
+          if (prev.leftFocus) {
+            const sourceName = branchList[prev.leftIdx]?.name ?? null;
+            const newState = { ...prev, confirmedSource: sourceName, leftFocus: false };
+            return newState;
+          }
+          const targetName = branchList[prev.rightIdx]?.name ?? null;
+          const newState = { ...prev, confirmedTarget: targetName };
+          if (newState.confirmedSource && newState.confirmedTarget) {
+            void runCompare(newState.confirmedSource, newState.confirmedTarget);
+          }
+          return newState;
+        });
+      }
+    } else if (state.stage === 'ready') {
+      if (key.escape) {
+        onClose();
+      } else if (key.tab && isWide) {
+        setViewMode(prev => prev === 'unified' ? 'side-by-side' : 'unified');
+      }
+    } else if (state.stage === 'error') {
+      if (key.escape) {
+        onClose();
+      } else if (input === 'r' || input === 'R') {
+        if (state.lastSource && state.lastTarget) {
+          void runCompare(state.lastSource, state.lastTarget);
+        } else {
+          setState({
+            stage: 'selecting',
+            leftFocus: true,
+            leftIdx: 0,
+            rightIdx: 0,
+            confirmedSource: null,
+            confirmedTarget: null,
+          });
+        }
+      }
     }
-  }, [onClose, isWide]));
+  }, [state, onClose, isWide, branchList, runCompare]));
 
+  if (state.stage === 'selecting') {
+    const { leftFocus, leftIdx, rightIdx, confirmedSource } = state;
+    return (
+      <Box flexDirection="column" flexGrow={1} paddingX={1}>
+        <Text bold color="cyan">【选择要比较的分支】</Text>
+        <Box flexDirection="row" marginTop={1}>
+          <Box flexDirection="column" borderStyle="single" paddingX={1} width={20}>
+            <Text bold color={leftFocus ? 'cyan' : undefined}>源分支</Text>
+            {branchList.map((b, idx) => (
+              <Box key={b.id}>
+                <Text color={confirmedSource === b.name ? 'green' : undefined}>
+                  {idx === leftIdx && leftFocus ? '▶ ' : '  '}{b.name}
+                </Text>
+              </Box>
+            ))}
+          </Box>
+          <Box flexDirection="column" borderStyle="single" paddingX={1} width={20}>
+            <Text bold color={!leftFocus ? 'cyan' : undefined}>目标分支</Text>
+            {branchList.map((b, idx) => (
+              <Box key={b.id}>
+                <Text>
+                  {idx === rightIdx && !leftFocus ? '▶ ' : '  '}{b.name}
+                </Text>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+        <Box marginTop={1}>
+          <Text dimColor>←→ 切换列  ↑↓ 选择  Enter 确认  Esc 取消</Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (state.stage === 'loading') {
+    return (
+      <Box flexDirection="column" flexGrow={1} paddingX={1} justifyContent="center">
+        <Spinner label="正在加载存档数据..." />
+      </Box>
+    );
+  }
+
+  if (state.stage === 'summarizing') {
+    return (
+      <Box flexDirection="column" flexGrow={1} paddingX={1} justifyContent="center">
+        <Spinner label="正在生成时间线对比..." />
+      </Box>
+    );
+  }
+
+  if (state.stage === 'error') {
+    return (
+      <Box flexDirection="column" flexGrow={1} paddingX={1}>
+        <Text bold color="red">⚠ {state.message}</Text>
+        <Box marginTop={1}>
+          <Text dimColor>[R] 重试  [Esc] 取消</Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  const { diffResult, narrativeSummary, sourceName, targetName } = state;
+  const grouped = groupByCategory(diffResult.diffs);
   const isEmpty = diffResult.diffs.length === 0;
 
   return (
@@ -154,7 +360,7 @@ export function ComparePanel({
       <Box flexDirection="row" justifyContent="space-between">
         <Box>
           <Text bold color="cyan">【分支对比】</Text>
-          <Text>{sourceBranchName} ↔ {targetBranchName}</Text>
+          <Text>{sourceName} ↔ {targetName}</Text>
         </Box>
         <Text dimColor>Esc 返回</Text>
       </Box>
@@ -167,21 +373,21 @@ export function ComparePanel({
         <Box flexDirection="column" marginTop={1}>
           <Text>摘要: {diffResult.totalCount} 项差异，{diffResult.highImpactCount} 项高影响分歧</Text>
 
+          {narrativeSummary.length > 0 && (
+            <Box flexDirection="column" marginTop={1} borderStyle="single" borderColor="yellow" paddingX={1}>
+              <Text bold color="yellow">── 叙事影响 ──</Text>
+              <Text>{narrativeSummary}</Text>
+            </Box>
+          )}
+
           {viewMode === 'unified' || !isWide ? (
             <UnifiedView grouped={grouped} />
           ) : (
             <SideBySideView
               grouped={grouped}
-              sourceBranchName={sourceBranchName}
-              targetBranchName={targetBranchName}
+              sourceBranchName={sourceName}
+              targetBranchName={targetName}
             />
-          )}
-
-          {narrativeSummary.length > 0 && (
-            <Box flexDirection="column" marginTop={1}>
-              <Text bold dimColor>── 叙事影响 ──</Text>
-              <Text>{narrativeSummary}</Text>
-            </Box>
           )}
         </Box>
       )}
