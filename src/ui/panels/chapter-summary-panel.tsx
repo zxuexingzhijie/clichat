@@ -6,9 +6,10 @@ const PAGE_SIZE = 3;
 type ChapterSummaryPanelProps = {
   readonly summaries: readonly string[];
   readonly onClose: () => void;
+  readonly isActive?: boolean;
 };
 
-export function ChapterSummaryPanel({ summaries, onClose }: ChapterSummaryPanelProps): React.ReactNode {
+export function ChapterSummaryPanel({ summaries, onClose, isActive }: ChapterSummaryPanelProps): React.ReactNode {
   const [scrollOffset, setScrollOffset] = useState(0);
   const visibleSummaries = summaries.slice(scrollOffset, scrollOffset + PAGE_SIZE);
   const canScrollUp = scrollOffset > 0;
@@ -18,7 +19,7 @@ export function ChapterSummaryPanel({ summaries, onClose }: ChapterSummaryPanelP
     if (key.escape) { onClose(); return; }
     if (key.pageUp) setScrollOffset(prev => Math.max(0, prev - PAGE_SIZE));
     if (key.pageDown) setScrollOffset(prev => canScrollDown ? prev + PAGE_SIZE : prev);
-  }, [onClose, canScrollDown]));
+  }, [onClose, canScrollDown]), { isActive: isActive ?? true });
 
   if (summaries.length === 0) {
     return (
@@ -55,3 +56,4 @@ export function ChapterSummaryPanel({ summaries, onClose }: ChapterSummaryPanelP
 }
 
 export type { ChapterSummaryPanelProps };
+

@@ -171,7 +171,7 @@ export function PanelRouter({
     inventory: <InventoryPanel onClose={onClose} />,
     shortcuts: <ShortcutHelpPanel onClose={onClose} />,
     replay: <ReplayPanel entries={[...replayEntries]} onClose={onClose} />,
-    chapter_summary: <ChapterSummaryPanel summaries={[...chapterSummaries]} onClose={onClose} />,
+    chapter_summary: <ChapterSummaryPanel summaries={[...chapterSummaries]} onClose={onClose} isActive={phase === 'chapter_summary'} />,
   }), [
     activeQuests, completedQuests, failedQuests, onClose,
     mapData, codexEntries,
