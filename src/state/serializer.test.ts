@@ -4,7 +4,7 @@ import { getDefaultPlayerState, type PlayerState } from './player-store';
 import { getDefaultSceneState, type SceneState } from './scene-store';
 import { getDefaultCombatState, type CombatState } from './combat-store';
 import { getDefaultGameState, type GameState } from './game-store';
-import { getDefaultQuestState, type QuestState, type QuestEvent } from './quest-store';
+import { createQuestStore, getDefaultQuestState, type QuestState, type QuestEvent } from './quest-store';
 import { getDefaultRelationState, createRelationStore, type RelationState } from './relation-store';
 import { getDefaultNpcMemoryState, type NpcMemoryState } from './npc-memory-store';
 import { getDefaultExplorationState, type ExplorationState } from './exploration-store';
@@ -14,13 +14,15 @@ import { createSerializer, SaveDataV2Schema, SaveDataV3Schema, SaveDataV4Schema,
 import { eventBus } from '../events/event-bus';
 
 function freshStores() {
+  const bus = { emit: () => {}, on: () => () => {} } as unknown as typeof eventBus;
+  const gameStore = createStore<GameState>(getDefaultGameState());
   return {
     player: createStore<PlayerState>(getDefaultPlayerState()),
     scene: createStore<SceneState>(getDefaultSceneState()),
     combat: createStore<CombatState>(getDefaultCombatState()),
-    game: createStore<GameState>(getDefaultGameState()),
-    quest: createStore<QuestState>(getDefaultQuestState()),
-    relations: createRelationStore({ emit: () => {} } as unknown as typeof eventBus),
+    game: gameStore,
+    quest: createQuestStore(bus, { getGameState: () => gameStore.getState() }),
+    relations: createRelationStore(bus),
     npcMemory: createStore<NpcMemoryState>(getDefaultNpcMemoryState()),
     exploration: createStore<ExplorationState>(getDefaultExplorationState()),
     playerKnowledge: createStore<PlayerKnowledgeState>(getDefaultPlayerKnowledgeState()),
@@ -433,7 +435,7 @@ describe('serializer.restore() does not emit reputation_changed (REP-04)', () =>
       scene: createStore<SceneState>(getDefaultSceneState()),
       combat: createStore<CombatState>(getDefaultCombatState()),
       game: createStore<GameState>(getDefaultGameState()),
-      quest: createStore<QuestState>(getDefaultQuestState()),
+      quest: createQuestStore(bus, { getGameState: () => getDefaultGameState() }),
       relations: createRelationStore(bus),
       npcMemory: createStore<NpcMemoryState>(getDefaultNpcMemoryState()),
       exploration: createStore<ExplorationState>(getDefaultExplorationState()),

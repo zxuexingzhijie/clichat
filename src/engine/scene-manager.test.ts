@@ -9,6 +9,7 @@ mock.module('ai', () => ({
 
 mock.module('@ai-sdk/openai', () => ({
   openai: () => 'mock-model',
+  createOpenAI: () => () => 'mock-model',
 }));
 
 const { createSceneManager } = await import('./scene-manager');

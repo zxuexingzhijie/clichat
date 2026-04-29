@@ -22,6 +22,7 @@ mock.module('ai', () => ({
 
 mock.module('@ai-sdk/openai', () => ({
   openai: () => 'mock-model',
+  createOpenAI: () => () => 'mock-model',
 }));
 
 const { createGameLoop } = await import('./game-loop');

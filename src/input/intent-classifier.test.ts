@@ -12,6 +12,7 @@ mock.module('ai', () => ({
 
 mock.module('@ai-sdk/openai', () => ({
   openai: () => 'mock-model',
+  createOpenAI: () => () => 'mock-model',
 }));
 
 const { classifyIntent } = await import('./intent-classifier');

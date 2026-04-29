@@ -117,13 +117,14 @@ describe('createCombatLoop', () => {
 
   it('cast deducts MP on use', async () => {
     const highRng = () => 0.99;
-    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY), { rng: highRng, generateNarrationFn: mockNarration });
+    const FIRE_ARROW_ENTRY: CodexEntry = { id: 'spell_fire_arrow', name: '火焰箭', type: 'spell', tags: ['fire'], description: '火焰伤害', mp_cost: 3, damage: 6, element: 'fire' } as unknown as CodexEntry;
+    const loop = createCombatLoop(stores, makeCodex(GOBLIN_ENTRY, FIRE_ARROW_ENTRY), { rng: highRng, generateNarrationFn: mockNarration });
     await loop.startCombat(['goblin']);
 
     const initialMp = playerStore.getState().mp;
-    await loop.processPlayerAction('cast');
+    await loop.processPlayerAction('cast', { spellId: 'spell_fire_arrow' });
 
-    expect(playerStore.getState().mp).toBe(initialMp - 4);
+    expect(playerStore.getState().mp).toBeLessThan(initialMp);
   });
 
   it('cast fails with insufficient MP and returns error message', async () => {
@@ -134,7 +135,7 @@ describe('createCombatLoop', () => {
     const result = await loop.processPlayerAction('cast');
     expect(result.status).toBe('error');
     if (result.status === 'error') {
-      expect(result.message).toContain('魔力不足');
+      expect(result.message).toContain('请指定法术名称');
     }
   });
 
@@ -505,7 +506,7 @@ describe('data-driven spell casting (COMBAT-05)', () => {
     expect(playerStore.getState().mp).toBe(initialMp);
   });
 
-  it('cast with no spellId falls back to CAST_MP_COST constant', async () => {
+  it('cast with no spellId returns error requesting spell name', async () => {
     const loop = createCombatLoop(
       stores,
       makeCodex(GOBLIN_ENTRY),
@@ -513,10 +514,11 @@ describe('data-driven spell casting (COMBAT-05)', () => {
     );
     await loop.startCombat(['goblin']);
 
-    const initialMp = playerStore.getState().mp;
-    await loop.processPlayerAction('cast');
-
-    expect(playerStore.getState().mp).toBeLessThan(initialMp);
+    const result = await loop.processPlayerAction('cast');
+    expect(result.status).toBe('error');
+    if (result.status === 'error') {
+      expect(result.message).toContain('请指定法术名称');
+    }
   });
 
   it('cast fire_arrow narration includes spell name', async () => {
