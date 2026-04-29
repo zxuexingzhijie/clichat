@@ -112,3 +112,49 @@ describe('buildNpcSystemPrompt', () => {
     expect(result).not.toContain('秘密内容');
   });
 });
+
+describe('buildNpcSystemPrompt — narrativeContext injection', () => {
+  it('called with undefined narrativeContext produces identical output to 2-arg call', () => {
+    const without = buildNpcSystemPrompt(baseNpc, 0);
+    const withUndefined = buildNpcSystemPrompt(baseNpc, 0, undefined);
+    expect(withUndefined).toBe(without);
+  });
+
+  it('called with act1 context contains 当前故事阶段：act1', () => {
+    const result = buildNpcSystemPrompt(baseNpc, 0, {
+      storyAct: 'act1',
+      atmosphereTags: ['平静', '日常'],
+    });
+    expect(result).toContain('当前故事阶段：act1');
+  });
+
+  it('called with act3 context contains atmosphere tags and 请用符合当前氛围的语气说话', () => {
+    const result = buildNpcSystemPrompt(baseNpc, 0, {
+      storyAct: 'act3',
+      atmosphereTags: ['沉重', '真相'],
+    });
+    expect(result).toContain('沉重、真相');
+    expect(result).toContain('请用符合当前氛围的语气说话');
+  });
+
+  it('narrative paragraph is appended AFTER existing trust-gate content', () => {
+    const result = buildNpcSystemPrompt(npcWithProfile, 0, {
+      storyAct: 'act2',
+      atmosphereTags: ['悬疑'],
+    });
+    const trustIdx = result.indexOf('回避任何追问');
+    const actIdx = result.indexOf('当前故事阶段：act2');
+    expect(trustIdx).toBeGreaterThan(-1);
+    expect(actIdx).toBeGreaterThan(trustIdx);
+  });
+
+  it('with trust-unlocked NPC and narrativeContext contains both trust content and act paragraph', () => {
+    const result = buildNpcSystemPrompt(npcWithProfile, 6, {
+      storyAct: 'act1',
+      atmosphereTags: ['紧张'],
+    });
+    expect(result).toContain('将军的秘密行动');
+    expect(result).toContain('当前故事阶段：act1');
+    expect(result).toContain('紧张');
+  });
+});

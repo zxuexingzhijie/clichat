@@ -1,3 +1,5 @@
+import type { NarrativePromptContext } from './narrative-system';
+
 export type NpcTrustGate = {
   readonly min_trust: number;
   readonly reveals: string;
@@ -18,7 +20,7 @@ export type NpcProfile = {
   readonly knowledgeProfile?: NpcKnowledgeProfile;
 };
 
-export function buildNpcSystemPrompt(npc: NpcProfile, trustLevel: number = 0): string {
+export function buildNpcSystemPrompt(npc: NpcProfile, trustLevel: number = 0, narrativeContext?: NarrativePromptContext): string {
   const base = `你扮演NPC "${npc.name}"。
 性格特征：${npc.personality_tags.join('、')}
 目标：${npc.goals.join('、')}
@@ -31,35 +33,43 @@ export function buildNpcSystemPrompt(npc: NpcProfile, trustLevel: number = 0): s
 - 不发明世界事实
 - 不声明机械效果`;
 
-  if (!npc.knowledgeProfile) return base;
+  const result = (() => {
+    if (!npc.knowledgeProfile) return base;
 
-  const profile = npc.knowledgeProfile;
-  const disclosureLines: string[] = [];
+    const profile = npc.knowledgeProfile;
+    const disclosureLines: string[] = [];
 
-  if (profile.always_knows?.length) {
-    disclosureLines.push(`你可以自由谈论：${profile.always_knows.join('、')}`);
-  }
-
-  const unlockedGates = (profile.trust_gates ?? []).filter(g => trustLevel >= g.min_trust);
-  if (unlockedGates.length) {
-    disclosureLines.push(`基于当前信任度（${trustLevel}/10），你可以提及（但保持间接和不确认）：`);
-    for (const gate of unlockedGates) {
-      disclosureLines.push(`- ${gate.reveals}`);
+    if (profile.always_knows?.length) {
+      disclosureLines.push(`你可以自由谈论：${profile.always_knows.join('、')}`);
     }
-  }
 
-  if (trustLevel > 8 && profile.hidden_knowledge?.length) {
-    disclosureLines.push(`你内心知道但极度不愿承认（只在被逼到绝境时才透露，保持犹豫和回避）：`);
-    for (const item of profile.hidden_knowledge) {
-      disclosureLines.push(`- ${item}`);
+    const unlockedGates = (profile.trust_gates ?? []).filter(g => trustLevel >= g.min_trust);
+    if (unlockedGates.length) {
+      disclosureLines.push(`基于当前信任度（${trustLevel}/10），你可以提及（但保持间接和不确认）：`);
+      for (const gate of unlockedGates) {
+        disclosureLines.push(`- ${gate.reveals}`);
+      }
     }
-  }
 
-  if (trustLevel < 5) {
-    disclosureLines.push('当前信任度不足：只谈表面日常话题，回避任何追问。');
-  }
+    if (trustLevel > 8 && profile.hidden_knowledge?.length) {
+      disclosureLines.push(`你内心知道但极度不愿承认（只在被逼到绝境时才透露，保持犹豫和回避）：`);
+      for (const item of profile.hidden_knowledge) {
+        disclosureLines.push(`- ${item}`);
+      }
+    }
 
-  return base + '\n\n' + disclosureLines.join('\n');
+    if (trustLevel < 5) {
+      disclosureLines.push('当前信任度不足：只谈表面日常话题，回避任何追问。');
+    }
+
+    return base + '\n\n' + disclosureLines.join('\n');
+  })();
+
+  if (!narrativeContext) return result;
+
+  const atmosphereStr = narrativeContext.atmosphereTags.join('、');
+  const narrativeParagraph = `\n\n当前故事阶段：${narrativeContext.storyAct}\n氛围：${atmosphereStr}\n请用符合当前氛围的语气说话。`;
+  return result + narrativeParagraph;
 }
 
 export type NpcUserPromptContext = {
