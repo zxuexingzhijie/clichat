@@ -1,5 +1,6 @@
 import { getRoleConfig } from '../providers';
-import { callGenerateText, callStreamText } from '../utils/ai-caller';
+import { callGenerateObject, callStreamText } from '../utils/ai-caller';
+import { NarrationOutputSchema } from '../schemas/narration-output';
 import {
   buildNarrativeSystemPrompt,
   buildNarrativeUserPrompt,
@@ -56,7 +57,7 @@ export async function generateNarration(
   const prompt = buildNarrativeUserPrompt(context as NarrativeUserPromptContext);
 
   try {
-    const { text } = await callGenerateText({
+    const { object } = await callGenerateObject<{ text: string }>({
       role: 'narrative-director',
       providerName: config.providerName,
       model: config.model,
@@ -65,10 +66,9 @@ export async function generateNarration(
       system,
       prompt,
       maxRetries: options?.maxRetries,
+      schema: NarrationOutputSchema,
     });
-    if (text.length > 300) return text.slice(0, 300);
-    if (text.length < 10) return getFallbackNarration(context.sceneType);
-    return text;
+    return object.text;
   } catch {
     return getFallbackNarration(context.sceneType);
   }
