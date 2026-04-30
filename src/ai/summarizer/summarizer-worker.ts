@@ -103,7 +103,10 @@ export async function runSummarizerLoop(signal: AbortSignal): Promise<void> {
 
     const task = dequeuePending();
     if (!task) {
-      await new Promise<void>((r) => setTimeout(r, 5000));
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(resolve, 5000);
+        signal.addEventListener('abort', () => { clearTimeout(timer); resolve(); }, { once: true });
+      });
       if (signal.aborted) {
         console.error('[summarizer] received abort signal — shutting down');
         return;
