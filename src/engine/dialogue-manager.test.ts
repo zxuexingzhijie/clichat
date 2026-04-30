@@ -1085,4 +1085,91 @@ describe('createDialogueManager', () => {
       expect(after - before).toBe(0);
     });
   });
+
+  describe('dialogueHistory format — DIAL-02', () => {
+    it('startDialogue writes {role:assistant, content} into dialogueHistory[0]', async () => {
+      const manager = createDialogueManager(stores, mockCodexEntries, {
+        generateNpcDialogueFn: mockGenerateNpcDialogue,
+        adjudicateFn: mockAdjudicate,
+      });
+
+      await manager.startDialogue('npc_guard');
+
+      const { dialogueStore } = await import('../state/dialogue-store');
+      const history = dialogueStore.getState().dialogueHistory;
+      expect(history.length).toBe(1);
+      expect(history[0]!.role).toBe('assistant');
+      expect(history[0]!.content).toBe('这里最近发生了些事情，你要小心。');
+    });
+
+    it('processPlayerResponse appends {role:user} and {role:assistant} entries to dialogueHistory', async () => {
+      mockGenerateNpcDialogue
+        .mockResolvedValueOnce({
+          dialogue: '第一句问候。',
+          emotionTag: 'neutral',
+          shouldRemember: false,
+          sentiment: 'neutral',
+        })
+        .mockResolvedValueOnce({
+          dialogue: '第二句回应。',
+          emotionTag: 'neutral',
+          shouldRemember: false,
+          sentiment: 'neutral',
+        });
+
+      const manager = createDialogueManager(stores, mockCodexEntries, {
+        generateNpcDialogueFn: mockGenerateNpcDialogue,
+        adjudicateFn: mockAdjudicate,
+      });
+
+      await manager.startDialogue('npc_guard');
+      await manager.processPlayerResponse(0);
+
+      const { dialogueStore } = await import('../state/dialogue-store');
+      const history = dialogueStore.getState().dialogueHistory;
+      expect(history.length).toBe(3);
+      expect(history[0]!.role).toBe('assistant');
+      expect(history[1]!.role).toBe('user');
+      expect(history[2]!.role).toBe('assistant');
+      expect(history[2]!.content).toBe('第二句回应。');
+    });
+
+    it('DialogueManager passes dialogueHistory as conversationHistory to generateNpcDialogue', async () => {
+      mockGenerateNpcDialogue
+        .mockResolvedValueOnce({
+          dialogue: '初始对话。',
+          emotionTag: 'neutral',
+          shouldRemember: false,
+          sentiment: 'neutral',
+        })
+        .mockResolvedValueOnce({
+          dialogue: '后续对话。',
+          emotionTag: 'neutral',
+          shouldRemember: false,
+          sentiment: 'neutral',
+        });
+
+      const manager = createDialogueManager(stores, mockCodexEntries, {
+        generateNpcDialogueFn: mockGenerateNpcDialogue,
+        adjudicateFn: mockAdjudicate,
+      });
+
+      await manager.startDialogue('npc_guard');
+
+      const { dialogueStore } = await import('../state/dialogue-store');
+      const historyAfterStart = dialogueStore.getState().dialogueHistory;
+
+      await manager.processPlayerResponse(0);
+
+      const secondCallArgs = mockGenerateNpcDialogue.mock.calls[1] as unknown as [
+        unknown,
+        unknown,
+        unknown,
+        unknown,
+        { conversationHistory?: unknown },
+      ];
+      const passedHistory = secondCallArgs[4]?.conversationHistory;
+      expect(passedHistory).toEqual(historyAfterStart);
+    });
+  });
 });
