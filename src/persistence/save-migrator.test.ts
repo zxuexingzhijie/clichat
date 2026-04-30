@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { migrateV1ToV2, migrateV2ToV3, migrateV4ToV5 } from './save-migrator';
+import { migrateV1ToV2, migrateV2ToV3, migrateV4ToV5, migrateV5ToV6 } from './save-migrator';
 import { getDefaultQuestState } from '../state/quest-store';
 import { getDefaultRelationState } from '../state/relation-store';
 import { getDefaultNpcMemoryState } from '../state/npc-memory-store';
@@ -225,5 +225,31 @@ describe('migrateV4ToV5', () => {
   it('returns primitive input unchanged', () => {
     const result = migrateV4ToV5('string');
     expect(result).toBe('string');
+  });
+});
+
+describe('migrateV5ToV6', () => {
+  it('upgrades version 5 to 6 and adds droppedItems default []', () => {
+    const v5 = { version: 5, scene: { sceneId: 'town', objects: [] } };
+    const result = migrateV5ToV6(v5) as Record<string, unknown>;
+    expect(result['version']).toBe(6);
+    const scene = result['scene'] as Record<string, unknown>;
+    expect(scene['droppedItems']).toEqual([]);
+  });
+
+  it('preserves existing droppedItems when already present', () => {
+    const v5 = { version: 5, scene: { sceneId: 'town', droppedItems: ['item_wolf_pelt'] } };
+    const result = migrateV5ToV6(v5) as Record<string, unknown>;
+    const scene = result['scene'] as Record<string, unknown>;
+    expect(scene['droppedItems']).toEqual(['item_wolf_pelt']);
+  });
+
+  it('returns non-version-5 objects unchanged', () => {
+    const v4 = { version: 4 };
+    expect(migrateV5ToV6(v4)).toEqual(v4);
+  });
+
+  it('returns null unchanged', () => {
+    expect(migrateV5ToV6(null)).toBeNull();
   });
 });

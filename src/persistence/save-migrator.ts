@@ -55,6 +55,21 @@ export function migrateV4ToV5(raw: unknown): unknown {
   };
 }
 
+export function migrateV5ToV6(raw: unknown): unknown {
+  if (typeof raw !== 'object' || raw === null) return raw;
+  const data = raw as Record<string, unknown>;
+  if (data['version'] !== 5) return raw;
+  const scene = (data['scene'] as Record<string, unknown> | undefined) ?? {};
+  return {
+    ...data,
+    version: 6,
+    scene: {
+      ...scene,
+      droppedItems: scene['droppedItems'] ?? [],
+    },
+  };
+}
+
 export function migrateV1ToV2(raw: unknown): unknown {
   if (typeof raw !== 'object' || raw === null) return raw;
   const data = raw as Record<string, unknown>;
