@@ -291,11 +291,32 @@ export function createSceneManager(
           sceneContext: state.locationName,
           narrativeContext: getNarrativeContext(options?.narrativeStore),
         });
-        const newLines = capNarrationLines([...state.narrationLines, narration]);
+        let newLines = capNarrationLines([...state.narrationLines, narration]);
+        const droppedAI = stores.scene.getState().droppedItems;
+        if (droppedAI.length > 0) {
+          const names = droppedAI.map(id => {
+            const entry = queryById(codexEntries, id);
+            return entry?.name ?? id;
+          }).join('、');
+          newLines = capNarrationLines([...newLines, `地上有：${names}`]);
+        }
         stores.scene.setState(draft => {
           draft.narrationLines = newLines;
         });
         return { status: 'success', narration: newLines };
+      }
+      const dropped = stores.scene.getState().droppedItems;
+      if (dropped.length > 0) {
+        const names = dropped.map(id => {
+          const entry = queryById(codexEntries, id);
+          return entry?.name ?? id;
+        }).join('、');
+        const dropLine = `地上有：${names}`;
+        const updatedLines = capNarrationLines([...state.narrationLines, dropLine]);
+        stores.scene.setState(draft => {
+          draft.narrationLines = updatedLines;
+        });
+        return { status: 'success', narration: updatedLines };
       }
       return { status: 'success', narration: state.narrationLines };
     }
