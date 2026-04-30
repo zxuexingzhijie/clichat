@@ -89,8 +89,11 @@
   2. The character creation guard dialogue (4 rounds) uses accumulated messages[] — the guard's later questions reflect the player's earlier answers
   3. `ai-caller.ts` accepts and forwards a `messages[]` array to the LLM API without serializing history to plain text
   4. DialogueManager stores history as `{role, content}[]` per session and resets cleanly on session end
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 3 plans
+Plans:
+- [ ] 18-01-PLAN.md — ai-caller.ts multi_turn 模式 + npc-actor.ts 类型迁移 (DIAL-01)
+- [ ] 18-02-PLAN.md — dialogueHistory 原子迁移 {speaker,text}→{role,content} + historySection 删除 (DIAL-02)
+- [ ] 18-03-PLAN.md — useNpcDialogue messagesRef 积累 + 守卫对话接线 (DIAL-03)
 
 ### Phase 19: AI Output Quality
 **Goal**: AI-generated narration is schema-validated, intent classification costs are tracked, and the summarizer shuts down gracefully
