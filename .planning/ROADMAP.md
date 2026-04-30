@@ -6,7 +6,7 @@
 - ✅ **v1.1 Playability & Distribution** — Phases 6–10 (shipped 2026-04-26) — [archive](.planning/milestones/v1.1-ROADMAP.md)
 - ✅ **v1.2 Game System Integrity & Playability** — Phases 11–15 (shipped 2026-04-29) — [archive](.planning/milestones/v1.2-ROADMAP.md)
 - ✅ **v1.3 Story Mainline & Narrative System** — Phase 16 (shipped 2026-04-29) — [archive](.planning/milestones/v1.3-ROADMAP.md)
-- 🔄 **v1.4 AI Quality & Game Completeness** — Phases 17–21 (in progress)
+- ✅ **v1.4 AI Quality & Game Completeness** — Phases 17–21 (shipped 2026-04-30) — [archive](.planning/milestones/v1.4-ROADMAP.md)
 
 ## Phases
 
@@ -51,92 +51,15 @@
 </details>
 
 <details>
-<summary>🔄 v1.4 AI Quality & Game Completeness (Phases 17–21) — IN PROGRESS</summary>
+<summary>✅ v1.4 AI Quality & Game Completeness (Phases 17–21) — SHIPPED 2026-04-30</summary>
 
 - [x] **Phase 17: NPC Architecture Fix** — narrativeContext wired into NPC Actor; sentiment routed through Rules Engine
 - [x] **Phase 18: Multi-Turn Dialogue** — ai-caller.ts messages[] API; DialogueManager history per session; guard dialogue context accumulation
 - [x] **Phase 19: AI Output Quality** — generateObject for narration; intent-classifier cost tracking; summarizer graceful shutdown
-- [ ] **Phase 20: Enemy Loot System** — loot_table in EnemySchema; combat drops items on death; :take from scene
-- [ ] **Phase 21: Distribution & Live Validation** — OWNER placeholders replaced; npm publish --dry-run clean; live API UAT passes
+- [x] **Phase 20: Enemy Loot System** — loot_table in EnemySchema; combat drops items on death; :take from scene; SaveDataV6
+- [x] **Phase 21: Distribution & Live Validation** — package.json v1.4.0; npm publish --dry-run clean; Homebrew review PASS; Live API UAT checklist
 
 </details>
-
-## v1.4 AI Quality & Game Completeness
-
-**Goal:** Fix critical AI architecture violations discovered in code audit, implement true multi-turn NPC dialogue, and complete deferred game/distribution features for a publishable build.
-**Phases:** 17–21
-**Total Plans:** TBD
-
-## Phase Details
-
-### Phase 17: NPC Architecture Fix
-**Goal**: NPC dialogue tone and relationship changes are governed by proper architecture — no direct state mutations bypassing the Rules Engine
-**Depends on**: Phase 16 (v1.3)
-**Requirements**: ARCH-01, ARCH-02
-**Success Criteria** (what must be TRUE):
-  1. NPC Actor system prompt includes current act and atmosphere tags from narrativeStore — NPC dialogue tone shifts between acts without manual prompt editing
-  2. Talking to an NPC and receiving a positive/negative sentiment response updates relationship via `adjudicateTalkResult`, not a direct delta — the Rules Engine owns the change
-  3. Unit tests confirm the `void` bug in npc-actor.ts is eliminated and narrativeContext flows through the call chain
-  4. No regression in existing NPC dialogue tests
-**Plans**: TBD
-
-### Phase 18: Multi-Turn Dialogue
-**Goal**: NPC conversations accumulate context across exchanges — each reply builds on prior turns instead of starting fresh
-**Depends on**: Phase 17
-**Requirements**: DIAL-01, DIAL-02, DIAL-03
-**Success Criteria** (what must be TRUE):
-  1. Player can have a 3-turn exchange with an NPC where the NPC's third response demonstrably references or builds on earlier turns — not a fresh context-free reply
-  2. The character creation guard dialogue (4 rounds) uses accumulated messages[] — the guard's later questions reflect the player's earlier answers
-  3. `ai-caller.ts` accepts and forwards a `messages[]` array to the LLM API without serializing history to plain text
-  4. DialogueManager stores history as `{role, content}[]` per session and resets cleanly on session end
-**Plans**: 3 plans
-Plans:
-- [x] 18-01-PLAN.md — ai-caller.ts multi_turn 模式 + npc-actor.ts 类型迁移 (DIAL-01)
-- [x] 18-02-PLAN.md — dialogueHistory 原子迁移 {speaker,text}→{role,content} + historySection 削除 (DIAL-02)
-- [x] 18-03-PLAN.md — useNpcDialogue messagesRef 積累 + 守卫対話接线 (DIAL-03)
-
-### Phase 19: AI Output Quality
-**Goal**: AI-generated narration is schema-validated, intent classification costs are tracked, and the summarizer shuts down gracefully
-**Depends on**: Phase 17
-**Requirements**: AI-05, AI-06, AI-07
-**Success Criteria** (what must be TRUE):
-  1. Narration output is never truncated mid-sentence — `generateNarration` enforces `text.max(300)` via Zod schema, not manual slice
-  2. The `:cost` command shows intent classification token usage alongside narration and NPC costs — no AI call is invisible to the cost tracker
-  3. Sending Ctrl-C during an active summarizer loop exits cleanly with a log line — no unhandled promise rejection, no orphaned process
-**Plans**: 3 plans
-Plans:
-- [x] 19-01-PLAN.md — NarrationOutputSchema + generateNarration → callGenerateObject (AI-05)
-- [x] 19-02-PLAN.md — classifyIntent → callGenerateObject + recordUsage cost tracking (AI-06)
-- [x] 19-03-PLAN.md — runSummarizerLoop AbortSignal + app.tsx SIGINT wiring (AI-07)
-
-### Phase 20: Enemy Loot System
-**Goal**: Defeating enemies yields items that persist in the scene and can be picked up
-**Depends on**: Phase 17
-**Requirements**: GAME-01
-**Success Criteria** (what must be TRUE):
-  1. At least one enemy in the Classic Fantasy world has a defined `loot_table` in its YAML schema entry
-  2. Killing that enemy causes at least one item to appear in the scene — `:look` lists it among scene contents
-  3. Player can `:take [item]` to move the dropped item into inventory — item persists after save/load
-**Plans**: 3 plans
-Plans:
-- [ ] 20-P01-PLAN.md — enemies.yaml loot→loot_table + EnemySchema rename + SceneStateSchema droppedItems (GAME-01)
-- [ ] 20-P02-PLAN.md — combat-loop loot redirect + take-handler new + index.ts register + scene-manager look (GAME-01)
-- [ ] 20-P03-PLAN.md — SaveDataV6Schema + migrateV5ToV6 + snapshot/restore upgrade (GAME-01)
-
-### Phase 21: Distribution & Live Validation
-**Goal**: The package is publishable and live API behavior matches the implementation's claims
-**Depends on**: Phase 19, Phase 20
-**Requirements**: DIST-01, UAT-01
-**Success Criteria** (what must be TRUE):
-  1. `npm publish --dry-run` completes without errors — no OWNER placeholders remain in package.json, Homebrew formula, or GitHub Actions workflows
-  2. Live API session: `:cost` displays accurate token counts that include intent classification usage added in Phase 19
-  3. Live API session: `:replay` replays the last 5 turns with correct narration matching the actual game history
-  4. Live API session: background summarizer compresses NPC memory after 10+ interactions without error
-**Plans**: 3 plans
-Plans:
-- [x] 21-P01-PLAN.md — package.json version 1.4.0 + author Makoto + npm pkg fix + publish dry-run (DIST-01)
-- [ ] 21-P02-PLAN.md — Homebrew dispatch review (release.yml read-only audit) (DIST-01)
-- [ ] 21-P03-PLAN.md — 21-UAT-CHECKLIST.md creation (UAT-01)
 
 ## Progress
 
@@ -162,4 +85,4 @@ Plans:
 | 18. Multi-Turn Dialogue | v1.4 | 3/3 | Complete | 2026-04-30 |
 | 19. AI Output Quality | v1.4 | 3/3 | Complete | 2026-04-30 |
 | 20. Enemy Loot System | v1.4 | 3/3 | Complete | 2026-04-30 |
-| 21. Distribution & Live Validation | v1.4 | 1/3 | In Progress | - |
+| 21. Distribution & Live Validation | v1.4 | 3/3 | Complete | 2026-04-30 |

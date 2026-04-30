@@ -107,14 +107,71 @@
 
 ---
 
+## Milestone: v1.4 AI Quality & Game Completeness
+
+**Shipped:** 2026-04-30
+**Phases:** 5 (17–21) | **Plans:** 14 | **Commits:** 74
+**Timeline:** 2 days (2026-04-29 → 2026-04-30)
+**Test suite:** 1115+ tests, 0 failures
+
+### What Was Built
+
+1. Rules Engine boundary enforced — adjudicateTalkResult wraps sentiment→delta; LLM cannot directly mutate relationship state
+2. NPC Actor receives narrativeContext — dialogue tone shifts between acts; void bug eliminated
+3. True multi-turn NPC dialogue — ai-caller.ts messages[] API; dialogueHistory {role,content}[]; messagesRef hook accumulation
+4. AI output quality — NarrationOutputSchema (Zod max300); classifyIntent via callGenerateObject with cost tracking
+5. Summarizer graceful shutdown — AbortSignal at 3 loop checkpoints; SIGINT handler registered and deregistered cleanly
+6. Enemy loot system — loot_table schema, combat drops, :take handler, SaveDataV6 migration
+7. Distribution ready — chronicle-cli@1.4.0, npm publish --dry-run 0 errors, Homebrew dispatch 5-check PASS
+
+### What Worked
+
+- **Critical path clarity**: Phase 17 (architecture fix) was prerequisite for Phases 18–21. Identifying this early meant no rework downstream
+- **TDD for boundary enforcement**: Writing RED tests for adjudicateTalkResult first confirmed the boundary violation was real before fixing it
+- **Atomic migrations**: dialogueHistory {speaker,text}→{role,content} was a single commit across 4 consumers — no partial state possible
+- **useRef for cross-render accumulation**: messagesRef pattern mirrors createStreamingText factory; idiomatic and testable without mocking React lifecycle
+- **Non-blocking UAT pattern**: Defining automation gate (bun test + tsc + dry-run) as the CI pass condition and human checklist as non-blocking decoupled shipping from live API access
+- **Discriminated union extension**: Adding multi_turn to existing MessageMode without breaking single_turn callers — zero call-site changes needed
+
+### What Was Inefficient
+
+- **REQUIREMENTS.md checkboxes never updated during execution**: All 11 requirements shipped but checkboxes stayed `[ ]` — had to verify from SUMMARY.md files at close
+- **ROADMAP.md Phase 20/21 plans left unchecked**: Plan-level checkboxes not updated as plans completed — required manual fix at milestone close
+- **Quick task SUMMARYs missing**: game-fixes and memory-wiring-fix logged in STATE.md but no SUMMARY.md created — flagged as audit gap at close
+
+### Patterns Established
+
+- `adjudicateTalkResult` pattern: Rules Engine owns all LLM-output-to-state-change translations — future sentiment/reputation systems should follow this boundary
+- `callGenerateObject` with role-specific schemas: Each AI role gets a dedicated Zod schema file (`src/ai/schemas/{role}-output.ts`)
+- AbortSignal 3-checkpoint pattern: check at loop start, post-sleep, and post-task — covers all stall points in async loops
+- Non-blocking UAT checklist: automation gate = CI pass condition; live API tests = human checklist status: pending — doesn't block shipping
+
+### Key Lessons
+
+- Architecture violations should be caught at code review, not discovered at v1.4 — add a "Rules Engine boundary" check to the code review checklist
+- Keep REQUIREMENTS.md and ROADMAP.md plan checkboxes updated after each plan execution — stale state requires manual reconciliation at milestone close
+- For quick tasks: create a minimal SUMMARY.md (1 paragraph) at the time of the commit — avoids audit gaps
+- Non-blocking UAT is the right call for features requiring live API keys — ship the automation gate, document the human tests
+
+### Cost Observations
+
+- Model mix: Sonnet for all execution agents; Opus for review/planning
+- Sessions: 2 sessions across 2 days (2026-04-29 + 2026-04-30)
+- Notable: 14 plans in 2 days (avg ~15 min/plan including review) — architecture fix phases (17 P01/P02) were fastest at ~3 min each due to well-defined boundaries
+
+---
+
 ## Cross-Milestone Trends
 
-| Metric | v1.0 | v1.1 |
-|--------|------|------|
-| Phases | 5 | 5 |
-| Plans | 37 | 23 |
-| Tests at close | 637 | 744 |
-| Timeline (days) | 3 | 4 |
-| Deferred UAT items | 3 | 3 |
-| Critical bugs at review | 2 | 0 |
-| Code review fix passes | 1 | 1 (87 TS errors) |
+| Metric | v1.0 | v1.1 | v1.4 |
+|--------|------|------|------|
+| Phases | 5 | 5 | 5 |
+| Plans | 37 | 23 | 14 |
+| Tests at close | 637 | 744 | 1115+ |
+| Timeline (days) | 3 | 4 | 2 |
+| Deferred UAT items | 3 | 3 | 8 |
+| Critical bugs at review | 2 | 0 | 1 (arch violation) |
+| Avg min/plan | ~12 | ~25 | ~15 |
+
+---
+

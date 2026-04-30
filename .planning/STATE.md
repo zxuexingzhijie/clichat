@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: AI Quality & Game Completeness
-status: active
+status: complete
 stopped_at: ~
-last_updated: "2026-04-30T16:00:00Z"
-last_activity: 2026-04-30 — Phase 21 complete (3/3 plans) — Distribution & Live Validation shipped
+last_updated: "2026-04-30T22:30:00Z"
+last_activity: 2026-04-30 — v1.4 milestone closed and archived
 progress:
   total_phases: 5
   completed_phases: 5
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** The player must feel they are in a persistent, consistent world that remembers them -- not a chatbot that reinvents the universe every turn.
-**Current focus:** v1.4 — Phase 21 complete; milestone ready for /gsd-complete-milestone
+**Current focus:** v1.4 complete — archived to milestones/v1.4-ROADMAP.md; ready for /gsd-new-milestone
 
 ## Current Position
 
@@ -119,16 +119,18 @@ None — all known blockers resolved.
 
 ## Deferred Items
 
-Items acknowledged and deferred at v1.3 milestone close on 2026-04-30:
+Items acknowledged and deferred at v1.4 milestone close on 2026-04-30:
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| UAT | Live API session validation (/cost, /replay, summarizer) | Carried to Phase 21 | v1.1 close |
-| Dist | Replace OWNER placeholders before first npm publish | Carried to Phase 21 | v1.1 close |
-| Bug | use-game-input.test.ts: getPanelActionForKey 'i' returns null (pre-existing) | Deferred | Phase 13 P01 |
-| UAT | Phase 05: HUMAN-UAT.md [deferred] — game flow manual testing | acknowledged | v1.3 close |
+| UAT | Live API session validation (/cost, /replay, summarizer) | human_needed — requires live API key | v1.4 close |
 | Verification | Phase 05: VERIFICATION.md [human_needed] — live game session UAT | acknowledged | v1.3 close |
 | Verification | Phase 12: VERIFICATION.md [human_needed] — combat system live UAT | acknowledged | v1.3 close |
+| Verification | Phase 21: VERIFICATION.md [human_needed] — live API UAT non-blocking | acknowledged | v1.4 close |
+| UAT | Phase 05: HUMAN-UAT.md [deferred] — game flow manual testing | acknowledged | v1.3 close |
+| UAT | Phase 21: 21-UAT-CHECKLIST.md [pending] — live API UAT (intentionally non-blocking) | acknowledged | v1.4 close |
+| QuickTask | game-fixes (20260428) — SUMMARY missing but commits present (4fc5708, e899162, bac1e9e, 944027f) | acknowledged | v1.4 close |
+| QuickTask | 001-memory-wiring-fix (20260429) — SUMMARY missing but commit 79123eb present | acknowledged | v1.4 close |
 
 ## Session Continuity
 

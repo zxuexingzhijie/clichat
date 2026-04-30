@@ -1,5 +1,36 @@
 # Milestones
 
+## v1.4 AI Quality & Game Completeness — 2026-04-30
+
+**Status:** ✅ SHIPPED
+**Phases:** 17–21 (14 plans, 74 commits)
+**Timeline:** 2026-04-29 → 2026-04-30 (2 days)
+**Test Suite:** 1115+ tests, 0 failures
+**Codebase:** ~41,500+ lines TypeScript
+
+### Delivered
+
+Critical AI architecture violations fixed (Rules Engine boundary enforced for NPC sentiment→relationship delta; narrativeContext wired into NPC Actor); true multi-turn NPC dialogue via messages[] standard API; schema-validated narration with Zod (no manual slice); intent classification token tracking in :cost; summarizer graceful AbortSignal shutdown; enemy loot drop system with :take and SaveDataV6; publishable build (package.json v1.4.0, npm publish --dry-run clean, Homebrew dispatch review PASS).
+
+### Key Accomplishments
+
+1. Rules Engine boundary enforced — adjudicateTalkResult wraps sentiment→delta; LLM cannot directly mutate relationship state
+2. NPC Actor receives narrativeContext — dialogue tone shifts between acts; void bug eliminated
+3. True multi-turn NPC dialogue — ai-caller.ts messages[] API; dialogueHistory {role,content}[]; messagesRef hook accumulation
+4. AI output quality — NarrationOutputSchema (Zod max300); classifyIntent via callGenerateObject with cost tracking
+5. Summarizer graceful shutdown — AbortSignal at 3 loop checkpoints; SIGINT handler registered and deregistered cleanly
+6. Enemy loot system — loot_table schema, combat drops, :take handler, SaveDataV6 migration
+7. Distribution ready — chronicle-cli@1.4.0, npm publish --dry-run 0 errors, Homebrew dispatch 5-check PASS
+
+**Known deferred items at close:** 8 (see STATE.md Deferred Items) — primarily live API UAT requiring real API key
+
+### Archive
+
+- Roadmap: `.planning/milestones/v1.4-ROADMAP.md`
+- Requirements: `.planning/milestones/v1.4-REQUIREMENTS.md`
+
+---
+
 ## v1.1 Playability & Distribution — 2026-04-26
 
 **Status:** SHIPPED

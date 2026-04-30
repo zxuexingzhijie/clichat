@@ -15,28 +15,18 @@ location descriptions driven by world flags.
 The player must feel they are in a **persistent, consistent world that remembers them** — not
 a chatbot that reinvents the universe every turn.
 
-## Current Milestone: v1.4 AI Quality & Game Completeness
+## Current State (v1.4)
 
-**Goal:** Fix critical AI architecture violations discovered in code audit, implement true multi-turn NPC dialogue, and complete deferred game features for a publishable build.
-
-**Target features:**
-- Architecture fix: wire narrativeContext into NPC Actor + route sentiment through Rules Engine
-- True multi-turn NPC dialogue via messages[] standard API structure
-- Narrative Director generateObject + intent-classifier cost tracking + summarizer graceful shutdown
-- Enemy loot drop system, OWNER placeholder replacement, Live API UAT
-
----
-
-## Current State (v1.3)
-
-- **Shipped:** 2026-04-29
-- **Codebase:** ~31,293 lines TypeScript, Bun runtime, React + Ink
-- **Test suite:** 1062 tests, 0 failures
+- **Shipped:** 2026-04-30
+- **Codebase:** ~41,500+ lines TypeScript, Bun runtime, React + Ink
+- **Test suite:** 1115+ tests, 0 failures
 - **AI providers:** Multi-provider via YAML config (Google, OpenAI, Anthropic, Qwen, DeepSeek)
 - **World:** Classic Fantasy — 9 locations, 4 factions, 15+ NPCs, 8-stage main quest (3 endings) + 4 side quests
-- **Distribution:** npm (chronicle-cli), Homebrew tap, GitHub Actions CI/CD
+- **Distribution:** npm (chronicle-cli@1.4.0), Homebrew tap, GitHub Actions CI/CD — publishable
 - **Narrative system:** narrativeStore (act1/act2/act3 + worldFlags); act-aware AI prompts; NPC trust-gated disclosure; location description overrides
-- **Known gaps:** OWNER placeholders in distribution files; live API UAT deferred; ai-caller.ts single-turn only
+- **AI architecture:** Rules Engine boundary enforced; multi-turn messages[] API; schema-validated narration; cost-tracked intent classification; graceful summarizer shutdown
+- **Game systems:** Enemy loot_table schema; combat drops; :take handler; SaveDataV6 migration
+- **Known gaps:** Live API UAT (non-blocking human checklist); CJK rendering audit deferred
 
 ## Requirements
 
@@ -81,16 +71,17 @@ a chatbot that reinvents the universe every turn.
 
 - ✓ Wire narrativeContext into NPC Actor; sentiment routed through Rules Engine (adjudicateTalkResult) — v1.4 Phase 17 (ARCH-01, ARCH-02)
 - ✓ True multi-turn NPC dialogue via messages[]; dialogueHistory {role,content}[]; messagesRef hook accumulation — v1.4 Phase 18 (DIAL-01, DIAL-02, DIAL-03)
+- ✓ Narrative Director generateObject + NarrationOutputSchema (Zod min10/max300); schema rejection → catch fallback — v1.4 Phase 19 (AI-05)
+- ✓ intent-classifier routes through callGenerateObject (role 'retrieval-planner'); tokens visible in :cost — v1.4 Phase 19 (AI-06)
+- ✓ runSummarizerLoop AbortSignal (3 checkpoints); SIGINT wired in app.tsx; graceful exit — v1.4 Phase 19 (AI-07)
+- ✓ Enemy loot_table schema + combat drops + :take handler + SaveDataV6 migration — v1.4 Phase 20 (GAME-01)
+- ✓ package.json v1.4.0, author=Makoto, repository.url=git+https://; npm publish --dry-run 0 errors — v1.4 Phase 21 (DIST-01)
+- ✓ Live API UAT: 21-UAT-CHECKLIST.md with automation gate + 3 human tests; non-blocking — v1.4 Phase 21 (UAT-01)
 
 ### Active
 
-- [ ] Narrative Director generateObject + schema constraints — v1.4 (AI-05)
-- [ ] intent-classifier cost tracking (route through ai-caller.ts) — v1.4 (AI-06)
-- [ ] summarizer graceful shutdown (AbortSignal) — v1.4 (AI-07)
-- [ ] Enemy loot drop system — v1.4 (GAME-01)
-- [ ] Replace OWNER placeholders in distribution files before first publish — v1.4 (DIST-01)
-- [ ] Live session validation of /cost, /replay, background summarizer (carry-over) — v1.4 (UAT-01)
-- [ ] CJK text rendering audit in live terminal (partial mitigation via string-width)
+- [ ] CJK text rendering audit in live terminal (partial mitigation via string-width) — deferred to v1.5
+- [ ] Live API UAT execution (3 tests in 21-UAT-CHECKLIST.md) — requires live API key, non-blocking
 
 ### Out of Scope
 
@@ -153,9 +144,15 @@ a chatbot that reinvents the universe every turn.
 | multi_turn uses SystemModelMessage (role:'system') as first element | All providers handle it uniformly; no top-level system param needed | ✓ Good — clean discriminated union extension |
 | dialogueHistory migrated to {role,content}[] | Unified with LLM API format; historySection text serialization deleted | ✓ Good — single history channel, no duplication |
 | messagesRef (useRef) for cross-render accumulation in hook | React ref survives re-renders; reset() preserves history; resetMessages() sets session boundary | ✓ Good — mirrors createStreamingText factory pattern |
+| NarrationOutputSchema via callGenerateObject | Zod schema enforcement (min10/max300) replaces manual slice; rejection triggers catch fallback | ✓ Good — schema is source of truth, not code guards |
+| classifyIntent uses callGenerateObject (role 'retrieval-planner') | Routes through ai-caller.ts; tokens recorded via recordUsage(); model? removed from options | ✓ Good — intent costs now visible in :cost |
+| runSummarizerLoop AbortSignal at 3 checkpoints | loop start + post-sleep + post-dispatchTask; SIGINT stored as named const for process.off | ✓ Good — Ctrl-C exits cleanly, no unhandled rejection |
+| EnemySchema loot→loot_table rename | Semantic clarity: loot_table is a roll table, not a flat list | ✓ Good — no ambiguity |
+| SaveDataV6Schema extends V5 | Chained migration pattern; branch-diff union extended to V4\|V5\|V6 | ✓ Good — backward-compatible saves maintained |
+| UAT-01 as non-blocking human checklist | Automation gate (bun test + tsc + dry-run) is the CI pass condition; live API tests require human | ✓ Good — doesn't block shipping; stays visible |
 
 ---
-*Last updated: 2026-04-30 after Phase 18 (Multi-Turn Dialogue)*
+*Last updated: 2026-04-30 after v1.4 milestone (AI Quality & Game Completeness)*
 
 **After each phase transition** (via `/gsd-transition`):
 1. Requirements invalidated? → Move to Out of Scope with reason
