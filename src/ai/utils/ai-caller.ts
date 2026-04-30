@@ -6,13 +6,30 @@ import type { AiRole } from '../providers';
 
 type MessageMode =
   | { readonly mode: 'standard'; readonly options: { readonly system: string; readonly prompt: string } }
-  | { readonly mode: 'anthropic_cache'; readonly options: { readonly messages: Array<Record<string, unknown>> } };
+  | { readonly mode: 'anthropic_cache'; readonly options: { readonly messages: Array<Record<string, unknown>> } }
+  | { readonly mode: 'multi_turn'; readonly options: { readonly messages: Array<Record<string, unknown>> } };
 
 export function buildAiCallMessages(
   providerName: string,
   system: string,
   prompt: string,
+  history?: ReadonlyArray<{ readonly role: 'user' | 'assistant'; readonly content: string }>,
 ): MessageMode {
+  if (history && history.length > 0) {
+    const systemMsg = providerName === 'anthropic'
+      ? { role: 'system' as const, content: system, providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } } }
+      : { role: 'system' as const, content: system };
+    return {
+      mode: 'multi_turn',
+      options: {
+        messages: [
+          systemMsg,
+          ...history.map(h => ({ role: h.role, content: h.content })),
+          { role: 'user' as const, content: prompt },
+        ],
+      },
+    };
+  }
   if (providerName === 'anthropic') {
     return {
       mode: 'anthropic_cache',
@@ -47,6 +64,7 @@ type BaseCallOptions = {
   readonly system: string;
   readonly prompt: string;
   readonly maxRetries?: number;
+  readonly history?: ReadonlyArray<{ readonly role: 'user' | 'assistant'; readonly content: string }>;
 };
 
 type GenerateObjectOptions<T> = BaseCallOptions & {
@@ -73,7 +91,7 @@ export async function callGenerateText(
 ): Promise<{ readonly text: string }> {
   const { role, providerName, model, temperature, maxTokens, system, prompt } = opts;
   const maxRetries = opts.maxRetries ?? 2;
-  const msgOpts = buildAiCallMessages(providerName, system, prompt);
+  const msgOpts = buildAiCallMessages(providerName, system, prompt, opts.history);
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -101,7 +119,7 @@ export async function callGenerateObject<T>(
 ): Promise<{ readonly object: T }> {
   const { role, providerName, model, temperature, maxTokens, system, prompt, schema } = opts;
   const maxRetries = opts.maxRetries ?? 2;
-  const msgOpts = buildAiCallMessages(providerName, system, prompt);
+  const msgOpts = buildAiCallMessages(providerName, system, prompt, opts.history);
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -130,7 +148,7 @@ export async function* callStreamText(
 ): AsyncGenerator<string> {
   const { role, providerName, model, temperature, maxTokens, system, prompt } = opts;
   const maxRetries = opts.maxRetries ?? 2;
-  const msgOpts = buildAiCallMessages(providerName, system, prompt);
+  const msgOpts = buildAiCallMessages(providerName, system, prompt, opts.history);
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
