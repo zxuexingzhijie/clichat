@@ -199,3 +199,120 @@ describe('callStreamText', () => {
     expect(mockRecordUsage).toHaveBeenCalledWith('narrative-director', expect.objectContaining({ totalTokens: 150 }));
   });
 });
+
+describe('buildAiCallMessages — multi_turn mode', () => {
+  it('returns multi_turn mode when history is non-empty (non-anthropic)', () => {
+    const result = buildAiCallMessages('google', 'sys', 'current', [
+      { role: 'user', content: 'hi' },
+      { role: 'assistant', content: 'hello' },
+    ]);
+    expect(result.mode).toBe('multi_turn');
+  });
+
+  it('multi_turn messages[0] is system message', () => {
+    const result = buildAiCallMessages('google', 'sys', 'current', [
+      { role: 'user', content: 'hi' },
+    ]);
+    const msgs = (result.options as any).messages;
+    expect(msgs[0].role).toBe('system');
+    expect(msgs[0].content).toBe('sys');
+  });
+
+  it('multi_turn messages contains history turns in order', () => {
+    const result = buildAiCallMessages('google', 'sys', 'current', [
+      { role: 'user', content: 'hi' },
+      { role: 'assistant', content: 'hello' },
+    ]);
+    const msgs = (result.options as any).messages;
+    expect(msgs[1]).toEqual({ role: 'user', content: 'hi' });
+    expect(msgs[2]).toEqual({ role: 'assistant', content: 'hello' });
+  });
+
+  it('multi_turn appends current user turn at end', () => {
+    const result = buildAiCallMessages('google', 'sys', 'current', [
+      { role: 'user', content: 'hi' },
+      { role: 'assistant', content: 'hello' },
+    ]);
+    const msgs = (result.options as any).messages;
+    expect(msgs[3]).toEqual({ role: 'user', content: 'current' });
+  });
+
+  it('multi_turn options does not contain prompt key', () => {
+    const result = buildAiCallMessages('google', 'sys', 'current', [
+      { role: 'user', content: 'hi' },
+    ]);
+    expect(result.options).not.toHaveProperty('prompt');
+  });
+
+  it('anthropic multi_turn system message has cacheControl', () => {
+    const result = buildAiCallMessages('anthropic', 'sys', 'current', [
+      { role: 'user', content: 'hi' },
+    ]);
+    expect(result.mode).toBe('multi_turn');
+    const msgs = (result.options as any).messages;
+    expect(msgs[0].providerOptions.anthropic.cacheControl.type).toBe('ephemeral');
+  });
+
+  it('falls back to standard mode when history is empty array', () => {
+    const result = buildAiCallMessages('google', 'sys', 'current', []);
+    expect(result.mode).toBe('standard');
+  });
+
+  it('falls back to anthropic_cache mode when history is empty array for anthropic', () => {
+    const result = buildAiCallMessages('anthropic', 'sys', 'current', []);
+    expect(result.mode).toBe('anthropic_cache');
+  });
+});
+
+describe('callGenerateObject — history forwarding', () => {
+  beforeEach(() => {
+    mockGenerateObject.mockReset();
+    mockRecordUsage.mockReset();
+    mockGenerateObject.mockResolvedValue({ object: { val: 1 }, usage: mockUsage });
+  });
+
+  it('forwards history as messages[] when history provided', async () => {
+    await callGenerateObject({
+      role: 'npc-actor',
+      providerName: 'google',
+      model: () => 'mock-model' as any,
+      temperature: 0.8,
+      maxTokens: 400,
+      system: 'sys',
+      prompt: 'usr',
+      schema: {} as any,
+      history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'hello' }],
+    });
+    const callArgs = (mockGenerateObject.mock.calls[0] as unknown as [Record<string, unknown>])[0];
+    expect(callArgs).toHaveProperty('messages');
+    expect(callArgs).not.toHaveProperty('prompt');
+  });
+});
+
+describe('callStreamText — history forwarding', () => {
+  beforeEach(() => {
+    mockStreamText.mockReset();
+    mockRecordUsage.mockReset();
+    mockStreamText.mockReturnValue({
+      textStream: (async function* () { yield 'x'; })(),
+      usage: Promise.resolve(mockUsage),
+    });
+  });
+
+  it('forwards history as messages[] when history provided', async () => {
+    const gen = callStreamText({
+      role: 'npc-actor',
+      providerName: 'google',
+      model: () => 'mock-model' as any,
+      temperature: 0.8,
+      maxTokens: 400,
+      system: 'sys',
+      prompt: 'usr',
+      history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'hello' }],
+    });
+    for await (const _ of gen) { /* consume */ }
+    const callArgs = (mockStreamText.mock.calls[0] as unknown as [Record<string, unknown>])[0];
+    expect(callArgs).toHaveProperty('messages');
+    expect(callArgs).not.toHaveProperty('prompt');
+  });
+});
