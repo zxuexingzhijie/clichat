@@ -83,6 +83,7 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
         });
         setDialogueConfig(guardConfig);
         eventBus.emit('narrative_creation_started', undefined);
+        npcDialogue.resetMessages();
         setPhase({ type: 'round_streaming', round: 1 });
       } catch (err) {
         if (!cancelled) {
