@@ -4,14 +4,14 @@ milestone: v1.4
 milestone_name: AI Quality & Game Completeness
 status: active
 stopped_at: ~
-last_updated: "2026-04-30T07:31:00Z"
-last_activity: 2026-04-30 — Phase 19 P01 complete (generateNarration migrated to callGenerateObject + NarrationOutputSchema)
+last_updated: "2026-04-30T10:50:38Z"
+last_activity: 2026-04-30 — Phase 19 P02 complete (classifyIntent migrated to callGenerateObject, :cost blind spot closed)
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 5
-  completed_plans: 6
-  percent: 42
+  completed_plans: 7
+  percent: 44
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 ## Current Position
 
 Phase: 19 (AI Output Quality) — in progress
-Plan: P01 complete, P02 next
-Status: 19-P01 complete (generateNarration → callGenerateObject + NarrationOutputSchema)
-Last activity: 2026-04-30 — Phase 19 P01 complete
+Plan: P02 complete, P03 next
+Status: 19-P02 complete (classifyIntent → callGenerateObject, :cost blind spot closed)
+Last activity: 2026-04-30 — Phase 19 P02 complete
 
 Progress: [████░░░░░░] 40%
 
@@ -78,6 +78,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - 17-P01: storyAct used as raw identifier (act1/act2/act3) in NPC system prompt — no translation to 第一幕 etc
 - 17-P02: adjudicateTalkResult wraps sentimentToDelta in rules-engine.ts; NpcSentiment inferred from NpcDialogue['sentiment'] to avoid enum duplication
 - 19-P01: NarrationOutputSchema enforces min(10)/max(300) via Zod; callGenerateObject replaces callGenerateText in generateNarration; schema rejection triggers catch fallback; streamNarration unchanged
+- 19-P02: classifyIntent uses callGenerateObject with role 'retrieval-planner'; model? removed from ClassifyIntentOptions; intent classification tokens now visible in :cost
 
 ### Pending Todos
 
@@ -126,6 +127,6 @@ Items acknowledged and deferred at v1.3 milestone close on 2026-04-30:
 
 ## Session Continuity
 
-Last session: 2026-04-30T07:31:00Z
-Stopped at: Phase 19 P01 complete — P02 next (intent-classifier cost tracking)
+Last session: 2026-04-30T10:50:38Z
+Stopped at: Phase 19 P02 complete — P03 next (summarizer graceful shutdown)
 Resume file: None
