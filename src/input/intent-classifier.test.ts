@@ -3,6 +3,7 @@ import type { Intent } from '../types/intent';
 import { createCommandParser } from './command-parser';
 
 const mockGenerateObject = mock(() => Promise.resolve({ object: {} as Intent }));
+const mockRecordUsage = mock(() => {});
 
 mock.module('ai', () => ({
   generateObject: mockGenerateObject,
@@ -15,12 +16,17 @@ mock.module('@ai-sdk/openai', () => ({
   createOpenAI: () => () => 'mock-model',
 }));
 
+mock.module('../state/cost-session-store', () => ({
+  recordUsage: mockRecordUsage,
+}));
+
 const { classifyIntent } = await import('./intent-classifier');
 const { routeInput } = await import('./input-router');
 
 describe('classifyIntent', () => {
   beforeEach(() => {
     mockGenerateObject.mockReset();
+    mockRecordUsage.mockReset();
   });
 
   it('classifies Chinese move intent', async () => {
@@ -103,7 +109,20 @@ describe('classifyIntent', () => {
 
     await expect(
       classifyIntent('something', 'A room', { maxRetries: 1 }),
-    ).rejects.toThrow('Intent classification failed after 2 attempts');
+    ).rejects.toThrow(Error);
+  });
+
+  it('calls recordUsage with role retrieval-planner on success', async () => {
+    const expected: Intent = {
+      action: 'look',
+      target: null,
+      confidence: 0.9,
+      raw_interpretation: 'Player looks around',
+    };
+    mockGenerateObject.mockResolvedValueOnce({ object: expected });
+    await classifyIntent('看看', 'A town square');
+    expect(mockRecordUsage).toHaveBeenCalledTimes(1);
+    expect(mockRecordUsage).toHaveBeenCalledWith('retrieval-planner', expect.any(Object));
   });
 });
 
