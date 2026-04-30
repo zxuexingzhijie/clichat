@@ -4,8 +4,8 @@ milestone: v1.4
 milestone_name: AI Quality & Game Completeness
 status: active
 stopped_at: ~
-last_updated: "2026-04-30T13:40:00Z"
-last_activity: 2026-04-30 — Phase 20 P02 complete (loot→droppedItems + take-handler + look display)
+last_updated: "2026-04-30T14:10:00Z"
+last_activity: 2026-04-30 — Phase 20 P03 complete (SaveDataV6 + migrateV5ToV6 + droppedItems persistence)
 progress:
   total_phases: 5
   completed_phases: 3
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 ## Current Position
 
 Phase: 20 (Enemy Loot System) — in progress
-Plan: P02 complete
-Status: 20-P02 complete (combat loot→droppedItems + take-handler + look display)
-Last activity: 2026-04-30 — Phase 20 P02 complete
+Plan: P03 complete
+Status: 20-P03 complete (SaveDataV6 + migrateV5ToV6 + droppedItems persistence)
+Last activity: 2026-04-30 — Phase 20 P03 complete
 
 Progress: [███████░░░] 70%
 
@@ -81,7 +81,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - 19-P02: classifyIntent uses callGenerateObject with role 'retrieval-planner'; model? removed from ClassifyIntentOptions; intent classification tokens now visible in :cost
 - 19-P03: runSummarizerLoop checks signal.aborted at 3 points (loop start, post-sleep, post-dispatchTask); SIGINT handler stored as named const for process.off deregistration; useEffect cleanup calls controller.abort() then process.off
 - 20-P01: EnemySchema loot→loot_table; SceneStateSchema droppedItems:string[] default []; combat-loop.ts updated to loot_table access
-- 20-P02: GameActionTypeSchema adds 'take'; combat loot writes to sceneStore.droppedItems; take-handler checks droppedItems.includes (T-20-03); handleLook shows droppedItems in both AI and fallback paths
+- 20-P03: SaveDataV6Schema extends V5; readSaveData() upgraded to V6; branch-diff SaveDataCompare extends to V4|V5|V6; UI type refs cascade-updated
 
 ### Pending Todos
 
@@ -130,6 +130,6 @@ Items acknowledged and deferred at v1.3 milestone close on 2026-04-30:
 
 ## Session Continuity
 
-Last session: 2026-04-30T13:40:00Z
-Stopped at: Completed 20-P02-PLAN.md — combat loot + take-handler + look display
+Last session: 2026-04-30T14:10:00Z
+Stopped at: Completed 20-P03-PLAN.md — SaveDataV6 + migrateV5ToV6 + droppedItems persistence
 Resume file: None
