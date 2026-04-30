@@ -15,6 +15,7 @@ import { handleCost } from './cost-handler';
 import { handleQuit } from './quit-handler';
 import { handleDefault } from './default-handler';
 import { handleUseItem } from './use-item-handler';
+import { handleTake } from './take-handler';
 
 export type { ActionContext, ActionHandler };
 export { getLastReplayEntries } from './phase-handlers';
@@ -68,6 +69,7 @@ const HANDLER_MAP: Record<string, ActionHandler> = {
   flee: handleDefault,
   trade: async (action) => ({ status: 'action_executed', action, narration: ['交易功能尚未开放。'] }),
   use_item: handleUseItem,
+  take: handleTake,
 };
 
 export function createDefaultRegistry(): ActionRegistry {
