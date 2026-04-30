@@ -4,14 +4,14 @@ milestone: v1.4
 milestone_name: AI Quality & Game Completeness
 status: active
 stopped_at: ~
-last_updated: "2026-04-30T14:10:00Z"
-last_activity: 2026-04-30 — Phase 20 P03 complete (SaveDataV6 + migrateV5ToV6 + droppedItems persistence)
+last_updated: "2026-04-30T15:00:00Z"
+last_activity: 2026-04-30 — Phase 20 complete (3/3 plans) — Enemy Loot System shipped
 progress:
   total_phases: 5
-  completed_phases: 3
-  total_plans: 8
-  completed_plans: 9
-  percent: 70
+  completed_phases: 4
+  total_plans: 11
+  completed_plans: 11
+  percent: 80
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** The player must feel they are in a persistent, consistent world that remembers them -- not a chatbot that reinvents the universe every turn.
-**Current focus:** v1.4 — Phase 18 complete; Phase 19 next (AI Output Quality)
+**Current focus:** v1.4 — Phase 20 complete; Phase 21 next (Distribution & Live Validation)
 
 ## Current Position
 
-Phase: 20 (Enemy Loot System) — in progress
-Plan: P03 complete
-Status: 20-P03 complete (SaveDataV6 + migrateV5ToV6 + droppedItems persistence)
-Last activity: 2026-04-30 — Phase 20 P03 complete
+Phase: 20 (Enemy Loot System) — complete
+Plan: P03 complete (all 3 plans done)
+Status: Phase 20 complete — loot_table YAML, droppedItems scene drop, :take handler, SaveDataV6
+Last activity: 2026-04-30 — Phase 20 all 3 plans complete
 
-Progress: [███████░░░] 70%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -130,6 +130,6 @@ Items acknowledged and deferred at v1.3 milestone close on 2026-04-30:
 
 ## Session Continuity
 
-Last session: 2026-04-30T14:10:00Z
-Stopped at: Completed 20-P03-PLAN.md — SaveDataV6 + migrateV5ToV6 + droppedItems persistence
+Last session: 2026-04-30T15:00:00Z
+Stopped at: Completed Phase 20 — all 3 plans done (P01/P02/P03)
 Resume file: None
