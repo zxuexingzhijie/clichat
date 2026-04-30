@@ -117,7 +117,11 @@ Plans:
   1. At least one enemy in the Classic Fantasy world has a defined `loot_table` in its YAML schema entry
   2. Killing that enemy causes at least one item to appear in the scene — `:look` lists it among scene contents
   3. Player can `:take [item]` to move the dropped item into inventory — item persists after save/load
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 20-P01-PLAN.md — enemies.yaml loot→loot_table + EnemySchema rename + SceneStateSchema droppedItems (GAME-01)
+- [ ] 20-P02-PLAN.md — combat-loop loot redirect + take-handler new + index.ts register + scene-manager look (GAME-01)
+- [ ] 20-P03-PLAN.md — SaveDataV6Schema + migrateV5ToV6 + snapshot/restore upgrade (GAME-01)
 
 ### Phase 21: Distribution & Live Validation
 **Goal**: The package is publishable and live API behavior matches the implementation's claims
@@ -153,5 +157,5 @@ Plans:
 | 17. NPC Architecture Fix | v1.4 | 2/2 | Complete | 2026-04-30 |
 | 18. Multi-Turn Dialogue | v1.4 | 3/3 | Complete | 2026-04-30 |
 | 19. AI Output Quality | v1.4 | 3/3 | Complete | 2026-04-30 |
-| 20. Enemy Loot System | v1.4 | 0/TBD | Not started | - |
+| 20. Enemy Loot System | v1.4 | 0/3 | Not started | - |
 | 21. Distribution & Live Validation | v1.4 | 0/TBD | Not started | - |
