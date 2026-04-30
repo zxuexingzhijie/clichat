@@ -9,7 +9,7 @@ export const handleTake: ActionHandler = async (action, ctx) => {
   const sceneState = ctx.stores.scene.getState();
   const droppedItems = sceneState.droppedItems;
 
-  let itemId: string | undefined = action.target;
+  let itemId: string | null | undefined = action.target;
 
   if (!itemId) {
     if (droppedItems.length === 0) {

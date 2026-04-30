@@ -8,6 +8,11 @@ import { getDefaultCombatState } from '../../state/combat-store';
 import type { SceneState } from '../../state/scene-store';
 import type { PlayerState } from '../../state/player-store';
 import type { ActionContext } from './types';
+import type { GameAction } from '../../types/game-action';
+
+function makeAction(type: GameAction['type'], target?: string): GameAction {
+  return { type, target: target ?? null, modifiers: {}, source: 'command' };
+}
 import type { CodexEntry } from '../../codex/schemas/entry-types';
 
 const EPISTEMIC = {
@@ -29,7 +34,7 @@ const WOLF_PELT_ENTRY: CodexEntry = {
   tags: ['item', 'material'],
   description: '一张完整的灰狼皮毛',
   epistemic: EPISTEMIC,
-  item_type: 'material',
+  item_type: 'misc',
   value: 15,
 };
 
@@ -80,7 +85,7 @@ function makeMockCtx(opts: {
 describe('handleTake', () => {
   it('picks up item by target id, removes from droppedItems, adds to player.tags', async () => {
     const ctx = makeMockCtx({ droppedItems: ['item_wolf_pelt'] });
-    const result = await handleTake({ type: 'take', target: 'item_wolf_pelt' }, ctx);
+    const result = await handleTake(makeAction('take', 'item_wolf_pelt'), ctx);
 
     expect(result.status).toBe('action_executed');
     expect(ctx.stores.scene.getState().droppedItems).not.toContain('item_wolf_pelt');
@@ -89,7 +94,7 @@ describe('handleTake', () => {
 
   it('returns error when target item is not in droppedItems', async () => {
     const ctx = makeMockCtx({ droppedItems: [] });
-    const result = await handleTake({ type: 'take', target: 'item_wolf_pelt' }, ctx);
+    const result = await handleTake(makeAction('take', 'item_wolf_pelt'), ctx);
 
     expect(result.status).toBe('error');
     if (result.status === 'error') {
@@ -99,7 +104,7 @@ describe('handleTake', () => {
 
   it('auto-picks single item when no target given', async () => {
     const ctx = makeMockCtx({ droppedItems: ['item_wolf_pelt'] });
-    const result = await handleTake({ type: 'take' }, ctx);
+    const result = await handleTake(makeAction('take'), ctx);
 
     expect(result.status).toBe('action_executed');
     expect(ctx.stores.scene.getState().droppedItems).toEqual([]);
@@ -112,7 +117,7 @@ describe('handleTake', () => {
       [BOW_ENTRY.id, BOW_ENTRY],
     ]);
     const ctx = makeMockCtx({ droppedItems: ['item_wolf_pelt', 'item_short_bow'], codexEntries: codex });
-    const result = await handleTake({ type: 'take' }, ctx);
+    const result = await handleTake(makeAction('take'), ctx);
 
     expect(result.status).toBe('error');
     if (result.status === 'error') {
@@ -124,7 +129,7 @@ describe('handleTake', () => {
 
   it('returns error when no target and droppedItems is empty', async () => {
     const ctx = makeMockCtx({ droppedItems: [] });
-    const result = await handleTake({ type: 'take' }, ctx);
+    const result = await handleTake(makeAction('take'), ctx);
 
     expect(result.status).toBe('error');
     if (result.status === 'error') {
@@ -134,7 +139,7 @@ describe('handleTake', () => {
 
   it('returns error when codexEntries is not loaded', async () => {
     const ctx = makeMockCtx({ droppedItems: ['item_wolf_pelt'], codexEntries: undefined });
-    const result = await handleTake({ type: 'take', target: 'item_wolf_pelt' }, ctx);
+    const result = await handleTake(makeAction('take', 'item_wolf_pelt'), ctx);
 
     expect(result.status).toBe('error');
     if (result.status === 'error') {
