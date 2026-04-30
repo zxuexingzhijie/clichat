@@ -1,6 +1,6 @@
 {
   "name": "chronicle-cli",
-  "version": "1.1.0",
+  "version": "1.4.0",
   "description": "AI-driven CLI interactive novel game",
   "type": "module",
   "bin": {
@@ -21,11 +21,20 @@
   "engines": {
     "bun": ">=1.3.12"
   },
-  "keywords": ["cli", "game", "interactive-fiction", "ai", "rpg", "terminal", "text-adventure"],
+  "keywords": [
+    "cli",
+    "game",
+    "interactive-fiction",
+    "ai",
+    "rpg",
+    "terminal",
+    "text-adventure"
+  ],
   "license": "MIT",
+  "author": "Makoto",
   "repository": {
     "type": "git",
-    "url": "https://github.com/zxuexingzhijie/clichat.git"
+    "url": "git+https://github.com/zxuexingzhijie/clichat.git"
   },
   "devDependencies": {
     "@types/bun": "latest",
