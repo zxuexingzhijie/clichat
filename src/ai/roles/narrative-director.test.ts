@@ -35,6 +35,7 @@ const { generateNarration, streamNarration } = await import('./narrative-directo
 describe('generateNarration', () => {
   beforeEach(() => {
     mockGenerateText.mockReset();
+    mockGenerateObject.mockReset();
     mockStreamText.mockReset();
   });
 
@@ -48,36 +49,31 @@ describe('generateNarration', () => {
 
   it('returns text on success', async () => {
     const narration = '月光从破碎的穹顶洒下，照亮满地的碎石。你踏入北方的小径，感受到夜风的凉意。';
-    mockGenerateText.mockResolvedValueOnce({ text: narration, usage: mockUsage });
-
+    mockGenerateObject.mockResolvedValueOnce({ object: { text: narration }, usage: mockUsage });
     const result = await generateNarration(baseContext);
     expect(result).toBe(narration);
-    expect(mockGenerateText).toHaveBeenCalledTimes(1);
+    expect(mockGenerateObject).toHaveBeenCalledTimes(1);
   });
 
   it('returns fallback on failure after retries', async () => {
-    mockGenerateText
+    mockGenerateObject
       .mockRejectedValueOnce(new Error('API error'))
       .mockRejectedValueOnce(new Error('API error'))
       .mockRejectedValueOnce(new Error('API error'));
-
     const result = await generateNarration(baseContext, { maxRetries: 2 });
     expect(result).toBe('你环顾四周，一切似乎很平静。');
-    expect(mockGenerateText).toHaveBeenCalledTimes(3);
+    expect(mockGenerateObject).toHaveBeenCalledTimes(3);
   });
 
-  it('truncates text longer than 300 characters', async () => {
-    const longText = '这是一段非常长的文本。'.repeat(50);
-    mockGenerateText.mockResolvedValueOnce({ text: longText, usage: mockUsage });
-
-    const result = await generateNarration(baseContext);
-    expect(result.length).toBeLessThanOrEqual(300);
+  it('returns fallback when schema rejects long text', async () => {
+    mockGenerateObject.mockRejectedValueOnce(new Error('Zod validation failed: text too long'));
+    const result = await generateNarration(baseContext, { maxRetries: 0 });
+    expect(result).toBe('你环顾四周，一切似乎很平静。');
   });
 
-  it('returns fallback for text shorter than 10 characters', async () => {
-    mockGenerateText.mockResolvedValueOnce({ text: '短', usage: mockUsage });
-
-    const result = await generateNarration(baseContext);
+  it('returns fallback when schema rejects short text', async () => {
+    mockGenerateObject.mockRejectedValueOnce(new Error('Zod validation failed: text too short'));
+    const result = await generateNarration(baseContext, { maxRetries: 0 });
     expect(result).toBe('你环顾四周，一切似乎很平静。');
   });
 });
