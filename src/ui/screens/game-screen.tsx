@@ -34,7 +34,7 @@ import type { LocationMapData } from '../panels/map-panel';
 import type { CodexDisplayEntry } from '../panels/codex-panel';
 import type { BranchDisplayNode } from '../panels/branch-tree-panel';
 import type { BranchMeta } from '../../state/branch-store';
-import type { SaveDataV5 } from '../../state/serializer';
+import type { SaveDataV6 } from '../../state/serializer';
 
 const OVERLAY_PHASES = new Set(['journal', 'map', 'codex', 'inventory', 'branch_tree', 'compare', 'shortcuts', 'replay', 'chapter_summary']);
 
@@ -52,7 +52,7 @@ type GameScreenProps = {
   readonly branchTree?: readonly BranchDisplayNode[];
   readonly currentBranchId?: string;
   readonly branches?: Record<string, BranchMeta>;
-  readonly readSaveData?: (fileName: string, saveDir: string) => Promise<SaveDataV5>;
+  readonly readSaveData?: (fileName: string, saveDir: string) => Promise<SaveDataV6>;
   readonly saveDir?: string;
 };
 

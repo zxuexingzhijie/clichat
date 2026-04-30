@@ -3,7 +3,7 @@ import * as nodeFs from 'node:fs';
 import { mkdir as fsMkdir, readdir as fsReaddir } from 'node:fs/promises';
 import path from 'node:path';
 import { eventBus } from '../events/event-bus';
-import { SaveDataV3Schema, SaveDataV4Schema, SaveDataV5Schema, type SaveDataV3, type SaveDataV4, type SaveDataV5, type Serializer } from '../state/serializer';
+import { SaveDataV3Schema, SaveDataV4Schema, SaveDataV5Schema, SaveDataV6Schema, type SaveDataV3, type SaveDataV4, type SaveDataV5, type SaveDataV6, type Serializer } from '../state/serializer';
 import type { SaveMeta } from '../state/serializer';
 
 export type SaveListEntry = {
@@ -91,12 +91,12 @@ export async function listSaves(saveDir: string): Promise<SaveListEntry[]> {
   );
 }
 
-export async function readSaveData(fileName: string, saveDir: string): Promise<SaveDataV5> {
+export async function readSaveData(fileName: string, saveDir: string): Promise<SaveDataV6> {
   const resolvedDir = path.resolve(saveDir);
   const resolved = path.isAbsolute(fileName) ? path.resolve(fileName) : path.resolve(resolvedDir, fileName);
   if (!resolved.startsWith(resolvedDir + path.sep) && resolved !== resolvedDir) {
     throw new Error('Invalid save file path: path traversal detected');
   }
   const raw = await Bun.file(resolved).json();
-  return SaveDataV5Schema.parse(raw);
+  return SaveDataV6Schema.parse(raw);
 }

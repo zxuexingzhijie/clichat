@@ -10,7 +10,7 @@ import { getDefaultNpcMemoryState, type NpcMemoryState } from './npc-memory-stor
 import { getDefaultExplorationState, type ExplorationState } from './exploration-store';
 import { getDefaultPlayerKnowledgeState, type PlayerKnowledgeState } from './player-knowledge-store';
 import { getDefaultTurnLogState, type TurnLogState } from './turn-log-store';
-import { createSerializer, SaveDataV2Schema, SaveDataV3Schema, SaveDataV4Schema, SaveDataV5Schema, SaveMetaSchema, TurnLogEntrySchema } from './serializer';
+import { createSerializer, SaveDataV2Schema, SaveDataV3Schema, SaveDataV4Schema, SaveDataV5Schema, SaveDataV6Schema, SaveMetaSchema, TurnLogEntrySchema } from './serializer';
 import { createNarrativeStore, getDefaultNarrativeState } from './narrative-state';
 import { eventBus } from '../events/event-bus';
 
@@ -41,8 +41,7 @@ describe('createSerializer', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
 
-    expect(parsed).toHaveProperty('version', 5);
-    expect(parsed).toHaveProperty('meta');
+    expect(parsed).toHaveProperty('version', 6);
     expect(parsed).toHaveProperty('branchId');
     expect(parsed).toHaveProperty('parentSaveId');
     expect(parsed).toHaveProperty('player');
@@ -176,10 +175,10 @@ describe('SaveDataV2Schema', () => {
 });
 
 describe('createSerializer v2 specific', () => {
-  it('snapshot produces JSON parseable to v5 schema', () => {
+  it('snapshot produces JSON parseable to v6 schema', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
-    const result = SaveDataV5Schema.safeParse(parsed);
+    const result = SaveDataV6Schema.safeParse(parsed);
     expect(result.success).toBe(true);
   });
 
@@ -378,10 +377,10 @@ describe('snapshot() saveName and getPlaytime (SAVE-01)', () => {
 
   it('quickSave uses saveName "Quick Save" and saveGame uses the provided name', () => {
     // Tested by verifying the snapshot arg flows through to meta — covered by the 3 tests above.
-    // This test verifies snapshot still validates against SaveDataV5Schema when called with a name.
+    // This test verifies snapshot still validates against SaveDataV6Schema when called with a name.
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot('Chapter 1'));
-    const result = SaveDataV5Schema.safeParse(parsed);
+    const result = SaveDataV6Schema.safeParse(parsed);
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.meta.saveName).toBe('Chapter 1');
@@ -390,10 +389,10 @@ describe('snapshot() saveName and getPlaytime (SAVE-01)', () => {
 });
 
 describe('createSerializer v4 migration', () => {
-  it('snapshot produces JSON with version: 5', () => {
+  it('snapshot produces JSON with version: 6', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
-    expect(parsed).toHaveProperty('version', 5);
+    expect(parsed).toHaveProperty('version', 6);
   });
 
   it('restore accepts a v3 save and migrates it to v4', () => {
@@ -466,10 +465,10 @@ describe('serializer.restore() does not emit reputation_changed (REP-04)', () =>
 });
 
 describe('SaveDataV5Schema and V5 serializer', () => {
-  it('snapshot() includes version: 5 and narrativeState.currentAct === act1', () => {
+  it('snapshot() includes version: 6 and narrativeState.currentAct === act1', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
-    expect(parsed.version).toBe(5);
+    expect(parsed.version).toBe(6);
     expect(parsed.narrativeState).toBeDefined();
     expect(parsed.narrativeState.currentAct).toBe('act1');
   });

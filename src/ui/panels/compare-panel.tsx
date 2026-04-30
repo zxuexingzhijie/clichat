@@ -3,7 +3,7 @@ import { Box, Text, useInput } from 'ink';
 import { Spinner } from '@inkjs/ui';
 import { GameStoreCtx } from '../../app';
 import type { BranchMeta } from '../../state/branch-store';
-import type { SaveDataV5 } from '../../state/serializer';
+import type { SaveDataV6 } from '../../state/serializer';
 import { compareBranches } from '../../engine/branch-diff';
 import type { DiffCategory, DiffItem, BranchDiffResult } from '../../engine/branch-diff';
 import { generateBranchNarrative } from '../../ai/roles/branch-narrator';
@@ -31,7 +31,7 @@ type ViewMode = 'unified' | 'side-by-side';
 
 export type ComparePanelProps = {
   readonly branches: Record<string, BranchMeta>;
-  readonly readSaveData: (fileName: string, saveDir: string) => Promise<SaveDataV5>;
+  readonly readSaveData: (fileName: string, saveDir: string) => Promise<SaveDataV6>;
   readonly saveDir: string;
   readonly onClose: () => void;
   readonly width?: number;
@@ -192,8 +192,8 @@ export function ComparePanel({
       return;
     }
 
-    let sourceData: SaveDataV5;
-    let targetData: SaveDataV5;
+    let sourceData: SaveDataV6;
+    let targetData: SaveDataV6;
 
     try {
       [sourceData, targetData] = await Promise.all([

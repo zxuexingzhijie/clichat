@@ -21,7 +21,7 @@ import type { LocationMapData } from './map-panel';
 import type { CodexDisplayEntry } from './codex-panel';
 import type { BranchDisplayNode } from './branch-tree-panel';
 import type { BranchMeta } from '../../state/branch-store';
-import type { SaveDataV5 } from '../../state/serializer';
+import type { SaveDataV6 } from '../../state/serializer';
 import type { ToastData } from '../hooks/use-toast';
 import type { SpinnerContext } from '../components/scene-spinner';
 import type { TurnLogEntry } from '../../state/serializer';
@@ -60,7 +60,7 @@ type PanelRouterProps = {
   readonly currentBranchId?: string;
 
   readonly branches?: Record<string, BranchMeta>;
-  readonly readSaveData?: (fileName: string, saveDir: string) => Promise<SaveDataV5>;
+  readonly readSaveData?: (fileName: string, saveDir: string) => Promise<SaveDataV6>;
   readonly saveDir?: string;
 
   readonly replayEntries: readonly TurnLogEntry[];
