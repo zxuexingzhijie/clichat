@@ -103,7 +103,11 @@ Plans:
   1. Narration output is never truncated mid-sentence — `generateNarration` enforces `text.max(300)` via Zod schema, not manual slice
   2. The `:cost` command shows intent classification token usage alongside narration and NPC costs — no AI call is invisible to the cost tracker
   3. Sending Ctrl-C during an active summarizer loop exits cleanly with a log line — no unhandled promise rejection, no orphaned process
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 19-01-PLAN.md — NarrationOutputSchema + generateNarration → callGenerateObject (AI-05)
+- [ ] 19-02-PLAN.md — classifyIntent → callGenerateObject + recordUsage cost tracking (AI-06)
+- [ ] 19-03-PLAN.md — runSummarizerLoop AbortSignal + app.tsx SIGINT wiring (AI-07)
 
 ### Phase 20: Enemy Loot System
 **Goal**: Defeating enemies yields items that persist in the scene and can be picked up
@@ -148,6 +152,6 @@ Plans:
 | 16. Story Mainline & Narrative System | v1.3 | 5/5 | Complete | 2026-04-29 |
 | 17. NPC Architecture Fix | v1.4 | 2/2 | Complete | 2026-04-30 |
 | 18. Multi-Turn Dialogue | v1.4 | 3/3 | Complete | 2026-04-30 |
-| 19. AI Output Quality | v1.4 | 0/TBD | Not started | - |
+| 19. AI Output Quality | v1.4 | 0/3 | Not started | - |
 | 20. Enemy Loot System | v1.4 | 0/TBD | Not started | - |
 | 21. Distribution & Live Validation | v1.4 | 0/TBD | Not started | - |
