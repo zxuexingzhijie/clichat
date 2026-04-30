@@ -527,8 +527,8 @@ export function createCombatLoop(
         const enemyData = enemyEntry?.type === 'enemy' ? (enemyEntry as Enemy) : null;
         const lootItems = enemyData?.loot_table ?? [];
         for (const itemId of lootItems) {
-          stores.player.setState(draft => {
-            draft.tags = [...draft.tags, `item:${itemId}`];
+          sceneStore?.setState(draft => {
+            draft.droppedItems = [...draft.droppedItems, itemId];
           });
         }
       }

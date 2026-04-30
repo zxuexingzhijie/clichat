@@ -4,6 +4,9 @@ import { createCombatLoop } from './combat-loop';
 import { combatStore, getDefaultCombatState } from '../state/combat-store';
 import { playerStore, getDefaultPlayerState } from '../state/player-store';
 import { gameStore } from '../state/game-store';
+import { createStore } from '../state/create-store';
+import { getDefaultSceneState } from '../state/scene-store';
+import type { SceneState } from '../state/scene-store';
 import type { CodexEntry } from '../codex/schemas/entry-types';
 
 const stores = { combat: combatStore, player: playerStore, game: gameStore };
@@ -538,5 +541,90 @@ describe('data-driven spell casting (COMBAT-05)', () => {
     await loop.processPlayerAction('cast', { spellId: 'spell_fire_arrow' });
 
     expect(narrations.some(n => n.includes('火焰箭'))).toBe(true);
+  });
+});
+
+describe('loot drop on enemy defeat', () => {
+  function makeSceneStore(initial?: Partial<SceneState>) {
+    return createStore<SceneState>({ ...getDefaultSceneState(), ...initial });
+  }
+
+  const WOLF_WITH_LOOT: CodexEntry = {
+    id: 'enemy_wolf',
+    name: '灰狼',
+    type: 'enemy',
+    tags: ['enemy', 'beast'],
+    description: '一匹凶猛的灰狼',
+    epistemic: {
+      authority: 'established_canon' as const,
+      truth_status: 'true' as const,
+      scope: 'global' as const,
+      visibility: 'public' as const,
+      confidence: 1,
+      source_type: 'authorial' as const,
+      known_by: [],
+      contradicts: [],
+      volatility: 'stable' as const,
+    },
+    hp: 1,
+    maxHp: 1,
+    attack: 1,
+    defense: 0,
+    dc: 1,
+    damage_base: 1,
+    abilities: [],
+    loot_table: ['item_wolf_pelt'],
+    danger_level: 2,
+  };
+
+  const WOLF_NO_LOOT: CodexEntry = {
+    ...WOLF_WITH_LOOT,
+    id: 'enemy_wolf_empty',
+    loot_table: [],
+  };
+
+  beforeEach(() => {
+    combatStore.setState(() => getDefaultCombatState());
+    playerStore.setState(() => getDefaultPlayerState());
+  });
+
+  it('writes loot_table items to scene droppedItems', async () => {
+    const localSceneStore = makeSceneStore({ droppedItems: [] });
+    const loop = createCombatLoop(
+      stores,
+      makeCodex(WOLF_WITH_LOOT),
+      { rng: () => 0.99, generateNarrationFn: mockNarration, sceneStore: localSceneStore },
+    );
+    await loop.startCombat(['enemy_wolf']);
+    await loop.processPlayerAction('attack');
+
+    expect(localSceneStore.getState().droppedItems).toContain('item_wolf_pelt');
+  });
+
+  it('does NOT add loot to player.tags', async () => {
+    const localSceneStore = makeSceneStore({ droppedItems: [] });
+    const loop = createCombatLoop(
+      stores,
+      makeCodex(WOLF_WITH_LOOT),
+      { rng: () => 0.99, generateNarrationFn: mockNarration, sceneStore: localSceneStore },
+    );
+    await loop.startCombat(['enemy_wolf']);
+    await loop.processPlayerAction('attack');
+
+    const tags = playerStore.getState().tags;
+    expect(tags.some(t => t === 'item:item_wolf_pelt')).toBe(false);
+  });
+
+  it('does nothing when loot_table is empty', async () => {
+    const localSceneStore = makeSceneStore({ droppedItems: [] });
+    const loop = createCombatLoop(
+      stores,
+      makeCodex(WOLF_NO_LOOT),
+      { rng: () => 0.99, generateNarrationFn: mockNarration, sceneStore: localSceneStore },
+    );
+    await loop.startCombat(['enemy_wolf_empty']);
+    await loop.processPlayerAction('attack');
+
+    expect(localSceneStore.getState().droppedItems).toEqual([]);
   });
 });
