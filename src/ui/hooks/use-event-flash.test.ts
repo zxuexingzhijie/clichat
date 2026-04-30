@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'bun:test';
-import { useEventFlash } from './use-event-flash';
+import { useEventFlash, createEventFlash } from './use-event-flash';
+import { eventBus } from '../../events/event-bus';
 
 describe('useEventFlash', () => {
   it('is a function', () => {
@@ -14,15 +15,12 @@ describe('useEventFlash', () => {
 
 describe('useEventFlash integration', () => {
   it('returns false initially via createEventFlash', () => {
-    const { createEventFlash } = require('./use-event-flash');
     const flash = createEventFlash('player_damaged', 100);
     expect(flash.isActive()).toBe(false);
     flash.cleanup();
   });
 
   it('returns true after subscribed event fires, then false after duration', async () => {
-    const { createEventFlash } = require('./use-event-flash');
-    const { eventBus } = require('../../events/event-bus');
     const flash = createEventFlash('player_damaged', 50);
     eventBus.emit('player_damaged', { amount: 5, source: 'test' });
     expect(flash.isActive()).toBe(true);
@@ -32,8 +30,6 @@ describe('useEventFlash integration', () => {
   });
 
   it('cleanup removes event listener', () => {
-    const { createEventFlash } = require('./use-event-flash');
-    const { eventBus } = require('../../events/event-bus');
     const flash = createEventFlash('player_healed', 100);
     flash.cleanup();
     eventBus.emit('player_healed', { amount: 10, source: 'test' });
