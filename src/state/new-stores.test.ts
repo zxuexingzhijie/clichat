@@ -72,10 +72,10 @@ describe('DialogueStore', () => {
 
   test('adds dialogue history entries', () => {
     dialogueStore.setState(draft => {
-      draft.dialogueHistory.push({ speaker: 'npc', text: '你好，旅人。' });
+      draft.dialogueHistory.push({ role: 'assistant', content: '你好，旅人。' });
     });
     expect(dialogueStore.getState().dialogueHistory).toHaveLength(1);
-    expect(dialogueStore.getState().dialogueHistory[0].speaker).toBe('npc');
+    expect(dialogueStore.getState().dialogueHistory[0].role).toBe('assistant');
   });
 
   test('supports mode enum values', () => {

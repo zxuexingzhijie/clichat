@@ -336,12 +336,12 @@ export function createDialogueManager(
   function buildNpcLlmContext(
     npc: Npc,
     memoryRecord: NpcMemoryRecord | undefined,
-    dialogueHistory: readonly { readonly speaker: string; readonly text: string }[],
+    dialogueHistory: readonly { readonly role: 'user' | 'assistant'; readonly content: string }[],
   ): {
     memoryStrings: readonly string[];
     archiveSummary: string | undefined;
     relevantCodex: readonly string[];
-    conversationHistory: readonly { readonly speaker: string; readonly text: string }[];
+    conversationHistory: readonly { readonly role: 'user' | 'assistant'; readonly content: string }[];
   } {
     const IMPORTANCE_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
     const combined = [
@@ -408,7 +408,7 @@ export function createDialogueManager(
       draft.npcId = npcId;
       draft.npcName = npc.name;
       draft.mode = mode;
-      draft.dialogueHistory = [{ speaker: 'npc', text: npcDialogue.dialogue }];
+      draft.dialogueHistory = [{ role: 'assistant', content: npcDialogue.dialogue }];
       draft.availableResponses = responses;
       draft.relationshipValue = 0;
       draft.emotionHint = null;
@@ -492,8 +492,8 @@ export function createDialogueManager(
       stores.dialogue.setState((draft) => {
         draft.dialogueHistory = [
           ...state.dialogueHistory,
-          { speaker: 'player', text: response.label },
-          { speaker: 'npc', text: npcDialogue.dialogue },
+          { role: 'user', content: response.label },
+          { role: 'assistant', content: npcDialogue.dialogue },
         ];
         draft.availableResponses = newResponses;
         draft.relationshipValue = newRelationship;
@@ -601,8 +601,8 @@ export function createDialogueManager(
       stores.dialogue.setState((draft) => {
         draft.dialogueHistory = [
           ...state.dialogueHistory,
-          { speaker: 'player', text },
-          { speaker: 'npc', text: npcDialogue.dialogue },
+          { role: 'user', content: text },
+          { role: 'assistant', content: npcDialogue.dialogue },
         ];
         draft.availableResponses = newResponses;
         draft.relationshipValue = newRelationship;

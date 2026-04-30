@@ -314,8 +314,8 @@ export function GameScreen({
     ? [
         ...sceneState.narrationLines,
         ...dialogueState.dialogueHistory
-          .filter((e) => e.speaker === 'npc')
-          .map((e) => `${dialogueState.npcName}："${e.text}"`),
+          .filter((e) => e.role === 'assistant')
+          .map((e) => `${dialogueState.npcName}："${e.content}"`),
       ]
     : [...sceneState.narrationLines];
 

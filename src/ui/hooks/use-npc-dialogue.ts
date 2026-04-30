@@ -14,7 +14,7 @@ export type NpcDialogueContext = {
   readonly memories: readonly string[];
   readonly archiveSummary?: string;
   readonly relevantCodex?: readonly string[];
-  readonly conversationHistory?: readonly { readonly speaker: string; readonly text: string }[];
+  readonly conversationHistory?: readonly { readonly role: 'user' | 'assistant'; readonly content: string }[];
 };
 
 export type UseNpcDialogueReturn = {

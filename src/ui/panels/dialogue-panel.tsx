@@ -12,8 +12,8 @@ type ResponseOption = {
 };
 
 type DialogueEntry = {
-  readonly speaker: string;
-  readonly text: string;
+  readonly role: string;
+  readonly content: string;
 };
 
 type DialoguePanelProps = {
@@ -102,8 +102,8 @@ export function DialoguePanel({
         <Text dimColor>......</Text>
       )}
       {recentHistory.map((entry, i) => (
-        <Text key={i} dimColor={entry.speaker !== 'npc'}>
-          {entry.speaker === 'npc' ? `"${entry.text}"` : `你："${entry.text}"`}
+        <Text key={i} dimColor={entry.role !== 'assistant'}>
+          {entry.role === 'assistant' ? `"${entry.content}"` : `你："${entry.content}"`}
         </Text>
       ))}
       {emotionHint && (

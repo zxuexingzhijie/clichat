@@ -5,8 +5,8 @@ import type { EventBus } from '../events/event-bus';
 import { AttributeNameSchema } from '../types/common';
 
 const DialogueEntrySchema = z.object({
-  speaker: z.enum(['npc', 'player', 'narration']),
-  text: z.string(),
+  role: z.enum(['user', 'assistant']),
+  content: z.string(),
 });
 
 const DialogueResponseSchema = z.object({

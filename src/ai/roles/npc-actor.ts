@@ -29,7 +29,6 @@ export async function generateNpcDialogue(
     memories,
     archiveSummary: options?.archiveSummary,
     relevantCodex: options?.relevantCodex,
-    conversationHistory: options?.conversationHistory,
   });
 
   try {
@@ -68,7 +67,6 @@ export async function* streamNpcDialogue(
     memories,
     archiveSummary: options?.archiveSummary,
     relevantCodex: options?.relevantCodex,
-    conversationHistory: options?.conversationHistory,
   });
 
   try {
