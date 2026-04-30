@@ -9,7 +9,7 @@ export type NpcActorOptions = {
   readonly maxRetries?: number;
   readonly archiveSummary?: string;
   readonly relevantCodex?: readonly string[];
-  readonly conversationHistory?: readonly { readonly speaker: string; readonly text: string }[];
+  readonly conversationHistory?: readonly { readonly role: 'user' | 'assistant'; readonly content: string }[];
 };
 
 export async function generateNpcDialogue(
@@ -43,6 +43,7 @@ export async function generateNpcDialogue(
       prompt,
       schema: NpcDialogueSchema,
       maxRetries: options?.maxRetries,
+      history: options?.conversationHistory,
     });
     return object;
   } catch {
@@ -80,6 +81,7 @@ export async function* streamNpcDialogue(
       system,
       prompt,
       maxRetries: options?.maxRetries,
+      history: options?.conversationHistory,
     });
   } catch {
     yield getFallbackDialogue(npcProfile.name).dialogue;

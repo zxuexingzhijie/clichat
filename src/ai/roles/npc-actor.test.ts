@@ -98,6 +98,47 @@ describe('generateNpcDialogue', () => {
   });
 });
 
+describe('generateNpcDialogue — history forwarding', () => {
+  const npcProfile = {
+    id: 'npc_test_history',
+    name: '历史测试NPC',
+    personality_tags: ['neutral'],
+    goals: ['test'],
+    backstory: '测试用',
+  };
+
+  beforeEach(() => {
+    mockGenerateObject.mockReset();
+    mockGenerateObject.mockResolvedValue({
+      object: {
+        dialogue: '...',
+        emotionTag: 'neutral',
+        shouldRemember: false,
+        sentiment: 'neutral',
+      },
+      usage: mockUsage,
+    });
+  });
+
+  it('forwards conversationHistory as messages[] (not prompt) to generateObject', async () => {
+    await generateNpcDialogue(
+      npcProfile,
+      '测试场景',
+      '问候',
+      [],
+      {
+        conversationHistory: [
+          { role: 'user', content: 'q' },
+          { role: 'assistant', content: 'a' },
+        ],
+      },
+    );
+    const callArgs = (mockGenerateObject.mock.calls[0] as unknown as [Record<string, unknown>])[0];
+    expect(callArgs).toHaveProperty('messages');
+    expect(callArgs).not.toHaveProperty('prompt');
+  });
+});
+
 describe('narrativeContext forwarding', () => {
   const npcProfile = {
     id: 'npc_test',
