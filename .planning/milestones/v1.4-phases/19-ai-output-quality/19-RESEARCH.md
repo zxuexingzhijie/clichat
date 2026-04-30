@@ -440,16 +440,18 @@ export type AiRole =
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Does Zod `.max(300)` validation failure cause `callGenerateObject` to exhaust all retries before falling to the catch block?**
    - What we know: `callGenerateObject` retries on any thrown error (line 107-112). Zod validation in `generateObject` (AI SDK) throws if schema fails.
    - What's unclear: Whether the AI SDK retries internally on schema failure before throwing, causing double-retry.
    - Recommendation: Set `maxRetries: 0` in the narration Zod failure test to confirm single-failure behavior; adjust if needed.
+   - RESOLVED: Plans use `maxRetries: 0` in Zod-failure tests to isolate single-failure behavior. Acceptable approach — double-retry is bounded by `maxRetries` regardless.
 
 2. **Should `NarrationOutputSchema` live in `src/ai/schemas/` (new file) or be inlined in `narrative-director.ts`?**
    - What we know: `NpcDialogueSchema` lives in `src/ai/schemas/npc-dialogue.ts` as its own file.
    - Recommendation: Follow the established pattern — create `src/ai/schemas/narration-output.ts`. Inline is acceptable if the schema is trivial (single field), but consistency with the NPC schema pattern is cleaner.
+   - RESOLVED: New file `src/ai/schemas/narration-output.ts` chosen — consistent with NpcDialogueSchema pattern in the same directory.
 
 ---
 

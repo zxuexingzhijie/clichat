@@ -341,17 +341,19 @@ draft.dialogueHistory = [
 | A2 | multi_turn mode passes system as SystemModelMessage (role:'system') inside messages[], not as top-level `system` string param — so all providers see it correctly | Architecture Patterns | Non-Anthropic providers may not handle SystemModelMessage in messages[] the same way |
 | A3 | The fallback `generateNpcDialogue` call in useNpcDialogue completion handler also needs history threaded through | Common Pitfalls #4 | Metadata extraction call will be single-turn; acceptable degradation but impure |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Does the `system` top-level string param coexist with `messages[]` in AI SDK v5?**
    - What we know: `Prompt` type shows `system?: string` alongside `messages: Array<ModelMessage>` — they are separate fields
    - What's unclear: Whether Anthropic provider handles `system` string + `messages[]` correctly, or whether SystemModelMessage in messages[] is the only path
    - Recommendation: Use SystemModelMessage inside messages[] (consistent with how existing `anthropic_cache` mode works; avoids two separate parameters)
+   - **RESOLVED:** Use SystemModelMessage (role:'system') as first element in messages[]. This is the confirmed path in `@ai-sdk/anthropic` source (lines 195-213) for cacheControl. Top-level `system` string is provider-dependent; messages[] approach is universal. D-02 confirmed: providerOptions.anthropic.cacheControl on the SystemModelMessage.
 
 2. **How does narrative-creation-screen signal "new session" vs "continuation" to useNpcDialogue?**
    - What we know: `reset()` is called before each round change; `startDialogue` is called after
    - What's unclear: If reset() clears messagesRef, round 1's startDialogue has empty history (correct). Round 2+ should have history. But reset() is called before every round, which would wipe it.
    - Recommendation: Screen must either (a) accumulate messages[] in its own state and pass via conversationHistory in the context object, OR (b) hook treats reset() as "wipe streaming only" and adds a separate `resetMessages()` API. Option (a) is simpler and keeps the hook stateless about session identity.
+   - **RESOLVED:** Option (b) chosen — hook owns messagesRef internally; `reset()` only clears streaming state (NOT messagesRef); new `resetMessages()` API allows screen to explicitly clear history at session boundary (before round 1). This is consistent with D-06 ("hook internally maintains messages[]") and aligns with Plan 03 design. D-07 and D-10 in CONTEXT.md updated to reflect hook-owned design.
 
 ## Environment Availability
 

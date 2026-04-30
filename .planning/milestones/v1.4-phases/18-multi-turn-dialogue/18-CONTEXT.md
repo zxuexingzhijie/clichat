@@ -29,12 +29,12 @@
 
 ### 守卫创建对话配线（DIAL-03）
 - **D-06:** `useNpcDialogue` hook 内部维护 `messages[]`，不经过 DialogueManager
-- **D-07:** `narrative-creation-screen.tsx` 每轮调用 `startDialogue` 时，把当前积累的 messages[] 传入 hook
+- **D-07:** hook 内部持有 `messagesRef` 积累 messages[]，`narrative-creation-screen.tsx` 每轮正常调用 `startDialogue(context)` 即可，无需传入历史——hook 自行追加
 - **D-08:** hook 在 `startDialogue` 时将上一轮的 `{role:'user', content: playerAction}` + `{role:'assistant', content: npcResponse}` 追加到内部 messages[]
 
 ### 对话历史大小
 - **D-09:** 不限制历史长度，传入全部对话记录（sessions 内累积）
-- **D-10:** 每个对话 session 独立——`startDialogue` 时重置 messages[]（`endDialogue` 不影响新 session）
+- **D-10:** messages[] 只通过显式的 `resetMessages()` 调用清空；`startDialogue` 不清 messages[]；`reset()` 只清流式状态；`narrative-creation-screen` 在守卫对话开始前调用 `resetMessages()` 以建立 session 边界
 
 ### 数据格式迁移
 - **D-11:** `dialogueHistory` 在 `DialogueState` 里改为 `{role: 'user' | 'assistant', content: string}[]`（从 `{speaker: string, text: string}[]` 迁移）
