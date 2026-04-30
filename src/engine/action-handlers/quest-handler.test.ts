@@ -50,6 +50,7 @@ function makeQuestSystem(overrides: Partial<QuestSystem> = {}): QuestSystem {
     advanceStage: mock(() => {}),
     failQuest: mock(() => {}),
     completeQuest: mock(() => {}),
+    cleanup: mock(() => {}),
     ...overrides,
   };
 }

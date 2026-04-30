@@ -72,7 +72,9 @@ async function dispatchTask(task: SummarizerTask): Promise<void> {
     const entries = task.entryIds.length > 0
       ? allEntries.filter(e => task.entryIds.includes(String(e.turnNumber)))
       : allEntries.slice(-20);
-    const result = await generateTurnLogCompress(entries);
+    const result = await generateTurnLogCompress(
+      entries.map(e => ({ turnNumber: e.turnNumber, action: e.action, narration: e.narrationLines.join(' ') }))
+    );
     recentTurnCompressBlocks.push(result);
     return;
   }

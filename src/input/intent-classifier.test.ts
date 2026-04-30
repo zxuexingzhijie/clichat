@@ -116,7 +116,7 @@ describe('classifyIntent', () => {
     mockGenerateObject.mockResolvedValueOnce({ object: expected });
     await classifyIntent('看看', 'A town square');
     expect(mockGenerateObject).toHaveBeenCalledTimes(1);
-    const callArgs = mockGenerateObject.mock.calls[0]?.[0] as Record<string, unknown>;
+    const callArgs = (mockGenerateObject.mock.calls as unknown as [Record<string, unknown>][])[0]?.[0];
     expect(callArgs).toBeDefined();
     expect(callArgs['schema']).toBeDefined();
   });
