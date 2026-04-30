@@ -1,4 +1,4 @@
-import { describe, it, expect, mock, beforeEach } from 'bun:test';
+import { describe, it, expect, mock, beforeEach, afterAll } from 'bun:test';
 
 const mockStreamNpcDialogue = mock(() => (async function* () { yield 'hello world response'; })());
 const mockGenerateNpcDialogue = mock(() =>
@@ -9,26 +9,23 @@ const mockGenerateNpcDialogue = mock(() =>
     shouldRemember: false,
   }),
 );
-mock.module('../../ai/roles/npc-actor', () => ({
-  streamNpcDialogue: mockStreamNpcDialogue,
-  generateNpcDialogue: mockGenerateNpcDialogue,
-}));
-
-const mockEventBus = { emit: mock(() => {}) };
-mock.module('../../events/event-bus', () => ({
-  eventBus: mockEventBus,
-}));
-
 const mockExtractNpcMetadata = mock(() => ({
   sentiment: undefined,
   emotionTag: 'curious',
   shouldRemember: true,
 }));
-mock.module('../../ai/utils/metadata-extractor', () => ({
-  extractNpcMetadata: mockExtractNpcMetadata,
+const mockEventBus = { emit: mock(() => {}), on: mock(() => {}), off: mock(() => {}) };
+mock.module('../../events/event-bus', () => ({
+  eventBus: mockEventBus,
 }));
 
 const { createNpcDialogueState } = await import('./use-npc-dialogue');
+
+const makeDeps = () => ({
+  streamFn: mockStreamNpcDialogue as Parameters<typeof createNpcDialogueState>[0] extends { streamFn?: infer F } ? F : never,
+  generateFn: mockGenerateNpcDialogue as Parameters<typeof createNpcDialogueState>[0] extends { generateFn?: infer F } ? F : never,
+  extractFn: mockExtractNpcMetadata as Parameters<typeof createNpcDialogueState>[0] extends { extractFn?: infer F } ? F : never,
+});
 
 const makeProfile = () => ({
   id: 'npc_guard',
@@ -60,12 +57,12 @@ describe('createNpcDialogueState — messagesRef accumulation', () => {
   });
 
   it('messagesRef is empty before any startDialogue call', () => {
-    const state = createNpcDialogueState();
+    const state = createNpcDialogueState(makeDeps());
     expect(state.getMessages()).toHaveLength(0);
   });
 
   it('messagesRef is empty immediately after startDialogue (append happens on completion)', async () => {
-    const state = createNpcDialogueState();
+    const state = createNpcDialogueState(makeDeps());
     const profile = makeProfile();
 
     await state.startDialogue({
@@ -79,7 +76,7 @@ describe('createNpcDialogueState — messagesRef accumulation', () => {
   });
 
   it('after stream completion, messagesRef contains user + assistant entries', async () => {
-    const state = createNpcDialogueState();
+    const state = createNpcDialogueState(makeDeps());
     const profile = makeProfile();
 
     await state.startDialogueAndWait({
@@ -98,7 +95,7 @@ describe('createNpcDialogueState — messagesRef accumulation', () => {
   });
 
   it('second startDialogue receives previous messages as conversationHistory', async () => {
-    const state = createNpcDialogueState();
+    const state = createNpcDialogueState(makeDeps());
     const profile = makeProfile();
 
     await state.startDialogueAndWait({
@@ -124,7 +121,7 @@ describe('createNpcDialogueState — messagesRef accumulation', () => {
   });
 
   it('reset() does not clear messagesRef', async () => {
-    const state = createNpcDialogueState();
+    const state = createNpcDialogueState(makeDeps());
     const profile = makeProfile();
 
     await state.startDialogueAndWait({
@@ -144,7 +141,7 @@ describe('createNpcDialogueState — messagesRef accumulation', () => {
   });
 
   it('resetMessages() clears messagesRef to empty array', async () => {
-    const state = createNpcDialogueState();
+    const state = createNpcDialogueState(makeDeps());
     const profile = makeProfile();
 
     await state.startDialogueAndWait({
@@ -160,4 +157,8 @@ describe('createNpcDialogueState — messagesRef accumulation', () => {
 
     expect(state.getMessages()).toHaveLength(0);
   });
+});
+
+afterAll(() => {
+  mock.restore();
 });

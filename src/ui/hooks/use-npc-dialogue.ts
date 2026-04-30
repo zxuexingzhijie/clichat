@@ -40,7 +40,14 @@ export type NpcDialogueStateController = {
   readonly getMessages: () => readonly HistoryEntry[];
 };
 
-export function createNpcDialogueState(): NpcDialogueStateController {
+export function createNpcDialogueState(deps?: {
+  streamFn?: typeof streamNpcDialogue;
+  generateFn?: typeof generateNpcDialogue;
+  extractFn?: typeof extractNpcMetadata;
+}): NpcDialogueStateController {
+  const streamFn = deps?.streamFn ?? streamNpcDialogue;
+  const generateFn = deps?.generateFn ?? generateNpcDialogue;
+  const extractFn = deps?.extractFn ?? extractNpcMetadata;
   const messages: HistoryEntry[] = [];
   let isStreaming = false;
 
@@ -53,7 +60,7 @@ export function createNpcDialogueState(): NpcDialogueStateController {
     });
 
     isStreaming = true;
-    streamNpcDialogue(npcProfile, scene, playerAction, memories, {
+    streamFn(npcProfile, scene, playerAction, memories, {
       archiveSummary: context.archiveSummary,
       relevantCodex: context.relevantCodex,
       conversationHistory: messages.length > 0 ? [...messages] : context.conversationHistory,
@@ -69,7 +76,7 @@ export function createNpcDialogueState(): NpcDialogueStateController {
     });
 
     isStreaming = true;
-    const stream = streamNpcDialogue(npcProfile, scene, playerAction, memories, {
+    const stream = streamFn(npcProfile, scene, playerAction, memories, {
       archiveSummary: context.archiveSummary,
       relevantCodex: context.relevantCodex,
       conversationHistory: messages.length > 0 ? [...messages] : context.conversationHistory,
