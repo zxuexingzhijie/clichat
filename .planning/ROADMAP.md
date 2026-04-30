@@ -132,7 +132,11 @@ Plans:
   2. Live API session: `:cost` displays accurate token counts that include intent classification usage added in Phase 19
   3. Live API session: `:replay` replays the last 5 turns with correct narration matching the actual game history
   4. Live API session: background summarizer compresses NPC memory after 10+ interactions without error
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 21-P01-PLAN.md — package.json version 1.4.0 + author Makoto + npm pkg fix + publish dry-run (DIST-01)
+- [ ] 21-P02-PLAN.md — Homebrew dispatch review (release.yml read-only audit) (DIST-01)
+- [ ] 21-P03-PLAN.md — 21-UAT-CHECKLIST.md creation (UAT-01)
 
 ## Progress
 
@@ -158,4 +162,4 @@ Plans:
 | 18. Multi-Turn Dialogue | v1.4 | 3/3 | Complete | 2026-04-30 |
 | 19. AI Output Quality | v1.4 | 3/3 | Complete | 2026-04-30 |
 | 20. Enemy Loot System | v1.4 | 0/3 | Not started | - |
-| 21. Distribution & Live Validation | v1.4 | 0/TBD | Not started | - |
+| 21. Distribution & Live Validation | v1.4 | 0/3 | Not started | - |
