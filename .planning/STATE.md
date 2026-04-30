@@ -4,14 +4,14 @@ milestone: v1.4
 milestone_name: AI Quality & Game Completeness
 status: active
 stopped_at: ~
-last_updated: "2026-04-30T10:30:00Z"
-last_activity: 2026-04-30 — Phase 18 UAT complete (8/8 pass), Phase 18 marked complete
+last_updated: "2026-04-30T07:31:00Z"
+last_activity: 2026-04-30 — Phase 19 P01 complete (generateNarration migrated to callGenerateObject + NarrationOutputSchema)
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 5
-  completed_plans: 5
-  percent: 40
+  completed_plans: 6
+  percent: 42
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 
 ## Current Position
 
-Phase: 19 (AI Output Quality) — ready to plan
-Plan: Not started
-Status: Phase 18 complete (3/3 plans, UAT 8/8 pass) — ready to plan Phase 19
-Last activity: 2026-04-30 — Phase 18 UAT complete (8/8 pass), marked complete
+Phase: 19 (AI Output Quality) — in progress
+Plan: P01 complete, P02 next
+Status: 19-P01 complete (generateNarration → callGenerateObject + NarrationOutputSchema)
+Last activity: 2026-04-30 — Phase 19 P01 complete
 
 Progress: [████░░░░░░] 40%
 
@@ -77,6 +77,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - 15-02: listSavesFn injected via GameLoopOptions (not mock.module) to prevent test isolation pollution; revealedNpcs uses Zod .default([]) for backward-compatible saves; dialogue_ended listener in scene-manager owns npcsPresent merge
 - 17-P01: storyAct used as raw identifier (act1/act2/act3) in NPC system prompt — no translation to 第一幕 etc
 - 17-P02: adjudicateTalkResult wraps sentimentToDelta in rules-engine.ts; NpcSentiment inferred from NpcDialogue['sentiment'] to avoid enum duplication
+- 19-P01: NarrationOutputSchema enforces min(10)/max(300) via Zod; callGenerateObject replaces callGenerateText in generateNarration; schema rejection triggers catch fallback; streamNarration unchanged
 
 ### Pending Todos
 
@@ -125,6 +126,6 @@ Items acknowledged and deferred at v1.3 milestone close on 2026-04-30:
 
 ## Session Continuity
 
-Last session: 2026-04-30T10:30:00Z
-Stopped at: Phase 18 complete, ready to plan Phase 19
+Last session: 2026-04-30T07:31:00Z
+Stopped at: Phase 19 P01 complete — P02 next (intent-classifier cost tracking)
 Resume file: None
