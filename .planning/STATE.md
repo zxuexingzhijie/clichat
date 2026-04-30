@@ -4,8 +4,8 @@ milestone: v1.4
 milestone_name: AI Quality & Game Completeness
 status: active
 stopped_at: ~
-last_updated: "2026-04-30T11:05:00Z"
-last_activity: 2026-04-30 — Phase 19 UAT complete (7/7 pass), Phase 19 marked complete
+last_updated: "2026-04-30T11:30:00Z"
+last_activity: 2026-04-30 — Phase 20 P01 complete (loot→loot_table + droppedItems)
 progress:
   total_phases: 5
   completed_phases: 3
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 
 ## Current Position
 
-Phase: 19 (AI Output Quality) — complete
-Plan: P03 complete (all 3 plans done)
-Status: 19-P03 complete (runSummarizerLoop AbortSignal + SIGINT wiring, graceful shutdown)
-Last activity: 2026-04-30 — Phase 19 P03 complete
+Phase: 20 (Enemy Loot System) — in progress
+Plan: P01 complete
+Status: 20-P01 complete (loot→loot_table rename + SceneState droppedItems field)
+Last activity: 2026-04-30 — Phase 20 P01 complete
 
 Progress: [█████░░░░░] 50%
 
@@ -80,6 +80,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - 19-P01: NarrationOutputSchema enforces min(10)/max(300) via Zod; callGenerateObject replaces callGenerateText in generateNarration; schema rejection triggers catch fallback; streamNarration unchanged
 - 19-P02: classifyIntent uses callGenerateObject with role 'retrieval-planner'; model? removed from ClassifyIntentOptions; intent classification tokens now visible in :cost
 - 19-P03: runSummarizerLoop checks signal.aborted at 3 points (loop start, post-sleep, post-dispatchTask); SIGINT handler stored as named const for process.off deregistration; useEffect cleanup calls controller.abort() then process.off
+- 20-P01: EnemySchema loot→loot_table; SceneStateSchema droppedItems:string[] default []; combat-loop.ts updated to loot_table access
 
 ### Pending Todos
 
