@@ -134,7 +134,7 @@ Plans:
   4. Live API session: background summarizer compresses NPC memory after 10+ interactions without error
 **Plans**: 3 plans
 Plans:
-- [ ] 21-P01-PLAN.md — package.json version 1.4.0 + author Makoto + npm pkg fix + publish dry-run (DIST-01)
+- [x] 21-P01-PLAN.md — package.json version 1.4.0 + author Makoto + npm pkg fix + publish dry-run (DIST-01)
 - [ ] 21-P02-PLAN.md — Homebrew dispatch review (release.yml read-only audit) (DIST-01)
 - [ ] 21-P03-PLAN.md — 21-UAT-CHECKLIST.md creation (UAT-01)
 
@@ -161,5 +161,5 @@ Plans:
 | 17. NPC Architecture Fix | v1.4 | 2/2 | Complete | 2026-04-30 |
 | 18. Multi-Turn Dialogue | v1.4 | 3/3 | Complete | 2026-04-30 |
 | 19. AI Output Quality | v1.4 | 3/3 | Complete | 2026-04-30 |
-| 20. Enemy Loot System | v1.4 | 0/3 | Not started | - |
-| 21. Distribution & Live Validation | v1.4 | 0/3 | Not started | - |
+| 20. Enemy Loot System | v1.4 | 3/3 | Complete | 2026-04-30 |
+| 21. Distribution & Live Validation | v1.4 | 1/3 | In Progress | - |

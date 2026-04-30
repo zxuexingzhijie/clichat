@@ -4,14 +4,14 @@ milestone: v1.4
 milestone_name: AI Quality & Game Completeness
 status: active
 stopped_at: ~
-last_updated: "2026-04-30T15:00:00Z"
-last_activity: 2026-04-30 — Phase 20 complete (3/3 plans) — Enemy Loot System shipped
+last_updated: "2026-04-30T14:23:31Z"
+last_activity: 2026-04-30 — Phase 21 P01 complete — package.json v1.4.0, npm publish --dry-run clean
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
-  percent: 80
+  total_plans: 14
+  completed_plans: 12
+  percent: 84
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 
 ## Current Position
 
-Phase: 20 (Enemy Loot System) — complete
-Plan: P03 complete (all 3 plans done)
-Status: Phase 20 complete — loot_table YAML, droppedItems scene drop, :take handler, SaveDataV6
-Last activity: 2026-04-30 — Phase 20 all 3 plans complete
+Phase: 21 (Distribution & Live Validation) — in progress
+Plan: P01 complete
+Status: Phase 21 P01 complete — package.json v1.4.0, author Makoto, git+https:// url, npm dry-run clean
+Last activity: 2026-04-30 — Phase 21 P01 complete
 
-Progress: [████████░░] 80%
+Progress: [████████░░] 84%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [████████░░] 80%
 | 14 Wave 2 (Quest Events + Commands) | 1 | ~8 min | ~8 min |
 | 17 P01 (NPC Architecture Fix) | 1 | ~3 min | ~3 min |
 | 17 P02 (NPC Architecture Fix) | 1 | ~3 min | ~3 min |
+| 21 P01 (Distribution) | 1 | ~1 min | ~1 min |
 
 *Updated after each plan completion*
 
@@ -82,6 +83,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - 19-P03: runSummarizerLoop checks signal.aborted at 3 points (loop start, post-sleep, post-dispatchTask); SIGINT handler stored as named const for process.off deregistration; useEffect cleanup calls controller.abort() then process.off
 - 20-P01: EnemySchema loot→loot_table; SceneStateSchema droppedItems:string[] default []; combat-loop.ts updated to loot_table access
 - 20-P03: SaveDataV6Schema extends V5; readSaveData() upgraded to V6; branch-diff SaveDataCompare extends to V4|V5|V6; UI type refs cascade-updated
+- 21-P01: version bumped to 1.4.0; author=Makoto; repository.url=git+https:// canonical format; npm publish --dry-run passes cleanly
 
 ### Pending Todos
 
@@ -130,6 +132,6 @@ Items acknowledged and deferred at v1.3 milestone close on 2026-04-30:
 
 ## Session Continuity
 
-Last session: 2026-04-30T15:00:00Z
-Stopped at: Completed Phase 20 — all 3 plans done (P01/P02/P03)
+Last session: 2026-04-30T14:23:31Z
+Stopped at: Completed 21-P01-PLAN.md
 Resume file: None
