@@ -1,0 +1,57 @@
+{
+  "npcId": "npc_captain",
+  "recentMemories": [
+    {
+      "id": "krsk_R8DtfXtsO3P3jina",
+      "npcId": "npc_captain",
+      "event": "与玩家初次对话: 站住，陌生人。黑松镇最近不太平，晚上别乱走。你是路过的旅人，还是有什么事要办？",
+      "turnNumber": 0,
+      "importance": "low",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    },
+    {
+      "id": "aM6uiMkKg-_2lDsvDlFWz",
+      "npcId": "npc_captain",
+      "event": "玩家说: \"\"你在担心什么？\"\" — 担心？我担心的多了去了。最近连着好几个猎户和旅客进了北林就没出来，活不见人死不见尸。我派人查了，每次",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    },
+    {
+      "id": "qDDpHVl7hgYTZbDLMN1SZ",
+      "npcId": "npc_captain",
+      "event": "玩家说: \"\"你说的镇那边，具体是什么情况？\"\" — 镇那边？你是说南街的猎户老赵家？前天他婆娘来报，说老赵进北林三天没回来。我派人去他常走的路线查了，发",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    },
+    {
+      "id": "WsUTw2eJGgGlCDz8__r58",
+      "npcId": "npc_captain",
+      "event": "玩家说: \"\"你说的街那边，具体是什么情况？\"\" — 街那边？你是说南街吧。老赵家就住在那条巷子尽头，他婆娘现在天天坐在门槛上哭。我让守卫多盯着那边，但说",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    }
+  ],
+  "salientMemories": [],
+  "archiveSummary": "",
+  "lastUpdated": "2026-04-30T18:48:54.951Z",
+  "version": 0
+}

@@ -365,6 +365,7 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
           branches={branchState.branches}
           readSaveData={readSaveData}
           saveDir={saveDir}
+          eventBus={ctx.eventBus}
         />
       </SizeGuard>
     </GameErrorBoundary>

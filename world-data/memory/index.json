@@ -1,0 +1,12 @@
+{
+  "npc_captain": {
+    "filePath": "/Users/makoto/Downloads/work/cli/world-data/memory/blackpine_town/npc_captain.json",
+    "region": "blackpine_town",
+    "updatedAt": "2026-04-30T18:48:54.951Z"
+  },
+  "npc_hunter": {
+    "filePath": "/Users/makoto/Downloads/work/cli/world-data/memory/blackpine_town/npc_hunter.json",
+    "region": "blackpine_town",
+    "updatedAt": "2026-04-30T18:49:53.511Z"
+  }
+}

@@ -16,15 +16,15 @@ import { useGameInput, getPanelActionForKey } from '../hooks/use-game-input';
 import { useGameEventToasts } from '../hooks/use-game-event-toasts';
 import { useTimedEffect } from '../hooks/use-timed-effect';
 import { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx, DialogueStoreCtx, CombatStoreCtx, QuestStoreCtx } from '../../app';
-import { eventBus } from '../../events/event-bus';
+import { eventBus as defaultEventBus } from '../../events/event-bus';
+import type { EventBus } from '../../events/event-bus';
 import { getRecentChapterSummaries } from '../../ai/summarizer/summarizer-worker';
 import { TIME_OF_DAY_LABELS } from '../../types/common';
-import { gameStore, type GameState } from '../../state/game-store';
+import type { GameState } from '../../state/game-store';
 import { costSessionStore } from '../../state/cost-session-store';
 import { getLastReplayEntries } from '../../game-loop';
 import { useAiNarration } from '../hooks/use-ai-narration';
 import { useNpcDialogue } from '../hooks/use-npc-dialogue';
-import { sceneStore } from '../../state/scene-store';
 import { createGameScreenController } from '../../engine/game-screen-controller';
 import type { GameLoop } from '../../game-loop';
 import type { DialogueManager } from '../../engine/dialogue-manager';
@@ -54,6 +54,7 @@ type GameScreenProps = {
   readonly branches?: Record<string, BranchMeta>;
   readonly readSaveData?: (fileName: string, saveDir: string) => Promise<SaveDataV6>;
   readonly saveDir?: string;
+  readonly eventBus?: EventBus;
 };
 
 export function GameScreen({
@@ -68,7 +69,14 @@ export function GameScreen({
   branches,
   readSaveData,
   saveDir,
+  eventBus = defaultEventBus,
 }: GameScreenProps): React.ReactNode {
+  const gameContextStore = React.useContext(GameStoreCtx.Context);
+  const sceneContextStore = React.useContext(SceneStoreCtx.Context);
+  if (!gameContextStore || !sceneContextStore) {
+    throw new ReferenceError('GameScreen must be used within game and scene store providers');
+  }
+
   const gameState = GameStoreCtx.useStoreState((s) => s);
   const playerState = PlayerStoreCtx.useStoreState((s) => s);
   const sceneState = SceneStoreCtx.useStoreState((s) => s);
@@ -114,11 +122,11 @@ export function GameScreen({
 
   const controller = useMemo(
     () => createGameScreenController(
-      { game: gameStore, scene: sceneStore },
+      { game: gameContextStore, scene: sceneContextStore },
       eventBus,
       { gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue },
     ),
-    [gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue],
+    [gameContextStore, sceneContextStore, eventBus, gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue],
   );
 
   useEffect(() => {
@@ -151,7 +159,7 @@ export function GameScreen({
     const handler = () => { triggerSceneFade(); };
     eventBus.on('scene_changed', handler);
     return () => { eventBus.off('scene_changed', handler); };
-  }, [triggerSceneFade]);
+  }, [eventBus, triggerSceneFade]);
 
   const [dialogueSelectedIndex, setDialogueSelectedIndex] = useState(0);
   const [combatSelectedIndex, setCombatSelectedIndex] = useState(0);
@@ -246,12 +254,12 @@ export function GameScreen({
     (text: string) => {
       dialogueManager?.processPlayerFreeText(text).catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err);
-        sceneStore.setState(draft => {
+        sceneContextStore.setState(draft => {
           draft.narrationLines = [...draft.narrationLines, `[对话错误] ${msg}`];
         });
       });
     },
-    [dialogueManager],
+    [dialogueManager, sceneContextStore],
   );
 
   const handleCombatExecute = useCallback(
@@ -302,13 +310,13 @@ export function GameScreen({
     if (input === 'r' || input === 'l') {
       void gameLoop?.loadLastSave();
     } else {
-      gameStore.setState(draft => { draft.phase = 'title'; draft.pendingQuit = false; });
+      gameContextStore.setState(draft => { draft.phase = 'title'; draft.pendingQuit = false; });
     }
-  }, [gameLoop]), { isActive: gameState.phase === 'game_over' });
+  }, [gameContextStore, gameLoop]), { isActive: gameState.phase === 'game_over' });
 
   useInput(useCallback((_input: string, _key: unknown) => {
-    gameStore.setState(draft => { draft.phase = 'title'; draft.pendingQuit = false; });
-  }, []), { isActive: gameState.phase === 'victory' });
+    gameContextStore.setState(draft => { draft.phase = 'title'; draft.pendingQuit = false; });
+  }, [gameContextStore]), { isActive: gameState.phase === 'victory' });
 
   const sceneLines = dialogueState.active && dialogueState.mode === 'inline'
     ? [
@@ -478,7 +486,7 @@ export function GameScreen({
               if (confirmed) {
                 exit();
               } else {
-                gameStore.setState(draft => { draft.pendingQuit = false; });
+                gameContextStore.setState(draft => { draft.pendingQuit = false; });
               }
             }}
           />
@@ -521,7 +529,7 @@ export function GameScreen({
             if (confirmed) {
               exit();
             } else {
-              gameStore.setState(draft => { draft.pendingQuit = false; });
+              gameContextStore.setState(draft => { draft.pendingQuit = false; });
             }
           }}
         />

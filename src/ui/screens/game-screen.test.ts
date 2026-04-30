@@ -5,6 +5,14 @@ import { GameScreen } from './game-screen';
 import type { GameLoop, ProcessResult } from '../../game-loop';
 
 describe('BUG-01: GameScreen accepts gameLoop prop', () => {
+  it('GameScreen source uses context stores for controller actions and panel close', () => {
+    const source = GameScreen.toString();
+    expect(source).toContain('GameStoreCtx.Context');
+    expect(source).toContain('SceneStoreCtx.Context');
+    expect(source).toContain('gameContextStore');
+    expect(source).toContain('sceneContextStore');
+  });
+
   it('GameScreen function source delegates to controller.handleActionExecute', () => {
     const source = GameScreen.toString();
     expect(source).toContain('gameLoop');
