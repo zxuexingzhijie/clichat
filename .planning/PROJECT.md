@@ -79,11 +79,11 @@ a chatbot that reinvents the universe every turn.
 - ✓ NPC knowledge_profile for 7 story NPCs + dialogue trust injection + route-lock flags — v1.3 (D-15–20)
 - ✓ Location description_overrides with worldFlags priority resolution (no LLM call) — v1.3 (D-21–24)
 
+- ✓ Wire narrativeContext into NPC Actor; sentiment routed through Rules Engine (adjudicateTalkResult) — v1.4 Phase 17 (ARCH-01, ARCH-02)
+- ✓ True multi-turn NPC dialogue via messages[]; dialogueHistory {role,content}[]; messagesRef hook accumulation — v1.4 Phase 18 (DIAL-01, DIAL-02, DIAL-03)
+
 ### Active
 
-- [ ] Wire narrativeContext into NPC Actor (npc-actor.ts `void` bug) — v1.4 (ARCH-01)
-- [ ] Route NPC sentiment through Rules Engine, not direct delta — v1.4 (ARCH-02)
-- [ ] True multi-turn NPC dialogue via messages[] — v1.4 (DIAL-01)
 - [ ] Narrative Director generateObject + schema constraints — v1.4 (AI-05)
 - [ ] intent-classifier cost tracking (route through ai-caller.ts) — v1.4 (AI-06)
 - [ ] summarizer graceful shutdown (AbortSignal) — v1.4 (AI-07)
@@ -149,10 +149,13 @@ a chatbot that reinvents the universe every turn.
 | SaveDataV4 union for compareBranches | branch-diff accepts V4|V5 without breaking existing code | ✓ Good — no downstream breakage |
 | OVERRIDE_PRIORITY hardcoded in code | Avoids data migration when priority changes | ✓ Good — easy to iterate |
 | quest field optional in createDialogueManager | Backward-compatible with existing test fixtures | ✓ Good — no test regressions |
-| ai-caller.ts single-turn only | Original design; multi-turn serialized to strings | ⚠ Revisit — true multi-turn deferred to v1.4 |
+| ai-caller.ts single-turn only | Original design; multi-turn serialized to strings | ✓ Resolved — Phase 18 implemented multi_turn MessageMode with messages[] |
+| multi_turn uses SystemModelMessage (role:'system') as first element | All providers handle it uniformly; no top-level system param needed | ✓ Good — clean discriminated union extension |
+| dialogueHistory migrated to {role,content}[] | Unified with LLM API format; historySection text serialization deleted | ✓ Good — single history channel, no duplication |
+| messagesRef (useRef) for cross-render accumulation in hook | React ref survives re-renders; reset() preserves history; resetMessages() sets session boundary | ✓ Good — mirrors createStreamingText factory pattern |
 
 ---
-*Last updated: 2026-04-30 after v1.3 milestone*
+*Last updated: 2026-04-30 after Phase 18 (Multi-Turn Dialogue)*
 
 **After each phase transition** (via `/gsd-transition`):
 1. Requirements invalidated? → Move to Out of Scope with reason

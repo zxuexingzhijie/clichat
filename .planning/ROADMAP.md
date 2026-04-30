@@ -53,8 +53,8 @@
 <details>
 <summary>🔄 v1.4 AI Quality & Game Completeness (Phases 17–21) — IN PROGRESS</summary>
 
-- [ ] **Phase 17: NPC Architecture Fix** — narrativeContext wired into NPC Actor; sentiment routed through Rules Engine
-- [ ] **Phase 18: Multi-Turn Dialogue** — ai-caller.ts messages[] API; DialogueManager history per session; guard dialogue context accumulation
+- [x] **Phase 17: NPC Architecture Fix** — narrativeContext wired into NPC Actor; sentiment routed through Rules Engine
+- [x] **Phase 18: Multi-Turn Dialogue** — ai-caller.ts messages[] API; DialogueManager history per session; guard dialogue context accumulation
 - [ ] **Phase 19: AI Output Quality** — generateObject for narration; intent-classifier cost tracking; summarizer graceful shutdown
 - [ ] **Phase 20: Enemy Loot System** — loot_table in EnemySchema; combat drops items on death; :take from scene
 - [ ] **Phase 21: Distribution & Live Validation** — OWNER placeholders replaced; npm publish --dry-run clean; live API UAT passes
@@ -91,9 +91,9 @@
   4. DialogueManager stores history as `{role, content}[]` per session and resets cleanly on session end
 **Plans**: 3 plans
 Plans:
-- [ ] 18-01-PLAN.md — ai-caller.ts multi_turn 模式 + npc-actor.ts 类型迁移 (DIAL-01)
-- [ ] 18-02-PLAN.md — dialogueHistory 原子迁移 {speaker,text}→{role,content} + historySection 删除 (DIAL-02)
-- [ ] 18-03-PLAN.md — useNpcDialogue messagesRef 积累 + 守卫对话接线 (DIAL-03)
+- [x] 18-01-PLAN.md — ai-caller.ts multi_turn 模式 + npc-actor.ts 类型迁移 (DIAL-01)
+- [x] 18-02-PLAN.md — dialogueHistory 原子迁移 {speaker,text}→{role,content} + historySection 削除 (DIAL-02)
+- [x] 18-03-PLAN.md — useNpcDialogue messagesRef 積累 + 守卫対話接线 (DIAL-03)
 
 ### Phase 19: AI Output Quality
 **Goal**: AI-generated narration is schema-validated, intent classification costs are tracked, and the summarizer shuts down gracefully
@@ -146,8 +146,8 @@ Plans:
 | 14. Quest, Memory, Scene & Codex | v1.2 | 4/4 | Complete | 2026-04-28 |
 | 15. Content & Death Recovery | v1.2 | 2/2 | Complete | 2026-04-28 |
 | 16. Story Mainline & Narrative System | v1.3 | 5/5 | Complete | 2026-04-29 |
-| 17. NPC Architecture Fix | v1.4 | 0/TBD | Not started | - |
-| 18. Multi-Turn Dialogue | v1.4 | 0/TBD | Not started | - |
+| 17. NPC Architecture Fix | v1.4 | 2/2 | Complete | 2026-04-30 |
+| 18. Multi-Turn Dialogue | v1.4 | 3/3 | Complete | 2026-04-30 |
 | 19. AI Output Quality | v1.4 | 0/TBD | Not started | - |
 | 20. Enemy Loot System | v1.4 | 0/TBD | Not started | - |
 | 21. Distribution & Live Validation | v1.4 | 0/TBD | Not started | - |
