@@ -25,7 +25,10 @@ mock.module('../roles/memory-summarizer', () => ({
   generateTurnLogCompress: mock(() => Promise.resolve('compressed turns')),
 }));
 
-const { applyNpcMemoryCompression } = await import('./summarizer-worker');
+const { applyNpcMemoryCompression, runSummarizerLoop } = await import('./summarizer-worker');
+const { dequeuePending: mockDequeuePending } = await import('./summarizer-queue') as {
+  dequeuePending: ReturnType<typeof mock>;
+};
 
 function makeEntries(count: number): NpcMemoryEntry[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -202,5 +205,30 @@ describe('applyNpcMemoryCompression', () => {
     if (capturedRecipe) (capturedRecipe as (d: typeof draft) => void)(draft);
     expect(draft.memories.npc_001.recentMemories.length).toBe(3);
     expect(draft.memories.npc_001.recentMemories[0]!.id).toBe(entries[2]!.id);
+  });
+});
+
+describe('runSummarizerLoop — AbortSignal', () => {
+  beforeEach(() => {
+    (mockDequeuePending as ReturnType<typeof mock>).mockReset();
+  });
+
+  it('exits immediately when signal is pre-aborted', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    (mockDequeuePending as ReturnType<typeof mock>).mockReturnValue(null);
+
+    await expect(runSummarizerLoop(controller.signal)).resolves.toBeUndefined();
+    expect(mockDequeuePending).not.toHaveBeenCalled();
+  });
+
+  it('exits cleanly after idle cycle when signal aborts during setTimeout', async () => {
+    const controller = new AbortController();
+    (mockDequeuePending as ReturnType<typeof mock>).mockReturnValue(null);
+
+    const loopPromise = runSummarizerLoop(controller.signal);
+    setTimeout(() => controller.abort(), 10);
+
+    await expect(loopPromise).resolves.toBeUndefined();
   });
 });
