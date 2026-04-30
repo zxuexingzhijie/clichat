@@ -34,7 +34,9 @@ function makeMinimalSave(overrides: Partial<SaveDataV4> = {}): SaveDataV4 {
       actions: [],
       npcsPresent: [],
       exits: [],
+      exitMap: {},
       objects: [],
+      droppedItems: [],
     },
     combat: {
       active: false,
@@ -235,6 +237,7 @@ describe('compareBranches', () => {
         exits: [],
         exitMap: {},
         objects: [],
+        droppedItems: [],
       },
     });
     const target = makeMinimalSave({
@@ -247,6 +250,7 @@ describe('compareBranches', () => {
         exits: [],
         exitMap: {},
         objects: [],
+        droppedItems: [],
       },
     });
     const result = compareBranches(source, target);

@@ -525,7 +525,7 @@ export function createCombatLoop(
       for (const combatEnemy of defeatedEnemies) {
         const enemyEntry = codexEntries.get(combatEnemy.id);
         const enemyData = enemyEntry?.type === 'enemy' ? (enemyEntry as Enemy) : null;
-        const lootItems = enemyData?.loot ?? [];
+        const lootItems = enemyData?.loot_table ?? [];
         for (const itemId of lootItems) {
           stores.player.setState(draft => {
             draft.tags = [...draft.tags, `item:${itemId}`];

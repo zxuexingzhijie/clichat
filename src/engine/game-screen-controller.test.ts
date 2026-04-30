@@ -36,6 +36,7 @@ function makeSceneStore(overrides: Partial<SceneState> = {}) {
     exits: ['north'],
     exitMap: { north: 'north' },
     objects: ['door'],
+    droppedItems: [],
     ...overrides,
   });
 }

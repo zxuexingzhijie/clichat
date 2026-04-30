@@ -18,6 +18,7 @@ export const SceneStateSchema = z.object({
   exits: z.array(z.string()),
   exitMap: z.record(z.string(), z.string()),
   objects: z.array(z.string()),
+  droppedItems: z.array(z.string()).default([]),
 });
 export type SceneState = z.infer<typeof SceneStateSchema>;
 export type SceneAction = z.infer<typeof SceneActionSchema>;
@@ -40,6 +41,7 @@ export function getDefaultSceneState(): SceneState {
     exits: ['north', 'south', 'east'],
     exitMap: { north: 'north', south: 'south', east: 'east' },
     objects: ['notice_board', 'oil_lamp'],
+    droppedItems: [],
   };
 }
 
