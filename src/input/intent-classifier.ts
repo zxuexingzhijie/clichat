@@ -1,6 +1,6 @@
-import { generateObject } from 'ai';
+import { callGenerateObject } from '../ai/utils/ai-caller';
+import { getRoleConfig } from '../ai/providers';
 import { IntentSchema, type Intent } from '../types/intent';
-import { getModel } from '../ai/providers';
 
 const INTENT_SYSTEM_PROMPT = `You are an intent classifier for a Chinese fantasy RPG game.
 Classify the player's input into a structured game action.
@@ -10,7 +10,6 @@ If the input is ambiguous, set confidence below 0.5 and provide your best interp
 
 export type ClassifyIntentOptions = {
   readonly maxRetries?: number;
-  readonly model?: Parameters<typeof generateObject>[0]['model'];
 };
 
 export async function classifyIntent(
@@ -18,25 +17,17 @@ export async function classifyIntent(
   sceneContext: string,
   options?: ClassifyIntentOptions,
 ): Promise<Intent> {
-  const maxRetries = options?.maxRetries ?? 1;
-  const model = (options?.model ?? getModel('retrieval-planner')) as import('ai').LanguageModel;
-  let lastError: unknown;
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const { object } = await generateObject({
-        model,
-        schema: IntentSchema,
-        system: INTENT_SYSTEM_PROMPT,
-        prompt: `Current scene: ${sceneContext}\nPlayer input: ${input}\n\nClassify the player's intent.`,
-      });
-      return object;
-    } catch (err) {
-      lastError = err;
-    }
-  }
-
-  throw new Error(
-    `Intent classification failed after ${maxRetries + 1} attempts: ${lastError instanceof Error ? lastError.message : String(lastError)}`,
-  );
+  const config = getRoleConfig('retrieval-planner');
+  const { object } = await callGenerateObject<Intent>({
+    role: 'retrieval-planner',
+    providerName: config.providerName,
+    model: config.model,
+    temperature: config.temperature,
+    maxTokens: config.maxTokens,
+    system: INTENT_SYSTEM_PROMPT,
+    prompt: `Current scene: ${sceneContext}\nPlayer input: ${input}\n\nClassify the player's intent.`,
+    maxRetries: options?.maxRetries ?? 1,
+    schema: IntentSchema,
+  });
+  return object;
 }
