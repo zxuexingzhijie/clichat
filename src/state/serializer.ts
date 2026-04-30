@@ -10,7 +10,7 @@ import { NpcMemoryStateSchema, type NpcMemoryState } from './npc-memory-store';
 import { ExplorationStateSchema, type ExplorationState } from './exploration-store';
 import { PlayerKnowledgeStateSchema, type PlayerKnowledgeState } from './player-knowledge-store';
 import type { TurnLogState } from './turn-log-store';
-import { migrateV1ToV2, migrateV2ToV3, migrateV3ToV4, migrateV4ToV5, migrateV5ToV6 } from '../persistence/save-migrator';
+import { migrateToLatest } from '../persistence/save-migrator';
 import { NarrativeStateSchema, type NarrativeState, type NarrativeStore } from './narrative-state';
 import { restoreQuestEventLog } from './quest-store';
 import { restoreTurnLog } from '../engine/turn-log';
@@ -165,19 +165,14 @@ export function createSerializer(
         throw new Error('Invalid save data: malformed JSON');
       }
 
-      const migrated = migrateV5ToV6(migrateV4ToV5(migrateV3ToV4(migrateV2ToV3(migrateV1ToV2(raw)))));
+      const migrated = migrateToLatest(raw);
+      const result = SaveDataV6Schema.safeParse(migrated);
 
-      const v6Result = SaveDataV6Schema.safeParse(migrated);
-      const v5Result = v6Result.success ? null : SaveDataV5Schema.safeParse(migrated);
-      const v4Result = (v6Result.success || v5Result?.success) ? null : SaveDataV4Schema.safeParse(migrated);
-      const v3Fallback = (v6Result.success || v5Result?.success || v4Result?.success) ? null : SaveDataV3Schema.safeParse(migrated);
-      const result = v6Result.success ? v6Result : (v5Result?.success ? v5Result : (v4Result?.success ? v4Result : v3Fallback));
-
-      if (!result || !result.success) {
-        const firstIssue = v6Result.error?.issues?.[0];
+      if (!result.success) {
+        const firstIssue = result.error.issues[0];
         const detail = firstIssue
           ? `${firstIssue.path.join('.')} — ${firstIssue.message}`
-          : v6Result.error?.message ?? 'unknown error';
+          : result.error.message ?? 'unknown error';
         throw new Error(`Invalid save data: ${detail}`);
       }
 
@@ -196,9 +191,7 @@ export function createSerializer(
       restoreQuestEventLog((data.questEventLog ?? []) as QuestEvent[]);
       restoreTurnLog(data.turnLog ?? []);
 
-      if (v6Result.success || v5Result?.success) {
-        stores.narrativeStore.restoreState((data as SaveDataV5).narrativeState);
-      }
+      stores.narrativeStore.restoreState(data.narrativeState);
     },
   };
 }

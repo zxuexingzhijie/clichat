@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useTimedEffect, createTimedEffect } from './use-timed-effect';
 import { eventBus } from '../../events/event-bus';
+import type { EventBus } from '../../events/event-bus';
 import type { DomainEvents } from '../../events/event-types';
 
 export function useEventFlash(eventName: keyof DomainEvents, durationMs: number = 300): boolean {
@@ -21,17 +22,21 @@ export type EventFlashInstance = {
   readonly cleanup: () => void;
 };
 
-export function createEventFlash(eventName: keyof DomainEvents, durationMs: number = 300): EventFlashInstance {
+export function createEventFlash(
+  eventName: keyof DomainEvents,
+  durationMs: number = 300,
+  bus: EventBus = eventBus,
+): EventFlashInstance {
   const effect = createTimedEffect(durationMs);
 
   const handler = () => {
     effect.trigger();
   };
 
-  eventBus.on(eventName, handler);
+  bus.on(eventName, handler);
 
   const cleanup = (): void => {
-    eventBus.off(eventName, handler);
+    bus.off(eventName, handler);
     effect.cleanup();
   };
 

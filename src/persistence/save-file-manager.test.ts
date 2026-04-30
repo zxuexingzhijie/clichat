@@ -266,6 +266,25 @@ describe('readSaveData', () => {
     expect(result.branchId).toBe('main');
   });
 
+  it('migrates older save data to SaveDataV6 before returning it', async () => {
+    const v5SaveData = {
+      ...mockSaveData,
+      version: 5,
+      scene: { ...mockSaveData.scene, droppedItems: undefined },
+    };
+    delete (v5SaveData.scene as Record<string, unknown>)['droppedItems'];
+    if (typeof Bun !== 'undefined') {
+      (Bun as unknown as Record<string, unknown>).file = mock((_path: string) => ({
+        json: async () => v5SaveData,
+      }));
+    }
+
+    const result = await readSaveData('old-save.json', '/tmp/saves');
+
+    expect(result.version).toBe(6);
+    expect(result.scene.droppedItems).toEqual([]);
+  });
+
   it('rejects path traversal attempts', async () => {
     const saveDir = '/tmp/saves';
     await expect(readSaveData('../../../etc/passwd', saveDir)).rejects.toThrow('path traversal');

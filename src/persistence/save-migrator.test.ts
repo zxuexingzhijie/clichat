@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { migrateV1ToV2, migrateV2ToV3, migrateV4ToV5, migrateV5ToV6 } from './save-migrator';
+import { migrateToLatest, migrateV1ToV2, migrateV2ToV3, migrateV4ToV5, migrateV5ToV6 } from './save-migrator';
 import { getDefaultQuestState } from '../state/quest-store';
 import { getDefaultRelationState } from '../state/relation-store';
 import { getDefaultNpcMemoryState } from '../state/npc-memory-store';
@@ -251,5 +251,14 @@ describe('migrateV5ToV6', () => {
 
   it('returns null unchanged', () => {
     expect(migrateV5ToV6(null)).toBeNull();
+  });
+});
+
+describe('migrateToLatest', () => {
+  it('upgrades a valid V4 save to SaveDataV6 with narrativeState and droppedItems', () => {
+    const result = migrateToLatest(validV4);
+    expect(result.version).toBe(6);
+    expect(result.narrativeState).toEqual(getDefaultNarrativeState());
+    expect(result.scene.droppedItems).toEqual([]);
   });
 });

@@ -1,8 +1,9 @@
 import { describe, it, expect, mock, beforeEach, afterEach, spyOn } from 'bun:test';
 import { _fs } from './memory-persistence';
 import { eventBus } from '../events/event-bus';
-import { npcMemoryStore } from '../state/npc-memory-store';
+import { addMemory, npcMemoryStore } from '../state/npc-memory-store';
 import type { NpcMemoryRecord } from '../state/npc-memory-store';
+import { createGameContext } from '../context/game-context';
 
 const mockBunWrite = mock(() => Promise.resolve(0));
 const mockBunFile = mock((_filePath: string) => ({
@@ -63,9 +64,32 @@ describe('initMemoryPersistence', () => {
   it('subscribes to npc_memory_written event', async () => {
     const { initMemoryPersistence } = await import('./memory-persistence');
 
-    initMemoryPersistence('/tmp/memory');
+    const cleanup = initMemoryPersistence('/tmp/memory', eventBus, npcMemoryStore, { debounceMs: 0 });
+    cleanup();
 
     expect(typeof initMemoryPersistence).toBe('function');
+  });
+
+  it('writes memory from an injected game context store when that store emits npc_memory_written', async () => {
+    const { initMemoryPersistence } = await import('./memory-persistence');
+    const ctx = createGameContext();
+    const cleanup = initMemoryPersistence('/tmp/memory', ctx.eventBus, ctx.stores.npcMemory, { debounceMs: 0 });
+
+    addMemory(ctx.stores.npcMemory, 'npc_context_guard', {
+      id: 'context-entry-1',
+      npcId: 'npc_context_guard',
+      event: 'context store event',
+      turnNumber: 1,
+      importance: 'medium',
+      emotionalValence: 0,
+      participants: [],
+    });
+
+    await new Promise(r => setTimeout(r, 20));
+    cleanup();
+
+    const writtenPaths = (mockBunWrite.mock.calls as unknown as [string, string][]).map(c => c[0]);
+    expect(writtenPaths.some(p => p.includes('npc_context_guard.json'))).toBe(true);
   });
 
   it('when npc_memory_written fires, triggers a write for that npcId', async () => {
@@ -75,7 +99,7 @@ describe('initMemoryPersistence', () => {
       draft.memories['npc_guard'] = makeRecord('npc_guard', 1);
     });
 
-    initMemoryPersistence('/tmp/memory');
+    initMemoryPersistence('/tmp/memory', eventBus, npcMemoryStore, { debounceMs: 0 });
 
     eventBus.emit('npc_memory_written', {
       npcId: 'npc_guard',
@@ -97,7 +121,7 @@ describe('initMemoryPersistence', () => {
       draft.memories['npc_guard'] = makeRecord('npc_guard', 1);
     });
 
-    initMemoryPersistence('/tmp/memory');
+    initMemoryPersistence('/tmp/memory', eventBus, npcMemoryStore, { debounceMs: 0 });
 
     const errorSpy = spyOn(console, 'error').mockImplementation(() => {});
 
@@ -123,7 +147,7 @@ describe('writeMemoryToDisk — index.json', () => {
       draft.memories['npc_guard'] = makeRecord('npc_guard', 1);
     });
 
-    initMemoryPersistence('/tmp/memory');
+    initMemoryPersistence('/tmp/memory', eventBus, npcMemoryStore, { debounceMs: 0 });
     eventBus.emit('npc_memory_written', {
       npcId: 'npc_guard',
       event: 'test',
@@ -143,7 +167,7 @@ describe('writeMemoryToDisk — index.json', () => {
       draft.memories['npc_guard'] = makeRecord('npc_guard', 1);
     });
 
-    initMemoryPersistence('/tmp/memory');
+    initMemoryPersistence('/tmp/memory', eventBus, npcMemoryStore, { debounceMs: 0 });
     eventBus.emit('npc_memory_written', {
       npcId: 'npc_guard',
       event: 'test',

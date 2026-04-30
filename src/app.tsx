@@ -40,6 +40,7 @@ import type { PlayerKnowledgeState } from './state/player-knowledge-store';
 import { runSummarizerLoop } from './ai/summarizer/summarizer-worker';
 import { initExplorationTracker } from './engine/exploration-tracker';
 import { initKnowledgeTracker } from './engine/knowledge-tracker';
+import { initMemoryPersistence } from './persistence/memory-persistence';
 
 const GameStoreCtx = createStoreContext<GameState>();
 const PlayerStoreCtx = createStoreContext<PlayerState>();
@@ -290,6 +291,11 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
       process.off('SIGINT', handleSigint);
     };
   }, []);
+
+  useEffect(() => {
+    const dataDir = process.env.__CHRONICLE_DATA_DIR || resolveDataDir();
+    return initMemoryPersistence(`${dataDir}/memory`, ctx.eventBus, ctx.stores.npcMemory);
+  }, [ctx]);
 
   useEffect(() => {
     const cleanup = initExplorationTracker(

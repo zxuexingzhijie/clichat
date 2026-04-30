@@ -1,7 +1,9 @@
 import * as nodeFs from 'node:fs';
 import { mkdir as fsMkdir } from 'node:fs/promises';
 import { eventBus } from '../events/event-bus';
-import { npcMemoryStore, NpcMemoryRecordSchema, type NpcMemoryRecord } from '../state/npc-memory-store';
+import type { EventBus } from '../events/event-bus';
+import { npcMemoryStore, type NpcMemoryRecord, type NpcMemoryState } from '../state/npc-memory-store';
+import type { Store } from '../state/create-store';
 
 // Injected fs — allows tests to override without mock.module
 export const _fs = {
@@ -45,8 +47,8 @@ export function applyRetention(record: NpcMemoryRecord): NpcMemoryRecord {
   };
 }
 
-async function writeMemoryToDisk(npcId: string, memoryDir: string): Promise<void> {
-  const storeRecord = npcMemoryStore.getState().memories[npcId];
+async function writeMemoryToDisk(npcId: string, memoryDir: string, store: Store<NpcMemoryState>): Promise<void> {
+  const storeRecord = store.getState().memories[npcId];
   if (!storeRecord) return;
 
   const region = DEFAULT_REGION;
@@ -84,10 +86,38 @@ async function writeMemoryToDisk(npcId: string, memoryDir: string): Promise<void
   await Bun.write(indexPath, JSON.stringify(index, null, 2));
 }
 
-export function initMemoryPersistence(memoryDir: string): void {
-  eventBus.on('npc_memory_written', ({ npcId }) => {
-    writeMemoryToDisk(npcId, memoryDir).catch(err => {
+export function initMemoryPersistence(
+  memoryDir: string,
+  bus: EventBus = eventBus,
+  store: Store<NpcMemoryState> = npcMemoryStore,
+  options: { readonly debounceMs?: number } = {},
+): () => void {
+  const debounceMs = options.debounceMs ?? 500;
+  const timers = new Map<string, ReturnType<typeof setTimeout>>();
+
+  const flush = (npcId: string) => {
+    writeMemoryToDisk(npcId, memoryDir, store).catch(err => {
       console.error(`[memory-persistence] write failed for ${npcId}:`, err);
     });
-  });
+  };
+
+  const handler = ({ npcId }: { npcId: string }) => {
+    const existing = timers.get(npcId);
+    if (existing) clearTimeout(existing);
+    const timer = setTimeout(() => {
+      timers.delete(npcId);
+      flush(npcId);
+    }, debounceMs);
+    timers.set(npcId, timer);
+  };
+
+  bus.on('npc_memory_written', handler);
+
+  return () => {
+    bus.off('npc_memory_written', handler);
+    for (const timer of timers.values()) {
+      clearTimeout(timer);
+    }
+    timers.clear();
+  };
 }
