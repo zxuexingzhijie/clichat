@@ -94,17 +94,30 @@ export async function runNextTask(): Promise<boolean> {
   return true;
 }
 
-export async function runSummarizerLoop(): Promise<void> {
+export async function runSummarizerLoop(signal: AbortSignal): Promise<void> {
   while (true) {
+    if (signal.aborted) {
+      console.error('[summarizer] received abort signal — shutting down');
+      return;
+    }
+
     const task = dequeuePending();
     if (!task) {
       await new Promise<void>((r) => setTimeout(r, 5000));
+      if (signal.aborted) {
+        console.error('[summarizer] received abort signal — shutting down');
+        return;
+      }
       continue;
     }
 
     markRunning(task.id);
     try {
       await dispatchTask(task);
+      if (signal.aborted) {
+        console.error('[summarizer] received abort signal — shutting down');
+        return;
+      }
       markDone(task.id);
     } catch {
       markFailed(task.id);

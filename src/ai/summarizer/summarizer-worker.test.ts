@@ -26,7 +26,7 @@ mock.module('../roles/memory-summarizer', () => ({
 }));
 
 const { applyNpcMemoryCompression, runSummarizerLoop } = await import('./summarizer-worker');
-const { dequeuePending: mockDequeuePending } = await import('./summarizer-queue') as {
+const { dequeuePending: mockDequeuePending } = await import('./summarizer-queue') as unknown as {
   dequeuePending: ReturnType<typeof mock>;
 };
 

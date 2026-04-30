@@ -277,9 +277,18 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
   }, [branchState]);
 
   useEffect(() => {
-    runSummarizerLoop().catch((err) => {
+    const controller = new AbortController();
+    const handleSigint = () => controller.abort();
+    process.on('SIGINT', handleSigint);
+
+    runSummarizerLoop(controller.signal).catch((err) => {
       console.error('[Summarizer] loop error:', err instanceof Error ? err.message : String(err));
     });
+
+    return () => {
+      controller.abort();
+      process.off('SIGINT', handleSigint);
+    };
   }, []);
 
   useEffect(() => {
