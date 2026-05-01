@@ -2,9 +2,9 @@
   "npcId": "npc_captain",
   "recentMemories": [
     {
-      "id": "krsk_R8DtfXtsO3P3jina",
+      "id": "HyB_o6b6gCGQ4PNDQrSMU",
       "npcId": "npc_captain",
-      "event": "与玩家初次对话: 站住，陌生人。黑松镇最近不太平，晚上别乱走。你是路过的旅人，还是有什么事要办？",
+      "event": "与玩家初次对话: 嗯，外乡人？最近镇上不太平，没事别往北边林子里去。要是看见什么可疑的，报给守夜人。",
       "turnNumber": 0,
       "importance": "low",
       "emotionalValence": 0,
@@ -14,9 +14,9 @@
       ]
     },
     {
-      "id": "aM6uiMkKg-_2lDsvDlFWz",
+      "id": "xQUcvLYVGE85db_04jHrF",
       "npcId": "npc_captain",
-      "event": "玩家说: \"\"你在担心什么？\"\" — 担心？我担心的多了去了。最近连着好几个猎户和旅客进了北林就没出来，活不见人死不见尸。我派人查了，每次",
+      "event": "玩家说: \"\"你知道这附近发生了什么事吗？\"\" — 哼，你问这个作甚？最近有猎人和旅客在北林失踪，我正带人巡查。有些线索……不知怎么就不见了。你若是普通",
       "turnNumber": 0,
       "importance": "medium",
       "emotionalValence": 0,
@@ -26,9 +26,9 @@
       ]
     },
     {
-      "id": "qDDpHVl7hgYTZbDLMN1SZ",
+      "id": "0RQbNOBUCSOMkaoNRgBKh",
       "npcId": "npc_captain",
-      "event": "玩家说: \"\"你说的镇那边，具体是什么情况？\"\" — 镇那边？你是说南街的猎户老赵家？前天他婆娘来报，说老赵进北林三天没回来。我派人去他常走的路线查了，发",
+      "event": "玩家说: \"\"这件事听起来很重要，能跟我详细说说吗？\"\" — 详细？哼，我倒是想跟你细说。可有些事，越查越不对劲。前日我分明在林子边缘找到一串足迹，第二天再去，竟",
       "turnNumber": 0,
       "importance": "medium",
       "emotionalValence": 0,
@@ -38,9 +38,21 @@
       ]
     },
     {
-      "id": "WsUTw2eJGgGlCDz8__r58",
+      "id": "e1dGWz2XMbT4y_p8TFqUC",
       "npcId": "npc_captain",
-      "event": "玩家说: \"\"你说的街那边，具体是什么情况？\"\" — 街那边？你是说南街吧。老赵家就住在那条巷子尽头，他婆娘现在天天坐在门槛上哭。我让守卫多盯着那边，但说",
+      "event": "玩家说: \"黑影有记录吗？\" — 有记录，但不多。守夜人老张说他在北林边缘见过一次，说是像个人形但动作快得不正常。我让他画了张草图，结",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    },
+    {
+      "id": "YGOwciowQInjl0zhkAPuz",
+      "npcId": "npc_captain",
+      "event": "玩家说: \"\"你说的酒馆那边，具体是什么情况？\"\" — 酒馆老板姓王，绰号‘老王头’。失踪的那几个猎人，几乎每晚都去他那儿喝酒。据他说，最后那个猎人失踪前，",
       "turnNumber": 0,
       "importance": "medium",
       "emotionalValence": 0,
@@ -52,6 +64,6 @@
   ],
   "salientMemories": [],
   "archiveSummary": "",
-  "lastUpdated": "2026-04-30T18:48:54.951Z",
+  "lastUpdated": "2026-05-01T12:18:05.884Z",
   "version": 0
 }

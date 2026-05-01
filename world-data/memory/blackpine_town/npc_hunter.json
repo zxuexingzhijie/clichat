@@ -2,9 +2,9 @@
   "npcId": "npc_hunter",
   "recentMemories": [
     {
-      "id": "QqqC2Rz4k5Gxx1CGVG8gN",
+      "id": "NN86A3fxggA4yamPB6Ae8",
       "npcId": "npc_hunter",
-      "event": "与玩家初次对话: 嗯。天色不早了，林子里狼嚎越来越近。你闻到了吗？风里有股怪味，像是有什么东西在搅动。",
+      "event": "与玩家初次对话: 嗯，你好。你是新来的？这镇上不太平，狼群在闹腾。",
       "turnNumber": 0,
       "importance": "low",
       "emotionalValence": 0,
@@ -16,6 +16,6 @@
   ],
   "salientMemories": [],
   "archiveSummary": "",
-  "lastUpdated": "2026-04-30T18:49:53.510Z",
+  "lastUpdated": "2026-05-01T12:28:44.752Z",
   "version": 0
 }

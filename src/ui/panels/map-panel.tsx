@@ -49,6 +49,20 @@ const NODE_WIDTH = 3;
 const H_SPACING = 4;
 const V_SPACING = 2;
 
+export function getMapPanelCopy(): {
+  readonly titlePrefix: string;
+  readonly mapHeading: string;
+  readonly currentLocationLabel: string;
+  readonly movementHint: string;
+} {
+  return {
+    titlePrefix: '【地图】',
+    mapHeading: '区域图',
+    currentLocationLabel: '当前位置',
+    movementHint: '↑↓ 选地点    Enter 设为目标    Esc 返回',
+  };
+}
+
 function getDangerLabel(level: number): string {
   return DANGER_LABELS[level] ?? '未知';
 }
@@ -185,6 +199,7 @@ export function MapPanel({
 }: MapPanelProps): React.ReactNode {
   const { width } = useScreenSize();
   const isWide = width >= 100;
+  const copy = getMapPanelCopy();
 
   const visibleIds = useMemo(() => getVisibleLocationIds(locations), [locations]);
   const [selectedIndex, setSelectedIndex] = useState(() => {
@@ -240,7 +255,7 @@ export function MapPanel({
     return (
       <Box flexDirection="column" flexGrow={1} paddingX={1}>
         <Box justifyContent="space-between">
-          <Text bold color="cyan">{'【地图】'}{regionName}</Text>
+          <Text bold color="cyan">{copy.titlePrefix}{regionName}</Text>
           <Text dimColor>Esc 返回</Text>
         </Box>
         <Box marginTop={1}>
@@ -267,7 +282,7 @@ export function MapPanel({
                     isQuestRelated={cell.isQuestRelated}
                     isSelected={isSelected && !isCurrent}
                   />
-                  {isCurrent && <Text color="cyan">{' ← 当前位置'}</Text>}
+                  {isCurrent && <Text color="cyan">{' ← '}{copy.currentLocationLabel}</Text>}
                 </Box>
               );
             }
@@ -308,22 +323,26 @@ export function MapPanel({
     </Box>
   ) : null;
 
-  const hintBar = <Text dimColor>{'↑↓ 上一/下一地点    Esc 返回'}</Text>;
+  const hintBar = <Text dimColor>{copy.movementHint}</Text>;
 
   if (isWide) {
     return (
       <Box flexDirection="column" flexGrow={1} paddingX={1}>
         <Box justifyContent="space-between">
-          <Text bold color="cyan">{'【地图】'}{regionName}</Text>
+          <Text bold color="cyan">{copy.titlePrefix}{regionName}</Text>
           <Text dimColor>Esc 返回</Text>
         </Box>
         <Box flexGrow={1} marginTop={1}>
-          <Box flexDirection="column" width="50%">
-            {mapContent}
+          <Box flexDirection="column" width="65%">
+            <Box justifyContent="space-between">
+              <Text bold color="yellow">{copy.mapHeading}</Text>
+              <Text color="cyan">{copy.currentLocationLabel}: {selectedLocation?.name ?? currentLocationId}</Text>
+            </Box>
+            <Box marginTop={1}>{mapContent}</Box>
             <Box marginTop={1}>{legendLine}</Box>
           </Box>
           <Text>{'│'}</Text>
-          <Box flexDirection="column" width="50%" paddingLeft={1}>
+          <Box flexDirection="column" width="35%" paddingLeft={1}>
             {detailContent}
           </Box>
         </Box>
@@ -337,6 +356,10 @@ export function MapPanel({
       <Box justifyContent="space-between">
         <Text bold color="cyan">{'【地图】'}{regionName}</Text>
         <Text dimColor>Esc 返回</Text>
+      </Box>
+      <Box marginTop={1} justifyContent="space-between">
+        <Text bold color="yellow">{copy.mapHeading}</Text>
+        <Text color="cyan">{copy.currentLocationLabel}: {selectedLocation?.name ?? currentLocationId}</Text>
       </Box>
       <Box marginTop={1} flexDirection="column">
         {mapContent}

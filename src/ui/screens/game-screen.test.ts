@@ -4,6 +4,13 @@ import { sceneStore, getDefaultSceneState } from '../../state/scene-store';
 import { GameScreen } from './game-screen';
 import type { GameLoop, ProcessResult } from '../../game-loop';
 
+describe('Scheme A: fixed action column layout', () => {
+  it('GameScreen source uses a fixed wide action column width', () => {
+    const source = GameScreen.toString();
+    expect(source).toContain('WIDE_ACTIONS_WIDTH');
+  });
+});
+
 describe('BUG-01: GameScreen accepts gameLoop prop', () => {
   it('GameScreen source uses context stores for controller actions and panel close', () => {
     const source = GameScreen.toString();

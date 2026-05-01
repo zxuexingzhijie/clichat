@@ -1,5 +1,5 @@
-import { npcMemoryStore } from '../../state/npc-memory-store';
-import { sceneStore } from '../../state/scene-store';
+import { npcMemoryStore, type NpcMemoryState } from '../../state/npc-memory-store';
+import { sceneStore, type SceneState } from '../../state/scene-store';
 import { getTurnLog } from '../../engine/turn-log';
 import {
   dequeuePending,
@@ -14,8 +14,34 @@ import {
   generateTurnLogCompress,
 } from '../roles/memory-summarizer';
 
+type RuntimeNpcMemoryStore = {
+  readonly getState: () => NpcMemoryState;
+  readonly setState: (recipe: (draft: NpcMemoryState) => void) => void;
+};
+
+type RuntimeSceneStore = {
+  readonly getState: () => SceneState;
+};
+
+let runtimeNpcMemoryStore: RuntimeNpcMemoryStore = npcMemoryStore;
+let runtimeSceneStore: RuntimeSceneStore = sceneStore;
+
 const recentChapterSummaries: string[] = [];
 const recentTurnCompressBlocks: string[] = [];
+
+export function configureSummarizerWorkerStores(stores: {
+  readonly npcMemory?: RuntimeNpcMemoryStore;
+  readonly scene?: RuntimeSceneStore;
+}): () => void {
+  const previousNpcMemoryStore = runtimeNpcMemoryStore;
+  const previousSceneStore = runtimeSceneStore;
+  runtimeNpcMemoryStore = stores.npcMemory ?? runtimeNpcMemoryStore;
+  runtimeSceneStore = stores.scene ?? runtimeSceneStore;
+  return () => {
+    runtimeNpcMemoryStore = previousNpcMemoryStore;
+    runtimeSceneStore = previousSceneStore;
+  };
+}
 
 export function getRecentChapterSummaries(): readonly string[] {
   return recentChapterSummaries;
@@ -29,12 +55,12 @@ export async function applyNpcMemoryCompression(
   task: SummarizerTask,
   result: string,
 ): Promise<'applied' | 'conflict'> {
-  const record = npcMemoryStore.getState().memories[task.targetId];
+  const record = runtimeNpcMemoryStore.getState().memories[task.targetId];
   if (!record || record.version !== task.baseVersion) {
     return 'conflict';
   }
 
-  npcMemoryStore.setState((draft) => {
+  runtimeNpcMemoryStore.setState((draft) => {
     const r = draft.memories[task.targetId];
     if (r) {
       r.archiveSummary = result;
@@ -48,7 +74,7 @@ export async function applyNpcMemoryCompression(
 
 async function dispatchTask(task: SummarizerTask): Promise<void> {
   if (task.type === 'npc_memory_compress') {
-    const record = npcMemoryStore.getState().memories[task.targetId];
+    const record = runtimeNpcMemoryStore.getState().memories[task.targetId];
     if (!record) {
       throw new Error(`NPC record not found for targetId: ${task.targetId}`);
     }
@@ -61,7 +87,7 @@ async function dispatchTask(task: SummarizerTask): Promise<void> {
   }
 
   if (task.type === 'chapter_summary') {
-    const narrationLines = sceneStore.getState().narrationLines;
+    const narrationLines = runtimeSceneStore.getState().narrationLines;
     const result = await generateChapterSummary(narrationLines);
     recentChapterSummaries.push(result);
     return;

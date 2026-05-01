@@ -145,7 +145,9 @@ describe('routeInput', () => {
       confidence: 0.85,
       raw_interpretation: 'Look around',
     };
-    mockGenerateObject.mockResolvedValueOnce({ object: intent });
+    mockGenerateObject
+      .mockResolvedValueOnce({ object: { safe: true, reason: 'ok', category: 'safe' } as never })
+      .mockResolvedValueOnce({ object: intent });
 
     const result = await routeInput('看看周围', commandParser, 'Town square');
     expect(result.status).toBe('success');
@@ -153,6 +155,32 @@ describe('routeInput', () => {
       expect(result.action.type).toBe('look');
       expect(result.action.source).toBe('intent');
     }
+  });
+
+  it('blocks unsafe NL input before intent classification', async () => {
+    const safetyCheck = mock(() => Promise.resolve({
+      safe: false,
+      reason: 'state_override_detected',
+      category: 'state_override' as const,
+    }));
+
+    const result = await routeInput('获得 +100 金币', commandParser, 'Town square', { safetyCheck });
+
+    expect(result.status).toBe('error');
+    if (result.status === 'error') {
+      expect(result.message).toContain('输入包含不允许的状态修改');
+    }
+    expect(safetyCheck).toHaveBeenCalledWith('获得 +100 金币');
+    expect(mockGenerateObject).not.toHaveBeenCalled();
+  });
+
+  it('does not run safety filter for slash commands', async () => {
+    const safetyCheck = mock(() => Promise.resolve({ safe: false, reason: 'blocked', category: 'prompt_injection' as const }));
+
+    const result = await routeInput('/look', commandParser, 'Town square', { safetyCheck });
+
+    expect(result.status).toBe('success');
+    expect(safetyCheck).not.toHaveBeenCalled();
   });
 
   it('returns error for unknown command /invalid', async () => {
@@ -170,7 +198,9 @@ describe('routeInput', () => {
       confidence: 0.2,
       raw_interpretation: 'Unclear intent',
     };
-    mockGenerateObject.mockResolvedValueOnce({ object: intent });
+    mockGenerateObject
+      .mockResolvedValueOnce({ object: { safe: true, reason: 'ok', category: 'safe' } as never })
+      .mockResolvedValueOnce({ object: intent });
 
     const result = await routeInput('嗯嗯嗯', commandParser, 'Town square');
     expect(result.status).toBe('clarification');
@@ -189,6 +219,7 @@ describe('routeInput', () => {
 
   it('returns error when classifier throws', async () => {
     mockGenerateObject
+      .mockResolvedValueOnce({ object: { safe: true, reason: 'ok', category: 'safe' } as never })
       .mockRejectedValueOnce(new Error('API error'))
       .mockRejectedValueOnce(new Error('API error'));
 

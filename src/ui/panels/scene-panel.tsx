@@ -9,6 +9,28 @@ import type { SpinnerContext } from '../components/scene-spinner';
 // lines reserved for: toast(1) + streaming(2) + scroll hint(1) + padding
 const RESERVED_ROWS = 5;
 
+export type ParsedSceneLine =
+  | { readonly type: 'dialogue'; readonly speaker: string; readonly text: string }
+  | { readonly type: 'system'; readonly text: string }
+  | { readonly type: 'narration'; readonly text: string };
+
+export function parseSceneLine(line: string): ParsedSceneLine {
+  const dialogueMatch = line.match(/^([^：:]{1,24})[：:]\s*["“](.+)["”]$/);
+  if (dialogueMatch) {
+    return {
+      type: 'dialogue',
+      speaker: dialogueMatch[1]!.trim(),
+      text: dialogueMatch[2]!.trim(),
+    };
+  }
+
+  if (/^\[[^\]]+\]/.test(line) || /^【[^】]+】/.test(line)) {
+    return { type: 'system', text: line };
+  }
+
+  return { type: 'narration', text: line };
+}
+
 type ScenePanelProps = {
   readonly lines: readonly string[];
   readonly streamingText?: string;
@@ -20,6 +42,25 @@ type ScenePanelProps = {
   readonly isSpinnerDimming?: boolean;
   readonly isInputActive?: boolean;
 };
+
+function SceneLine({ line, dimmed }: { readonly line: string; readonly dimmed?: boolean }): React.ReactNode {
+  const parsed = parseSceneLine(line);
+
+  if (parsed.type === 'dialogue') {
+    return (
+      <Box flexDirection="column" borderStyle="single" borderColor="cyan" paddingX={1} marginY={0}>
+        <Text bold color="cyan" dimColor={dimmed}>{parsed.speaker}</Text>
+        <Text dimColor={dimmed}>“{parsed.text}”</Text>
+      </Box>
+    );
+  }
+
+  if (parsed.type === 'system') {
+    return <Text color="yellow" dimColor={dimmed}>{parsed.text}</Text>;
+  }
+
+  return <Text dimColor={dimmed}>{parsed.text}</Text>;
+}
 
 export function ScenePanel({
   lines,
@@ -84,7 +125,7 @@ export function ScenePanel({
       ) : (
         <>
           {visibleLines.map((line, i) => (
-            <Text key={i} dimColor={isDimmed}>{line}</Text>
+            <SceneLine key={i} line={line} dimmed={isDimmed} />
           ))}
           {isStreaming && (
             <Text dimColor={isDimmed}>

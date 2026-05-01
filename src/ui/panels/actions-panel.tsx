@@ -1,6 +1,8 @@
 import React, { useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 
+export const ACTION_PANEL_HINT = '数字/↑↓/Enter　自定义输入在底部';
+
 type Action = {
   readonly id: string;
   readonly label: string;
@@ -64,7 +66,7 @@ export function ActionsPanel({
         );
       })}
       <Text dimColor>
-        {isStreaming ? 'Enter/Space 跳过动画' : '↑↓ 选择    Enter 确认    / 输入自定义行动'}
+        {isStreaming ? 'Enter/Space 跳过动画' : ACTION_PANEL_HINT}
       </Text>
     </Box>
   );

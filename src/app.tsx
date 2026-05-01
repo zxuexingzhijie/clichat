@@ -37,7 +37,8 @@ import type { BranchDisplayNode } from './ui/panels/branch-tree-panel';
 import type { ExplorationState } from './state/exploration-store';
 import type { BranchState } from './state/branch-store';
 import type { PlayerKnowledgeState } from './state/player-knowledge-store';
-import { runSummarizerLoop } from './ai/summarizer/summarizer-worker';
+import { initSummarizerScheduler } from './ai/summarizer/summarizer-scheduler';
+import { configureSummarizerWorkerStores, runSummarizerLoop } from './ai/summarizer/summarizer-worker';
 import { initExplorationTracker } from './engine/exploration-tracker';
 import { initKnowledgeTracker } from './engine/knowledge-tracker';
 import { initMemoryPersistence } from './persistence/memory-persistence';
@@ -280,6 +281,14 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
   useEffect(() => {
     const controller = new AbortController();
     const handleSigint = () => controller.abort();
+    const cleanupScheduler = initSummarizerScheduler(ctx.eventBus, {
+      npcMemory: ctx.stores.npcMemory,
+      combat: ctx.stores.combat,
+    });
+    const cleanupWorkerStores = configureSummarizerWorkerStores({
+      npcMemory: ctx.stores.npcMemory,
+      scene: ctx.stores.scene,
+    });
     process.on('SIGINT', handleSigint);
 
     runSummarizerLoop(controller.signal).catch((err) => {
@@ -287,10 +296,12 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
     });
 
     return () => {
+      cleanupScheduler();
+      cleanupWorkerStores();
       controller.abort();
       process.off('SIGINT', handleSigint);
     };
-  }, []);
+  }, [ctx]);
 
   useEffect(() => {
     const dataDir = process.env.__CHRONICLE_DATA_DIR || resolveDataDir();

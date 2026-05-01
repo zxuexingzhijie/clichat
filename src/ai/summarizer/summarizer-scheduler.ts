@@ -1,6 +1,7 @@
-import { npcMemoryStore } from '../../state/npc-memory-store';
-import { combatStore } from '../../state/combat-store';
+import { npcMemoryStore, type NpcMemoryState } from '../../state/npc-memory-store';
+import { combatStore, type CombatState } from '../../state/combat-store';
 import { eventBus } from '../../events/event-bus';
+import type { EventBus } from '../../events/event-bus';
 import { enqueueTask } from './summarizer-queue';
 
 const NPC_MEMORY_THRESHOLD = 10;
@@ -15,9 +16,20 @@ export type TriggerSource =
   | 'combat_ended'
   | 'interval';
 
+type SummarizerSchedulerStores = {
+  readonly npcMemory: { readonly getState: () => NpcMemoryState };
+  readonly combat: { readonly getState: () => CombatState };
+};
+
+const defaultStores: SummarizerSchedulerStores = {
+  npcMemory: npcMemoryStore,
+  combat: combatStore,
+};
+
 export function evaluateTriggers(
   triggerSource: TriggerSource,
   context?: { npcId?: string },
+  stores: SummarizerSchedulerStores = defaultStores,
 ): void {
   const now = Date.now();
   if (triggerSource === 'interval' && now - lastEvaluatedAt < DEBOUNCE_MS) {
@@ -25,7 +37,7 @@ export function evaluateTriggers(
   }
   lastEvaluatedAt = now;
 
-  const combatActive = combatStore.getState().active;
+  const combatActive = stores.combat.getState().active;
 
   if (triggerSource === 'save_game_completed') {
     enqueueTask({
@@ -45,7 +57,7 @@ export function evaluateTriggers(
 
   if (triggerSource === 'npc_memory_written' && context?.npcId) {
     const { npcId } = context;
-    const record = npcMemoryStore.getState().memories[npcId];
+    const record = stores.npcMemory.getState().memories[npcId];
     if (!record) return;
 
     if (record.recentMemories.length >= NPC_MEMORY_THRESHOLD) {
@@ -55,7 +67,7 @@ export function evaluateTriggers(
       enqueueTask({
         type: 'npc_memory_compress',
         targetId: npcId,
-        entryIds: record.recentMemories.map((m) => m.id),
+        entryIds: record.recentMemories.map((memory) => memory.id),
         baseVersion: record.version,
         priority: taskPriority,
         triggerReason: 'npc_memory_written',
@@ -65,7 +77,7 @@ export function evaluateTriggers(
   }
 
   if (triggerSource === 'interval') {
-    const memories = npcMemoryStore.getState().memories;
+    const memories = stores.npcMemory.getState().memories;
     for (const [npcId, record] of Object.entries(memories)) {
       if (!record) continue;
       if (record.recentMemories.length >= NPC_MEMORY_THRESHOLD) {
@@ -75,7 +87,7 @@ export function evaluateTriggers(
         enqueueTask({
           type: 'npc_memory_compress',
           targetId: npcId,
-          entryIds: record.recentMemories.map((m) => m.id),
+          entryIds: record.recentMemories.map((memory) => memory.id),
           baseVersion: record.version,
           priority: taskPriority,
           triggerReason: 'interval',
@@ -85,14 +97,27 @@ export function evaluateTriggers(
   }
 }
 
-eventBus.on('npc_memory_written', ({ npcId }) => {
-  evaluateTriggers('npc_memory_written', { npcId });
-});
+export function initSummarizerScheduler(
+  bus: EventBus = eventBus,
+  stores: SummarizerSchedulerStores = defaultStores,
+): () => void {
+  const handleNpcMemoryWritten = ({ npcId }: { npcId: string }) => {
+    evaluateTriggers('npc_memory_written', { npcId }, stores);
+  };
+  const handleSaveGameCompleted = () => {
+    evaluateTriggers('save_game_completed', undefined, stores);
+  };
+  const handleCombatEnded = () => {
+    evaluateTriggers('combat_ended', undefined, stores);
+  };
 
-eventBus.on('save_game_completed', () => {
-  evaluateTriggers('save_game_completed');
-});
+  bus.on('npc_memory_written', handleNpcMemoryWritten);
+  bus.on('save_game_completed', handleSaveGameCompleted);
+  bus.on('combat_ended', handleCombatEnded);
 
-eventBus.on('combat_ended', () => {
-  evaluateTriggers('combat_ended');
-});
+  return () => {
+    bus.off('npc_memory_written', handleNpcMemoryWritten);
+    bus.off('save_game_completed', handleSaveGameCompleted);
+    bus.off('combat_ended', handleCombatEnded);
+  };
+}

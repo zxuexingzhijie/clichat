@@ -12,6 +12,7 @@ mock.module('../../state/npc-memory-store', () => ({
 }));
 
 mock.module('./summarizer-queue', () => ({
+  enqueueTask: mock(() => {}),
   dequeuePending: mock(() => null),
   markRunning: mock(() => {}),
   markDone: mock(() => {}),
@@ -25,7 +26,7 @@ mock.module('../roles/memory-summarizer', () => ({
   generateTurnLogCompress: mock(() => Promise.resolve('compressed turns')),
 }));
 
-const { applyNpcMemoryCompression, runSummarizerLoop } = await import('./summarizer-worker');
+const { applyNpcMemoryCompression, configureSummarizerWorkerStores, runSummarizerLoop } = await import('./summarizer-worker');
 const { dequeuePending: mockDequeuePending } = await import('./summarizer-queue') as unknown as {
   dequeuePending: ReturnType<typeof mock>;
 };
@@ -46,6 +47,46 @@ describe('applyNpcMemoryCompression', () => {
   beforeEach(() => {
     mockNpcMemoryGetState.mockReset();
     mockNpcMemorySetState.mockReset();
+    configureSummarizerWorkerStores({
+      npcMemory: { getState: mockNpcMemoryGetState, setState: mockNpcMemorySetState } as never,
+    });
+  });
+
+  it('uses a configured runtime NPC memory store', async () => {
+    const entries = makeEntries(3);
+    const runtimeGetState = mock(() => ({
+      memories: {
+        npc_runtime: {
+          npcId: 'npc_runtime',
+          recentMemories: entries,
+          salientMemories: [],
+          archiveSummary: '',
+          lastUpdated: new Date().toISOString(),
+          version: 5,
+        },
+      },
+    }));
+    const runtimeSetState = mock((_recipe: (draft: unknown) => void) => {});
+    const cleanup = configureSummarizerWorkerStores({
+      npcMemory: { getState: runtimeGetState, setState: runtimeSetState } as never,
+    });
+
+    const result = await applyNpcMemoryCompression({
+      id: 'task_runtime',
+      type: 'npc_memory_compress',
+      targetId: 'npc_runtime',
+      entryIds: ['entry_0'],
+      baseVersion: 5,
+      priority: 2,
+      triggerReason: 'threshold',
+      createdAt: new Date().toISOString(),
+      status: 'running',
+    }, 'runtime summary');
+    cleanup();
+
+    expect(result).toBe('applied');
+    expect(runtimeSetState).toHaveBeenCalledTimes(1);
+    expect(mockNpcMemorySetState).not.toHaveBeenCalled();
   });
 
   it('returns conflict when npcId not found in store', async () => {

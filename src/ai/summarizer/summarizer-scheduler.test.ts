@@ -27,7 +27,14 @@ mock.module('../../state/combat-store', () => ({
   combatStore: { getState: mockGetCombatState },
 }));
 
-const { evaluateTriggers } = await import('./summarizer-scheduler');
+const { evaluateTriggers, initSummarizerScheduler } = await import('./summarizer-scheduler');
+
+function evaluateTestTriggers(source: Parameters<typeof evaluateTriggers>[0], context?: Parameters<typeof evaluateTriggers>[1]): void {
+  evaluateTriggers(source, context, {
+    npcMemory: { getState: mockGetMemoryState } as never,
+    combat: { getState: mockGetCombatState } as never,
+  });
+}
 
 function makeMemoryEntries(count: number) {
   return Array.from({ length: count }, (_, i) => ({
@@ -50,6 +57,39 @@ describe('evaluateTriggers', () => {
     mockGetMemoryState.mockReturnValue({ memories: {} });
   });
 
+  it('initSummarizerScheduler wires injected event bus to injected stores', () => {
+    const handlers = new Map<string, (payload?: unknown) => void>();
+    const bus = {
+      on: mock((event: string, handler: (payload?: unknown) => void) => { handlers.set(event, handler); }),
+      off: mock((event: string) => { handlers.delete(event); }),
+      emit: mock(() => {}),
+    };
+    const npcMemory = {
+      getState: mock(() => ({
+        memories: {
+          npc_ctx: {
+            npcId: 'npc_ctx',
+            recentMemories: makeMemoryEntries(10),
+            salientMemories: [],
+            archiveSummary: '',
+            lastUpdated: new Date().toISOString(),
+            version: 4,
+          },
+        },
+      })),
+    };
+    const combat = { getState: mock(() => ({ active: false })) };
+
+    const cleanup = initSummarizerScheduler(bus as never, { npcMemory: npcMemory as never, combat: combat as never });
+    handlers.get('npc_memory_written')?.({ npcId: 'npc_ctx' });
+    cleanup();
+
+    expect(mockEnqueueTask).toHaveBeenCalledTimes(1);
+    expect((mockEnqueueTask.mock.calls[0]![0] as { targetId: string; baseVersion: number }).targetId).toBe('npc_ctx');
+    expect((mockEnqueueTask.mock.calls[0]![0] as { targetId: string; baseVersion: number }).baseVersion).toBe(4);
+    expect(bus.off).toHaveBeenCalledWith('npc_memory_written', expect.any(Function));
+  });
+
   describe('combat gate', () => {
     it('skips low-priority (3) tasks when combat is active', () => {
       mockGetCombatState.mockReturnValue({ active: true });
@@ -66,7 +106,7 @@ describe('evaluateTriggers', () => {
         },
       });
 
-      evaluateTriggers('interval');
+      evaluateTestTriggers('interval');
 
       const lowPriorityCalls = mockEnqueueTask.mock.calls.filter(
         (call) => (call[0] as { priority: number }).priority === 3,
@@ -78,7 +118,7 @@ describe('evaluateTriggers', () => {
       mockGetCombatState.mockReturnValue({ active: true });
       mockGetMemoryState.mockReturnValue({ memories: {} });
 
-      evaluateTriggers('save_game_completed');
+      evaluateTestTriggers('save_game_completed');
 
       const highPriorityCalls = mockEnqueueTask.mock.calls.filter(
         (call) => (call[0] as { priority: number }).priority === 1,
@@ -102,7 +142,7 @@ describe('evaluateTriggers', () => {
         },
       });
 
-      evaluateTriggers('npc_memory_written', { npcId: 'npc_001' });
+      evaluateTestTriggers('npc_memory_written', { npcId: 'npc_001' });
 
       expect(mockEnqueueTask).toHaveBeenCalledTimes(1);
       const call = mockEnqueueTask.mock.calls[0]![0] as {
@@ -131,7 +171,7 @@ describe('evaluateTriggers', () => {
         },
       });
 
-      evaluateTriggers('npc_memory_written', { npcId: 'npc_001' });
+      evaluateTestTriggers('npc_memory_written', { npcId: 'npc_001' });
 
       expect(mockEnqueueTask).not.toHaveBeenCalled();
     });
@@ -139,7 +179,7 @@ describe('evaluateTriggers', () => {
     it('does not enqueue when npcId not found in store', () => {
       mockGetMemoryState.mockReturnValue({ memories: {} });
 
-      evaluateTriggers('npc_memory_written', { npcId: 'npc_nonexistent' });
+      evaluateTestTriggers('npc_memory_written', { npcId: 'npc_nonexistent' });
 
       expect(mockEnqueueTask).not.toHaveBeenCalled();
     });
@@ -147,7 +187,7 @@ describe('evaluateTriggers', () => {
 
   describe('save_game_completed trigger', () => {
     it('enqueues chapter_summary at priority 1 on save', () => {
-      evaluateTriggers('save_game_completed');
+      evaluateTestTriggers('save_game_completed');
 
       expect(mockEnqueueTask).toHaveBeenCalledTimes(1);
       const call = mockEnqueueTask.mock.calls[0]![0] as {
@@ -163,8 +203,8 @@ describe('evaluateTriggers', () => {
     it('does not fire twice within 5 seconds on interval trigger', () => {
       mockGetMemoryState.mockReturnValue({ memories: {} });
 
-      evaluateTriggers('interval');
-      evaluateTriggers('interval');
+      evaluateTestTriggers('interval');
+      evaluateTestTriggers('interval');
 
       expect(mockEnqueueTask).toHaveBeenCalledTimes(0);
     });

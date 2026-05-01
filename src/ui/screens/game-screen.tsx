@@ -37,6 +37,7 @@ import type { BranchMeta } from '../../state/branch-store';
 import type { SaveDataV6 } from '../../state/serializer';
 
 const OVERLAY_PHASES = new Set(['journal', 'map', 'codex', 'inventory', 'branch_tree', 'compare', 'shortcuts', 'replay', 'chapter_summary']);
+const WIDE_ACTIONS_WIDTH = 36;
 
 type GameScreenProps = {
   readonly questTemplates: ReadonlyMap<string, QuestTemplate>;
@@ -443,8 +444,8 @@ export function GameScreen({
   }
 
   if (isWide) {
-    const sceneWidth = Math.floor(innerWidth * 0.6);
-    const actionsWidth = innerWidth - sceneWidth - 1;
+    const actionsWidth = Math.min(WIDE_ACTIONS_WIDTH, Math.max(28, innerWidth - 48));
+    const sceneWidth = innerWidth - actionsWidth - 1;
 
     return (
       <Box

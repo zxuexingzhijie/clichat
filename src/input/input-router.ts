@@ -1,6 +1,8 @@
 import type { GameAction } from '../types/game-action';
 import type { CommandParser } from './command-parser';
 import { GAME_CONSTANTS } from '../engine/game-constants';
+import { checkSafety } from '../ai/roles/safety-filter';
+import type { SafetyFilterResult } from '../ai/schemas/safety-filter';
 import { classifyIntent, type ClassifyIntentOptions } from './intent-classifier';
 
 export type InputResult =
@@ -12,6 +14,7 @@ const CONFIDENCE_THRESHOLD = GAME_CONSTANTS.CONFIDENCE_THRESHOLD;
 
 export type RouteInputOptions = {
   readonly classifyOptions?: ClassifyIntentOptions;
+  readonly safetyCheck?: (text: string) => Promise<SafetyFilterResult>;
 };
 
 export async function routeInput(
@@ -37,6 +40,15 @@ export async function routeInput(
   }
 
   try {
+    const safetyCheck = options?.safetyCheck ?? checkSafety;
+    const safety = await safetyCheck(trimmed);
+    if (!safety.safe) {
+      return {
+        status: 'error',
+        message: `输入包含不允许的状态修改或越权内容：${safety.reason}`,
+      };
+    }
+
     const intent = await classifyIntent(trimmed, sceneContext, options?.classifyOptions);
 
     if (intent.confidence < CONFIDENCE_THRESHOLD) {
