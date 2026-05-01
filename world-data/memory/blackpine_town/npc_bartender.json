@@ -1,0 +1,21 @@
+{
+  "npcId": "npc_bartender",
+  "recentMemories": [
+    {
+      "id": "vPdo1hhVXpHFPS7bG6-Ni",
+      "npcId": "npc_bartender",
+      "event": "与玩家初次对话: 哟，新面孔啊！外面雪不小吧？快进来暖暖身子。这张地图可不常见，是来找人还是寻宝？黑松镇虽小，故事可不",
+      "turnNumber": 0,
+      "importance": "low",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_bartender"
+      ]
+    }
+  ],
+  "salientMemories": [],
+  "archiveSummary": "",
+  "lastUpdated": "2026-05-01T12:31:41.585Z",
+  "version": 0
+}

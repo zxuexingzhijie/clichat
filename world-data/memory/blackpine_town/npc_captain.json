@@ -2,9 +2,9 @@
   "npcId": "npc_captain",
   "recentMemories": [
     {
-      "id": "HyB_o6b6gCGQ4PNDQrSMU",
+      "id": "2FgrKTNJe6TwJinSyGaOU",
       "npcId": "npc_captain",
-      "event": "与玩家初次对话: 嗯，外乡人？最近镇上不太平，没事别往北边林子里去。要是看见什么可疑的，报给守夜人。",
+      "event": "与玩家初次对话: 嗯。你是生面孔。最近镇上不太平，没事别往北边去。有什么要问的，快点说。",
       "turnNumber": 0,
       "importance": "low",
       "emotionalValence": 0,
@@ -14,45 +14,9 @@
       ]
     },
     {
-      "id": "xQUcvLYVGE85db_04jHrF",
+      "id": "vWQE4Lf0AeN3iOENrOZjC",
       "npcId": "npc_captain",
-      "event": "玩家说: \"\"你知道这附近发生了什么事吗？\"\" — 哼，你问这个作甚？最近有猎人和旅客在北林失踪，我正带人巡查。有些线索……不知怎么就不见了。你若是普通",
-      "turnNumber": 0,
-      "importance": "medium",
-      "emotionalValence": 0,
-      "participants": [
-        "player",
-        "npc_captain"
-      ]
-    },
-    {
-      "id": "0RQbNOBUCSOMkaoNRgBKh",
-      "npcId": "npc_captain",
-      "event": "玩家说: \"\"这件事听起来很重要，能跟我详细说说吗？\"\" — 详细？哼，我倒是想跟你细说。可有些事，越查越不对劲。前日我分明在林子边缘找到一串足迹，第二天再去，竟",
-      "turnNumber": 0,
-      "importance": "medium",
-      "emotionalValence": 0,
-      "participants": [
-        "player",
-        "npc_captain"
-      ]
-    },
-    {
-      "id": "e1dGWz2XMbT4y_p8TFqUC",
-      "npcId": "npc_captain",
-      "event": "玩家说: \"黑影有记录吗？\" — 有记录，但不多。守夜人老张说他在北林边缘见过一次，说是像个人形但动作快得不正常。我让他画了张草图，结",
-      "turnNumber": 0,
-      "importance": "medium",
-      "emotionalValence": 0,
-      "participants": [
-        "player",
-        "npc_captain"
-      ]
-    },
-    {
-      "id": "YGOwciowQInjl0zhkAPuz",
-      "npcId": "npc_captain",
-      "event": "玩家说: \"\"你说的酒馆那边，具体是什么情况？\"\" — 酒馆老板姓王，绰号‘老王头’。失踪的那几个猎人，几乎每晚都去他那儿喝酒。据他说，最后那个猎人失踪前，",
+      "event": "玩家说: \"\"你们在这里执行什么任务？\"\" — 巡逻，还有查案。最近北林那边总是有人失踪，我派了几队兄弟去搜，结果连线索都跟上回一样，第二天就不见了",
       "turnNumber": 0,
       "importance": "medium",
       "emotionalValence": 0,
@@ -64,6 +28,6 @@
   ],
   "salientMemories": [],
   "archiveSummary": "",
-  "lastUpdated": "2026-05-01T12:18:05.884Z",
+  "lastUpdated": "2026-05-01T15:38:02.714Z",
   "version": 0
 }

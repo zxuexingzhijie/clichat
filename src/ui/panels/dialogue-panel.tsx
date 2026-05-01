@@ -85,8 +85,8 @@ export function DialoguePanel({
   useInput(handleInput, { isActive: isActive && !isFreeTextMode });
 
   const relLabel = getAttitudeLabel(relationshipValue);
-  const recentHistory = dialogueHistory.slice(-4);
-  const hasMoreHistory = dialogueHistory.length > 4;
+  const recentHistory = dialogueHistory.filter((e) => !(e.role === 'user' && e.content === 'greet')).slice(-4);
+  const hasMoreHistory = dialogueHistory.filter((e) => !(e.role === 'user' && e.content === 'greet')).length > 4;
 
   return (
     <Box flexDirection="column" flexGrow={1} paddingX={1}>

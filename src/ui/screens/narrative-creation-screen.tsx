@@ -102,7 +102,12 @@ export function NarrativeCreationScreen({ onComplete }: NarrativeCreationScreenP
       const roundData = dialogueConfig.rounds[phase.round - 1];
       if (!roundData) return;
 
-      const sceneContext = `黑松镇北门，守卫正在盘问旅人。${roundData.guardPromptHint}`;
+      const optionLabels = roundData.options.map((o) => o.label).join('、');
+      const sceneContext =
+        `黑松镇北门，守卫正在对旅人进行入城盘问（第${phase.round}轮，共${TOTAL_ROUNDS}轮）。` +
+        `本轮主题：${roundData.guardPromptHint}。` +
+        `旅人可能的回答是：${optionLabels}。` +
+        `守卫的问话必须围绕此主题，自然引导出上述回答，不得引入其他话题。`;
       const playerAction = lastSelectionLabel
         ? `旅人回答："${lastSelectionLabel}"`
         : '旅人刚走到城门前';

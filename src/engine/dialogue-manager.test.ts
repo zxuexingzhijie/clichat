@@ -403,7 +403,7 @@ describe('createDialogueManager', () => {
     expect(result.dialogue).toBeTruthy();
   });
 
-  it('startDialogue with simple NPC (no quest goals, neutral disposition) enters inline mode', async () => {
+  it('startDialogue with simple NPC opens full dialogue panel mode', async () => {
     const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
       adjudicateFn: mockAdjudicate,
@@ -411,7 +411,7 @@ describe('createDialogueManager', () => {
 
     const result = await manager.startDialogue('npc_guard');
 
-    expect(result.mode).toBe('inline');
+    expect(result.mode).toBe('full');
     expect(result.npcName).toBe('北门守卫');
   });
 
@@ -689,103 +689,84 @@ describe('createDialogueManager', () => {
     expect(result.mode).toBe('full');
   });
 
-  it('NPC with innkeeper tag gets innkeeper-specific questions containing 房间 or 住宿', async () => {
+  it('startDialogue uses generateDialogueOptionsFn to build response items', async () => {
+    const mockGenerateOptions = mock(() =>
+      Promise.resolve({ options: ['"你在这里多久了？"', '"最近镇上有什么新鲜事？"'] }),
+    );
     const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
+      generateDialogueOptionsFn: mockGenerateOptions,
       adjudicateFn: mockAdjudicate,
     });
 
-    await manager.startDialogue('npc_innkeeper');
+    await manager.startDialogue('npc_guard');
 
     const { dialogueStore } = await import('../state/dialogue-store');
     const options = dialogueStore.getState().availableResponses;
-    const labels = options.map(o => o.label).join(' ');
-    expect(labels).toMatch(/房间|住宿/);
+    const labels = options.map((o) => o.label);
+    expect(labels).toContain('"你在这里多久了？"');
+    expect(labels).toContain('"最近镇上有什么新鲜事？"');
+    expect(labels).toContain('结束对话');
   });
 
-  it('NPC with hunter tag gets hunter-specific questions containing 猎物 or 危险', async () => {
+  it('startDialogue always appends 结束对话 and check option in full mode', async () => {
+    const mockGenerateOptions = mock(() =>
+      Promise.resolve({ options: ['"选项A"'] }),
+    );
     const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
+      generateDialogueOptionsFn: mockGenerateOptions,
       adjudicateFn: mockAdjudicate,
     });
 
-    await manager.startDialogue('npc_hunter');
+    await manager.startDialogue('npc_guard');
 
     const { dialogueStore } = await import('../state/dialogue-store');
     const options = dialogueStore.getState().availableResponses;
-    const labels = options.map(o => o.label).join(' ');
-    expect(labels).toMatch(/猎物|危险/);
+    const labels = options.map((o) => o.label);
+    expect(labels).toContain('结束对话');
+    expect(labels.some((l) => l.includes('心智检定'))).toBe(true);
   });
 
-  it('NPC with military tag gets military-specific questions containing 驻守 or 任务', async () => {
+  it('processPlayerResponse uses generateDialogueOptionsFn after NPC reply', async () => {
+    const mockGenerateOptions = mock(() =>
+      Promise.resolve({ options: ['"你刚才说的登记是什么意思？"', '"镇公所在哪里？"'] }),
+    );
     const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
+      generateDialogueOptionsFn: mockGenerateOptions,
       adjudicateFn: mockAdjudicate,
     });
 
-    await manager.startDialogue('npc_soldier');
+    await manager.startDialogue('npc_guard');
+    await manager.processPlayerResponse(0);
 
     const { dialogueStore } = await import('../state/dialogue-store');
     const options = dialogueStore.getState().availableResponses;
-    const labels = options.map(o => o.label).join(' ');
-    expect(labels).toMatch(/驻守|任务/);
+    const labels = options.map((o) => o.label);
+    expect(labels).toContain('"你刚才说的登记是什么意思？"');
+    expect(labels).toContain('"镇公所在哪里？"');
+    expect(labels).toContain('结束对话');
   });
 
-  it('NPC with clergy tag gets clergy questions', async () => {
+  it('generateDialogueOptionsFn receives NPC name and latest dialogue', async () => {
+    let capturedName = '';
+    let capturedDialogue = '';
+    const mockGenerateOptions = mock((name: string, dialogue: string) => {
+      capturedName = name;
+      capturedDialogue = dialogue;
+      return Promise.resolve({ options: ['"好的"'] });
+    });
     const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
+      generateDialogueOptionsFn: mockGenerateOptions,
       adjudicateFn: mockAdjudicate,
     });
 
-    await manager.startDialogue('npc_priest');
+    await manager.startDialogue('npc_guard');
 
-    const { dialogueStore } = await import('../state/dialogue-store');
-    const options = dialogueStore.getState().availableResponses;
-    const labels = options.map(o => o.label).join(' ');
-    expect(labels).toMatch(/神明|神殿|庇护|服务/);
-  });
-
-  it('NPC with tags [military, guard] gets military questions (first match wins)', async () => {
-    const manager = createDialogueManager(stores, mockCodexEntries, {
-      generateNpcDialogueFn: mockGenerateNpcDialogue,
-      adjudicateFn: mockAdjudicate,
-    });
-
-    await manager.startDialogue('npc_soldier');
-
-    const { dialogueStore } = await import('../state/dialogue-store');
-    const options = dialogueStore.getState().availableResponses;
-    const labels = options.map(o => o.label).join(' ');
-    expect(labels).toMatch(/任务|动向|管辖/);
-    expect(labels).not.toMatch(/执勤多久/);
-  });
-
-  it('NPC with beggar tag gets questions containing 帮助 or 施舍', async () => {
-    const manager = createDialogueManager(stores, mockCodexEntries, {
-      generateNpcDialogueFn: mockGenerateNpcDialogue,
-      adjudicateFn: mockAdjudicate,
-    });
-
-    await manager.startDialogue('npc_beggar');
-
-    const { dialogueStore } = await import('../state/dialogue-store');
-    const options = dialogueStore.getState().availableResponses;
-    const labels = options.map(o => o.label).join(' ');
-    expect(labels).toMatch(/帮助|施舍/);
-  });
-
-  it('NPC with underworld tag gets questions containing 服务 or 黑市', async () => {
-    const manager = createDialogueManager(stores, mockCodexEntries, {
-      generateNpcDialogueFn: mockGenerateNpcDialogue,
-      adjudicateFn: mockAdjudicate,
-    });
-
-    await manager.startDialogue('npc_criminal');
-
-    const { dialogueStore } = await import('../state/dialogue-store');
-    const options = dialogueStore.getState().availableResponses;
-    const labels = options.map(o => o.label).join(' ');
-    expect(labels).toMatch(/服务|黑市/);
+    expect(capturedName).toBe('北门守卫');
+    expect(capturedDialogue).toBe('这里最近发生了些事情，你要小心。');
   });
 
   it('with narrativeStore passes narrativeContext to doGenerateDialogue', async () => {
@@ -1087,7 +1068,7 @@ describe('createDialogueManager', () => {
   });
 
   describe('dialogueHistory format — DIAL-02', () => {
-    it('startDialogue writes {role:assistant, content} into dialogueHistory[0]', async () => {
+    it('startDialogue writes {role:user, content:greet} then {role:assistant} into dialogueHistory', async () => {
       const manager = createDialogueManager(stores, mockCodexEntries, {
         generateNpcDialogueFn: mockGenerateNpcDialogue,
         adjudicateFn: mockAdjudicate,
@@ -1097,9 +1078,11 @@ describe('createDialogueManager', () => {
 
       const { dialogueStore } = await import('../state/dialogue-store');
       const history = dialogueStore.getState().dialogueHistory;
-      expect(history.length).toBe(1);
-      expect(history[0]!.role).toBe('assistant');
-      expect(history[0]!.content).toBe('这里最近发生了些事情，你要小心。');
+      expect(history.length).toBe(2);
+      expect(history[0]!.role).toBe('user');
+      expect(history[0]!.content).toBe('greet');
+      expect(history[1]!.role).toBe('assistant');
+      expect(history[1]!.content).toBe('这里最近发生了些事情，你要小心。');
     });
 
     it('processPlayerResponse appends {role:user} and {role:assistant} entries to dialogueHistory', async () => {
@@ -1127,11 +1110,12 @@ describe('createDialogueManager', () => {
 
       const { dialogueStore } = await import('../state/dialogue-store');
       const history = dialogueStore.getState().dialogueHistory;
-      expect(history.length).toBe(3);
-      expect(history[0]!.role).toBe('assistant');
-      expect(history[1]!.role).toBe('user');
-      expect(history[2]!.role).toBe('assistant');
-      expect(history[2]!.content).toBe('第二句回应。');
+      expect(history.length).toBe(4);
+      expect(history[0]!.role).toBe('user');    // greet
+      expect(history[1]!.role).toBe('assistant'); // npc greeting
+      expect(history[2]!.role).toBe('user');    // player choice
+      expect(history[3]!.role).toBe('assistant');
+      expect(history[3]!.content).toBe('第二句回应。');
     });
 
     it('DialogueManager passes dialogueHistory as conversationHistory to generateNpcDialogue', async () => {

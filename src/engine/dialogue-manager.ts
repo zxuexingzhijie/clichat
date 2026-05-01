@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid';
 import { queryById } from '../codex/query';
 import { getDefaultDialogueState } from '../state/dialogue-store';
 import { generateNpcDialogue } from '../ai/roles/npc-actor';
+import { generateDialogueOptions } from '../ai/roles/dialogue-options-generator';
 import { filterCodexForNpc } from '../ai/utils/npc-knowledge-filter';
 import { resolveNormalCheck } from './adjudication';
 import { adjudicateTalkResult } from './rules-engine';
@@ -25,47 +26,6 @@ import type { CheckResult, AttributeName } from '../types/common';
 import type { NarrativeStore } from '../state/narrative-state';
 import type { NarrativePromptContext } from '../ai/prompts/narrative-system';
 
-const QUEST_GOAL_KEYWORDS = ['investigate', 'find', 'recruit', 'discover', 'locate', 'uncover', '调查', '寻找', '找到', '招募', '发现', '追踪', '揭露'];
-
-function isQuestNpc(npc: Npc): boolean {
-  return npc.goals.some((goal) =>
-    QUEST_GOAL_KEYWORDS.some((kw) => goal.toLowerCase().includes(kw)),
-  );
-}
-
-function requiresFullMode(npc: Npc): boolean {
-  return (
-    isQuestNpc(npc) ||
-    npc.initial_disposition < -0.2 ||
-    npc.initial_disposition > 0.5
-  );
-}
-
-const NPC_ROLE_QUESTIONS: Record<string, readonly string[]> = {
-  guard:       ['"最近镇上有没有什么异常？"', '"你在这里执勤多久了？"'],
-  merchant:    ['"你这里有什么货物？"', '"最近生意怎么样？"'],
-  information_broker: ['"你知道什么值钱的消息吗？"', '"最近镇上有什么风声？"'],
-  craftsman:   ['"你能帮我修缮装备吗？"', '"你缺什么材料？"'],
-  healer:      ['"你有治疗药水吗？"', '"附近有什么危险？"'],
-  religious:   ['"神殿最近有什么活动？"', '"你们信奉哪位神明？"'],
-  innkeeper:   ['"你这里还有空房间吗？"', '"镇上最近有什么新鲜事？"', '"你们的饭菜有什么特色？"'],
-  hunter:      ['"附近有什么危险的猎物？"', '"这条路安全吗？"', '"最近见过什么奇怪的踪迹？"'],
-  military:    ['"你们在这里执行什么任务？"', '"最近有没有异常动向？"', '"这片区域谁在管辖？"'],
-  clergy:      ['"神明最近有什么启示？"', '"我能在神殿寻求庇护吗？"', '"你们为镇上提供什么服务？"'],
-  beggar:      ['"你需要帮助吗？"', '"镇上有没有施舍处？"', '"你见过什么不寻常的事？"'],
-  underworld:  ['"你在找什么特殊服务？"', '"黑市最近有什么货？"', '"怎么联系你的老板？"'],
-};
-
-const PERSONALITY_QUESTIONS: Record<string, string> = {
-  dutiful:     '"你的职责是什么？"',
-  friendly:    '"你在这里住多久了？"',
-  shrewd:      '"这笔交易对你有什么好处？"',
-  gruff:       '"有话直说。"',
-  gossipy:     '"最近有什么有趣的事？"',
-  cautious:    '"这里安全吗？"',
-  honest:      '"实话实说，情况怎么样？"',
-};
-
 type DialogueResponseItem = {
   id: string;
   label: string;
@@ -74,156 +34,29 @@ type DialogueResponseItem = {
   checkDc?: number;
 };
 
-function buildResponses(npc: Npc, mode: 'inline' | 'full'): DialogueResponseItem[] {
-  const responses: DialogueResponseItem[] = [];
-
-  // add role-specific questions
-  const addedLabels = new Set<string>();
-  for (const tag of npc.tags ?? []) {
-    const questions = NPC_ROLE_QUESTIONS[tag];
-    if (questions) {
-      for (const q of questions) {
-        if (!addedLabels.has(q)) {
-          responses.push({ id: nanoid(), label: q, requiresCheck: false });
-          addedLabels.add(q);
-        }
-      }
-      break;
-    }
-  }
-
-  // add one personality-driven question if we have room
-  if (responses.length < 2) {
-    for (const tag of npc.personality_tags ?? []) {
-      const q = PERSONALITY_QUESTIONS[tag];
-      if (q && !addedLabels.has(q)) {
-        responses.push({ id: nanoid(), label: q, requiresCheck: false });
-        addedLabels.add(q);
-        break;
-      }
-    }
-  }
-
-  // always include a generic fallback question
-  const generic = '"你知道这附近发生了什么事吗？"';
-  if (!addedLabels.has(generic)) {
-    responses.push({ id: nanoid(), label: generic, requiresCheck: false });
-  }
+function buildResponseItems(
+  npcName: string,
+  generatedOptions: readonly string[],
+  mode: 'inline' | 'full',
+): DialogueResponseItem[] {
+  const items: DialogueResponseItem[] = generatedOptions.map((label) => ({
+    id: nanoid(),
+    label,
+    requiresCheck: false,
+  }));
 
   if (mode === 'full') {
-    responses.push({
+    items.push({
       id: nanoid(),
-      label: `[心智检定 DC ${GAME_CONSTANTS.DEFAULT_DC}] 观察${npc.name}的表情`,
+      label: `[心智检定 DC ${GAME_CONSTANTS.DEFAULT_DC}] 观察${npcName}的表情`,
       requiresCheck: true,
       checkAttribute: 'mind' as const,
       checkDc: GAME_CONSTANTS.DEFAULT_DC,
     });
   }
 
-  responses.push({ id: nanoid(), label: '结束对话', requiresCheck: false });
-  return responses;
-}
-
-const LOCATION_KEYWORDS = ['矿', '森林', '山', '街', '镇', '村', '城', '营地', '神殿', '酒馆', '城门', '北门', '地下', '废墟'];
-const PERSON_KEYWORDS = ['他说', '她说', '听说', '有人', '那个人', '那家伙', '老板', '队长', '大人'];
-const SECRET_KEYWORDS = ['秘密', '内情', '隐瞒', '不敢说', '不方便', '不能说', '消息', '风声', '传言'];
-
-function buildContextualResponses(npc: Npc, mode: 'inline' | 'full', npcDialogue: NpcDialogue): DialogueResponseItem[] {
-  const text = npcDialogue.dialogue;
-  const contextual: DialogueResponseItem[] = [];
-  const addedLabels = new Set<string>();
-
-  // emotion-driven follow-ups
-  if (npcDialogue.emotionTag === 'suspicious' || npcDialogue.emotionTag === 'fearful') {
-    const q = '"你在担心什么？"';
-    contextual.push({ id: nanoid(), label: q, requiresCheck: false });
-    addedLabels.add(q);
-  }
-  if (npcDialogue.emotionTag === 'angry') {
-    const q = '"你为什么这么生气？"';
-    contextual.push({ id: nanoid(), label: q, requiresCheck: false });
-    addedLabels.add(q);
-  }
-
-  // content-driven: location mention
-  if (contextual.length < 2) {
-    for (const kw of LOCATION_KEYWORDS) {
-      if (text.includes(kw)) {
-        const q = `"你说的${kw}那边，具体是什么情况？"`;
-        if (!addedLabels.has(q)) {
-          contextual.push({ id: nanoid(), label: q, requiresCheck: false });
-          addedLabels.add(q);
-          break;
-        }
-      }
-    }
-  }
-
-  // content-driven: someone mentioned
-  if (contextual.length < 2) {
-    for (const kw of PERSON_KEYWORDS) {
-      if (text.includes(kw)) {
-        const q = '"你说的那个人，还有什么我不知道的？"';
-        if (!addedLabels.has(q)) {
-          contextual.push({ id: nanoid(), label: q, requiresCheck: false });
-          addedLabels.add(q);
-          break;
-        }
-      }
-    }
-  }
-
-  // content-driven: hints at hidden info
-  if (contextual.length < 2) {
-    for (const kw of SECRET_KEYWORDS) {
-      if (text.includes(kw)) {
-        const q = '"这件事你知道多少，能告诉我吗？"';
-        if (!addedLabels.has(q)) {
-          contextual.push({ id: nanoid(), label: q, requiresCheck: false });
-          addedLabels.add(q);
-          break;
-        }
-      }
-    }
-  }
-
-  // shouldRemember: NPC flagged this as important — prompt deeper probe
-  if (npcDialogue.shouldRemember && contextual.length < 2) {
-    const q = '"这件事听起来很重要，能跟我详细说说吗？"';
-    if (!addedLabels.has(q)) {
-      contextual.push({ id: nanoid(), label: q, requiresCheck: false });
-      addedLabels.add(q);
-    }
-  }
-
-  // fill remaining slots from static role questions
-  for (const tag of npc.tags ?? []) {
-    if (contextual.length >= 2) break;
-    const questions = NPC_ROLE_QUESTIONS[tag];
-    if (questions) {
-      for (const q of questions) {
-        if (contextual.length >= 2) break;
-        if (!addedLabels.has(q)) {
-          contextual.push({ id: nanoid(), label: q, requiresCheck: false });
-          addedLabels.add(q);
-        }
-      }
-      break;
-    }
-  }
-
-  if (mode === 'full') {
-    contextual.push({
-      id: nanoid(),
-      label: `[心智检定 DC ${GAME_CONSTANTS.DEFAULT_DC}] 观察${npc.name}的表情`,
-      requiresCheck: true,
-      checkAttribute: 'mind' as const,
-      checkDc: GAME_CONSTANTS.DEFAULT_DC,
-    });
-  }
-
-  contextual.push({ id: nanoid(), label: '结束对话', requiresCheck: false });
-  return contextual;
+  items.push({ id: nanoid(), label: '结束对话', requiresCheck: false });
+  return items;
 }
 
 function emotionTagToHint(npcName: string, emotionTag: string): string {
@@ -254,6 +87,7 @@ export type DialogueResult = {
 
 export type DialogueManagerOptions = {
   readonly generateNpcDialogueFn?: typeof generateNpcDialogue;
+  readonly generateDialogueOptionsFn?: typeof generateDialogueOptions;
   readonly adjudicateFn?: (action: { type: string; target?: string }) => CheckResult;
   readonly narrativeStore?: NarrativeStore;
 };
@@ -279,6 +113,7 @@ export function createDialogueManager(
   options?: DialogueManagerOptions,
 ): DialogueManager {
   const doGenerateDialogue = options?.generateNpcDialogueFn ?? generateNpcDialogue;
+  const doGenerateOptions = options?.generateDialogueOptionsFn ?? generateDialogueOptions;
 
   function tryLockRouteFlag(npcId: string, questStore: Store<QuestState> | undefined): void {
     if (!questStore) return;
@@ -400,15 +235,23 @@ export function createDialogueManager(
 
     lastNpcEmotionTag = npcDialogue.emotionTag;
 
-    const mode = requiresFullMode(npc) ? 'full' : 'inline';
-    const responses = buildResponses(npc, mode);
+    const mode = 'full' as const;
+    const initialHistory = [
+      { role: 'user' as const, content: 'greet' },
+      { role: 'assistant' as const, content: npcDialogue.dialogue },
+    ];
+    const generatedOpts = await doGenerateOptions(npc.name, npcDialogue.dialogue, initialHistory);
+    const responses = buildResponseItems(npc.name, generatedOpts.options, mode);
 
     stores.dialogue.setState((draft) => {
       draft.active = true;
       draft.npcId = npcId;
       draft.npcName = npc.name;
       draft.mode = mode;
-      draft.dialogueHistory = [{ role: 'assistant', content: npcDialogue.dialogue }];
+      draft.dialogueHistory = [
+        { role: 'user', content: 'greet' },
+        { role: 'assistant', content: npcDialogue.dialogue },
+      ];
       draft.availableResponses = responses;
       draft.relationshipValue = 0;
       draft.emotionHint = null;
@@ -487,14 +330,16 @@ export function createDialogueManager(
 
       const talkResult = adjudicateTalkResult(npcDialogue.sentiment);
       const newRelationship = state.relationshipValue + talkResult.relationshipDelta;
-      const newResponses = buildContextualResponses(npc, state.mode, npcDialogue);
+      const newHistory = [
+        ...state.dialogueHistory,
+        { role: 'user' as const, content: response.label },
+        { role: 'assistant' as const, content: npcDialogue.dialogue },
+      ];
+      const generatedOpts = await doGenerateOptions(npc.name, npcDialogue.dialogue, newHistory);
+      const newResponses = buildResponseItems(npc.name, generatedOpts.options, state.mode);
 
       stores.dialogue.setState((draft) => {
-        draft.dialogueHistory = [
-          ...state.dialogueHistory,
-          { role: 'user', content: response.label },
-          { role: 'assistant', content: npcDialogue.dialogue },
-        ];
+        draft.dialogueHistory = newHistory;
         draft.availableResponses = newResponses;
         draft.relationshipValue = newRelationship;
         if (emotionHint !== null) {
@@ -596,14 +441,16 @@ export function createDialogueManager(
 
       const talkResult = adjudicateTalkResult(npcDialogue.sentiment);
       const newRelationship = state.relationshipValue + talkResult.relationshipDelta;
-      const newResponses = buildContextualResponses(npc, state.mode, npcDialogue);
+      const newHistory = [
+        ...state.dialogueHistory,
+        { role: 'user' as const, content: text },
+        { role: 'assistant' as const, content: npcDialogue.dialogue },
+      ];
+      const generatedOpts = await doGenerateOptions(npc.name, npcDialogue.dialogue, newHistory);
+      const newResponses = buildResponseItems(npc.name, generatedOpts.options, state.mode);
 
       stores.dialogue.setState((draft) => {
-        draft.dialogueHistory = [
-          ...state.dialogueHistory,
-          { role: 'user', content: text },
-          { role: 'assistant', content: npcDialogue.dialogue },
-        ];
+        draft.dialogueHistory = newHistory;
         draft.availableResponses = newResponses;
         draft.relationshipValue = newRelationship;
       });
