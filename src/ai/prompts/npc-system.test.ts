@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { buildNpcSystemPrompt } from './npc-system';
+import { buildNpcSystemPrompt, buildNpcUserPrompt } from './npc-system';
 import type { NpcProfile } from './npc-system';
 
 const baseNpc: NpcProfile = {
@@ -110,6 +110,20 @@ describe('buildNpcSystemPrompt', () => {
     };
     const result = buildNpcSystemPrompt(npc, 3);
     expect(result).not.toContain('秘密内容');
+  });
+});
+
+describe('buildNpcUserPrompt', () => {
+  it('injects encounter count separately from memory text', () => {
+    const result = buildNpcUserPrompt({
+      scene: '雨夜北门',
+      playerAction: 'greet',
+      memories: [],
+      encounterCount: 2,
+    });
+
+    expect(result).toContain('与玩家的接触次数：2 次');
+    expect(result).toContain('你对这个玩家的记忆：（无）');
   });
 });
 

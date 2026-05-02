@@ -41,7 +41,7 @@ describe('generateNpcDialogue', () => {
     const expected: NpcDialogue = {
       dialogue: '嗯？你要打什么？说吧，别浪费我时间。',
       emotionTag: 'neutral',
-      shouldRemember: false,
+      memoryNote: null,
       sentiment: 'neutral',
     };
     mockGenerateObject.mockResolvedValueOnce({ object: expected, usage: mockUsage });
@@ -71,7 +71,7 @@ describe('generateNpcDialogue', () => {
     );
     expect(result.dialogue).toContain('老铁匠');
     expect(result.emotionTag).toBe('neutral');
-    expect(result.shouldRemember).toBe(false);
+    expect(result.memoryNote).toBeNull();
     expect(result.sentiment).toBe('neutral');
   });
 
@@ -79,7 +79,7 @@ describe('generateNpcDialogue', () => {
     const expected: NpcDialogue = {
       dialogue: '今天天气不错。',
       emotionTag: 'happy',
-      shouldRemember: true,
+      memoryNote: '我记得玩家今天来打招呼。',
       sentiment: 'positive',
     };
     mockGenerateObject
@@ -113,7 +113,7 @@ describe('generateNpcDialogue — history forwarding', () => {
       object: {
         dialogue: '...',
         emotionTag: 'neutral',
-        shouldRemember: false,
+        memoryNote: null,
         sentiment: 'neutral',
       },
       usage: mockUsage,
@@ -156,7 +156,7 @@ describe('narrativeContext forwarding', () => {
     mockGenerateObject.mockResolvedValue({ object: {
       dialogue: '...',
       emotionTag: 'neutral',
-      shouldRemember: false,
+      memoryNote: null,
       sentiment: 'neutral',
     }, usage: mockUsage });
   });

@@ -9,6 +9,7 @@ export type NpcActorOptions = {
   readonly maxRetries?: number;
   readonly archiveSummary?: string;
   readonly relevantCodex?: readonly string[];
+  readonly encounterCount?: number;
   readonly conversationHistory?: readonly { readonly role: 'user' | 'assistant'; readonly content: string }[];
 };
 
@@ -27,6 +28,7 @@ export async function generateNpcDialogue(
     scene,
     playerAction,
     memories,
+    encounterCount: options?.encounterCount,
     archiveSummary: options?.archiveSummary,
     relevantCodex: options?.relevantCodex,
   });
@@ -65,6 +67,7 @@ export async function* streamNpcDialogue(
     scene,
     playerAction,
     memories,
+    encounterCount: options?.encounterCount,
     archiveSummary: options?.archiveSummary,
     relevantCodex: options?.relevantCodex,
   });

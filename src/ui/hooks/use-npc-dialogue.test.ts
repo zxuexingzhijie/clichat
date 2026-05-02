@@ -6,7 +6,7 @@ const mockGenerateNpcDialogue = mock(() =>
     dialogue: 'hello',
     sentiment: 'neutral',
     emotionTag: 'neutral',
-    shouldRemember: false,
+    memoryNote: null,
   }),
 );
 const mockExtractNpcMetadata = mock((): { sentiment: 'positive' | 'neutral' | 'negative' | 'hostile' | undefined; emotionTag: string; shouldRemember: boolean } => ({
@@ -47,7 +47,7 @@ describe('createNpcDialogueState — messagesRef accumulation', () => {
       dialogue: 'hello',
       sentiment: 'neutral',
       emotionTag: 'neutral',
-      shouldRemember: false,
+      memoryNote: null,
     });
     mockExtractNpcMetadata.mockReturnValue({
       sentiment: 'positive' as const,

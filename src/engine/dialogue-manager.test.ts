@@ -8,7 +8,7 @@ const mockGenerateNpcDialogue = mock((): Promise<NpcDialogue> =>
   Promise.resolve({
     dialogue: '这里最近发生了些事情，你要小心。',
     emotionTag: 'suspicious',
-    shouldRemember: false,
+    memoryNote: null,
     sentiment: 'neutral',
   }),
 );
@@ -29,10 +29,10 @@ const { createDialogueManager } = await import('./dialogue-manager');
 
 const { dialogueStore, getDefaultDialogueState } = await import('../state/dialogue-store');
 const { npcMemoryStore, getDefaultNpcMemoryState } = await import('../state/npc-memory-store');
-const { sceneStore } = await import('../state/scene-store');
-const { gameStore } = await import('../state/game-store');
-const { playerStore } = await import('../state/player-store');
-const { relationStore } = await import('../state/relation-store');
+const { sceneStore, getDefaultSceneState } = await import('../state/scene-store');
+const { gameStore, getDefaultGameState } = await import('../state/game-store');
+const { playerStore, getDefaultPlayerState } = await import('../state/player-store');
+const { relationStore, getDefaultRelationState } = await import('../state/relation-store');
 
 const stores = {
   dialogue: dialogueStore,
@@ -369,12 +369,18 @@ const mockCodexEntries = new Map([
 
 describe('createDialogueManager', () => {
   beforeEach(() => {
+    dialogueStore.setState(() => getDefaultDialogueState());
+    npcMemoryStore.setState(() => getDefaultNpcMemoryState());
+    sceneStore.setState(() => getDefaultSceneState());
+    gameStore.setState(() => getDefaultGameState());
+    playerStore.setState(() => getDefaultPlayerState());
+    relationStore.setState(() => getDefaultRelationState());
     mockGenerateNpcDialogue.mockReset();
     mockAdjudicate.mockReset();
     mockGenerateNpcDialogue.mockResolvedValue({
       dialogue: '这里最近发生了些事情，你要小心。',
       emotionTag: 'suspicious',
-      shouldRemember: false,
+      memoryNote: null,
       sentiment: 'neutral',
     });
     mockAdjudicate.mockReturnValue({
@@ -420,13 +426,13 @@ describe('createDialogueManager', () => {
       .mockResolvedValueOnce({
         dialogue: '最近的确不太平。',
         emotionTag: 'neutral',
-        shouldRemember: false,
+        memoryNote: null,
         sentiment: 'neutral',
       })
       .mockResolvedValueOnce({
         dialogue: '你有什么线索吗？',
         emotionTag: 'happy',
-        shouldRemember: false,
+        memoryNote: null,
         sentiment: 'positive',
       });
 
@@ -446,7 +452,7 @@ describe('createDialogueManager', () => {
     mockGenerateNpcDialogue.mockResolvedValue({
       dialogue: '什么事也没有。',
       emotionTag: 'suspicious',
-      shouldRemember: false,
+      memoryNote: null,
       sentiment: 'neutral',
     });
 
@@ -501,13 +507,38 @@ describe('createDialogueManager', () => {
     expect(dialogueStore.getState().npcId).toBeNull();
   });
 
-  it('shouldRemember=true writes to npc memory store', async () => {
-    mockGenerateNpcDialogue.mockResolvedValue({
-      dialogue: '我会记住你的帮助。',
-      emotionTag: 'happy',
-      shouldRemember: true,
-      sentiment: 'positive',
+  it('endDialogue always writes an encounter memory', async () => {
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
     });
+
+    await manager.startDialogue('npc_captain');
+    manager.endDialogue();
+
+    const record = npcMemoryStore.getState().memories['npc_captain'];
+    expect(record?.recentMemories).toContainEqual(
+      expect.objectContaining({
+        event: '与玩家进行过对话（第1次）',
+        importance: 'low',
+      }),
+    );
+  });
+
+  it('processPlayerResponse writes memoryNote as episodic memory', async () => {
+    mockGenerateNpcDialogue
+      .mockResolvedValueOnce({
+        dialogue: '最近的确不太平。',
+        emotionTag: 'neutral',
+        memoryNote: null,
+        sentiment: 'neutral',
+      })
+      .mockResolvedValueOnce({
+        dialogue: '我会留意你说的线索。',
+        emotionTag: 'happy',
+        memoryNote: '我记得玩家提供了失踪案线索。',
+        sentiment: 'positive',
+      });
 
     const manager = createDialogueManager(stores, mockCodexEntries, {
       generateNpcDialogueFn: mockGenerateNpcDialogue,
@@ -515,10 +546,15 @@ describe('createDialogueManager', () => {
     });
 
     await manager.startDialogue('npc_captain');
+    await manager.processPlayerResponse(0);
 
-    const { npcMemoryStore } = await import('../state/npc-memory-store');
     const record = npcMemoryStore.getState().memories['npc_captain'];
-    expect(record?.recentMemories.length).toBeGreaterThan(0);
+    expect(record?.recentMemories).toContainEqual(
+      expect.objectContaining({
+        event: '我记得玩家提供了失踪案线索。',
+        importance: 'medium',
+      }),
+    );
   });
 
   it('startDialogue returns error for unknown NPC', async () => {
@@ -537,13 +573,13 @@ describe('createDialogueManager', () => {
       .mockResolvedValueOnce({
         dialogue: '你好。',
         emotionTag: 'neutral',
-        shouldRemember: false,
+        memoryNote: null,
         sentiment: 'neutral',
       })
       .mockResolvedValueOnce({
         dialogue: '你是个值得信赖的人。',
         emotionTag: 'happy',
-        shouldRemember: false,
+        memoryNote: null,
         sentiment: 'positive',
       });
 
@@ -617,13 +653,13 @@ describe('createDialogueManager', () => {
       .mockResolvedValueOnce({
         dialogue: '你好。',
         emotionTag: 'neutral',
-        shouldRemember: false,
+        memoryNote: null,
         sentiment: 'neutral',
       })
       .mockResolvedValueOnce({
         dialogue: '你是个值得信赖的人。',
         emotionTag: 'happy',
-        shouldRemember: false,
+        memoryNote: null,
         sentiment: 'positive',
       });
 
@@ -650,13 +686,13 @@ describe('createDialogueManager', () => {
       .mockResolvedValueOnce({
         dialogue: '你好。',
         emotionTag: 'neutral',
-        shouldRemember: false,
+        memoryNote: null,
         sentiment: 'neutral',
       })
       .mockResolvedValueOnce({
         dialogue: '好的。',
         emotionTag: 'neutral',
-        shouldRemember: false,
+        memoryNote: null,
         sentiment: 'positive',
       });
 
@@ -776,7 +812,7 @@ describe('createDialogueManager', () => {
       return Promise.resolve({
         dialogue: '测试对白。',
         emotionTag: 'neutral',
-        shouldRemember: false,
+        memoryNote: null,
         sentiment: 'neutral',
       });
     });
@@ -806,7 +842,7 @@ describe('createDialogueManager', () => {
       return Promise.resolve({
         dialogue: '测试对白。',
         emotionTag: 'neutral',
-        shouldRemember: false,
+        memoryNote: null,
         sentiment: 'neutral',
       });
     });
@@ -840,7 +876,7 @@ describe('createDialogueManager', () => {
       return Promise.resolve({
         dialogue: '测试对白。',
         emotionTag: 'neutral',
-        shouldRemember: false,
+        memoryNote: null,
         sentiment: 'neutral',
       });
     });
@@ -868,7 +904,7 @@ describe('createDialogueManager', () => {
       return Promise.resolve({
         dialogue: '测试对白。',
         emotionTag: 'neutral',
-        shouldRemember: false,
+        memoryNote: null,
         sentiment: 'neutral',
       });
     });
@@ -959,13 +995,13 @@ describe('createDialogueManager', () => {
         .mockResolvedValueOnce({
           dialogue: '你好。',
           emotionTag: 'neutral',
-          shouldRemember: false,
+          memoryNote: null,
           sentiment: 'neutral',
         })
         .mockResolvedValueOnce({
           dialogue: '你是个值得信赖的人。',
           emotionTag: 'happy',
-          shouldRemember: false,
+          memoryNote: null,
           sentiment: 'positive',
         });
 
@@ -987,13 +1023,13 @@ describe('createDialogueManager', () => {
         .mockResolvedValueOnce({
           dialogue: '你好。',
           emotionTag: 'neutral',
-          shouldRemember: false,
+          memoryNote: null,
           sentiment: 'neutral',
         })
         .mockResolvedValueOnce({
           dialogue: '走开！',
           emotionTag: 'angry',
-          shouldRemember: false,
+          memoryNote: null,
           sentiment: 'hostile',
         });
 
@@ -1015,13 +1051,13 @@ describe('createDialogueManager', () => {
         .mockResolvedValueOnce({
           dialogue: '你好。',
           emotionTag: 'neutral',
-          shouldRemember: false,
+          memoryNote: null,
           sentiment: 'neutral',
         })
         .mockResolvedValueOnce({
           dialogue: '我不喜欢你的态度。',
           emotionTag: 'angry',
-          shouldRemember: false,
+          memoryNote: null,
           sentiment: 'negative',
         });
 
@@ -1043,13 +1079,13 @@ describe('createDialogueManager', () => {
         .mockResolvedValueOnce({
           dialogue: '你好。',
           emotionTag: 'neutral',
-          shouldRemember: false,
+          memoryNote: null,
           sentiment: 'neutral',
         })
         .mockResolvedValueOnce({
           dialogue: '没什么特别的。',
           emotionTag: 'neutral',
-          shouldRemember: false,
+          memoryNote: null,
           sentiment: 'neutral',
         });
 
@@ -1090,13 +1126,13 @@ describe('createDialogueManager', () => {
         .mockResolvedValueOnce({
           dialogue: '第一句问候。',
           emotionTag: 'neutral',
-          shouldRemember: false,
+          memoryNote: null,
           sentiment: 'neutral',
         })
         .mockResolvedValueOnce({
           dialogue: '第二句回应。',
           emotionTag: 'neutral',
-          shouldRemember: false,
+          memoryNote: null,
           sentiment: 'neutral',
         });
 
@@ -1123,13 +1159,13 @@ describe('createDialogueManager', () => {
         .mockResolvedValueOnce({
           dialogue: '初始对话。',
           emotionTag: 'neutral',
-          shouldRemember: false,
+          memoryNote: null,
           sentiment: 'neutral',
         })
         .mockResolvedValueOnce({
           dialogue: '后续对话。',
           emotionTag: 'neutral',
-          shouldRemember: false,
+          memoryNote: null,
           sentiment: 'neutral',
         });
 

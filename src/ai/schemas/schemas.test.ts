@@ -8,12 +8,12 @@ describe('NpcDialogueSchema', () => {
     const valid: NpcDialogue = {
       dialogue: '你这家伙，又来了？上次欠我的酒钱还没还呢！',
       emotionTag: 'amused',
-      shouldRemember: true,
+      memoryNote: '我记得玩家又来找我要酒钱。',
       sentiment: 'positive',
     };
     const result = NpcDialogueSchema.parse(valid);
     expect(result.emotionTag).toBe('amused');
-    expect(result.shouldRemember).toBe(true);
+    expect(result.memoryNote).toBe('我记得玩家又来找我要酒钱。');
     expect(result.sentiment).toBe('positive');
   });
 
@@ -21,7 +21,7 @@ describe('NpcDialogueSchema', () => {
     expect(() => NpcDialogueSchema.parse({
       dialogue: '这是一段有效的NPC对话文本内容。',
       emotionTag: 'neutral',
-      shouldRemember: false,
+      memoryNote: null,
       sentiment: 'invalid',
     })).toThrow();
   });
@@ -32,7 +32,7 @@ describe('NpcDialogueSchema', () => {
       const result = NpcDialogueSchema.parse({
         dialogue: '这是一段有效的NPC对话文本内容。',
         emotionTag: 'neutral',
-        shouldRemember: false,
+        memoryNote: null,
         sentiment,
       });
       expect(result.sentiment).toBe(sentiment);
@@ -45,7 +45,7 @@ describe('NpcDialogueSchema', () => {
       const result = NpcDialogueSchema.parse({
         dialogue: '这是一段有效的NPC对话文本内容。',
         emotionTag,
-        shouldRemember: false,
+        memoryNote: null,
         sentiment: 'neutral',
       });
       expect(result.emotionTag).toBe(emotionTag);

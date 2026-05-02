@@ -168,6 +168,18 @@ export function createDialogueManager(
   let isProcessing = false;
   let lastNpcEmotionTag = 'neutral';
 
+  function isEncounterMemory(event: string): boolean {
+    return /^与玩家进行过对话（第\d+次）$/.test(event);
+  }
+
+  function countEncounters(memoryRecord: NpcMemoryRecord | undefined): number {
+    const entries = [
+      ...(memoryRecord?.recentMemories ?? []),
+      ...(memoryRecord?.salientMemories ?? []),
+    ];
+    return entries.filter((entry) => isEncounterMemory(entry.event)).length;
+  }
+
   function buildNpcLlmContext(
     npc: Npc,
     memoryRecord: NpcMemoryRecord | undefined,
@@ -176,6 +188,7 @@ export function createDialogueManager(
     memoryStrings: readonly string[];
     archiveSummary: string | undefined;
     relevantCodex: readonly string[];
+    encounterCount: number;
     conversationHistory: readonly { readonly role: 'user' | 'assistant'; readonly content: string }[];
   } {
     const IMPORTANCE_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
@@ -186,7 +199,9 @@ export function createDialogueManager(
       const imp = (IMPORTANCE_ORDER[a.importance] ?? 1) - (IMPORTANCE_ORDER[b.importance] ?? 1);
       return imp !== 0 ? imp : b.turnNumber - a.turnNumber;
     });
-    const memoryStrings = combined.map((m) => m.event);
+    const memoryStrings = combined
+      .filter((m) => !isEncounterMemory(m.event))
+      .map((m) => m.event);
     const archiveSummary = memoryRecord?.archiveSummary || undefined;
 
     const npcFilterCtx: NpcFilterContext = {
@@ -199,7 +214,13 @@ export function createDialogueManager(
     const filtered = filterCodexForNpc(Array.from(codexEntries.values()), npcFilterCtx);
     const relevantCodex = filtered.slice(0, 3).map((e) => e.description.slice(0, 150));
 
-    return { memoryStrings, archiveSummary, relevantCodex, conversationHistory: dialogueHistory };
+    return {
+      memoryStrings,
+      archiveSummary,
+      relevantCodex,
+      encounterCount: countEncounters(memoryRecord),
+      conversationHistory: dialogueHistory,
+    };
   }
 
   async function startDialogue(npcId: string): Promise<DialogueResult> {
@@ -212,7 +233,7 @@ export function createDialogueManager(
     const npc = entry as Npc;
     const memoryRecord = stores.npcMemory.getState().memories[npcId];
     const scene = stores.scene.getState().narrationLines.join(' ');
-    const { memoryStrings, archiveSummary, relevantCodex, conversationHistory } = buildNpcLlmContext(npc, memoryRecord, []);
+    const { memoryStrings, archiveSummary, relevantCodex, encounterCount, conversationHistory } = buildNpcLlmContext(npc, memoryRecord, []);
 
     const npcProfile = {
       id: npc.id,
@@ -228,7 +249,7 @@ export function createDialogueManager(
       scene,
       'greet',
       memoryStrings,
-      { archiveSummary, relevantCodex, conversationHistory },
+      { archiveSummary, relevantCodex, encounterCount, conversationHistory },
       getDialogueNarrativeContext(),
       getTrustLevel(npcId),
     );
@@ -256,10 +277,6 @@ export function createDialogueManager(
       draft.relationshipValue = 0;
       draft.emotionHint = null;
     });
-
-    if (npcDialogue.shouldRemember) {
-      writeMemory(npcId, `与玩家初次对话: ${npcDialogue.dialogue.slice(0, 50)}`, 'low');
-    }
 
     stores.game.setState((draft) => {
       draft.phase = 'dialogue';
@@ -303,7 +320,7 @@ export function createDialogueManager(
 
     const memoryRecord = stores.npcMemory.getState().memories[npcId];
     const scene = stores.scene.getState().narrationLines.join(' ');
-    const { memoryStrings, archiveSummary, relevantCodex, conversationHistory } = buildNpcLlmContext(npc, memoryRecord, state.dialogueHistory);
+    const { memoryStrings, archiveSummary, relevantCodex, encounterCount, conversationHistory } = buildNpcLlmContext(npc, memoryRecord, state.dialogueHistory);
 
     const npcProfile = {
       id: npc.id,
@@ -321,7 +338,7 @@ export function createDialogueManager(
         scene,
         response.label,
         memoryStrings,
-        { archiveSummary, relevantCodex, conversationHistory },
+        { archiveSummary, relevantCodex, encounterCount, conversationHistory },
         getDialogueNarrativeContext(),
         getTrustLevel(npcId),
       );
@@ -347,8 +364,8 @@ export function createDialogueManager(
         }
       });
 
-      if (npcDialogue.shouldRemember) {
-        writeMemory(npcId, `玩家说: "${response.label.slice(0, 30)}" — ${npcDialogue.dialogue.slice(0, 50)}`);
+      if (npcDialogue.memoryNote) {
+        writeMemory(npcId, npcDialogue.memoryNote, 'medium');
       }
 
       return {
@@ -364,6 +381,12 @@ export function createDialogueManager(
   function endDialogue(): void {
     const npcId = stores.dialogue.getState().npcId;
     const delta = stores.dialogue.getState().relationshipValue;
+
+    if (npcId) {
+      const memoryRecord = stores.npcMemory.getState().memories[npcId];
+      const encounterCount = countEncounters(memoryRecord) + 1;
+      writeMemory(npcId, `与玩家进行过对话（第${encounterCount}次）`, 'low');
+    }
 
     tryLockRouteFlag(npcId ?? '', stores.quest);
 
@@ -414,7 +437,7 @@ export function createDialogueManager(
     const npc = entry as Npc;
     const memoryRecord = stores.npcMemory.getState().memories[npcId];
     const scene = stores.scene.getState().narrationLines.join(' ');
-    const { memoryStrings, archiveSummary, relevantCodex, conversationHistory } = buildNpcLlmContext(npc, memoryRecord, state.dialogueHistory);
+    const { memoryStrings, archiveSummary, relevantCodex, encounterCount, conversationHistory } = buildNpcLlmContext(npc, memoryRecord, state.dialogueHistory);
 
     const npcProfile = {
       id: npc.id,
@@ -432,7 +455,7 @@ export function createDialogueManager(
         scene,
         text,
         memoryStrings,
-        { archiveSummary, relevantCodex, conversationHistory },
+        { archiveSummary, relevantCodex, encounterCount, conversationHistory },
         getDialogueNarrativeContext(),
         getTrustLevel(npcId),
       );
@@ -455,8 +478,8 @@ export function createDialogueManager(
         draft.relationshipValue = newRelationship;
       });
 
-      if (npcDialogue.shouldRemember) {
-        writeMemory(npcId, `玩家说: "${text.slice(0, 30)}" — ${npcDialogue.dialogue.slice(0, 50)}`);
+      if (npcDialogue.memoryNote) {
+        writeMemory(npcId, npcDialogue.memoryNote, 'medium');
       }
 
       return {

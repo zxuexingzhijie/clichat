@@ -14,6 +14,7 @@ export type NpcDialogueContext = {
   readonly memories: readonly string[];
   readonly archiveSummary?: string;
   readonly relevantCodex?: readonly string[];
+  readonly encounterCount?: number;
   readonly conversationHistory?: readonly { readonly role: 'user' | 'assistant'; readonly content: string }[];
 };
 
@@ -63,6 +64,7 @@ export function createNpcDialogueState(deps?: {
     streamFn(npcProfile, scene, playerAction, memories, {
       archiveSummary: context.archiveSummary,
       relevantCodex: context.relevantCodex,
+      encounterCount: context.encounterCount,
       conversationHistory: messages.length > 0 ? [...messages] : context.conversationHistory,
     });
   };
@@ -79,6 +81,7 @@ export function createNpcDialogueState(deps?: {
     const stream = streamFn(npcProfile, scene, playerAction, memories, {
       archiveSummary: context.archiveSummary,
       relevantCodex: context.relevantCodex,
+      encounterCount: context.encounterCount,
       conversationHistory: messages.length > 0 ? [...messages] : context.conversationHistory,
     });
 
@@ -134,6 +137,7 @@ export function useNpcDialogue(): UseNpcDialogueReturn {
     streaming.start(streamNpcDialogue(npcProfile, scene, playerAction, memories, {
       archiveSummary: context.archiveSummary,
       relevantCodex: context.relevantCodex,
+      encounterCount: context.encounterCount,
       conversationHistory: messagesRef.current.length > 0 ? messagesRef.current : context.conversationHistory,
     }));
   }, [streaming.start]);
@@ -177,15 +181,26 @@ export function useNpcDialogue(): UseNpcDialogueReturn {
             {
               archiveSummary: ctx.archiveSummary,
               relevantCodex: ctx.relevantCodex,
+              encounterCount: ctx.encounterCount,
               conversationHistory: messagesRef.current.length > 0 ? messagesRef.current : ctx.conversationHistory,
             },
           ).then(result => {
             setMetadata({ ...result, dialogue: fullText });
           }).catch(() => {
-            setMetadata({ dialogue: fullText, sentiment: 'neutral', ...extracted });
+            setMetadata({
+              dialogue: fullText,
+              sentiment: extracted.sentiment ?? 'neutral',
+              emotionTag: extracted.emotionTag as NpcDialogue['emotionTag'],
+              memoryNote: null,
+            });
           });
         } else {
-          setMetadata({ dialogue: fullText, sentiment: 'neutral', ...extracted });
+          setMetadata({
+            dialogue: fullText,
+            sentiment: extracted.sentiment ?? 'neutral',
+            emotionTag: extracted.emotionTag as NpcDialogue['emotionTag'],
+            memoryNote: null,
+          });
         }
 
         messagesRef.current = [

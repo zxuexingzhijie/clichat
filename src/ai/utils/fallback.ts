@@ -19,7 +19,7 @@ export function getFallbackDialogue(npcName: string): NpcDialogue {
   return {
     dialogue: `${npcName}沉默地看着你，似乎不想多说什么。`,
     emotionTag: 'neutral',
-    shouldRemember: false,
     sentiment: 'neutral',
+    memoryNote: null,
   };
 }

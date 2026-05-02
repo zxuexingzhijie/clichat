@@ -32,7 +32,7 @@ describe('getFallbackDialogue', () => {
     const result = getFallbackDialogue('老铁匠');
     expect(result.dialogue).toContain('老铁匠');
     expect(result.emotionTag).toBe('neutral');
-    expect(result.shouldRemember).toBe(false);
+    expect(result.memoryNote).toBeNull();
     expect(result.sentiment).toBe('neutral');
   });
 

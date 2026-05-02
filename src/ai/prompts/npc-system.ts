@@ -76,6 +76,7 @@ export type NpcUserPromptContext = {
   readonly scene: string;
   readonly playerAction: string;
   readonly memories: readonly string[];
+  readonly encounterCount?: number;
   readonly emotionHint?: string;
   readonly archiveSummary?: string;
   readonly relevantCodex?: readonly string[];
@@ -94,6 +95,7 @@ export function buildNpcUserPrompt(context: NpcUserPromptContext): string {
 
   return `场景：${context.scene}
 玩家动作：${context.playerAction}
+与玩家的接触次数：${context.encounterCount ?? 0} 次
 你对这个玩家的记忆：${memoriesText}${archiveSection}${codexSection}
 当前情绪倾向：${context.emotionHint ?? '中立'}
 请以角色身份回应。`;
