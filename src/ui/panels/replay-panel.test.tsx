@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import type { TurnLogEntry } from '../../state/serializer';
+import { formatTurnLabel } from './replay-panel';
 
 const makeTurnEntry = (overrides: Partial<TurnLogEntry> = {}): TurnLogEntry => ({
   turnNumber: 1,
@@ -25,14 +26,30 @@ describe('ReplayPanel module', () => {
 describe('ReplayPanel entry format', () => {
   it('formats turn label as [T{N}] {action}', () => {
     const entry = makeTurnEntry({ turnNumber: 3, action: 'go north' });
-    const label = `[T${entry.turnNumber}] ${entry.action.slice(0, 45)}`;
-    expect(label).toBe('[T3] go north');
+    expect(formatTurnLabel(entry)).toBe('[T3] go north');
   });
 
-  it('truncates long action labels to 45 chars', () => {
+  it('marks long action labels as previews with an ellipsis after 45 chars', () => {
     const longAction = 'a'.repeat(60);
-    const label = `[T1] ${longAction.slice(0, 45)}`;
-    expect(label.length).toBe(5 + 45);
+    expect(formatTurnLabel(makeTurnEntry({ action: longAction }))).toBe(`[T1] ${'a'.repeat(45)}…`);
+  });
+
+  it('does not mark exactly 45 code points as previews', () => {
+    const action = 'b'.repeat(45);
+    expect(formatTurnLabel(makeTurnEntry({ action }))).toBe(`[T1] ${action}`);
+  });
+
+  it('does not split non-BMP emoji surrogate pairs when creating a preview', () => {
+    const action = `${'a'.repeat(44)}😀tail`;
+    const label = formatTurnLabel(makeTurnEntry({ action }));
+    expect(label).toBe(`[T1] ${'a'.repeat(44)}😀…`);
+    expect(label).not.toContain('\uFFFD');
+    expect(label).not.toMatch(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u);
+  });
+
+  it('does not add ellipsis for exactly 45 code points including non-BMP emoji', () => {
+    const action = `${'a'.repeat(44)}😀`;
+    expect(formatTurnLabel(makeTurnEntry({ action }))).toBe(`[T1] ${action}`);
   });
 
   it('handles entry with npcDialogue field', () => {

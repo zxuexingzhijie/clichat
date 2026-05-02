@@ -1,4 +1,4 @@
-import { npcMemoryStore, type NpcMemoryState } from '../../state/npc-memory-store';
+import { npcMemoryStore, type NpcMemoryEntry, type NpcMemoryState } from '../../state/npc-memory-store';
 import { sceneStore, type SceneState } from '../../state/scene-store';
 import { getTurnLog } from '../../engine/turn-log';
 import {
@@ -28,6 +28,22 @@ let runtimeSceneStore: RuntimeSceneStore = sceneStore;
 
 const recentChapterSummaries: string[] = [];
 const recentTurnCompressBlocks: string[] = [];
+
+function getRawMemorySource(record: {
+  readonly allMemories?: readonly NpcMemoryEntry[];
+  readonly salientMemories?: readonly NpcMemoryEntry[];
+  readonly recentMemories?: readonly NpcMemoryEntry[];
+}): NpcMemoryEntry[] {
+  const source = record.allMemories && record.allMemories.length > 0
+    ? record.allMemories
+    : [...(record.salientMemories ?? []), ...(record.recentMemories ?? [])];
+  const seenIds = new Set<string>();
+  return source.filter((memory) => {
+    if (seenIds.has(memory.id)) return false;
+    seenIds.add(memory.id);
+    return true;
+  });
+}
 
 export function configureSummarizerWorkerStores(stores: {
   readonly npcMemory?: RuntimeNpcMemoryStore;
@@ -64,7 +80,7 @@ export async function applyNpcMemoryCompression(
     const r = draft.memories[task.targetId];
     if (r) {
       r.archiveSummary = result;
-      r.recentMemories = r.recentMemories.slice(task.entryIds.length) as typeof r.recentMemories;
+      r.archiveSourceIds = Array.from(new Set([...(r.archiveSourceIds ?? []), ...task.entryIds]));
       r.version += 1;
     }
   });
@@ -78,8 +94,16 @@ async function dispatchTask(task: SummarizerTask): Promise<void> {
     if (!record) {
       throw new Error(`NPC record not found for targetId: ${task.targetId}`);
     }
-    const result = await generateNpcMemorySummary(task.targetId, record.recentMemories);
-    const applyResult = await applyNpcMemoryCompression(task, result);
+    const rawSource = getRawMemorySource(record);
+    const entriesById = new Map(rawSource.map((memory) => [memory.id, memory]));
+    const entries = task.entryIds
+      .map((entryId) => entriesById.get(entryId))
+      .filter((memory): memory is NpcMemoryEntry => Boolean(memory));
+    const result = await generateNpcMemorySummary(task.targetId, entries);
+    const applyResult = await applyNpcMemoryCompression({
+      ...task,
+      entryIds: entries.map((memory) => memory.id),
+    }, result);
     if (applyResult === 'conflict') {
       throw new Error('Version conflict during npc_memory_compress');
     }

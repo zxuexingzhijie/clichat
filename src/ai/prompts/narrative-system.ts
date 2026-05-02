@@ -64,7 +64,7 @@ ${CORE_CONSTRAINTS}
   const narrativeParagraph = `\n当前叙事氛围：${atmosphereStr}（用这些词语的语气和意象）\n故事进程：${actLabel}\n${toneGuidance}`;
 
   const recentSection = narrativeContext.recentNarration?.length
-    ? `\n最近叙述（保持语气和意象的连贯性，避免重复同一词语）：\n${narrativeContext.recentNarration.slice(-3).join('\n')}`
+    ? `\n最近叙述（保持语气和意象的连贯性，避免重复同一词语）：\n${narrativeContext.recentNarration.join('\n')}`
     : '';
 
   return base + narrativeParagraph + recentSection;
@@ -79,10 +79,9 @@ export type NarrativeUserPromptContext = {
 };
 
 export function buildNarrativeUserPrompt(context: NarrativeUserPromptContext): string {
-  const recentLines = context.recentNarration.slice(-3).join('\n');
+  const recentLines = context.recentNarration.join('\n');
   const codexSection = context.codexEntries
-    .slice(0, 3)
-    .map((e) => `[${e.id}] ${e.description.slice(0, 200)}`)
+    .map((e) => `[${e.id}] ${e.description}`)
     .join('\n');
 
   const parts = [

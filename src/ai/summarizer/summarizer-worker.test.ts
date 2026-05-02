@@ -26,9 +26,12 @@ mock.module('../roles/memory-summarizer', () => ({
   generateTurnLogCompress: mock(() => Promise.resolve('compressed turns')),
 }));
 
-const { applyNpcMemoryCompression, configureSummarizerWorkerStores, runSummarizerLoop } = await import('./summarizer-worker');
+const { applyNpcMemoryCompression, configureSummarizerWorkerStores, runNextTask, runSummarizerLoop } = await import('./summarizer-worker');
 const { dequeuePending: mockDequeuePending } = await import('./summarizer-queue') as unknown as {
   dequeuePending: ReturnType<typeof mock>;
+};
+const { generateNpcMemorySummary: mockGenerateNpcMemorySummary } = await import('../roles/memory-summarizer') as unknown as {
+  generateNpcMemorySummary: ReturnType<typeof mock>;
 };
 
 function makeEntries(count: number): NpcMemoryEntry[] {
@@ -140,15 +143,17 @@ describe('applyNpcMemoryCompression', () => {
     expect(mockNpcMemorySetState).not.toHaveBeenCalled();
   });
 
-  it('returns applied when versions match, updates archiveSummary, increments version', async () => {
+  it('returns applied when versions match, updates archiveSummary, merges archiveSourceIds, increments version', async () => {
     const entries = makeEntries(5);
     mockNpcMemoryGetState.mockReturnValue({
       memories: {
         npc_001: {
           npcId: 'npc_001',
+          allMemories: entries,
           recentMemories: entries,
           salientMemories: [],
           archiveSummary: 'old summary',
+          archiveSourceIds: ['entry_0', 'legacy_entry'],
           lastUpdated: new Date().toISOString(),
           version: 2,
         },
@@ -181,9 +186,11 @@ describe('applyNpcMemoryCompression', () => {
       memories: {
         npc_001: {
           npcId: 'npc_001',
+          allMemories: [...entries],
           recentMemories: [...entries],
-          salientMemories: [],
+          salientMemories: [entries[4]!],
           archiveSummary: 'old summary',
+          archiveSourceIds: ['entry_0', 'legacy_entry'],
           lastUpdated: new Date().toISOString(),
           version: 2,
         },
@@ -191,11 +198,14 @@ describe('applyNpcMemoryCompression', () => {
     };
     if (capturedRecipe) (capturedRecipe as (d: typeof draft) => void)(draft);
     expect(draft.memories.npc_001.archiveSummary).toBe('new compressed memory');
+    expect(draft.memories.npc_001.archiveSourceIds).toEqual(['entry_0', 'legacy_entry', 'entry_1']);
     expect(draft.memories.npc_001.version).toBe(3);
-    expect(draft.memories.npc_001.recentMemories.length).toBe(entries.length - entryIds.length);
+    expect(draft.memories.npc_001.allMemories.map((memory) => memory.id)).toEqual(entries.map((memory) => memory.id));
+    expect(draft.memories.npc_001.recentMemories.map((memory) => memory.id)).toEqual(entries.map((memory) => memory.id));
+    expect(draft.memories.npc_001.salientMemories.map((memory) => memory.id)).toEqual([entries[4]!.id]);
   });
 
-  it('preserves recentMemories not in entryIds after write-back', async () => {
+  it('preserves all raw/source entries after write-back', async () => {
     const entries = makeEntries(5);
     const entryIds = [entries[0]!.id, entries[1]!.id];
 
@@ -203,9 +213,11 @@ describe('applyNpcMemoryCompression', () => {
       memories: {
         npc_001: {
           npcId: 'npc_001',
-          recentMemories: entries,
-          salientMemories: [],
+          allMemories: entries,
+          recentMemories: entries.slice(1),
+          salientMemories: [entries[0]!],
           archiveSummary: '',
+          archiveSourceIds: [] as string[],
           lastUpdated: new Date().toISOString(),
           version: 0,
         },
@@ -235,17 +247,78 @@ describe('applyNpcMemoryCompression', () => {
       memories: {
         npc_001: {
           npcId: 'npc_001',
-          recentMemories: [...entries],
-          salientMemories: [],
+          allMemories: [...entries],
+          recentMemories: entries.slice(1),
+          salientMemories: [entries[0]!],
           archiveSummary: '',
+          archiveSourceIds: [] as string[],
           lastUpdated: new Date().toISOString(),
           version: 0,
         },
       },
     };
     if (capturedRecipe) (capturedRecipe as (d: typeof draft) => void)(draft);
-    expect(draft.memories.npc_001.recentMemories.length).toBe(3);
-    expect(draft.memories.npc_001.recentMemories[0]!.id).toBe(entries[2]!.id);
+    expect(draft.memories.npc_001.allMemories.map((memory) => memory.id)).toEqual(entries.map((memory) => memory.id));
+    expect(draft.memories.npc_001.recentMemories.map((memory) => memory.id)).toEqual(entries.slice(1).map((memory) => memory.id));
+    expect(draft.memories.npc_001.salientMemories.map((memory) => memory.id)).toEqual([entries[0]!.id]);
+    expect(draft.memories.npc_001.archiveSourceIds).toEqual(entryIds);
+  });
+});
+
+describe('runNextTask — NPC memory compression dispatch', () => {
+  beforeEach(() => {
+    mockNpcMemoryGetState.mockReset();
+    mockNpcMemorySetState.mockReset();
+    (mockDequeuePending as ReturnType<typeof mock>).mockReset();
+    (mockGenerateNpcMemorySummary as ReturnType<typeof mock>).mockReset();
+    (mockGenerateNpcMemorySummary as ReturnType<typeof mock>).mockResolvedValue('compressed selected raw entries');
+    configureSummarizerWorkerStores({
+      npcMemory: { getState: mockNpcMemoryGetState, setState: mockNpcMemorySetState } as never,
+    });
+  });
+
+  it('summarizes selected allMemories entries by task.entryIds and archives only summarized ids', async () => {
+    const entries = makeEntries(12);
+    const oldEntry = entries[1]!;
+    const recentEntry = entries[11]!;
+    const taskEntryIds = [oldEntry.id, recentEntry.id, 'missing_entry'];
+    const record = {
+      npcId: 'npc_001',
+      allMemories: entries,
+      recentMemories: entries.slice(-5),
+      salientMemories: entries.slice(0, 7),
+      archiveSummary: '',
+      archiveSourceIds: ['entry_0'],
+      lastUpdated: new Date().toISOString(),
+      version: 4,
+    };
+
+    mockNpcMemoryGetState.mockReturnValue({ memories: { npc_001: record } });
+    (mockDequeuePending as ReturnType<typeof mock>).mockReturnValue({
+      id: 'task_dispatch',
+      type: 'npc_memory_compress',
+      targetId: 'npc_001',
+      entryIds: taskEntryIds,
+      baseVersion: 4,
+      priority: 2,
+      triggerReason: 'threshold',
+      createdAt: new Date().toISOString(),
+      status: 'pending',
+    });
+
+    let capturedRecipe: ((draft: unknown) => void) | null = null;
+    mockNpcMemorySetState.mockImplementation((recipe: (_draft: unknown) => void) => {
+      capturedRecipe = recipe;
+    });
+
+    const didRun = await runNextTask();
+
+    expect(didRun).toBe(true);
+    expect(mockGenerateNpcMemorySummary).toHaveBeenCalledWith('npc_001', [oldEntry, recentEntry]);
+
+    const draft = { memories: { npc_001: { ...record, archiveSourceIds: ['entry_0'] } } };
+    if (capturedRecipe) (capturedRecipe as (d: typeof draft) => void)(draft);
+    expect(draft.memories.npc_001.archiveSourceIds).toEqual(['entry_0', oldEntry.id, recentEntry.id]);
   });
 });
 

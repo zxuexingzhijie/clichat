@@ -1,4 +1,3 @@
-import { GAME_CONSTANTS } from './game-constants';
 import { combatStore } from '../state/combat-store';
 import type { Store } from '../state/create-store';
 import type { GameState } from '../state/game-store';
@@ -42,10 +41,8 @@ export type GameScreenController = {
 
 const COMBAT_ACTION_TYPES: readonly CombatActionType[] = ['attack', 'cast', 'guard', 'flee'];
 
-function capNarrationLines(lines: readonly string[]): string[] {
-  return lines.length > GAME_CONSTANTS.MAX_TURN_LOG_SIZE
-    ? lines.slice(-GAME_CONSTANTS.MAX_TURN_LOG_SIZE) as string[]
-    : [...lines];
+function appendNarrationLines(lines: readonly string[], additions: readonly string[]): string[] {
+  return [...lines, ...additions];
 }
 
 export function createGameScreenController(
@@ -82,7 +79,7 @@ export function createGameScreenController(
       const result = await gameLoop.executeAction(gameAction);
       if (result.status === 'error') {
         sceneStore.setState(draft => {
-          draft.narrationLines = capNarrationLines([...draft.narrationLines, `[错误] ${result.message ?? '未知错误'}`]);
+          draft.narrationLines = appendNarrationLines(draft.narrationLines, [`[错误] ${result.message ?? '未知错误'}`]);
         });
         setInputMode?.('action_select');
         return;
@@ -98,13 +95,13 @@ export function createGameScreenController(
         sceneType: 'exploration',
         codexEntries: [],
         playerAction: action.label,
-        recentNarration: sceneState.narrationLines.slice(-3),
+        recentNarration: sceneState.narrationLines,
         sceneContext: sceneState.locationName ?? '',
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       sceneStore.setState(draft => {
-        draft.narrationLines = capNarrationLines([...draft.narrationLines, `[错误] ${msg}`]);
+        draft.narrationLines = appendNarrationLines(draft.narrationLines, [`[错误] ${msg}`]);
       });
       setInputMode?.('action_select');
     }
@@ -119,17 +116,17 @@ export function createGameScreenController(
     gameLoop.processInput(text).then((result) => {
       if (result.status === 'error') {
         sceneStore.setState(draft => {
-          draft.narrationLines = capNarrationLines([...draft.narrationLines, `[错误] ${result.message}`]);
+          draft.narrationLines = appendNarrationLines(draft.narrationLines, [`[错误] ${result.message}`]);
         });
         setInputMode?.('action_select');
       } else if (result.status === 'clarification') {
         sceneStore.setState(draft => {
-          draft.narrationLines = capNarrationLines([...draft.narrationLines, result.message]);
+          draft.narrationLines = appendNarrationLines(draft.narrationLines, [result.message]);
         });
         setInputMode?.('action_select');
       } else if (result.status === 'help') {
         sceneStore.setState(draft => {
-          draft.narrationLines = capNarrationLines([...draft.narrationLines, ...result.commands]);
+          draft.narrationLines = appendNarrationLines(draft.narrationLines, result.commands);
         });
         setInputMode?.('action_select');
       } else if (result.status === 'action_executed' && result.narration.length > 0) {
@@ -140,14 +137,14 @@ export function createGameScreenController(
           sceneType: 'exploration',
           codexEntries: [],
           playerAction: text,
-          recentNarration: sceneState.narrationLines.slice(-3),
+          recentNarration: sceneState.narrationLines,
           sceneContext: sceneState.locationName ?? '',
         });
       }
     }).catch((err: unknown) => {
       const msg = err instanceof Error ? err.message : String(err);
       sceneStore.setState(draft => {
-        draft.narrationLines = capNarrationLines([...draft.narrationLines, `[错误] ${msg}`]);
+        draft.narrationLines = appendNarrationLines(draft.narrationLines, [`[错误] ${msg}`]);
       });
       setInputMode?.('action_select');
     });
@@ -156,7 +153,7 @@ export function createGameScreenController(
   const handleNarrationComplete = (text: string): void => {
     if (text.trim().length > 0) {
       sceneStore.setState(draft => {
-        draft.narrationLines = capNarrationLines([...draft.narrationLines, text]);
+        draft.narrationLines = appendNarrationLines(draft.narrationLines, [text]);
       });
     }
     resetNarration?.();
@@ -165,7 +162,7 @@ export function createGameScreenController(
 
   const handleNarrationError = (error: Error): void => {
     sceneStore.setState(draft => {
-      draft.narrationLines = capNarrationLines([...draft.narrationLines, `[叙事错误] ${error.message}`]);
+      draft.narrationLines = appendNarrationLines(draft.narrationLines, [`[叙事错误] ${error.message}`]);
     });
     resetNarration?.();
     setInputMode?.('action_select');
@@ -173,10 +170,10 @@ export function createGameScreenController(
 
   const handleNpcDialogueComplete = (npcName: string, dialogue: string, currentInputMode: InputMode): void => {
     sceneStore.setState(draft => {
-      draft.narrationLines = capNarrationLines([
-        ...draft.narrationLines,
-        `${npcName}\uFF1A\u201C${dialogue}\u201D`,
-      ]);
+      draft.narrationLines = appendNarrationLines(
+        draft.narrationLines,
+        [`${npcName}\uFF1A\u201C${dialogue}\u201D`],
+      );
     });
     resetNpcDialogue?.();
     if (currentInputMode === 'processing') {
@@ -190,7 +187,7 @@ export function createGameScreenController(
       console.error('[dialogue] processPlayerResponse failed:', err);
       eventBus.emit('ai_call_failed', { role: 'npc_actor', error: err instanceof Error ? err.message : String(err) });
       sceneStore.setState(draft => {
-        draft.narrationLines = capNarrationLines([...draft.narrationLines, '[对话中断] 对话意外结束。']);
+        draft.narrationLines = appendNarrationLines(draft.narrationLines, ['[对话中断] 对话意外结束。']);
       });
       dialogueManager.endDialogue();
       gameStore.setState(draft => { draft.phase = 'game'; });
@@ -210,7 +207,7 @@ export function createGameScreenController(
       const result = await combatLoop.processPlayerAction(actionType, opts);
       if (result.status === 'error') {
         sceneStore.setState(draft => {
-          draft.narrationLines = capNarrationLines([...draft.narrationLines, `[战斗] ${result.message}`]);
+          draft.narrationLines = appendNarrationLines(draft.narrationLines, [`[战斗] ${result.message}`]);
         });
         return;
       }

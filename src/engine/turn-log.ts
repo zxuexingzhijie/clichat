@@ -1,8 +1,10 @@
 import type { TurnLogEntry } from '../state/serializer';
-import { createTurnLogStore, MAX_TURN_LOG_SIZE, type TurnLogState } from '../state/turn-log-store';
+import { createTurnLogStore, type TurnLogState } from '../state/turn-log-store';
 import { eventBus } from '../events/event-bus';
 import type { Store } from '../state/create-store';
 
+// Legacy/global turn-log singleton. GameContext turn-log stores are independent
+// and are not automatically bound to this module-level state.
 let turnLog: TurnLogEntry[] = [];
 let _defaultStore: Store<TurnLogState> | null = null;
 
@@ -19,11 +21,8 @@ export function appendTurnLog(entry: Omit<TurnLogEntry, 'timestamp'>): void {
     timestamp: new Date().toISOString(),
   };
   turnLog = [...turnLog, fullEntry];
-  if (turnLog.length > MAX_TURN_LOG_SIZE) {
-    turnLog = turnLog.slice(turnLog.length - MAX_TURN_LOG_SIZE);
-  }
   getStore().setState((d) => {
-    d.entries = [...d.entries, fullEntry].slice(-MAX_TURN_LOG_SIZE);
+    d.entries = [...d.entries, fullEntry];
   });
 }
 
@@ -42,8 +41,8 @@ export function resetTurnLog(): void {
 }
 
 export function restoreTurnLog(entries: readonly TurnLogEntry[]): void {
-  turnLog = [...entries].slice(-MAX_TURN_LOG_SIZE);
-  getStore().setState((d) => { d.entries = [...entries].slice(-MAX_TURN_LOG_SIZE); });
+  turnLog = [...entries];
+  getStore().setState((d) => { d.entries = [...entries]; });
 }
 
 export { getStore as getTurnLogStore };

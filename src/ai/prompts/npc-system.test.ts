@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { buildNpcSystemPrompt } from './npc-system';
+import { buildNpcSystemPrompt, buildNpcUserPrompt } from './npc-system';
 import type { NpcProfile } from './npc-system';
 
 const baseNpc: NpcProfile = {
@@ -156,5 +156,22 @@ describe('buildNpcSystemPrompt — narrativeContext injection', () => {
     expect(result).toContain('将军的秘密行动');
     expect(result).toContain('当前故事阶段：act1');
     expect(result).toContain('紧张');
+  });
+});
+
+describe('buildNpcUserPrompt', () => {
+  it('includes all memories instead of fixed first 8', () => {
+    const memories = Array.from({ length: 10 }, (_, index) => `记忆${index + 1}`);
+
+    const result = buildNpcUserPrompt({
+      scene: '场景',
+      playerAction: '问候',
+      memories,
+    });
+
+    expect(result).toContain('记忆1');
+    expect(result).toContain('记忆8');
+    expect(result).toContain('记忆9');
+    expect(result).toContain('记忆10');
   });
 });

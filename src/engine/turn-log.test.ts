@@ -5,6 +5,7 @@ import {
   replayTurns,
   resetTurnLog,
   restoreTurnLog,
+  getTurnLogStore,
 } from './turn-log';
 
 beforeEach(() => {
@@ -76,7 +77,7 @@ describe('turn-log', () => {
     expect(replay).toHaveLength(10);
   });
 
-  it('turn log capped at 50 entries, oldest dropped first', () => {
+  it('appendTurnLog retains all entries after more than 50 appends', () => {
     for (let i = 1; i <= 60; i++) {
       appendTurnLog({
         turnNumber: i,
@@ -87,9 +88,13 @@ describe('turn-log', () => {
     }
 
     const log = getTurnLog();
-    expect(log).toHaveLength(50);
-    expect(log[0]!.turnNumber).toBe(11);
-    expect(log[49]!.turnNumber).toBe(60);
+    const storeEntries = getTurnLogStore().getState().entries;
+    expect(log).toHaveLength(60);
+    expect(storeEntries).toHaveLength(60);
+    expect(log[0]!.turnNumber).toBe(1);
+    expect(log[59]!.turnNumber).toBe(60);
+    expect(storeEntries[0]!.turnNumber).toBe(1);
+    expect(storeEntries[59]!.turnNumber).toBe(60);
   });
 
   it('resetTurnLog clears all entries', () => {
@@ -137,7 +142,7 @@ describe('turn-log', () => {
     expect(log[1]!.turnNumber).toBe(11);
   });
 
-  it('restoreTurnLog caps at 50 entries', () => {
+  it('restoreTurnLog restores all entries when given more than 50 entries', () => {
     const entries = Array.from({ length: 60 }, (_, i) => ({
       turnNumber: i + 1,
       action: `action_${i + 1}`,
@@ -148,8 +153,13 @@ describe('turn-log', () => {
 
     restoreTurnLog(entries);
     const log = getTurnLog();
-    expect(log).toHaveLength(50);
-    expect(log[0]!.turnNumber).toBe(11);
+    const storeEntries = getTurnLogStore().getState().entries;
+    expect(log).toHaveLength(60);
+    expect(storeEntries).toHaveLength(60);
+    expect(log[0]!.turnNumber).toBe(1);
+    expect(log[59]!.turnNumber).toBe(60);
+    expect(storeEntries[0]!.turnNumber).toBe(1);
+    expect(storeEntries[59]!.turnNumber).toBe(60);
   });
 
   it('getTurnLog returns copies, not references', () => {

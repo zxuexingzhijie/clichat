@@ -13,7 +13,7 @@ import { getDefaultNpcDisposition } from '../state/relation-store';
 import { addMemory } from '../state/npc-memory-store';
 import type { Store } from '../state/create-store';
 import type { DialogueState } from '../state/dialogue-store';
-import type { NpcMemoryState, NpcMemoryRecord } from '../state/npc-memory-store';
+import type { NpcMemoryState, NpcMemoryRecord, NpcMemoryEntry } from '../state/npc-memory-store';
 import type { SceneState } from '../state/scene-store';
 import type { GameState } from '../state/game-store';
 import type { PlayerState } from '../state/player-store';
@@ -168,6 +168,19 @@ export function createDialogueManager(
   let isProcessing = false;
   let lastNpcEmotionTag = 'neutral';
 
+  function getMemorySource(memoryRecord: NpcMemoryRecord | undefined): readonly NpcMemoryEntry[] {
+    if (!memoryRecord) return [];
+    const source = memoryRecord.allMemories?.length
+      ? memoryRecord.allMemories
+      : [...(memoryRecord.salientMemories ?? []), ...(memoryRecord.recentMemories ?? [])];
+    const seen = new Set<string>();
+    return source.filter((memory) => {
+      if (seen.has(memory.id)) return false;
+      seen.add(memory.id);
+      return true;
+    });
+  }
+
   function buildNpcLlmContext(
     npc: Npc,
     memoryRecord: NpcMemoryRecord | undefined,
@@ -178,15 +191,7 @@ export function createDialogueManager(
     relevantCodex: readonly string[];
     conversationHistory: readonly { readonly role: 'user' | 'assistant'; readonly content: string }[];
   } {
-    const IMPORTANCE_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
-    const combined = [
-      ...(memoryRecord?.recentMemories ?? []),
-      ...(memoryRecord?.salientMemories ?? []),
-    ].sort((a, b) => {
-      const imp = (IMPORTANCE_ORDER[a.importance] ?? 1) - (IMPORTANCE_ORDER[b.importance] ?? 1);
-      return imp !== 0 ? imp : b.turnNumber - a.turnNumber;
-    });
-    const memoryStrings = combined.map((m) => m.event);
+    const memoryStrings = getMemorySource(memoryRecord).map((m) => m.event);
     const archiveSummary = memoryRecord?.archiveSummary || undefined;
 
     const npcFilterCtx: NpcFilterContext = {
@@ -197,7 +202,7 @@ export function createDialogueManager(
       npcRegion: '',
     };
     const filtered = filterCodexForNpc(Array.from(codexEntries.values()), npcFilterCtx);
-    const relevantCodex = filtered.slice(0, 3).map((e) => e.description.slice(0, 150));
+    const relevantCodex = filtered.map((e) => e.description);
 
     return { memoryStrings, archiveSummary, relevantCodex, conversationHistory: dialogueHistory };
   }

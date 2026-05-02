@@ -1,6 +1,5 @@
 import { queryById } from '../codex/query';
 import { assembleNarrativeContext } from '../ai/utils/context-assembler';
-import { GAME_CONSTANTS } from './game-constants';
 import type { Store } from '../state/create-store';
 import type { SceneState } from '../state/scene-store';
 import type { GameState } from '../state/game-store';
@@ -37,8 +36,12 @@ function getNarrativeContext(narrativeStore?: NarrativeStore): NarrativePromptCo
   return { storyAct: currentAct, atmosphereTags };
 }
 
+export type LoadSceneOptions = {
+  readonly appendNarration?: boolean;
+};
+
 export type SceneManager = {
-  readonly loadScene: (locationId: string) => Promise<SceneManagerResult>;
+  readonly loadScene: (locationId: string, options?: LoadSceneOptions) => Promise<SceneManagerResult>;
   readonly handleLook: (target?: string) => Promise<SceneManagerResult>;
   readonly handleInspect: (target: string) => Promise<SceneManagerResult>;
   readonly handleGo: (direction: string) => Promise<SceneManagerResult>;
@@ -117,10 +120,8 @@ function buildSuggestedActionsFromNpcs(npcIds: readonly string[], location: Loca
   return actions;
 }
 
-function capNarrationLines(lines: readonly string[]): string[] {
-  return lines.length > GAME_CONSTANTS.MAX_TURN_LOG_SIZE
-    ? lines.slice(-GAME_CONSTANTS.MAX_TURN_LOG_SIZE) as string[]
-    : [...lines];
+function appendNarrationLines(lines: readonly string[], additions: readonly string[]): string[] {
+  return [...lines, ...additions];
 }
 
 export function createSceneManager(
@@ -183,7 +184,7 @@ export function createSceneManager(
     }
   });
 
-  async function loadScene(locationId: string): Promise<SceneManagerResult> {
+  async function loadScene(locationId: string, loadOptions?: LoadSceneOptions): Promise<SceneManagerResult> {
     const entry = queryById(codexEntries, locationId);
 
     if (!entry || !isLocation(entry)) {
@@ -216,44 +217,49 @@ export function createSceneManager(
       draft.objects = [...entry.objects];
     });
 
-    const worldFlags = options?.narrativeStore?.getState().worldFlags ?? {};
-    let narrationText = selectLocationDescription(entry, worldFlags);
+    const narrationLines: string[] = [];
+    const shouldAppendNarration = loadOptions?.appendNarration ?? true;
 
-    if (generateRetrievalPlanFn && generateNarrationFn) {
-      const retrievalPlan = await generateRetrievalPlanFn({
-        currentScene: entry.name,
-        playerAction: 'enter_scene',
-        activeNpcs: entry.notable_npcs,
-        activeQuests: [],
-      });
+    if (shouldAppendNarration) {
+      const worldFlags = options?.narrativeStore?.getState().worldFlags ?? {};
+      let narrationText = selectLocationDescription(entry, worldFlags);
 
-      const assembled = assembleNarrativeContext(
-        retrievalPlan,
-        codexEntries,
-        [],
-        { narrationLines: [], sceneDescription: entry.description },
-        'enter_scene',
-      );
+      if (generateRetrievalPlanFn && generateNarrationFn) {
+        const retrievalPlan = await generateRetrievalPlanFn({
+          currentScene: entry.name,
+          playerAction: 'enter_scene',
+          activeNpcs: entry.notable_npcs,
+          activeQuests: [],
+        });
 
-      narrationText = await generateNarrationFn({
-        sceneType: 'exploration',
-        codexEntries: assembled.codexEntries,
-        playerAction: 'enter_scene',
-        recentNarration: [],
-        sceneContext: entry.description,
-        narrativeContext: getNarrativeContext(options?.narrativeStore),
+        const assembled = assembleNarrativeContext(
+          retrievalPlan,
+          codexEntries,
+          [],
+          { narrationLines: stores.scene.getState().narrationLines, sceneDescription: entry.description },
+          'enter_scene',
+        );
+
+        narrationText = await generateNarrationFn({
+          sceneType: 'exploration',
+          codexEntries: assembled.codexEntries,
+          playerAction: 'enter_scene',
+          recentNarration: stores.scene.getState().narrationLines,
+          sceneContext: entry.description,
+          narrativeContext: getNarrativeContext(options?.narrativeStore),
+        });
+      }
+
+      narrationLines.push(narrationText);
+
+      if (stores.game.getState().turnCount === 0 && !previousSceneId) {
+        narrationLines.push('【提示】据说镇上最近有人失踪——酒馆的老板知道些内情。与 NPC 交谈，或输入 /help 查看所有命令。');
+      }
+
+      stores.scene.setState(draft => {
+        draft.narrationLines = appendNarrationLines(draft.narrationLines, narrationLines);
       });
     }
-
-    const narrationLines = [narrationText];
-
-    if (stores.game.getState().turnCount === 0 && !previousSceneId) {
-      narrationLines.push('【提示】据说镇上最近有人失踪——酒馆的老板知道些内情。与 NPC 交谈，或输入 /help 查看所有命令。');
-    }
-
-    stores.scene.setState(draft => {
-      draft.narrationLines = narrationLines;
-    });
 
     const actions = buildSuggestedActions(entry, codexEntries);
     stores.scene.setState(draft => {
@@ -276,7 +282,7 @@ export function createSceneManager(
       if (locationEntry && isLocation(locationEntry)) {
         const override = selectLocationDescription(locationEntry, worldFlags);
         if (override !== locationEntry.description) {
-          const newLines = capNarrationLines([...state.narrationLines, override]);
+          const newLines = appendNarrationLines(state.narrationLines, [override]);
           stores.scene.setState(draft => { draft.narrationLines = newLines; });
           return { status: 'success', narration: newLines };
         }
@@ -287,18 +293,18 @@ export function createSceneManager(
           sceneType: 'exploration',
           codexEntries: [],
           playerAction: 're-look',
-          recentNarration: state.narrationLines.slice(-3),
+          recentNarration: state.narrationLines,
           sceneContext: state.locationName,
           narrativeContext: getNarrativeContext(options?.narrativeStore),
         });
-        let newLines = capNarrationLines([...state.narrationLines, narration]);
+        let newLines = appendNarrationLines(state.narrationLines, [narration]);
         const droppedAI = stores.scene.getState().droppedItems;
         if (droppedAI.length > 0) {
           const names = droppedAI.map(id => {
             const entry = queryById(codexEntries, id);
             return entry?.name ?? id;
           }).join('、');
-          newLines = capNarrationLines([...newLines, `地上有：${names}`]);
+          newLines = appendNarrationLines(newLines, [`地上有：${names}`]);
         }
         stores.scene.setState(draft => {
           draft.narrationLines = newLines;
@@ -312,7 +318,7 @@ export function createSceneManager(
           return entry?.name ?? id;
         }).join('、');
         const dropLine = `地上有：${names}`;
-        const updatedLines = capNarrationLines([...state.narrationLines, dropLine]);
+        const updatedLines = appendNarrationLines(state.narrationLines, [dropLine]);
         stores.scene.setState(draft => {
           draft.narrationLines = updatedLines;
         });
@@ -334,12 +340,12 @@ export function createSceneManager(
         sceneType: 'exploration',
         codexEntries: [],
         playerAction: `look at ${target}`,
-        recentNarration: state.narrationLines.slice(-3),
+        recentNarration: state.narrationLines,
         sceneContext: state.locationName,
         narrativeContext: getNarrativeContext(options?.narrativeStore),
       });
 
-      const newLines = capNarrationLines([...state.narrationLines, narration]);
+      const newLines = appendNarrationLines(state.narrationLines, [narration]);
       stores.scene.setState(draft => {
         draft.narrationLines = newLines;
       });
@@ -392,12 +398,12 @@ export function createSceneManager(
         sceneType: 'exploration',
         codexEntries: assembled.codexEntries,
         playerAction: `inspect ${target}`,
-        recentNarration: state.narrationLines.slice(-3),
+        recentNarration: state.narrationLines,
         sceneContext: description,
         narrativeContext: getNarrativeContext(options?.narrativeStore),
       });
 
-      const newLines = capNarrationLines([...state.narrationLines, narration]);
+      const newLines = appendNarrationLines(state.narrationLines, [narration]);
       stores.scene.setState(draft => {
         draft.narrationLines = newLines;
       });
@@ -405,7 +411,7 @@ export function createSceneManager(
       return { status: 'success', narration: newLines };
     }
 
-    const newLines = capNarrationLines([...state.narrationLines, description]);
+    const newLines = appendNarrationLines(state.narrationLines, [description]);
     stores.scene.setState(draft => {
       draft.narrationLines = newLines;
     });

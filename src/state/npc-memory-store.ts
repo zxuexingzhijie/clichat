@@ -18,9 +18,11 @@ export type NpcMemoryEntry = z.infer<typeof NpcMemoryEntrySchema>;
 
 export const NpcMemoryRecordSchema = z.object({
   npcId: z.string(),
-  recentMemories: z.array(NpcMemoryEntrySchema).max(15),
-  salientMemories: z.array(NpcMemoryEntrySchema).max(50),
+  allMemories: z.array(NpcMemoryEntrySchema).default([]),
+  recentMemories: z.array(NpcMemoryEntrySchema).default([]),
+  salientMemories: z.array(NpcMemoryEntrySchema).default([]),
   archiveSummary: z.string(),
+  archiveSourceIds: z.array(z.string()).default([]),
   lastUpdated: z.string(),
   version: z.number().int().default(0),
 });
@@ -37,16 +39,36 @@ export function getDefaultNpcMemoryState(): NpcMemoryState {
   return { memories: {} };
 }
 
+function getRawMemorySource(record?: {
+  allMemories?: readonly NpcMemoryEntry[];
+  salientMemories?: readonly NpcMemoryEntry[];
+  recentMemories?: readonly NpcMemoryEntry[];
+}): NpcMemoryEntry[] {
+  if (!record) return [];
+
+  const rawSource = record.allMemories?.length
+    ? record.allMemories
+    : [...(record.salientMemories ?? []), ...(record.recentMemories ?? [])];
+  const seenIds = new Set<string>();
+  return rawSource.filter(memory => {
+    if (seenIds.has(memory.id)) return false;
+    seenIds.add(memory.id);
+    return true;
+  });
+}
+
 export function createNpcMemoryStore(bus: EventBus): Store<NpcMemoryState> {
   return createStore<NpcMemoryState>(
     getDefaultNpcMemoryState(),
     ({ newState, oldState }) => {
       for (const npcId of Object.keys(newState.memories)) {
-        const newLen = newState.memories[npcId]?.recentMemories.length ?? 0;
-        const oldLen = oldState.memories[npcId]?.recentMemories.length ?? 0;
-        if (newLen > oldLen) {
-          const recentMemories = newState.memories[npcId]!.recentMemories;
-          const latest = recentMemories[recentMemories.length - 1];
+        const newRecord = newState.memories[npcId];
+        const oldRecord = oldState.memories[npcId];
+        const newRawMemories = getRawMemorySource(newRecord);
+        const oldRawMemories = getRawMemorySource(oldRecord);
+
+        if (newRawMemories.length > oldRawMemories.length) {
+          const latest = newRawMemories[newRawMemories.length - 1];
           if (latest) {
             bus.emit('npc_memory_written', {
               npcId,
@@ -71,28 +93,21 @@ export function addMemory(
     if (!draft.memories[npcId]) {
       draft.memories[npcId] = {
         npcId,
+        allMemories: [],
         recentMemories: [],
         salientMemories: [],
         archiveSummary: '',
+        archiveSourceIds: [],
         lastUpdated: new Date().toISOString(),
         version: 0,
       };
     }
     const record = draft.memories[npcId]!;
-    const appended = [...record.recentMemories, entry];
-    if (appended.length > 15) {
-      const importanceOrder: Record<string, number> = { low: 0, medium: 1, high: 2 };
-      const sorted = [...appended].sort((a, b) => {
-        const impDiff = (importanceOrder[a.importance] ?? 1) - (importanceOrder[b.importance] ?? 1);
-        if (impDiff !== 0) return impDiff;
-        return a.turnNumber - b.turnNumber;
-      });
-      const toEvict = sorted[0]!;
-      const evictIndex = appended.findIndex(m => m.id === toEvict.id);
-      record.recentMemories = [...appended.slice(0, evictIndex), ...appended.slice(evictIndex + 1)];
-      record.salientMemories = [...record.salientMemories, toEvict];
-    } else {
-      record.recentMemories = appended;
-    }
+    const allMemories = [...getRawMemorySource(record), entry];
+    record.allMemories = allMemories;
+    record.recentMemories = allMemories.slice(-15);
+    record.salientMemories = allMemories.slice(0, Math.max(0, allMemories.length - 15));
+    record.archiveSourceIds = record.archiveSourceIds ?? [];
+    record.lastUpdated = new Date().toISOString();
   });
 }

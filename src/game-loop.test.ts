@@ -354,6 +354,47 @@ describe('createGameLoop options wiring', () => {
     expect(gameStore.getState().phase).toBe('game');
   });
 
+  it('loadLastSave refreshes restored scene metadata without appending narration', async () => {
+    const mockSaveFileManager = {
+      quickSave: mock(() => Promise.resolve('/saves/quicksave.json')),
+      saveGame: mock(() => Promise.resolve('/saves/test.json')),
+      loadGame: mock(() => {
+        sceneStore.setState(draft => {
+          draft.sceneId = 'loc_restored';
+          draft.narrationLines = ['saved narration'];
+        });
+        return Promise.resolve();
+      }),
+    };
+    const mockSerializer = {
+      snapshot: mock(() => '{}'),
+      restore: mock(() => {}),
+    };
+    const mockListSavesFn = mock((_dir: string) => Promise.resolve([
+      { filePath: '/saves/save_2024-01-02.json', meta: { saveName: 'test', timestamp: '2024-01-02T00:00:00Z', character: { name: 'Hero', race: 'human', profession: 'warrior' }, playtime: 0, locationName: '酒馆' } },
+    ] as SaveListEntry[]));
+    const mockSceneManager = {
+      loadScene: mock(() => Promise.resolve({ status: 'success' as const, narration: [] as readonly string[] })),
+      handleLook: mock(),
+      handleInspect: mock(),
+      handleGo: mock(),
+      getCurrentScene: mock(() => null),
+    };
+
+    const loop = createGameLoop(stores, eventBus, {
+      rng: createSeededRng(42),
+      saveFileManager: mockSaveFileManager,
+      serializer: mockSerializer,
+      saveDir: '/saves',
+      listSavesFn: mockListSavesFn,
+      sceneManager: mockSceneManager,
+    });
+
+    await loop.loadLastSave();
+
+    expect(mockSceneManager.loadScene).toHaveBeenCalledWith('loc_restored', { appendNarration: false });
+  });
+
   it('loadLastSave is a no-op when no saves exist', async () => {
     const mockSaveFileManager = {
       quickSave: mock(() => Promise.resolve('/saves/quicksave.json')),

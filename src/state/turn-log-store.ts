@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createStore, type Store } from './create-store';
 import type { EventBus } from '../events/event-bus';
 
+// View-size compatibility only; storage must retain all turn-log entries.
 export const MAX_TURN_LOG_SIZE = 50;
 
 export const TurnLogEntrySchema = z.object({

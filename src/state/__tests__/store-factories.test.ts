@@ -281,12 +281,13 @@ describe('createNpcMemoryStore', () => {
     bus.on('npc_memory_written', (e) => events.push(e));
     const store = createNpcMemoryStore(bus);
     store.setState((draft) => {
+      const memory = {
+        id: 'm1', npcId: 'npc1', event: 'met player', turnNumber: 1,
+        importance: 'medium' as const, emotionalValence: 0.5, participants: ['player'],
+      };
       draft.memories['npc1'] = {
-        npcId: 'npc1', recentMemories: [{
-          id: 'm1', npcId: 'npc1', event: 'met player', turnNumber: 1,
-          importance: 'medium', emotionalValence: 0.5, participants: ['player'],
-        }],
-        salientMemories: [], archiveSummary: '', lastUpdated: '', version: 0,
+        npcId: 'npc1', allMemories: [memory], recentMemories: [memory],
+        salientMemories: [], archiveSummary: '', archiveSourceIds: [], lastUpdated: '', version: 0,
       };
     });
     expect(events).toHaveLength(1);

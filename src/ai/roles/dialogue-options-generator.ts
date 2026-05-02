@@ -19,8 +19,7 @@ export async function generateDialogueOptions(
 
   const recentExchange =
     recentHistory
-      ?.slice(-4)
-      .map((m) => `${m.role === 'user' ? '玩家' : npcName}：${m.content}`)
+      ?.map((m) => `${m.role === 'user' ? '玩家' : npcName}：${m.content}`)
       .join('\n') ?? '';
 
   const prompt =

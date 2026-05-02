@@ -149,7 +149,7 @@ export function createGameLoop(
     stores.game.setState(draft => { draft.phase = 'game'; });
     const sceneId = stores.scene.getState().sceneId;
     if (sceneId && options?.sceneManager) {
-      await options.sceneManager.loadScene(sceneId);
+      await options.sceneManager.loadScene(sceneId, { appendNarration: false });
     }
   }
 

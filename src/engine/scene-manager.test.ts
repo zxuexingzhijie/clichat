@@ -14,8 +14,8 @@ mock.module('@ai-sdk/openai', () => ({
 
 const { createSceneManager, selectLocationDescription } = await import('./scene-manager');
 const { sceneStore, getDefaultSceneState } = await import('../state/scene-store');
-const { gameStore } = await import('../state/game-store');
-const { playerStore } = await import('../state/player-store');
+const { gameStore, getDefaultGameState } = await import('../state/game-store');
+const { playerStore, getDefaultPlayerState } = await import('../state/player-store');
 
 const stores = { scene: sceneStore, game: gameStore, player: playerStore };
 
@@ -185,6 +185,8 @@ function createMockRetrievalFn() {
 describe('createSceneManager', () => {
   beforeEach(() => {
     sceneStore.setState(() => Object.assign({}, getDefaultSceneState()));
+    gameStore.setState(() => Object.assign({}, getDefaultGameState()));
+    playerStore.setState(() => Object.assign({}, getDefaultPlayerState()));
   });
 
   it('loadScene updates sceneStore with location data', async () => {
@@ -224,6 +226,71 @@ describe('createSceneManager', () => {
     expect(state.narrationLines).toContain('夜色中的北门，石墙上的油灯微微摇曳。');
     expect(narrationFn).toHaveBeenCalled();
     expect(retrievalFn).toHaveBeenCalled();
+  });
+
+  it('loadScene appends new scene narration without clearing prior narration history', async () => {
+    const codex = createMockCodexEntries();
+    const existingLines = ['prior narration 1', 'prior narration 2'];
+    sceneStore.setState(draft => {
+      draft.narrationLines = existingLines;
+    });
+    gameStore.setState(draft => { draft.turnCount = 1; });
+    const manager = createSceneManager(stores, codex);
+
+    await manager.loadScene('loc_north_gate');
+    const afterFirstLoad = sceneStore.getState().narrationLines;
+    await manager.loadScene('loc_main_street');
+
+    const state = sceneStore.getState();
+    expect(state.narrationLines.slice(0, existingLines.length)).toEqual(existingLines);
+    expect(state.narrationLines).toHaveLength(existingLines.length + 2);
+    expect(state.narrationLines[existingLines.length]).toBe(afterFirstLoad[existingLines.length]);
+    expect(state.narrationLines[state.narrationLines.length - 1]).toBe((codex.get('loc_main_street') as Location).description);
+  });
+
+  it('loadScene can refresh scene metadata without appending duplicate narration', async () => {
+    const codex = createMockCodexEntries();
+    const existingLines = ['restored narration 1', 'restored narration 2'];
+    const narrationFn = createMockNarrationFn();
+    const retrievalFn = createMockRetrievalFn();
+    sceneStore.setState(draft => {
+      draft.narrationLines = existingLines;
+      draft.sceneId = 'loc_north_gate';
+    });
+    const manager = createSceneManager(stores, codex, {
+      generateNarrationFn: narrationFn,
+      generateRetrievalPlanFn: retrievalFn,
+    });
+
+    const result = await manager.loadScene('loc_main_street', { appendNarration: false });
+
+    expect(result.status).toBe('success');
+    expect(sceneStore.getState().locationName).toBe('黑松镇·主街');
+    expect(sceneStore.getState().narrationLines).toEqual(existingLines);
+    expect(narrationFn).not.toHaveBeenCalled();
+    expect(retrievalFn).not.toHaveBeenCalled();
+  });
+
+  it('keeps all scene narration lines after appending more than the turn log limit', async () => {
+    const codex = createMockCodexEntries();
+    const existingLines = ['seed narration'];
+    sceneStore.setState(draft => {
+      draft.narrationLines = existingLines;
+    });
+    gameStore.setState(draft => { draft.turnCount = 1; });
+    const manager = createSceneManager(stores, codex);
+
+    await manager.loadScene('loc_north_gate');
+    const lengthAfterLoad = sceneStore.getState().narrationLines.length;
+    for (let i = 0; i < 55; i += 1) {
+      await manager.handleInspect('notice_board');
+    }
+
+    const state = sceneStore.getState();
+    expect(lengthAfterLoad).toBe(existingLines.length + 1);
+    expect(state.narrationLines).toHaveLength(lengthAfterLoad + 55);
+    expect(state.narrationLines[0]).toBe(existingLines[0]);
+    expect(state.narrationLines.slice(-55)).toEqual(Array.from({ length: 55 }, () => 'notice_board'));
   });
 
   it('handleLook with no target returns current narration lines', async () => {
@@ -632,6 +699,8 @@ describe('selectLocationDescription', () => {
 describe('handleLook override path', () => {
   beforeEach(() => {
     sceneStore.setState(() => Object.assign({}, getDefaultSceneState()));
+    gameStore.setState(() => Object.assign({}, getDefaultGameState()));
+    playerStore.setState(() => Object.assign({}, getDefaultPlayerState()));
   });
 
   it('returns override text without calling generateNarrationFn when worldFlag matches', async () => {
@@ -715,6 +784,8 @@ describe('handleLook override path', () => {
 describe('loadScene with worldFlags override', () => {
   beforeEach(() => {
     sceneStore.setState(() => Object.assign({}, getDefaultSceneState()));
+    gameStore.setState(() => Object.assign({}, getDefaultGameState()));
+    playerStore.setState(() => Object.assign({}, getDefaultPlayerState()));
   });
 
   it('uses override description in loadScene when worldFlag matches', async () => {
