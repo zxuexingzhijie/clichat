@@ -125,6 +125,92 @@ describe('buildNpcUserPrompt', () => {
     expect(result).toContain('与玩家的接触次数：2 次');
     expect(result).toContain('你对这个玩家的记忆：（无）');
   });
+
+  it('formats ecological memory with epistemic labels and keeps rumors out of confirmed facts', () => {
+    const promptContext = {
+      scene: '雨夜北门',
+      playerAction: '询问失踪矿工',
+      memories: ['玩家曾在雨夜来过北门'],
+      ecologicalMemory: {
+        playerKnowledge: ['玩家知道旧矿洞封锁了'],
+        facts: [
+          {
+            id: 'fact-confirmed-gate',
+            statement: '北门今晚已经封锁。',
+            scope: 'location' as const,
+            scopeId: 'loc_north_gate',
+            truthStatus: 'confirmed' as const,
+            confidence: 0.95,
+            sourceEventIds: ['event-gate'],
+            tags: [],
+            createdAt: '2026-05-02T00:00:00.000Z',
+            updatedAt: '2026-05-02T00:00:00.000Z',
+          },
+          {
+            id: 'fact-rumor-miner',
+            statement: '有人传言失踪矿工被狼群带走。',
+            scope: 'location' as const,
+            scopeId: 'loc_north_gate',
+            truthStatus: 'rumor' as const,
+            confidence: 0.4,
+            sourceEventIds: ['event-rumor'],
+            tags: [],
+            createdAt: '2026-05-02T00:00:00.000Z',
+            updatedAt: '2026-05-02T00:00:00.000Z',
+          },
+        ],
+        beliefs: [
+          {
+            id: 'belief-guard-player',
+            holderId: 'npc_guard',
+            holderType: 'npc' as const,
+            subjectId: 'player',
+            factId: null,
+            statement: '这个旅行者可能知道矿工失踪的线索。',
+            stance: 'believes' as const,
+            confidence: 0.7,
+            sourceEventIds: ['event-talk'],
+            lastReinforcedTurn: 4,
+            decay: 'normal' as const,
+            tags: [],
+          },
+        ],
+        events: [
+          {
+            id: 'event-gate',
+            idempotencyKey: 'event-gate',
+            turnNumber: 4,
+            timestamp: '2026-05-02T00:00:00.000Z',
+            type: 'dialogue' as const,
+            actorIds: ['player', 'npc_guard'],
+            subjectIds: ['npc_guard'],
+            locationId: 'loc_north_gate',
+            factionIds: [],
+            summary: '玩家在北门询问失踪矿工。',
+            visibility: 'same_location' as const,
+            importance: 'medium' as const,
+            tags: [],
+            source: 'npc_dialogue' as const,
+          },
+        ],
+        omitted: [],
+      },
+    };
+
+    const result = buildNpcUserPrompt(promptContext);
+
+    expect(result).toContain('Runtime memory:');
+    expect(result).toContain('Confirmed world facts:');
+    expect(result).toContain('Rumors:');
+    expect(result).toContain('This NPC believes:');
+    expect(result).toContain('Recent events:');
+    const confirmedSection = result.slice(
+      result.indexOf('Confirmed world facts:'),
+      result.indexOf('Rumors:'),
+    );
+    expect(confirmedSection).toContain('北门今晚已经封锁。');
+    expect(confirmedSection).not.toContain('有人传言失踪矿工被狼群带走。');
+  });
 });
 
 describe('buildNpcSystemPrompt — narrativeContext injection', () => {

@@ -4,6 +4,7 @@ import { getDefaultDialogueState } from '../state/dialogue-store';
 import { generateNpcDialogue } from '../ai/roles/npc-actor';
 import { generateDialogueOptions } from '../ai/roles/dialogue-options-generator';
 import { filterCodexForNpc } from '../ai/utils/npc-knowledge-filter';
+import { retrieveEcologicalMemory, type EcologicalMemoryContext } from '../ai/utils/ecological-memory-retriever';
 import { resolveNormalCheck } from './adjudication';
 import { adjudicateTalkResult } from './rules-engine';
 import { GAME_CONSTANTS } from './game-constants';
@@ -24,6 +25,8 @@ import type { NpcDialogue } from '../ai/schemas/npc-dialogue';
 import type { NpcFilterContext } from '../ai/utils/npc-knowledge-filter';
 import type { CheckResult, AttributeName } from '../types/common';
 import type { NarrativeStore } from '../state/narrative-state';
+import type { WorldEvent, WorldMemoryState } from '../state/world-memory-store';
+import type { PlayerKnowledgeState } from '../state/player-knowledge-store';
 import type { NarrativePromptContext } from '../ai/prompts/narrative-system';
 
 type DialogueResponseItem = {
@@ -34,12 +37,26 @@ type DialogueResponseItem = {
   checkDc?: number;
 };
 
+const DEFAULT_DIALOGUE_OPTION_LABELS = ['你刚才说的是什么意思？', '还有什么我需要知道的？'] as const;
+
+function normalizeGeneratedOptions(generatedOptions: unknown): readonly string[] {
+  if (!Array.isArray(generatedOptions)) {
+    return DEFAULT_DIALOGUE_OPTION_LABELS;
+  }
+
+  const labels = generatedOptions.filter(
+    (label): label is string => typeof label === 'string' && label.trim().length > 0,
+  );
+
+  return labels.length > 0 ? labels : DEFAULT_DIALOGUE_OPTION_LABELS;
+}
+
 function buildResponseItems(
   npcName: string,
-  generatedOptions: readonly string[],
+  generatedOptions: unknown,
   mode: 'inline' | 'full',
 ): DialogueResponseItem[] {
-  const items: DialogueResponseItem[] = generatedOptions.map((label) => ({
+  const items: DialogueResponseItem[] = normalizeGeneratedOptions(generatedOptions).map((label) => ({
     id: nanoid(),
     label,
     requiresCheck: false,
@@ -57,6 +74,15 @@ function buildResponseItems(
 
   items.push({ id: nanoid(), label: '结束对话', requiresCheck: false });
   return items;
+}
+
+function stableTextHash(text: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(36);
 }
 
 function emotionTagToHint(npcName: string, emotionTag: string): string {
@@ -90,6 +116,7 @@ export type DialogueManagerOptions = {
   readonly generateDialogueOptionsFn?: typeof generateDialogueOptions;
   readonly adjudicateFn?: (action: { type: string; target?: string }) => CheckResult;
   readonly narrativeStore?: NarrativeStore;
+  readonly recordWorldEventFn?: (event: WorldEvent) => boolean;
 };
 
 export interface DialogueManager {
@@ -108,6 +135,8 @@ export function createDialogueManager(
     player: Store<PlayerState>;
     relation: Store<RelationState>;
     quest?: Store<QuestState>;
+    worldMemory?: Store<WorldMemoryState>;
+    playerKnowledge?: Store<PlayerKnowledgeState>;
   },
   codexEntries: Map<string, CodexEntry>,
   options?: DialogueManagerOptions,
@@ -147,6 +176,31 @@ export function createDialogueManager(
     if (!options?.narrativeStore) return undefined;
     const { currentAct, atmosphereTags } = options.narrativeStore.getState();
     return { storyAct: currentAct, atmosphereTags };
+  }
+
+  function getPlayerKnowledgeSummaries(): readonly string[] {
+    if (!stores.playerKnowledge) return [];
+    return Object.values(stores.playerKnowledge.getState().entries)
+      .sort((left, right) => right.turnNumber - left.turnNumber)
+      .map((entry) => `${entry.knowledgeStatus}: ${entry.description}`)
+      .slice(0, 5);
+  }
+
+  function buildEcologicalMemoryForNpc(npc: Npc, playerAction: string): EcologicalMemoryContext | undefined {
+    if (!stores.worldMemory) return undefined;
+    const sceneId = stores.scene.getState().sceneId;
+    const factionIds = npc.faction ? [npc.faction] : [];
+    return retrieveEcologicalMemory(stores.worldMemory.getState(), {
+      npcId: npc.id,
+      locationId: sceneId,
+      factionIds,
+      playerAction,
+      playerKnowledge: getPlayerKnowledgeSummaries(),
+      tags: [npc.id, sceneId, ...factionIds],
+      maxEvents: 5,
+      maxFacts: 5,
+      maxBeliefs: 5,
+    });
   }
 
   const doAdjudicate =
@@ -249,7 +303,13 @@ export function createDialogueManager(
       scene,
       'greet',
       memoryStrings,
-      { archiveSummary, relevantCodex, encounterCount, conversationHistory },
+      {
+        archiveSummary,
+        relevantCodex,
+        encounterCount,
+        conversationHistory,
+        ecologicalMemory: buildEcologicalMemoryForNpc(npc, 'greet'),
+      },
       getDialogueNarrativeContext(),
       getTrustLevel(npcId),
     );
@@ -262,7 +322,7 @@ export function createDialogueManager(
       { role: 'assistant' as const, content: npcDialogue.dialogue },
     ];
     const generatedOpts = await doGenerateOptions(npc.name, npcDialogue.dialogue, initialHistory);
-    const responses = buildResponseItems(npc.name, generatedOpts.options, mode);
+    const responses = buildResponseItems(npc.name, generatedOpts?.options, mode);
 
     stores.dialogue.setState((draft) => {
       draft.active = true;
@@ -338,7 +398,13 @@ export function createDialogueManager(
         scene,
         response.label,
         memoryStrings,
-        { archiveSummary, relevantCodex, encounterCount, conversationHistory },
+        {
+          archiveSummary,
+          relevantCodex,
+          encounterCount,
+          conversationHistory,
+          ecologicalMemory: buildEcologicalMemoryForNpc(npc, response.label),
+        },
         getDialogueNarrativeContext(),
         getTrustLevel(npcId),
       );
@@ -353,7 +419,7 @@ export function createDialogueManager(
         { role: 'assistant' as const, content: npcDialogue.dialogue },
       ];
       const generatedOpts = await doGenerateOptions(npc.name, npcDialogue.dialogue, newHistory);
-      const newResponses = buildResponseItems(npc.name, generatedOpts.options, state.mode);
+      const newResponses = buildResponseItems(npc.name, generatedOpts?.options, state.mode);
 
       stores.dialogue.setState((draft) => {
         draft.dialogueHistory = newHistory;
@@ -378,9 +444,63 @@ export function createDialogueManager(
     }
   }
 
+  function buildDialogueWorldEvent(state: DialogueState, npc: Npc | undefined): WorldEvent | null {
+    if (!state.npcId || state.dialogueHistory.length === 0) return null;
+
+    const turnNumber = stores.game.getState().turnCount;
+    const locationId = stores.scene.getState().sceneId;
+    const npcName = npc?.name ?? state.npcName ?? state.npcId;
+    const dialogueHistory = state.dialogueHistory.map((entry) => ({ ...entry }));
+    const rawText = dialogueHistory.map((entry) => `${entry.role}: ${entry.content}`).join('\n');
+
+    const transcriptHash = stableTextHash(rawText);
+
+    return {
+      id: nanoid(),
+      idempotencyKey: `dialogue:${state.npcId}:${locationId}:${turnNumber}:${dialogueHistory.length}:${transcriptHash}`,
+      turnNumber,
+      timestamp: new Date().toISOString(),
+      type: 'dialogue',
+      actorIds: ['player', state.npcId],
+      subjectIds: ['player', state.npcId],
+      locationId,
+      factionIds: npc?.faction ? [npc.faction] : [],
+      summary: `Player completed dialogue with ${npcName} (${dialogueHistory.length} turns, relationship delta ${state.relationshipValue}).`,
+      rawText,
+      rawPayload: {
+        dialogueHistory,
+        relationshipDelta: state.relationshipValue,
+        npc: npc ? {
+          id: npc.id,
+          name: npc.name,
+          faction: npc.faction ?? null,
+          locationId: npc.location_id,
+          personalityTags: npc.personality_tags,
+          goals: npc.goals,
+        } : {
+          id: state.npcId,
+          name: state.npcName,
+        },
+        mode: state.mode,
+      },
+      visibility: 'private',
+      importance: Math.abs(state.relationshipValue) >= 10 ? 'medium' : 'low',
+      tags: ['dialogue', state.npcId, locationId],
+      source: 'npc_dialogue',
+    };
+  }
+
   function endDialogue(): void {
-    const npcId = stores.dialogue.getState().npcId;
-    const delta = stores.dialogue.getState().relationshipValue;
+    const dialogueState = stores.dialogue.getState();
+    const npcId = dialogueState.npcId;
+    const delta = dialogueState.relationshipValue;
+    const entry = npcId ? queryById(codexEntries, npcId) : undefined;
+    const npc = entry?.type === 'npc' ? entry as Npc : undefined;
+
+    const worldEvent = buildDialogueWorldEvent(dialogueState, npc);
+    if (worldEvent) {
+      options?.recordWorldEventFn?.(worldEvent);
+    }
 
     if (npcId) {
       const memoryRecord = stores.npcMemory.getState().memories[npcId];
@@ -455,7 +575,13 @@ export function createDialogueManager(
         scene,
         text,
         memoryStrings,
-        { archiveSummary, relevantCodex, encounterCount, conversationHistory },
+        {
+          archiveSummary,
+          relevantCodex,
+          encounterCount,
+          conversationHistory,
+          ecologicalMemory: buildEcologicalMemoryForNpc(npc, text),
+        },
         getDialogueNarrativeContext(),
         getTrustLevel(npcId),
       );
@@ -470,7 +596,7 @@ export function createDialogueManager(
         { role: 'assistant' as const, content: npcDialogue.dialogue },
       ];
       const generatedOpts = await doGenerateOptions(npc.name, npcDialogue.dialogue, newHistory);
-      const newResponses = buildResponseItems(npc.name, generatedOpts.options, state.mode);
+      const newResponses = buildResponseItems(npc.name, generatedOpts?.options, state.mode);
 
       stores.dialogue.setState((draft) => {
         draft.dialogueHistory = newHistory;

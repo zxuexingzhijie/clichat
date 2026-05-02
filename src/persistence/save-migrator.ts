@@ -2,7 +2,8 @@ import { getDefaultQuestState } from '../state/quest-store';
 import { getDefaultRelationState } from '../state/relation-store';
 import { getDefaultNpcMemoryState } from '../state/npc-memory-store';
 import { getDefaultNarrativeState } from '../state/narrative-state';
-import type { SaveDataV6 } from '../state/serializer';
+import { getDefaultWorldMemoryState } from '../state/world-memory-store';
+import type { SaveDataV7 } from '../state/serializer';
 
 function buildMetaFromV1(data: Record<string, unknown>): unknown {
   const player = data['player'] as Record<string, unknown> | undefined;
@@ -90,11 +91,23 @@ export function migrateV1ToV2(raw: unknown): unknown {
   };
 }
 
-export function migrateToLatest(raw: unknown): SaveDataV6 {
+export function migrateV6ToV7(raw: unknown): unknown {
+  if (typeof raw !== 'object' || raw === null) return raw;
+  const data = raw as Record<string, unknown>;
+  if (data['version'] !== 6) return raw;
+  return {
+    ...data,
+    version: 7,
+    worldMemory: getDefaultWorldMemoryState(),
+  };
+}
+
+export function migrateToLatest(raw: unknown): SaveDataV7 {
   const v2 = migrateV1ToV2(raw);
   const v3 = migrateV2ToV3(v2);
   const v4 = migrateV3ToV4(v3);
   const v5 = migrateV4ToV5(v4);
   const v6 = migrateV5ToV6(v5);
-  return v6 as SaveDataV6;
+  const v7 = migrateV6ToV7(v6);
+  return v7 as SaveDataV7;
 }

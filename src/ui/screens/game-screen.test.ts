@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, mock } from 'bun:test';
+import { readFileSync } from 'node:fs';
 import { gameStore, getDefaultGameState } from '../../state/game-store';
 import { sceneStore, getDefaultSceneState } from '../../state/scene-store';
 import { GameScreen } from './game-screen';
@@ -8,6 +9,69 @@ describe('Scheme A: fixed action column layout', () => {
   it('GameScreen source uses a fixed wide action column width', () => {
     const source = GameScreen.toString();
     expect(source).toContain('WIDE_ACTIONS_WIDTH');
+  });
+});
+
+describe('Task 3: App world memory recorder wiring', () => {
+  it('AppInner initializes world event recorder only after codex load and returns cleanup', () => {
+    const source = readFileSync(new URL('../../app.tsx', import.meta.url), 'utf8');
+
+    expect(source).toContain('initWorldEventRecorder');
+    expect(source).toContain('if (allCodexEntries.size === 0) return;');
+    expect(source).toContain('worldMemory: ctx.stores.worldMemory');
+    expect(source).toContain('return cleanup;');
+  });
+});
+
+describe('Task 8: ecological memory production wiring', () => {
+  it('AppInner passes worldMemory and quest stores into createSceneManager', () => {
+    const source = readFileSync(new URL('../../app.tsx', import.meta.url), 'utf8');
+    const createSceneManagerCall = source.slice(
+      source.indexOf('const sceneManager = useMemo'),
+      source.indexOf('const dialogueManager = useMemo'),
+    );
+
+    expect(createSceneManagerCall).toContain('createSceneManager');
+    expect(createSceneManagerCall).toContain('worldMemory: ctx.stores.worldMemory');
+    expect(createSceneManagerCall).toContain('quest: ctx.stores.quest');
+  });
+
+  it('AppInner passes worldMemoryStore into production GameScreen', () => {
+    const source = readFileSync(new URL('../../app.tsx', import.meta.url), 'utf8');
+    const gameScreenCall = source.slice(
+      source.indexOf('<GameScreen'),
+      source.indexOf('/>', source.indexOf('<GameScreen')),
+    );
+
+    expect(gameScreenCall).toContain('worldMemoryStore={ctx.stores.worldMemory}');
+  });
+
+  it('GameScreen passes worldMemoryStore into createGameScreenController as worldMemory', () => {
+    const source = readFileSync(new URL('./game-screen.tsx', import.meta.url), 'utf8');
+    const controllerCall = source.slice(
+      source.indexOf('const controller = useMemo'),
+      source.indexOf('useEffect', source.indexOf('const controller = useMemo')),
+    );
+
+    expect(source).toContain('worldMemoryStore');
+    expect(controllerCall).toContain('createGameScreenController');
+    expect(controllerCall).toContain('worldMemory: worldMemoryStore');
+  });
+
+  it('GameScreen derives active quest ecological context and passes it into createGameScreenController', () => {
+    const source = readFileSync(new URL('./game-screen.tsx', import.meta.url), 'utf8');
+    const controllerCall = source.slice(
+      source.indexOf('const controller = useMemo'),
+      source.indexOf('useEffect', source.indexOf('const controller = useMemo')),
+    );
+
+    expect(source).toContain('activeQuestEcologicalContext');
+    expect(source).toContain('questState.quests');
+    expect(source).toContain('questTemplates');
+    expect(source).toContain("progress.status === 'active'");
+    expect(source).toContain('template.tags');
+    expect(controllerCall).toContain('activeQuestIds: activeQuestEcologicalContext.activeQuestIds');
+    expect(controllerCall).toContain('activeQuestTags: activeQuestEcologicalContext.activeQuestTags');
   });
 });
 

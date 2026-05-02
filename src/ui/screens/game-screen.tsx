@@ -34,7 +34,9 @@ import type { LocationMapData } from '../panels/map-panel';
 import type { CodexDisplayEntry } from '../panels/codex-panel';
 import type { BranchDisplayNode } from '../panels/branch-tree-panel';
 import type { BranchMeta } from '../../state/branch-store';
-import type { SaveDataV6 } from '../../state/serializer';
+import type { SaveDataV7 } from '../../state/serializer';
+import type { Store } from '../../state/create-store';
+import type { WorldMemoryState } from '../../state/world-memory-store';
 
 const OVERLAY_PHASES = new Set(['journal', 'map', 'codex', 'inventory', 'branch_tree', 'compare', 'shortcuts', 'replay', 'chapter_summary']);
 const WIDE_ACTIONS_WIDTH = 36;
@@ -53,9 +55,10 @@ type GameScreenProps = {
   readonly branchTree?: readonly BranchDisplayNode[];
   readonly currentBranchId?: string;
   readonly branches?: Record<string, BranchMeta>;
-  readonly readSaveData?: (fileName: string, saveDir: string) => Promise<SaveDataV6>;
+  readonly readSaveData?: (fileName: string, saveDir: string) => Promise<SaveDataV7>;
   readonly saveDir?: string;
   readonly eventBus?: EventBus;
+  readonly worldMemoryStore?: Store<WorldMemoryState>;
 };
 
 export function GameScreen({
@@ -71,6 +74,7 @@ export function GameScreen({
   readSaveData,
   saveDir,
   eventBus = defaultEventBus,
+  worldMemoryStore,
 }: GameScreenProps): React.ReactNode {
   const gameContextStore = React.useContext(GameStoreCtx.Context);
   const sceneContextStore = React.useContext(SceneStoreCtx.Context);
@@ -121,14 +125,52 @@ export function GameScreen({
   const wasProcessingRef = useRef(false);
   const wasNarrationStreamingRef = useRef(false);
 
+  const allQuestEntries = useMemo<QuestDisplayEntry[]>(() =>
+    Object.entries(questState.quests)
+      .map(([questId, progress]) => {
+        const template = questTemplates.get(questId);
+        return template ? { progress, template } : null;
+      })
+      .filter((e): e is QuestDisplayEntry => e !== null),
+    [questState.quests, questTemplates],
+  );
+
+  const activeQuests = useMemo(() => allQuestEntries.filter(e => e.progress.status === 'active'), [allQuestEntries]);
+  const completedQuests = useMemo(() => allQuestEntries.filter(e => e.progress.status === 'completed'), [allQuestEntries]);
+  const failedQuests = useMemo(() => allQuestEntries.filter(e => e.progress.status === 'failed'), [allQuestEntries]);
+
+  const activeQuestEcologicalContext = useMemo(() => ({
+    activeQuestIds: activeQuests.map(({ template }) => template.id),
+    activeQuestTags: [...new Set(activeQuests.flatMap(({ template }) => template.tags))],
+  }), [activeQuests]);
+
   const controller = useMemo(
     () => createGameScreenController(
-      { game: gameContextStore, scene: sceneContextStore },
+      { game: gameContextStore, scene: sceneContextStore, worldMemory: worldMemoryStore },
       eventBus,
-      { gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue },
+      {
+        gameLoop,
+        dialogueManager,
+        combatLoop,
+        setInputMode,
+        startNarration,
+        resetNarration,
+        resetNpcDialogue,
+        activeQuestIds: activeQuestEcologicalContext.activeQuestIds,
+        activeQuestTags: activeQuestEcologicalContext.activeQuestTags,
+      },
     ),
-    [gameContextStore, sceneContextStore, eventBus, gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue],
+    [gameContextStore, sceneContextStore, worldMemoryStore, eventBus, gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue, activeQuestEcologicalContext],
   );
+
+  const activeQuestName = activeQuests[0]?.template.name ?? null;
+
+  const replayEntries = useMemo(() => getLastReplayEntries(), [gameState.phase]);
+
+  const [dialogueSelectedIndex, setDialogueSelectedIndex] = useState(0);
+  const [combatSelectedIndex, setCombatSelectedIndex] = useState(0);
+  const [lastTurnTokens, setLastTurnTokens] = useState(0);
+  const [chapterSummaries, setChapterSummaries] = useState(() => getRecentChapterSummaries());
 
   useEffect(() => {
     const isProcessing = inputMode === 'processing' && !isAnyStreaming;
@@ -151,9 +193,6 @@ export function GameScreen({
     }
   }, [isSpinnerDimming, isAnyStreaming]);
 
-  const showSpinner = inputMode === 'processing' && !isAnyStreaming && !spinnerDimoutComplete;
-  const showSpinnerWithDim = showSpinner || (isSpinnerDimming && isAnyStreaming);
-
   const { active: isSceneDimmed, trigger: triggerSceneFade } = useTimedEffect(500);
 
   useEffect(() => {
@@ -161,11 +200,6 @@ export function GameScreen({
     eventBus.on('scene_changed', handler);
     return () => { eventBus.off('scene_changed', handler); };
   }, [eventBus, triggerSceneFade]);
-
-  const [dialogueSelectedIndex, setDialogueSelectedIndex] = useState(0);
-  const [combatSelectedIndex, setCombatSelectedIndex] = useState(0);
-  const [lastTurnTokens, setLastTurnTokens] = useState(0);
-  const [chapterSummaries, setChapterSummaries] = useState(() => getRecentChapterSummaries());
 
   useEffect(() => {
     const handler = (p: { taskId: string; type: string }) => {
@@ -175,7 +209,7 @@ export function GameScreen({
     };
     eventBus.on('summarizer_task_completed', handler);
     return () => { eventBus.off('summarizer_task_completed', handler); };
-  }, []);
+  }, [eventBus]);
 
   useEffect(() => {
     return costSessionStore.subscribe(() => {
@@ -209,24 +243,8 @@ export function GameScreen({
     : (isInDialogueMode || dialogueState.active) ? 'npc_dialogue' as const
     : 'narration' as const;
   const isWide = width >= 100;
-
-  const allQuestEntries = useMemo<QuestDisplayEntry[]>(() =>
-    Object.entries(questState.quests)
-      .map(([questId, progress]) => {
-        const template = questTemplates.get(questId);
-        return template ? { progress, template } : null;
-      })
-      .filter((e): e is QuestDisplayEntry => e !== null),
-    [questState.quests, questTemplates],
-  );
-
-  const activeQuests = useMemo(() => allQuestEntries.filter(e => e.progress.status === 'active'), [allQuestEntries]);
-  const completedQuests = useMemo(() => allQuestEntries.filter(e => e.progress.status === 'completed'), [allQuestEntries]);
-  const failedQuests = useMemo(() => allQuestEntries.filter(e => e.progress.status === 'failed'), [allQuestEntries]);
-
-  const activeQuestName = activeQuests[0]?.template.name ?? null;
-
-  const replayEntries = useMemo(() => getLastReplayEntries(), [gameState.phase]);
+  const showSpinner = inputMode === 'processing' && !isAnyStreaming && !spinnerDimoutComplete;
+  const showSpinnerWithDim = showSpinner || (isSpinnerDimming && isAnyStreaming);
 
   const handleActionExecute = useCallback(
     (index: number) => { void controller.handleActionExecute(index); },

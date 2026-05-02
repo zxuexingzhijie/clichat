@@ -16,6 +16,7 @@ import { createBranchStore, type BranchState } from '../state/branch-store';
 import { createCostSessionStore, type CostSessionState } from '../state/cost-session-store';
 import { createTurnLogStore, type TurnLogState } from '../state/turn-log-store';
 import { createNarrativeStore, type NarrativeStore } from '../state/narrative-state';
+import { createWorldMemoryStore, type WorldMemoryState } from '../state/world-memory-store';
 import { createNarrativeStateWatcher } from '../engine/narrative-state-watcher';
 
 export type GameStores = {
@@ -33,6 +34,7 @@ export type GameStores = {
   readonly costSession: Store<CostSessionState>;
   readonly turnLog: Store<TurnLogState>;
   readonly narrative: NarrativeStore;
+  readonly worldMemory: Store<WorldMemoryState>;
 };
 
 export type GameContext = {
@@ -60,6 +62,7 @@ export function createGameContext(): GameContext {
     costSession: createCostSessionStore(eventBus),
     turnLog: createTurnLogStore(eventBus),
     narrative: narrativeStore,
+    worldMemory: createWorldMemoryStore(eventBus),
   };
 
   createNarrativeStateWatcher(narrativeStore, eventBus);

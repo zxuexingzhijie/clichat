@@ -1,8 +1,14 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
+import mitt from 'mitt';
 import type { NpcDialogue } from '../ai/schemas/npc-dialogue';
 import type { CheckResult } from '../types/common';
+import type { EventBus } from '../events/event-bus';
+import type { WorldEvent } from '../state/world-memory-store';
+import { createWorldMemoryStore } from '../state/world-memory-store';
+import { createPlayerKnowledgeStore } from '../state/player-knowledge-store';
 import { createStore } from '../state/create-store';
 import type { QuestState } from '../state/quest-store';
+import { recordWorldEventWithDerivations } from './world-memory-recorder';
 
 const mockGenerateNpcDialogue = mock((): Promise<NpcDialogue> =>
   Promise.resolve({
@@ -421,6 +427,99 @@ describe('createDialogueManager', () => {
     expect(result.npcName).toBe('北门守卫');
   });
 
+  it('startDialogue passes only the active NPC belief and current-location fact as ecological memory', async () => {
+    const eventBus = mitt() as EventBus;
+    const worldMemory = createWorldMemoryStore(eventBus);
+    const playerKnowledge = createPlayerKnowledgeStore(eventBus);
+    sceneStore.setState((draft) => {
+      draft.sceneId = 'loc_north_gate';
+      draft.narrationLines = ['北门雨夜'];
+    });
+    worldMemory.setState((draft) => {
+      draft.facts = {
+        fact_gate_locked: {
+          id: 'fact_gate_locked',
+          statement: '北门今晚已经封锁。',
+          scope: 'location',
+          scopeId: 'loc_north_gate',
+          truthStatus: 'confirmed',
+          confidence: 0.95,
+          sourceEventIds: ['event_gate'],
+          tags: [],
+          createdAt: '2026-05-02T00:00:00.000Z',
+          updatedAt: '2026-05-02T00:00:00.000Z',
+        },
+        fact_tavern_locked: {
+          id: 'fact_tavern_locked',
+          statement: '酒馆后门今晚已经封锁。',
+          scope: 'location',
+          scopeId: 'loc_tavern',
+          truthStatus: 'confirmed',
+          confidence: 0.95,
+          sourceEventIds: ['event_tavern'],
+          tags: [],
+          createdAt: '2026-05-02T00:00:00.000Z',
+          updatedAt: '2026-05-02T00:00:00.000Z',
+        },
+      };
+      draft.beliefs = {
+        belief_guard_player: {
+          id: 'belief_guard_player',
+          holderId: 'npc_guard',
+          holderType: 'npc',
+          subjectId: 'player',
+          factId: null,
+          statement: '这个旅行者可能知道矿工失踪的线索。',
+          stance: 'believes',
+          confidence: 0.7,
+          sourceEventIds: ['event_talk'],
+          lastReinforcedTurn: 4,
+          decay: 'normal',
+          tags: [],
+        },
+        belief_bartender_private: {
+          id: 'belief_bartender_private',
+          holderId: 'npc_bartender',
+          holderType: 'npc',
+          subjectId: 'player',
+          factId: null,
+          statement: '玩家欠酒馆老板一笔账。',
+          stance: 'believes',
+          confidence: 0.8,
+          sourceEventIds: ['event_private'],
+          lastReinforcedTurn: 5,
+          decay: 'normal',
+          tags: [],
+        },
+      };
+    });
+
+    let capturedEcologicalMemory: unknown;
+    const trackingDialogueFn = mock((...args: unknown[]) => {
+      capturedEcologicalMemory = (args[4] as { ecologicalMemory?: unknown }).ecologicalMemory;
+      return Promise.resolve({
+        dialogue: '北门今晚不开放。',
+        emotionTag: 'neutral',
+        memoryNote: null,
+        sentiment: 'neutral',
+      });
+    });
+    const ecologicalStores = { ...stores, worldMemory, playerKnowledge };
+    const manager = createDialogueManager(ecologicalStores, mockCodexEntries, {
+      generateNpcDialogueFn: trackingDialogueFn as typeof import('../ai/roles/npc-actor').generateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_guard');
+
+    const memory = capturedEcologicalMemory as {
+      facts: readonly { statement: string }[];
+      beliefs: readonly { statement: string }[];
+    };
+    expect(memory.facts.map((fact) => fact.statement)).toEqual(['北门今晚已经封锁。']);
+    expect(memory.beliefs.map((belief) => belief.statement)).toEqual(['这个旅行者可能知道矿工失踪的线索。']);
+  });
+
   it('processPlayerResponse generates follow-up dialogue', async () => {
     mockGenerateNpcDialogue
       .mockResolvedValueOnce({
@@ -523,6 +622,159 @@ describe('createDialogueManager', () => {
         importance: 'low',
       }),
     );
+  });
+
+  it('endDialogue records full dialogue world event before resetting dialogue state', async () => {
+    mockGenerateNpcDialogue
+      .mockResolvedValueOnce({
+        dialogue: '雨夜里别乱跑。',
+        emotionTag: 'suspicious',
+        memoryNote: null,
+        sentiment: 'neutral',
+      })
+      .mockResolvedValueOnce({
+        dialogue: '我会记住你说的线索。',
+        emotionTag: 'neutral',
+        memoryNote: null,
+        sentiment: 'positive',
+      });
+
+    const recordWorldEventFn = mock((event: WorldEvent): boolean => {
+      expect(dialogueStore.getState().active).toBe(true);
+      expect(dialogueStore.getState().npcId).toBe('npc_guard');
+      return true;
+    });
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      generateDialogueOptionsFn: mock(() => Promise.resolve({ options: ['"告诉我失踪案的线索"'] })),
+      adjudicateFn: mockAdjudicate,
+      recordWorldEventFn,
+    });
+
+    sceneStore.setState((draft) => {
+      draft.sceneId = 'loc_north_gate';
+    });
+    gameStore.setState((draft) => {
+      draft.turnCount = 7;
+    });
+
+    await manager.startDialogue('npc_guard');
+    await manager.processPlayerResponse(0);
+    const historyBeforeEnd = dialogueStore.getState().dialogueHistory;
+
+    manager.endDialogue();
+
+    expect(recordWorldEventFn).toHaveBeenCalledTimes(1);
+    const event = recordWorldEventFn.mock.calls[0]?.[0];
+    expect(event).toEqual(expect.objectContaining({
+      type: 'dialogue',
+      turnNumber: 7,
+      locationId: 'loc_north_gate',
+      source: 'npc_dialogue',
+      visibility: 'private',
+      summary: expect.stringContaining('北门守卫'),
+    }));
+    expect(event?.actorIds).toEqual(expect.arrayContaining(['player', 'npc_guard']));
+    expect(event?.rawPayload?.dialogueHistory).toEqual(historyBeforeEnd);
+    expect(Array.isArray(event?.rawPayload?.dialogueHistory)).toBe(true);
+    expect((event?.rawPayload?.dialogueHistory as unknown[]).length).toBe(4);
+  });
+
+  it('endDialogue gives same NPC/location/turn dialogues with same history length distinct idempotency keys when transcripts differ', async () => {
+    mockGenerateNpcDialogue
+      .mockResolvedValueOnce({
+        dialogue: '第一段不同的问候。',
+        emotionTag: 'neutral',
+        memoryNote: null,
+        sentiment: 'neutral',
+      })
+      .mockResolvedValueOnce({
+        dialogue: '第二段不同的问候。',
+        emotionTag: 'neutral',
+        memoryNote: null,
+        sentiment: 'neutral',
+      });
+
+    const recordedEvents: WorldEvent[] = [];
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      generateDialogueOptionsFn: mock(() => Promise.resolve({ options: ['"询问北门情况"'] })),
+      adjudicateFn: mockAdjudicate,
+      recordWorldEventFn: (event) => {
+        recordedEvents.push(event);
+        return true;
+      },
+    });
+
+    sceneStore.setState((draft) => {
+      draft.sceneId = 'loc_north_gate';
+    });
+    gameStore.setState((draft) => {
+      draft.turnCount = 7;
+    });
+
+    await manager.startDialogue('npc_guard');
+    manager.endDialogue();
+    await manager.startDialogue('npc_guard');
+    manager.endDialogue();
+
+    expect(recordedEvents).toHaveLength(2);
+    expect(recordedEvents[0]!.rawPayload?.dialogueHistory).toHaveLength(2);
+    expect(recordedEvents[1]!.rawPayload?.dialogueHistory).toHaveLength(2);
+    expect(recordedEvents[0]!.idempotencyKey).not.toBe(recordedEvents[1]!.idempotencyKey);
+  });
+
+  it('endDialogue using the real world memory recorder appends dialogue events and records processed idempotency keys', async () => {
+    mockGenerateNpcDialogue
+      .mockResolvedValueOnce({
+        dialogue: '第一段真实记录。',
+        emotionTag: 'neutral',
+        memoryNote: null,
+        sentiment: 'neutral',
+      })
+      .mockResolvedValueOnce({
+        dialogue: '第二段真实记录。',
+        emotionTag: 'neutral',
+        memoryNote: null,
+        sentiment: 'neutral',
+      });
+
+    const eventBus = mitt() as unknown as EventBus;
+    const worldMemory = createWorldMemoryStore(eventBus);
+    const realRecorderStores = {
+      worldMemory,
+      game: gameStore,
+      scene: sceneStore,
+      dialogue: dialogueStore,
+    };
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      generateDialogueOptionsFn: mock(() => Promise.resolve({ options: ['"询问北门情况"'] })),
+      adjudicateFn: mockAdjudicate,
+      recordWorldEventFn: (event) => recordWorldEventWithDerivations(realRecorderStores, event),
+    });
+
+    sceneStore.setState((draft) => {
+      draft.sceneId = 'loc_north_gate';
+      draft.npcsPresent = ['npc_bystander'];
+    });
+    gameStore.setState((draft) => {
+      draft.turnCount = 7;
+    });
+
+    await manager.startDialogue('npc_guard');
+    manager.endDialogue();
+    await manager.startDialogue('npc_guard');
+    manager.endDialogue();
+
+    const memoryState = worldMemory.getState();
+    expect(memoryState.events).toHaveLength(2);
+    expect(memoryState.events.map((event) => event.type)).toEqual(['dialogue', 'dialogue']);
+    expect(memoryState.events.every((event) => event.visibility === 'private')).toBe(true);
+    expect(Object.keys(memoryState.processedIdempotencyKeys).sort()).toEqual(
+      memoryState.events.map((event) => event.idempotencyKey).sort(),
+    );
+    expect(memoryState.beliefs).toEqual({});
   });
 
   it('processPlayerResponse writes memoryNote as episodic memory', async () => {
@@ -760,6 +1012,27 @@ describe('createDialogueManager', () => {
     const { dialogueStore } = await import('../state/dialogue-store');
     const options = dialogueStore.getState().availableResponses;
     const labels = options.map((o) => o.label);
+    expect(labels).toContain('结束对话');
+    expect(labels.some((l) => l.includes('心智检定'))).toBe(true);
+  });
+
+  it('startDialogue falls back to default response items when generated dialogue options are undefined', async () => {
+    const mockGenerateOptions = mock(() =>
+      Promise.resolve({ options: undefined } as unknown as { options: string[] }),
+    );
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      generateDialogueOptionsFn: mockGenerateOptions,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_guard');
+
+    const { dialogueStore } = await import('../state/dialogue-store');
+    const options = dialogueStore.getState().availableResponses;
+    const labels = options.map((o) => o.label);
+    expect(labels).toContain('你刚才说的是什么意思？');
+    expect(labels).toContain('还有什么我需要知道的？');
     expect(labels).toContain('结束对话');
     expect(labels.some((l) => l.includes('心智检定'))).toBe(true);
   });

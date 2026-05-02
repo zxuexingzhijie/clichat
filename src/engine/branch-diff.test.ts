@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'bun:test';
 import { compareBranches, type DiffItem } from './branch-diff';
-import type { SaveDataV4 } from '../state/serializer';
+import type { SaveDataV4, SaveDataV7 } from '../state/serializer';
+import { getDefaultNarrativeState } from '../state/narrative-state';
+import { getDefaultWorldMemoryState } from '../state/world-memory-store';
 
 function makeMinimalSave(overrides: Partial<SaveDataV4> = {}): SaveDataV4 {
   return {
@@ -67,6 +69,16 @@ function makeMinimalSave(overrides: Partial<SaveDataV4> = {}): SaveDataV4 {
   } as SaveDataV4;
 }
 
+function makeMinimalV7Save(overrides: Partial<SaveDataV7> = {}): SaveDataV7 {
+  return {
+    ...makeMinimalSave(),
+    version: 7,
+    narrativeState: getDefaultNarrativeState(),
+    worldMemory: getDefaultWorldMemoryState(),
+    ...overrides,
+  } as SaveDataV7;
+}
+
 describe('compareBranches', () => {
   it('returns empty diffs for identical snapshots', () => {
     const save = makeMinimalSave();
@@ -74,6 +86,21 @@ describe('compareBranches', () => {
     expect(result.diffs).toEqual([]);
     expect(result.totalCount).toBe(0);
     expect(result.highImpactCount).toBe(0);
+  });
+
+  it('accepts V7 saves without displaying world-memory diffs', () => {
+    const source = makeMinimalV7Save();
+    const target = makeMinimalV7Save({
+      worldMemory: {
+        ...getDefaultWorldMemoryState(),
+        processedIdempotencyKeys: { 'quest:q1:1': 'world-event-1' },
+      },
+    });
+
+    const result = compareBranches(source, target);
+
+    expect(result.diffs).toEqual([]);
+    expect(result.totalCount).toBe(0);
   });
 
   it('detects quest status change with marker ~', () => {

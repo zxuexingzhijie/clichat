@@ -199,6 +199,106 @@ describe('createGameScreenController', () => {
       expect(startNarration).toHaveBeenCalled();
     });
 
+    it('retrieves ecological memory with current scene and selected action before starting AI narration', async () => {
+      const { createWorldMemoryStore } = await import('../state/world-memory-store');
+      const gameStore = makeGameStore();
+      const sceneStore = makeSceneStore({
+        sceneId: 'loc_north_gate',
+        locationName: '黑松镇·北门',
+        actions: [{ id: 'inspect_notice_board', label: '检查告示牌', type: 'inspect' }],
+      });
+      const eventBus = mitt<DomainEvents>();
+      const worldMemory = createWorldMemoryStore(eventBus);
+      const retrievedMemory = {
+        events: [],
+        facts: [],
+        beliefs: [],
+        playerKnowledge: [],
+        omitted: [],
+      };
+      const retrievalQueries: unknown[] = [];
+      const retrieveEcologicalMemoryFn = mock((state: unknown, query: unknown) => {
+        retrievalQueries.push(query);
+        expect(state).toBe(worldMemory.getState());
+        return retrievedMemory;
+      });
+      let capturedContext: { ecologicalMemory?: unknown } | undefined;
+      const startNarration = mock((context: { ecologicalMemory?: unknown }) => {
+        capturedContext = context;
+      });
+      const gameLoop: GameLoop = {
+        executeAction: mock(async () => ({
+          status: 'action_executed' as const,
+          action: { type: 'inspect' as const, target: 'notice_board', modifiers: {}, source: 'action_select' as const },
+          narration: [],
+        })),
+        processInput: mock(async () => ({ status: 'help' as const, commands: [] })),
+        getCommandParser: mock(() => ({ parse: () => null })),
+      } as unknown as GameLoop;
+
+      const controller = createGameScreenController(
+        { game: gameStore, scene: sceneStore, worldMemory },
+        eventBus,
+        { startNarration, gameLoop, retrieveEcologicalMemoryFn },
+      );
+
+      await controller.handleActionExecute(0);
+
+      expect(retrieveEcologicalMemoryFn).toHaveBeenCalledTimes(1);
+      expect(retrievalQueries[0]).toEqual(expect.objectContaining({
+        locationId: 'loc_north_gate',
+        playerAction: '检查告示牌',
+      }));
+      expect(capturedContext?.ecologicalMemory).toBe(retrievedMemory);
+    });
+
+    it('includes active quest ids and quest template tags in action narration ecological memory query', async () => {
+      const { createWorldMemoryStore } = await import('../state/world-memory-store');
+      const gameStore = makeGameStore();
+      const sceneStore = makeSceneStore({
+        sceneId: 'loc_north_gate',
+        actions: [{ id: 'inspect_notice_board', label: '检查告示牌', type: 'inspect' }],
+      });
+      const eventBus = mitt<DomainEvents>();
+      const worldMemory = createWorldMemoryStore(eventBus);
+
+      const retrievalQueries: unknown[] = [];
+      const retrieveEcologicalMemoryFn = mock((state: unknown, query: unknown) => {
+        retrievalQueries.push(query);
+        return { events: [], facts: [], beliefs: [], playerKnowledge: [], omitted: [] };
+      });
+      const startNarration = mock(() => {});
+      const gameLoop: GameLoop = {
+        executeAction: mock(async () => ({
+          status: 'action_executed' as const,
+          action: { type: 'inspect' as const, target: 'notice_board', modifiers: {}, source: 'action_select' as const },
+          narration: [],
+        })),
+        processInput: mock(async () => ({ status: 'help' as const, commands: [] })),
+        getCommandParser: mock(() => ({ parse: () => null })),
+      } as unknown as GameLoop;
+
+      const controller = createGameScreenController(
+        { game: gameStore, scene: sceneStore, worldMemory },
+        eventBus,
+        {
+          startNarration,
+          gameLoop,
+          retrieveEcologicalMemoryFn,
+          activeQuestIds: ['quest_missing_scout', 'quest_old_oath'],
+          activeQuestTags: ['missing_scout', 'north_gate', 'loc_north_gate'],
+        },
+      );
+
+      await controller.handleActionExecute(0);
+
+      expect(retrieveEcologicalMemoryFn).toHaveBeenCalledTimes(1);
+      expect(retrievalQueries[0]).toEqual(expect.objectContaining({
+        questIds: ['quest_missing_scout', 'quest_old_oath'],
+        tags: ['loc_north_gate', 'missing_scout', 'north_gate'],
+      }));
+    });
+
     it('appends error line to narrationLines when gameLoop returns error status', async () => {
       const gameStore = makeGameStore();
       const sceneStore = makeSceneStore({ narrationLines: ['初始行'] });

@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'bun:test';
-import { migrateToLatest, migrateV1ToV2, migrateV2ToV3, migrateV4ToV5, migrateV5ToV6 } from './save-migrator';
+import { migrateToLatest, migrateV1ToV2, migrateV2ToV3, migrateV4ToV5, migrateV5ToV6, migrateV6ToV7 } from './save-migrator';
 import { getDefaultQuestState } from '../state/quest-store';
 import { getDefaultRelationState } from '../state/relation-store';
 import { getDefaultNpcMemoryState } from '../state/npc-memory-store';
 import { getDefaultNarrativeState } from '../state/narrative-state';
+import { getDefaultWorldMemoryState } from '../state/world-memory-store';
 
 const validV1 = {
   version: 1,
@@ -254,11 +255,36 @@ describe('migrateV5ToV6', () => {
   });
 });
 
+const validV6 = {
+  ...validV4,
+  version: 6,
+  scene: { ...validV4.scene, droppedItems: [] },
+  narrativeState: getDefaultNarrativeState(),
+};
+
+describe('migrateV6ToV7', () => {
+  it('upgrades version 6 to 7 and adds empty worldMemory', () => {
+    const result = migrateV6ToV7(validV6) as Record<string, unknown>;
+    expect(result['version']).toBe(7);
+    expect(result['worldMemory']).toEqual(getDefaultWorldMemoryState());
+  });
+
+  it('returns non-version-6 objects unchanged', () => {
+    const v7 = { version: 7, worldMemory: getDefaultWorldMemoryState() };
+    expect(migrateV6ToV7(v7)).toBe(v7);
+  });
+
+  it('returns null unchanged', () => {
+    expect(migrateV6ToV7(null)).toBeNull();
+  });
+});
+
 describe('migrateToLatest', () => {
-  it('upgrades a valid V4 save to SaveDataV6 with narrativeState and droppedItems', () => {
+  it('upgrades a valid V4 save to SaveDataV7 with narrativeState, droppedItems, and worldMemory', () => {
     const result = migrateToLatest(validV4);
-    expect(result.version).toBe(6);
+    expect(result.version).toBe(7);
     expect(result.narrativeState).toEqual(getDefaultNarrativeState());
     expect(result.scene.droppedItems).toEqual([]);
+    expect(result.worldMemory).toEqual(getDefaultWorldMemoryState());
   });
 });

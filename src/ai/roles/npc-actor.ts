@@ -4,6 +4,7 @@ import { NpcDialogueSchema, type NpcDialogue } from '../schemas/npc-dialogue';
 import { buildNpcSystemPrompt, buildNpcUserPrompt, type NpcProfile } from '../prompts/npc-system';
 import { getFallbackDialogue } from '../utils/fallback';
 import type { NarrativePromptContext } from '../prompts/narrative-system';
+import type { EcologicalMemoryContext } from '../utils/ecological-memory-retriever';
 
 export type NpcActorOptions = {
   readonly maxRetries?: number;
@@ -11,6 +12,7 @@ export type NpcActorOptions = {
   readonly relevantCodex?: readonly string[];
   readonly encounterCount?: number;
   readonly conversationHistory?: readonly { readonly role: 'user' | 'assistant'; readonly content: string }[];
+  readonly ecologicalMemory?: EcologicalMemoryContext;
 };
 
 export async function generateNpcDialogue(
@@ -31,6 +33,7 @@ export async function generateNpcDialogue(
     encounterCount: options?.encounterCount,
     archiveSummary: options?.archiveSummary,
     relevantCodex: options?.relevantCodex,
+    ecologicalMemory: options?.ecologicalMemory,
   });
 
   try {
@@ -70,6 +73,7 @@ export async function* streamNpcDialogue(
     encounterCount: options?.encounterCount,
     archiveSummary: options?.archiveSummary,
     relevantCodex: options?.relevantCodex,
+    ecologicalMemory: options?.ecologicalMemory,
   });
 
   try {

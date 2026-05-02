@@ -14,6 +14,8 @@ import { createPlayerKnowledgeStore, getDefaultPlayerKnowledgeState } from '../p
 import { createBranchStore, getDefaultBranchState } from '../branch-store';
 import { createCostSessionStore, getDefaultCostSessionState } from '../cost-session-store';
 import type { GameState } from '../game-store';
+import { createGameContext } from '../../context/game-context';
+import { getDefaultWorldMemoryState } from '../world-memory-store';
 
 describe('createPlayerStore', () => {
   it('creates an isolated store with default state', () => {
@@ -357,5 +359,12 @@ describe('createCostSessionStore', () => {
     store.setState((draft) => { draft.lastTurnTokens = 100; });
     expect(events).toHaveLength(1);
     expect(events[0]).toEqual({ lastTurnTokens: 100 });
+  });
+});
+
+describe('createGameContext', () => {
+  it('creates a worldMemory store with default state', () => {
+    const ctx = createGameContext();
+    expect(ctx.stores.worldMemory.getState()).toEqual(getDefaultWorldMemoryState());
   });
 });

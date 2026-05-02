@@ -12,6 +12,7 @@ import { PlayerKnowledgeStateSchema, type PlayerKnowledgeState } from './player-
 import type { TurnLogState } from './turn-log-store';
 import { migrateToLatest } from '../persistence/save-migrator';
 import { NarrativeStateSchema, type NarrativeState, type NarrativeStore } from './narrative-state';
+import { WorldMemoryStateSchema, type WorldMemoryState } from './world-memory-store';
 import { restoreQuestEventLog } from './quest-store';
 import { restoreTurnLog } from '../engine/turn-log';
 
@@ -100,6 +101,12 @@ export const SaveDataV6Schema = SaveDataV5Schema.extend({
 });
 export type SaveDataV6 = z.infer<typeof SaveDataV6Schema>;
 
+export const SaveDataV7Schema = SaveDataV6Schema.extend({
+  version: z.literal(7),
+  worldMemory: WorldMemoryStateSchema,
+});
+export type SaveDataV7 = z.infer<typeof SaveDataV7Schema>;
+
 export function createSerializer(
   stores: {
     player: Store<PlayerState>;
@@ -113,6 +120,7 @@ export function createSerializer(
     playerKnowledge: Store<PlayerKnowledgeState>;
     turnLog: Store<TurnLogState>;
     narrativeStore: NarrativeStore;
+    worldMemory: Store<WorldMemoryState>;
   },
   getBranchId: () => string,
   getParentSaveId: () => string | null,
@@ -136,8 +144,8 @@ export function createSerializer(
         locationName: scene.sceneId,
       };
 
-      const data: SaveDataV6 = {
-        version: 6,
+      const data: SaveDataV7 = {
+        version: 7,
         meta,
         branchId: getBranchId(),
         parentSaveId: getParentSaveId(),
@@ -153,6 +161,7 @@ export function createSerializer(
         playerKnowledge: stores.playerKnowledge.getState(),
         turnLog: stores.turnLog.getState().entries,
         narrativeState: stores.narrativeStore.getState(),
+        worldMemory: stores.worldMemory.getState(),
       };
       return JSON.stringify(data);
     },
@@ -166,7 +175,7 @@ export function createSerializer(
       }
 
       const migrated = migrateToLatest(raw);
-      const result = SaveDataV6Schema.safeParse(migrated);
+      const result = SaveDataV7Schema.safeParse(migrated);
 
       if (!result.success) {
         const firstIssue = result.error.issues[0];
@@ -192,6 +201,7 @@ export function createSerializer(
       restoreTurnLog(data.turnLog ?? []);
 
       stores.narrativeStore.restoreState(data.narrativeState);
+      stores.worldMemory.setState(draft => { Object.assign(draft, data.worldMemory); });
     },
   };
 }

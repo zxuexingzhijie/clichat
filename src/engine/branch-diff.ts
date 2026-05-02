@@ -1,6 +1,6 @@
-import type { SaveDataV4, SaveDataV5, SaveDataV6 } from '../state/serializer';
+import type { SaveDataV4, SaveDataV5, SaveDataV6, SaveDataV7 } from '../state/serializer';
 
-type SaveDataCompare = SaveDataV4 | SaveDataV5 | SaveDataV6;
+type SaveDataCompare = SaveDataV4 | SaveDataV5 | SaveDataV6 | SaveDataV7;
 
 export type DiffCategory = 'quest' | 'npc_relation' | 'inventory' | 'location' | 'faction' | 'knowledge';
 export type DiffMarker = '+' | '-' | '~';

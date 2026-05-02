@@ -1,3 +1,5 @@
+import type { EcologicalMemoryContext } from '../utils/ecological-memory-retriever';
+
 export type SceneType = 'exploration' | 'combat' | 'dialogue' | 'lore' | 'horror' | 'check_result';
 
 const CORE_CONSTRAINTS = `规则：
@@ -37,6 +39,7 @@ export type NarrativePromptContext = {
   readonly storyAct: 'act1' | 'act2' | 'act3';
   readonly atmosphereTags: readonly string[];
   readonly recentNarration?: readonly string[];
+  readonly ecologicalMemory?: EcologicalMemoryContext;
 };
 
 const ACT_TONE_GUIDANCE: Record<string, string> = {
@@ -44,6 +47,24 @@ const ACT_TONE_GUIDANCE: Record<string, string> = {
   act2: '第二幕提示：读者已知出了什么问题，但细节还不清楚。用悬疑和信息空缺制造张力。',
   act3: '第三幕提示：玩家掌握了真相。场景描述可带沉重感——同样的地方，已有不同的含义。',
 };
+
+function bulletList(items: readonly string[]): string {
+  return items.length ? items.map((item) => `- ${item}`).join('\n') : '- （无）';
+}
+
+function formatEcologicalMemory(memory: EcologicalMemoryContext | undefined): string {
+  if (!memory) return '';
+
+  const confirmedFacts = memory.facts
+    .filter((fact) => fact.truthStatus === 'confirmed')
+    .map((fact) => fact.statement);
+  const rumors = memory.facts
+    .filter((fact) => fact.truthStatus === 'rumor')
+    .map((fact) => fact.statement);
+  const recentEvents = memory.events.map((event) => event.summary);
+
+  return `\nRuntime world memory:\nConfirmed world facts:\n${bulletList(confirmedFacts)}\nLocal rumors:\n${bulletList(rumors)}\nRecent relevant events:\n${bulletList(recentEvents)}\nRules for runtime world memory:\n- Keep authored codex world truth distinct from runtime world facts.\n- Treat confirmed world facts as runtime truth.\n- Treat local rumors as uncertain and avoid narrating them as confirmed.`;
+}
 
 export function buildNarrativeSystemPrompt(
   sceneType: SceneType,
@@ -67,7 +88,9 @@ ${CORE_CONSTRAINTS}
     ? `\n最近叙述（保持语气和意象的连贯性，避免重复同一词语）：\n${narrativeContext.recentNarration.slice(-3).join('\n')}`
     : '';
 
-  return base + narrativeParagraph + recentSection;
+  const ecologicalMemorySection = formatEcologicalMemory(narrativeContext.ecologicalMemory);
+
+  return base + narrativeParagraph + recentSection + ecologicalMemorySection;
 }
 
 export type NarrativeUserPromptContext = {

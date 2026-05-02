@@ -227,7 +227,7 @@ describe('listSaves', () => {
 
 describe('readSaveData', () => {
   const mockSaveData = {
-    version: 6,
+    version: 7,
     meta: { saveName: 'Test', timestamp: '2026-01-01T00:00:00.000Z', character: { name: 'Hero', race: 'Human', profession: 'Warrior' }, playtime: 0, locationName: 'North Gate' },
     branchId: 'main',
     parentSaveId: null,
@@ -243,6 +243,7 @@ describe('readSaveData', () => {
     playerKnowledge: { entries: {} },
     turnLog: [],
     narrativeState: { currentAct: 'act1', atmosphereTags: ['mundane', 'curious'], worldFlags: {}, playerKnowledgeLevel: 0 },
+    worldMemory: { events: [], facts: {}, beliefs: {}, processedIdempotencyKeys: {} },
   };
 
   beforeEach(() => {
@@ -259,19 +260,21 @@ describe('readSaveData', () => {
     }
   });
 
-  it('returns parsed SaveDataV6 without calling serializer.restore', async () => {
+  it('returns parsed SaveDataV7 without calling serializer.restore', async () => {
     const saveDir = '/tmp/saves';
     const result = await readSaveData('test-save.json', saveDir);
-    expect(result.version).toBe(6);
+    expect(result.version).toBe(7);
     expect(result.branchId).toBe('main');
+    expect(result.worldMemory).toEqual({ events: [], facts: {}, beliefs: {}, processedIdempotencyKeys: {} });
   });
 
-  it('migrates older save data to SaveDataV6 before returning it', async () => {
+  it('migrates older save data to SaveDataV7 before returning it', async () => {
     const v5SaveData = {
       ...mockSaveData,
       version: 5,
       scene: { ...mockSaveData.scene, droppedItems: undefined },
     };
+    delete (v5SaveData as Record<string, unknown>)['worldMemory'];
     delete (v5SaveData.scene as Record<string, unknown>)['droppedItems'];
     if (typeof Bun !== 'undefined') {
       (Bun as unknown as Record<string, unknown>).file = mock((_path: string) => ({
@@ -281,8 +284,9 @@ describe('readSaveData', () => {
 
     const result = await readSaveData('old-save.json', '/tmp/saves');
 
-    expect(result.version).toBe(6);
+    expect(result.version).toBe(7);
     expect(result.scene.droppedItems).toEqual([]);
+    expect(result.worldMemory).toEqual({ events: [], facts: {}, beliefs: {}, processedIdempotencyKeys: {} });
   });
 
   it('rejects path traversal attempts', async () => {

@@ -1,3 +1,4 @@
+import type { EcologicalMemoryContext } from '../utils/ecological-memory-retriever';
 import type { NarrativePromptContext } from './narrative-system';
 
 export type NpcTrustGate = {
@@ -80,7 +81,38 @@ export type NpcUserPromptContext = {
   readonly emotionHint?: string;
   readonly archiveSummary?: string;
   readonly relevantCodex?: readonly string[];
+  readonly ecologicalMemory?: EcologicalMemoryContext;
 };
+
+function bulletList(items: readonly string[]): string {
+  return items.length ? items.map((item) => `- ${item}`).join('\n') : '- （无）';
+}
+
+function formatEcologicalMemory(memory: EcologicalMemoryContext | undefined): string {
+  if (!memory) return '';
+
+  const confirmedFacts = memory.facts
+    .filter((fact) => fact.truthStatus === 'confirmed')
+    .map((fact) => fact.statement);
+  const rumors = memory.facts
+    .filter((fact) => fact.truthStatus === 'rumor')
+    .map((fact) => fact.statement);
+  const beliefs = memory.beliefs.map((belief) => `${belief.stance}: ${belief.statement}`);
+  const recentEvents = memory.events.map((event) => event.summary);
+
+  return `
+Runtime memory:
+Player knowledge:
+${bulletList(memory.playerKnowledge)}
+Confirmed world facts:
+${bulletList(confirmedFacts)}
+Rumors:
+${bulletList(rumors)}
+This NPC believes:
+${bulletList(beliefs)}
+Recent events:
+${bulletList(recentEvents)}`;
+}
 
 export function buildNpcUserPrompt(context: NpcUserPromptContext): string {
   const memoriesText = context.memories.slice(0, 8).join('\n') || '（无）';
@@ -93,10 +125,12 @@ export function buildNpcUserPrompt(context: NpcUserPromptContext): string {
     ? `\n当前相关世界知识：\n${context.relevantCodex.map((c) => `- ${c}`).join('\n')}`
     : '';
 
+  const ecologicalMemorySection = formatEcologicalMemory(context.ecologicalMemory);
+
   return `场景：${context.scene}
 玩家动作：${context.playerAction}
 与玩家的接触次数：${context.encounterCount ?? 0} 次
-你对这个玩家的记忆：${memoriesText}${archiveSection}${codexSection}
+你对这个玩家的记忆：${memoriesText}${archiveSection}${codexSection}${ecologicalMemorySection}
 当前情绪倾向：${context.emotionHint ?? '中立'}
 请以角色身份回应。`;
 }

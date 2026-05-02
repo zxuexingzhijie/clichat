@@ -96,6 +96,50 @@ describe('generateNpcDialogue', () => {
     expect(result).toEqual(expected);
     expect(mockGenerateObject).toHaveBeenCalledTimes(2);
   });
+
+  it('forwards ecologicalMemory option into the NPC user prompt', async () => {
+    const expected: NpcDialogue = {
+      dialogue: '北门的事我知道一些。',
+      emotionTag: 'neutral',
+      memoryNote: null,
+      sentiment: 'neutral',
+    };
+    mockGenerateObject.mockResolvedValueOnce({ object: expected, usage: mockUsage });
+    const options = {
+      ecologicalMemory: {
+        playerKnowledge: [],
+        facts: [
+          {
+            id: 'fact-gate',
+            statement: '北门今晚已经封锁。',
+            scope: 'location' as const,
+            scopeId: 'loc_north_gate',
+            truthStatus: 'confirmed' as const,
+            confidence: 0.9,
+            sourceEventIds: [],
+            tags: [],
+            createdAt: '2026-05-02T00:00:00.000Z',
+            updatedAt: '2026-05-02T00:00:00.000Z',
+          },
+        ],
+        beliefs: [],
+        events: [],
+        omitted: [],
+      },
+    };
+
+    await generateNpcDialogue(
+      npcProfile,
+      '铁匠铺内',
+      '打招呼',
+      [],
+      options,
+    );
+
+    const callArgs = (mockGenerateObject.mock.calls[0] as unknown as [Record<string, unknown>])[0];
+    expect(callArgs.prompt).toContain('Runtime memory:');
+    expect(callArgs.prompt).toContain('北门今晚已经封锁。');
+  });
 });
 
 describe('generateNpcDialogue — history forwarding', () => {

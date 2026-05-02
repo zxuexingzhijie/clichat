@@ -41,6 +41,7 @@ import { initSummarizerScheduler } from './ai/summarizer/summarizer-scheduler';
 import { configureSummarizerWorkerStores, runSummarizerLoop } from './ai/summarizer/summarizer-worker';
 import { initExplorationTracker } from './engine/exploration-tracker';
 import { initKnowledgeTracker } from './engine/knowledge-tracker';
+import { initWorldEventRecorder, recordWorldEventWithDerivations } from './engine/world-memory-recorder';
 import { initMemoryPersistence } from './persistence/memory-persistence';
 
 const GameStoreCtx = createStoreContext<GameState>();
@@ -129,6 +130,7 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
           playerKnowledge: ctx.stores.playerKnowledge,
           turnLog: ctx.stores.turnLog,
           narrativeStore: ctx.stores.narrative,
+          worldMemory: ctx.stores.worldMemory,
         },
         () => ctx.stores.branch.getState().currentBranchId,
         () => null,
@@ -156,7 +158,14 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
 
   const sceneManager = useMemo(
     () => createSceneManager(
-      { scene: ctx.stores.scene, game: ctx.stores.game, player: ctx.stores.player, eventBus: ctx.eventBus },
+      {
+        scene: ctx.stores.scene,
+        game: ctx.stores.game,
+        player: ctx.stores.player,
+        eventBus: ctx.eventBus,
+        worldMemory: ctx.stores.worldMemory,
+        quest: ctx.stores.quest,
+      },
       allCodexEntries as Map<string, CodexEntry>,
       {
         generateNarrationFn: generateNarration,
@@ -182,8 +191,21 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
         player: ctx.stores.player,
         relation: ctx.stores.relation,
         quest: ctx.stores.quest,
+        worldMemory: ctx.stores.worldMemory,
+        playerKnowledge: ctx.stores.playerKnowledge,
       },
       allCodexEntries as Map<string, CodexEntry>,
+      {
+        recordWorldEventFn: (event) => recordWorldEventWithDerivations(
+          {
+            worldMemory: ctx.stores.worldMemory,
+            game: ctx.stores.game,
+            scene: ctx.stores.scene,
+            dialogue: ctx.stores.dialogue,
+          },
+          event,
+        ),
+      },
     ),
     [ctx, allCodexEntries],
   );
@@ -326,6 +348,21 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
     return cleanup;
   }, [ctx, allCodexEntries]);
 
+  useEffect(() => {
+    if (allCodexEntries.size === 0) return;
+    const cleanup = initWorldEventRecorder(
+      {
+        worldMemory: ctx.stores.worldMemory,
+        game: ctx.stores.game,
+        scene: ctx.stores.scene,
+        dialogue: ctx.stores.dialogue,
+      },
+      ctx.eventBus,
+      allCodexEntries,
+    );
+    return cleanup;
+  }, [ctx, allCodexEntries]);
+
   const handleStart = useCallback(() => {
     setGameState((draft) => {
       draft.phase = 'narrative_creation';
@@ -377,6 +414,7 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
           readSaveData={readSaveData}
           saveDir={saveDir}
           eventBus={ctx.eventBus}
+          worldMemoryStore={ctx.stores.worldMemory}
         />
       </SizeGuard>
     </GameErrorBoundary>

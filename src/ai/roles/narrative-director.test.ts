@@ -55,6 +55,58 @@ describe('generateNarration', () => {
     expect(mockGenerateObject).toHaveBeenCalledTimes(1);
   });
 
+  it('passes ecological memory into the narrative system prompt', async () => {
+    mockGenerateObject.mockResolvedValueOnce({ object: { text: '北门的告示在风里轻响，你意识到传言并不可靠。' }, usage: mockUsage });
+
+    await generateNarration({
+      ...baseContext,
+      narrativeContext: {
+        storyAct: 'act2',
+        atmosphereTags: ['dread'],
+        ecologicalMemory: {
+          playerKnowledge: [],
+          omitted: [],
+          beliefs: [],
+          facts: [
+            {
+              id: 'fact-confirmed',
+              statement: '北门告示确实存在。',
+              scope: 'location',
+              scopeId: 'loc_north_gate',
+              truthStatus: 'confirmed',
+              confidence: 1,
+              sourceEventIds: ['event-confirmed'],
+              tags: [],
+              createdAt: '2026-05-02T00:00:00.000Z',
+              updatedAt: '2026-05-02T00:00:00.000Z',
+            },
+            {
+              id: 'fact-rumor',
+              statement: '传言北门外有幽灵。',
+              scope: 'location',
+              scopeId: 'loc_north_gate',
+              truthStatus: 'rumor',
+              confidence: 0.3,
+              sourceEventIds: ['event-rumor'],
+              tags: [],
+              createdAt: '2026-05-02T00:00:00.000Z',
+              updatedAt: '2026-05-02T00:00:00.000Z',
+            },
+          ],
+          events: [],
+        },
+      },
+    });
+
+    const calls = (mockGenerateObject as unknown as { mock: { calls: Array<[{ system?: string }]> } }).mock.calls;
+    const call = calls[0]?.[0];
+    expect(call?.system).toContain('Runtime world memory:');
+    expect(call?.system).toContain('Confirmed world facts:');
+    expect(call?.system).toContain('北门告示确实存在。');
+    expect(call?.system).toContain('Local rumors:');
+    expect(call?.system).toContain('传言北门外有幽灵。');
+  });
+
   it('returns fallback on failure after retries', async () => {
     mockGenerateObject
       .mockRejectedValueOnce(new Error('API error'))

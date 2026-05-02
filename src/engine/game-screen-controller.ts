@@ -8,14 +8,24 @@ import type { GameLoop } from '../game-loop';
 import type { DialogueManager } from './dialogue-manager';
 import type { CombatLoop, CombatActionType } from './combat-loop';
 import type { NarrativeContext } from '../ai/roles/narrative-director';
+import { retrieveEcologicalMemory } from '../ai/utils/ecological-memory-retriever';
+import type { EcologicalMemoryContext, EcologicalMemoryQuery } from '../ai/utils/ecological-memory-retriever';
+import type { WorldMemoryState } from '../state/world-memory-store';
 import type { Emitter } from 'mitt';
 
 type ControllerStores = {
   readonly game: Store<GameState>;
   readonly scene: Store<SceneState>;
+  readonly worldMemory?: Store<WorldMemoryState>;
 };
 
+
 type InputMode = 'action_select' | 'input_active' | 'processing';
+
+type RetrieveEcologicalMemoryFn = (
+  state: WorldMemoryState,
+  query: EcologicalMemoryQuery,
+) => EcologicalMemoryContext;
 
 type ControllerDeps = {
   readonly gameLoop?: GameLoop;
@@ -25,7 +35,11 @@ type ControllerDeps = {
   readonly startNarration?: (context: NarrativeContext) => void;
   readonly resetNarration?: () => void;
   readonly resetNpcDialogue?: () => void;
+  readonly retrieveEcologicalMemoryFn?: RetrieveEcologicalMemoryFn;
+  readonly activeQuestIds?: readonly string[];
+  readonly activeQuestTags?: readonly string[];
 };
+
 
 export type GameScreenController = {
   readonly handlePanelClose: () => void;
@@ -48,13 +62,33 @@ function capNarrationLines(lines: readonly string[]): string[] {
     : [...lines];
 }
 
+function uniqueEcologicalMemoryTags(sceneId: string | null | undefined, activeQuestTags: readonly string[]): string[] {
+  return [...new Set([sceneId, ...activeQuestTags].filter((tag): tag is string => Boolean(tag)))];
+}
+
 export function createGameScreenController(
   stores: ControllerStores,
   eventBus: Emitter<DomainEvents>,
   deps: ControllerDeps,
 ): GameScreenController {
-  const { game: gameStore, scene: sceneStore } = stores;
+  const { game: gameStore, scene: sceneStore, worldMemory: worldMemoryStore } = stores;
   const { gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue } = deps;
+  const retrieveEcologicalMemoryFn = deps.retrieveEcologicalMemoryFn ?? retrieveEcologicalMemory;
+  const activeQuestIds = deps.activeQuestIds ?? [];
+  const activeQuestTags = deps.activeQuestTags ?? [];
+
+  function getEcologicalMemory(playerAction: string, sceneState: SceneState): EcologicalMemoryContext | undefined {
+    if (!worldMemoryStore) return undefined;
+    return retrieveEcologicalMemoryFn(worldMemoryStore.getState(), {
+      locationId: sceneState.sceneId ?? undefined,
+      questIds: activeQuestIds,
+      playerAction,
+      tags: uniqueEcologicalMemoryTags(sceneState.sceneId, activeQuestTags),
+      maxEvents: 6,
+      maxFacts: 8,
+      maxBeliefs: 0,
+    });
+  }
 
   const handlePanelClose = (): void => {
     gameStore.setState(draft => { draft.phase = 'game'; });
@@ -100,6 +134,7 @@ export function createGameScreenController(
         playerAction: action.label,
         recentNarration: sceneState.narrationLines.slice(-3),
         sceneContext: sceneState.locationName ?? '',
+        ecologicalMemory: getEcologicalMemory(action.label, sceneState),
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -142,6 +177,7 @@ export function createGameScreenController(
           playerAction: text,
           recentNarration: sceneState.narrationLines.slice(-3),
           sceneContext: sceneState.locationName ?? '',
+          ecologicalMemory: getEcologicalMemory(text, sceneState),
         });
       }
     }).catch((err: unknown) => {

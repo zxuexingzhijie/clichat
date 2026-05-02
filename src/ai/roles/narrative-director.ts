@@ -9,6 +9,7 @@ import {
   type NarrativePromptContext,
 } from '../prompts/narrative-system';
 import { getFallbackNarration } from '../utils/fallback';
+import type { EcologicalMemoryContext } from '../utils/ecological-memory-retriever';
 
 export type NarrativeContext = {
   readonly sceneType: SceneType;
@@ -18,18 +19,31 @@ export type NarrativeContext = {
   readonly recentNarration: readonly string[];
   readonly sceneContext: string;
   readonly narrativeContext?: NarrativePromptContext;
+  readonly ecologicalMemory?: EcologicalMemoryContext;
 };
 
 export type NarrativeOptions = {
   readonly maxRetries?: number;
 };
 
+function getNarrativePromptContext(context: NarrativeContext): NarrativePromptContext | undefined {
+  if (!context.ecologicalMemory) return context.narrativeContext;
+  if (context.narrativeContext) {
+    return { ...context.narrativeContext, ecologicalMemory: context.ecologicalMemory };
+  }
+  return {
+    storyAct: 'act1',
+    atmosphereTags: [],
+    ecologicalMemory: context.ecologicalMemory,
+  };
+}
+
 export async function* streamNarration(
   context: NarrativeContext,
   options?: NarrativeOptions,
 ): AsyncGenerator<string> {
   const config = getRoleConfig('narrative-director');
-  const system = buildNarrativeSystemPrompt(context.sceneType, context.narrativeContext);
+  const system = buildNarrativeSystemPrompt(context.sceneType, getNarrativePromptContext(context));
   const prompt = buildNarrativeUserPrompt(context as NarrativeUserPromptContext);
 
   try {
@@ -53,7 +67,7 @@ export async function generateNarration(
   options?: NarrativeOptions,
 ): Promise<string> {
   const config = getRoleConfig('narrative-director');
-  const system = buildNarrativeSystemPrompt(context.sceneType, context.narrativeContext);
+  const system = buildNarrativeSystemPrompt(context.sceneType, getNarrativePromptContext(context));
   const prompt = buildNarrativeUserPrompt(context as NarrativeUserPromptContext);
 
   try {

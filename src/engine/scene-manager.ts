@@ -12,6 +12,10 @@ import type { SceneAction } from '../state/scene-store';
 import type { EventBus } from '../events/event-bus';
 import type { NarrativeStore } from '../state/narrative-state';
 import type { NarrativePromptContext } from '../ai/prompts/narrative-system';
+import { retrieveEcologicalMemory } from '../ai/utils/ecological-memory-retriever';
+import type { EcologicalMemoryContext, EcologicalMemoryQuery } from '../ai/utils/ecological-memory-retriever';
+import type { WorldMemoryState } from '../state/world-memory-store';
+import type { QuestState } from '../state/quest-store';
 
 export type SceneManagerResult =
   | { readonly status: 'success'; readonly narration: readonly string[] }
@@ -25,10 +29,16 @@ type GenerateRetrievalPlanFn = (context: {
   readonly activeQuests: readonly string[];
 }) => Promise<RetrievalPlan>;
 
+type RetrieveEcologicalMemoryFn = (
+  state: WorldMemoryState,
+  query: EcologicalMemoryQuery,
+) => EcologicalMemoryContext;
+
 export type SceneManagerOptions = {
   readonly generateNarrationFn?: GenerateNarrationFn;
   readonly generateRetrievalPlanFn?: GenerateRetrievalPlanFn;
   readonly narrativeStore?: NarrativeStore;
+  readonly retrieveEcologicalMemoryFn?: RetrieveEcologicalMemoryFn;
 };
 
 function getNarrativeContext(narrativeStore?: NarrativeStore): NarrativePromptContext | undefined {
@@ -124,13 +134,22 @@ function capNarrationLines(lines: readonly string[]): string[] {
 }
 
 export function createSceneManager(
-  stores: { scene: Store<SceneState>; game: Store<GameState>; player: Store<PlayerState>; eventBus?: EventBus },
+  stores: {
+    scene: Store<SceneState>;
+    game: Store<GameState>;
+    player: Store<PlayerState>;
+    eventBus?: EventBus;
+    worldMemory?: Store<WorldMemoryState>;
+    quest?: Store<QuestState>;
+  },
   codexEntries: Map<string, CodexEntry>,
   options?: SceneManagerOptions,
 ): SceneManager {
   const generateNarrationFn = options?.generateNarrationFn;
   const generateRetrievalPlanFn = options?.generateRetrievalPlanFn;
+  const retrieveEcologicalMemoryFn = options?.retrieveEcologicalMemoryFn ?? retrieveEcologicalMemory;
   let currentSceneId: string | null = null;
+
 
   stores.eventBus?.on('state_restored', () => {
     const restoredSceneId = stores.scene.getState().sceneId;
@@ -141,6 +160,42 @@ export function createSceneManager(
       draft.narrationLines = [...draft.narrationLines, '【系统】已载入存档，欢迎回来。'];
     });
   });
+
+  function getActiveQuestIds(): string[] {
+    if (!stores.quest) return [];
+    return Object.entries(stores.quest.getState().quests)
+      .filter(([, progress]) => progress.status === 'active')
+      .map(([questId]) => questId);
+  }
+
+  function getActiveQuestTemplateTags(activeQuestIds: readonly string[]): string[] {
+    const tags = new Set<string>();
+    for (const questId of activeQuestIds) {
+      const entry = queryById(codexEntries, questId);
+      if (entry?.type !== 'quest') continue;
+      for (const tag of entry.tags) tags.add(tag);
+    }
+    return [...tags];
+  }
+
+  function getEcologicalMemory(playerAction: string, locationId?: string | null): EcologicalMemoryContext | undefined {
+    if (!stores.worldMemory) return undefined;
+    const activeQuestIds = getActiveQuestIds();
+    const tags = new Set([
+      ...stores.player.getState().tags,
+      ...getActiveQuestTemplateTags(activeQuestIds),
+    ]);
+    const query: EcologicalMemoryQuery = {
+      locationId: locationId ?? stores.scene.getState().sceneId ?? undefined,
+      playerAction,
+      questIds: activeQuestIds,
+      tags: [...tags],
+      maxEvents: 6,
+      maxFacts: 8,
+      maxBeliefs: 0,
+    };
+    return retrieveEcologicalMemoryFn(stores.worldMemory.getState(), query);
+  }
 
   stores.eventBus?.on('dialogue_ended', ({ npcId }) => {
     if (npcId === 'npc_bartender') {
@@ -242,6 +297,7 @@ export function createSceneManager(
         recentNarration: [],
         sceneContext: entry.description,
         narrativeContext: getNarrativeContext(options?.narrativeStore),
+        ecologicalMemory: getEcologicalMemory('enter_scene', locationId),
       });
     }
 
@@ -290,6 +346,7 @@ export function createSceneManager(
           recentNarration: state.narrationLines.slice(-3),
           sceneContext: state.locationName,
           narrativeContext: getNarrativeContext(options?.narrativeStore),
+          ecologicalMemory: getEcologicalMemory('re-look', state.sceneId),
         });
         let newLines = capNarrationLines([...state.narrationLines, narration]);
         const droppedAI = stores.scene.getState().droppedItems;
@@ -337,6 +394,7 @@ export function createSceneManager(
         recentNarration: state.narrationLines.slice(-3),
         sceneContext: state.locationName,
         narrativeContext: getNarrativeContext(options?.narrativeStore),
+        ecologicalMemory: getEcologicalMemory(`look at ${target}`, state.sceneId),
       });
 
       const newLines = capNarrationLines([...state.narrationLines, narration]);
@@ -395,6 +453,7 @@ export function createSceneManager(
         recentNarration: state.narrationLines.slice(-3),
         sceneContext: description,
         narrativeContext: getNarrativeContext(options?.narrativeStore),
+        ecologicalMemory: getEcologicalMemory(`inspect ${target}`, state.sceneId),
       });
 
       const newLines = capNarrationLines([...state.narrationLines, narration]);

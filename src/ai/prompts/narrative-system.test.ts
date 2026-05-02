@@ -1,7 +1,82 @@
 import { describe, it, expect } from 'bun:test';
 import { buildNarrativeSystemPrompt } from './narrative-system';
+import type { EcologicalMemoryContext } from '../utils/ecological-memory-retriever';
 
 describe('buildNarrativeSystemPrompt', () => {
+  it('renders ecological memory with epistemic labels and keeps rumors out of confirmed facts', () => {
+    const ecologicalMemory: EcologicalMemoryContext = {
+      playerKnowledge: [],
+      omitted: [],
+      beliefs: [],
+      facts: [
+        {
+          id: 'fact-confirmed',
+          statement: '北门的悬赏告示确实存在。',
+          scope: 'location',
+          scopeId: 'loc_north_gate',
+          truthStatus: 'confirmed',
+          confidence: 1,
+          sourceEventIds: ['event-confirmed'],
+          tags: [],
+          createdAt: '2026-05-02T00:00:00.000Z',
+          updatedAt: '2026-05-02T00:00:00.000Z',
+        },
+        {
+          id: 'fact-rumor',
+          statement: '有人传说森林里有会说话的狼。',
+          scope: 'location',
+          scopeId: 'loc_north_gate',
+          truthStatus: 'rumor',
+          confidence: 0.4,
+          sourceEventIds: ['event-rumor'],
+          tags: [],
+          createdAt: '2026-05-02T00:00:00.000Z',
+          updatedAt: '2026-05-02T00:00:00.000Z',
+        },
+      ],
+      events: [
+        {
+          id: 'event-recent',
+          idempotencyKey: 'event-recent',
+          turnNumber: 5,
+          timestamp: '2026-05-02T00:00:00.000Z',
+          type: 'quest',
+          actorIds: ['player'],
+          subjectIds: [],
+          locationId: 'loc_north_gate',
+          factionIds: [],
+          summary: '玩家查看了北门悬赏告示。',
+          sourceDomainEvent: 'test',
+          visibility: 'public',
+          importance: 'medium',
+          tags: [],
+          source: 'system',
+        },
+      ],
+    };
+
+    const result = buildNarrativeSystemPrompt('exploration', {
+      storyAct: 'act2',
+      atmosphereTags: ['dread'],
+      ecologicalMemory,
+    });
+
+    expect(result).toContain('Runtime world memory:');
+    expect(result).toContain('Confirmed world facts:');
+    expect(result).toContain('Local rumors:');
+    expect(result).toContain('Recent relevant events:');
+    expect(result).toContain('北门的悬赏告示确实存在。');
+    expect(result).toContain('有人传说森林里有会说话的狼。');
+    expect(result).toContain('玩家查看了北门悬赏告示。');
+
+    const confirmedSection = result.slice(
+      result.indexOf('Confirmed world facts:'),
+      result.indexOf('Local rumors:'),
+    );
+    expect(confirmedSection).toContain('北门的悬赏告示确实存在。');
+    expect(confirmedSection).not.toContain('有人传说森林里有会说话的狼。');
+  });
+
   it('called without narrativeContext returns same result as original function', () => {
     const result = buildNarrativeSystemPrompt('exploration');
     expect(result).toContain('你是一个中文奇幻RPG游戏的叙述者');

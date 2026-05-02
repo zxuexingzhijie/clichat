@@ -10,7 +10,8 @@ import { getDefaultNpcMemoryState, type NpcMemoryState } from './npc-memory-stor
 import { getDefaultExplorationState, type ExplorationState } from './exploration-store';
 import { getDefaultPlayerKnowledgeState, type PlayerKnowledgeState } from './player-knowledge-store';
 import { getDefaultTurnLogState, type TurnLogState } from './turn-log-store';
-import { createSerializer, SaveDataV2Schema, SaveDataV3Schema, SaveDataV4Schema, SaveDataV5Schema, SaveDataV6Schema, SaveMetaSchema, TurnLogEntrySchema } from './serializer';
+import { getDefaultWorldMemoryState, type WorldMemoryState } from './world-memory-store';
+import { createSerializer, SaveDataV2Schema, SaveDataV3Schema, SaveDataV4Schema, SaveDataV5Schema, SaveDataV7Schema, SaveMetaSchema, TurnLogEntrySchema } from './serializer';
 import { createNarrativeStore, getDefaultNarrativeState } from './narrative-state';
 import { eventBus } from '../events/event-bus';
 
@@ -29,6 +30,7 @@ function freshStores() {
     playerKnowledge: createStore<PlayerKnowledgeState>(getDefaultPlayerKnowledgeState()),
     turnLog: createStore<TurnLogState>(getDefaultTurnLogState()),
     narrativeStore: createNarrativeStore(),
+    worldMemory: createStore<WorldMemoryState>(getDefaultWorldMemoryState()),
   };
 }
 
@@ -37,11 +39,11 @@ function freshSerializer() {
 }
 
 describe('createSerializer', () => {
-  it('snapshot returns JSON with required v5 keys', () => {
+  it('snapshot returns JSON with required v7 keys', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
 
-    expect(parsed).toHaveProperty('version', 6);
+    expect(parsed).toHaveProperty('version', 7);
     expect(parsed).toHaveProperty('branchId');
     expect(parsed).toHaveProperty('parentSaveId');
     expect(parsed).toHaveProperty('player');
@@ -56,6 +58,7 @@ describe('createSerializer', () => {
     expect(parsed).toHaveProperty('playerKnowledge');
     expect(parsed).toHaveProperty('turnLog');
     expect(parsed).toHaveProperty('narrativeState');
+    expect(parsed.worldMemory).toEqual(getDefaultWorldMemoryState());
   });
 
   it('snapshot reflects modified store state', () => {
@@ -94,6 +97,22 @@ describe('createSerializer', () => {
 
     serializer.restore(snap);
     expect(stores.player.getState().hp).toBe(originalHp);
+  });
+
+  it('round-trips worldMemory processed idempotency keys', () => {
+    const stores = freshStores();
+    stores.worldMemory.setState(draft => {
+      draft.processedIdempotencyKeys['dialogue:npc_guard:1'] = 'world-event-1';
+    });
+    const serializer = createSerializer(stores, () => 'main', () => null);
+    const snap = serializer.snapshot();
+
+    const stores2 = freshStores();
+    createSerializer(stores2, () => 'main', () => null).restore(snap);
+
+    expect(stores2.worldMemory.getState().processedIdempotencyKeys).toEqual({
+      'dialogue:npc_guard:1': 'world-event-1',
+    });
   });
 
   it('restore throws on invalid JSON', () => {
@@ -175,10 +194,10 @@ describe('SaveDataV2Schema', () => {
 });
 
 describe('createSerializer v2 specific', () => {
-  it('snapshot produces JSON parseable to v6 schema', () => {
+  it('snapshot produces JSON parseable to v7 schema', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
-    const result = SaveDataV6Schema.safeParse(parsed);
+    const result = SaveDataV7Schema.safeParse(parsed);
     expect(result.success).toBe(true);
   });
 
@@ -377,10 +396,10 @@ describe('snapshot() saveName and getPlaytime (SAVE-01)', () => {
 
   it('quickSave uses saveName "Quick Save" and saveGame uses the provided name', () => {
     // Tested by verifying the snapshot arg flows through to meta — covered by the 3 tests above.
-    // This test verifies snapshot still validates against SaveDataV6Schema when called with a name.
+    // This test verifies snapshot still validates against SaveDataV7Schema when called with a name.
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot('Chapter 1'));
-    const result = SaveDataV6Schema.safeParse(parsed);
+    const result = SaveDataV7Schema.safeParse(parsed);
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.meta.saveName).toBe('Chapter 1');
@@ -389,10 +408,10 @@ describe('snapshot() saveName and getPlaytime (SAVE-01)', () => {
 });
 
 describe('createSerializer v4 migration', () => {
-  it('snapshot produces JSON with version: 6', () => {
+  it('snapshot produces JSON with version: 7', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
-    expect(parsed).toHaveProperty('version', 6);
+    expect(parsed).toHaveProperty('version', 7);
   });
 
   it('restore accepts a v3 save and migrates it to v4', () => {
@@ -444,6 +463,7 @@ describe('serializer.restore() does not emit reputation_changed (REP-04)', () =>
       playerKnowledge: createStore<PlayerKnowledgeState>(getDefaultPlayerKnowledgeState()),
       turnLog: createStore<TurnLogState>(getDefaultTurnLogState()),
       narrativeStore: createNarrativeStore(),
+      worldMemory: createStore<WorldMemoryState>(getDefaultWorldMemoryState()),
     };
 
     const snapStores = freshStores();
@@ -465,12 +485,13 @@ describe('serializer.restore() does not emit reputation_changed (REP-04)', () =>
 });
 
 describe('SaveDataV5Schema and V5 serializer', () => {
-  it('snapshot() includes version: 6 and narrativeState.currentAct === act1', () => {
+  it('snapshot() includes version: 7, narrativeState.currentAct === act1, and default worldMemory', () => {
     const serializer = freshSerializer();
     const parsed = JSON.parse(serializer.snapshot());
-    expect(parsed.version).toBe(6);
+    expect(parsed.version).toBe(7);
     expect(parsed.narrativeState).toBeDefined();
     expect(parsed.narrativeState.currentAct).toBe('act1');
+    expect(parsed.worldMemory).toEqual(getDefaultWorldMemoryState());
   });
 
   it('restore() round-trips narrativeState.worldFlags correctly for a V5 save', () => {
