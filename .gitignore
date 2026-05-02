@@ -6,3 +6,4 @@ dist/
 .claude/worktrees/
 .env.local
 .superpowers/
+.worktrees/
