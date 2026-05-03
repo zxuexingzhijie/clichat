@@ -258,3 +258,20 @@ describe('buildNpcSystemPrompt — narrativeContext injection', () => {
     expect(result).toContain('紧张');
   });
 });
+
+describe('buildNpcUserPrompt', () => {
+  it('includes all memories instead of fixed first 8', () => {
+    const memories = Array.from({ length: 10 }, (_, index) => `记忆${index + 1}`);
+
+    const result = buildNpcUserPrompt({
+      scene: '场景',
+      playerAction: '问候',
+      memories,
+    });
+
+    expect(result).toContain('记忆1');
+    expect(result).toContain('记忆8');
+    expect(result).toContain('记忆9');
+    expect(result).toContain('记忆10');
+  });
+});

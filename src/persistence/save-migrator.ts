@@ -21,6 +21,57 @@ function buildMetaFromV1(data: Record<string, unknown>): unknown {
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function dedupeMemoriesById(memories: unknown[]): unknown[] {
+  const seenIds = new Set<string>();
+  return memories.filter(memory => {
+    if (!isRecord(memory) || typeof memory['id'] !== 'string') return true;
+    const id = memory['id'];
+    if (seenIds.has(id)) return false;
+    seenIds.add(id);
+    return true;
+  });
+}
+
+function normalizeNpcMemorySnapshot(raw: unknown): unknown {
+  if (!isRecord(raw)) return raw;
+  const snapshot = raw['npcMemorySnapshot'];
+  if (!isRecord(snapshot)) return raw;
+  const memories = snapshot['memories'];
+  if (!isRecord(memories)) return raw;
+
+  const normalizedMemories = Object.fromEntries(
+    Object.entries(memories).map(([npcId, value]) => {
+      if (!isRecord(value)) return [npcId, value];
+
+      const allMemories = Array.isArray(value['allMemories']) ? value['allMemories'] : [];
+      const recentMemories = Array.isArray(value['recentMemories']) ? value['recentMemories'] : [];
+      const salientMemories = Array.isArray(value['salientMemories']) ? value['salientMemories'] : [];
+      const rawSource = allMemories.length > 0 ? allMemories : [...salientMemories, ...recentMemories];
+
+      return [
+        npcId,
+        {
+          ...value,
+          allMemories: dedupeMemoriesById(rawSource),
+          archiveSourceIds: Array.isArray(value['archiveSourceIds']) ? value['archiveSourceIds'] : [],
+        },
+      ];
+    }),
+  );
+
+  return {
+    ...raw,
+    npcMemorySnapshot: {
+      ...snapshot,
+      memories: normalizedMemories,
+    },
+  };
+}
+
 export function migrateV2ToV3(raw: unknown): unknown {
   if (typeof raw !== 'object' || raw === null) return raw;
   const data = raw as Record<string, unknown>;
@@ -108,6 +159,7 @@ export function migrateToLatest(raw: unknown): SaveDataV7 {
   const v4 = migrateV3ToV4(v3);
   const v5 = migrateV4ToV5(v4);
   const v6 = migrateV5ToV6(v5);
-  const v7 = migrateV6ToV7(v6);
+  const normalizedV6 = normalizeNpcMemorySnapshot(v6);
+  const v7 = migrateV6ToV7(normalizedV6);
   return v7 as SaveDataV7;
 }

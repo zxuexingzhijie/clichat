@@ -854,20 +854,23 @@ describe('createDialogueManager', () => {
     expect(disposition?.value).not.toBe(0);
   });
 
-  it('startDialogue passes both recentMemories and salientMemories to generateNpcDialogue', async () => {
+  it('startDialogue legacy memory fallback keeps salient before recent and deduplicates by id', async () => {
     const { npcMemoryStore } = await import('../state/npc-memory-store');
 
     npcMemoryStore.setState(draft => {
       draft.memories['npc_guard'] = {
         npcId: 'npc_guard',
+        allMemories: [],
         recentMemories: [
-          { id: 'r1', npcId: 'npc_guard', event: '最近的记忆1', turnNumber: 1, importance: 'medium', emotionalValence: 0, participants: ['player', 'npc_guard'] },
-          { id: 'r2', npcId: 'npc_guard', event: '最近的记忆2', turnNumber: 2, importance: 'medium', emotionalValence: 0, participants: ['player', 'npc_guard'] },
+          { id: 'dup', npcId: 'npc_guard', event: '最近重复记忆不应优先', turnNumber: 2, importance: 'medium', emotionalValence: 0, participants: ['player', 'npc_guard'] },
+          { id: 'r2', npcId: 'npc_guard', event: '最近的记忆2', turnNumber: 3, importance: 'medium', emotionalValence: 0, participants: ['player', 'npc_guard'] },
         ],
         salientMemories: [
-          { id: 's1', npcId: 'npc_guard', event: '重要的记忆1', turnNumber: 0, importance: 'high', emotionalValence: 0.5, participants: ['player', 'npc_guard'] },
+          { id: 's1', npcId: 'npc_guard', event: '重要的较早记忆1', turnNumber: 0, importance: 'high', emotionalValence: 0.5, participants: ['player', 'npc_guard'] },
+          { id: 'dup', npcId: 'npc_guard', event: '重要的较早重复记忆', turnNumber: 1, importance: 'high', emotionalValence: 0.5, participants: ['player', 'npc_guard'] },
         ],
         archiveSummary: '',
+        archiveSourceIds: [],
         version: 0,
         lastUpdated: new Date().toISOString(),
       };
@@ -882,10 +885,46 @@ describe('createDialogueManager', () => {
 
     const callArgs = mockGenerateNpcDialogue.mock.calls[0] as unknown as [unknown, unknown, unknown, string[]];
     const memories = callArgs?.[3];
-    expect(memories).toHaveLength(3);
-    expect(memories).toContain('最近的记忆1');
-    expect(memories).toContain('最近的记忆2');
-    expect(memories).toContain('重要的记忆1');
+    expect(memories).toEqual(['重要的较早记忆1', '重要的较早重复记忆', '最近的记忆2']);
+  });
+
+  it('startDialogue uses allMemories beyond the old recent view for dialogue context', async () => {
+    const { npcMemoryStore } = await import('../state/npc-memory-store');
+    const allMemories = Array.from({ length: 18 }, (_, index) => ({
+      id: `m${index + 1}`,
+      npcId: 'npc_guard',
+      event: `完整记忆${index + 1}`,
+      turnNumber: index + 1,
+      importance: 'medium' as const,
+      emotionalValence: 0,
+      participants: ['player', 'npc_guard'],
+    }));
+
+    npcMemoryStore.setState(draft => {
+      draft.memories['npc_guard'] = {
+        npcId: 'npc_guard',
+        allMemories,
+        recentMemories: allMemories.slice(-15),
+        salientMemories: [],
+        archiveSummary: '',
+        archiveSourceIds: [],
+        version: 0,
+        lastUpdated: new Date().toISOString(),
+      };
+    });
+
+    const manager = createDialogueManager(stores, mockCodexEntries, {
+      generateNpcDialogueFn: mockGenerateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_guard');
+
+    const callArgs = mockGenerateNpcDialogue.mock.calls[0] as unknown as [unknown, unknown, unknown, string[]];
+    const memories = callArgs?.[3];
+    expect(memories).toContain('完整记忆1');
+    expect(memories).toContain('完整记忆18');
+    expect(memories.length).toBeGreaterThan(15);
   });
 
   it('startDialogue sets dialogue-store relationshipValue to 0', async () => {

@@ -50,11 +50,15 @@ function makeRecord(
     emotionalValence: 0,
     participants: [],
   });
+  const recentMemories = Array.from({ length: recentCount }, (_, i) => makeEntry(i));
+  const salientMemories = Array.from({ length: salientCount }, (_, i) => makeEntry(100 + i));
   return {
     npcId,
-    recentMemories: Array.from({ length: recentCount }, (_, i) => makeEntry(i)),
-    salientMemories: Array.from({ length: salientCount }, (_, i) => makeEntry(100 + i)),
+    allMemories: [...salientMemories, ...recentMemories],
+    recentMemories,
+    salientMemories,
     archiveSummary,
+    archiveSourceIds: [],
     lastUpdated: new Date().toISOString(),
     version: 0,
   };
@@ -179,57 +183,93 @@ describe('writeMemoryToDisk — index.json', () => {
     const writtenPaths = (mockBunWrite.mock.calls as unknown as [string, string][]).map(c => c[0]);
     expect(writtenPaths.some(p => p.includes('npc_guard.json'))).toBe(true);
   });
+
+  it('writes a normalized no-loss memory record to the NPC memory file', async () => {
+    const { initMemoryPersistence } = await import('./memory-persistence');
+    const ctx = createGameContext();
+
+    ctx.stores.npcMemory.setState(draft => {
+      draft.memories['npc_guard'] = makeRecord('npc_guard', 15);
+    });
+
+    const cleanup = initMemoryPersistence('/tmp/memory', ctx.eventBus, ctx.stores.npcMemory, { debounceMs: 0 });
+    ctx.eventBus.emit('npc_memory_written', {
+      npcId: 'npc_guard',
+      event: 'test',
+      turnNumber: 1,
+    });
+
+    await new Promise(r => setTimeout(r, 50));
+    cleanup();
+
+    const npcWrite = (mockBunWrite.mock.calls as unknown as [string, string][]).find(([path]) =>
+      path.includes('npc_guard.json'),
+    );
+    expect(npcWrite).toBeDefined();
+    const writtenRecord = JSON.parse(npcWrite![1]) as NpcMemoryRecord;
+    expect(writtenRecord.allMemories).toHaveLength(15);
+    expect(writtenRecord.recentMemories).toHaveLength(15);
+    expect(writtenRecord.salientMemories).toHaveLength(0);
+  });
 });
 
-describe('applyRetention — three-layer logic', () => {
-  it('when recentMemories reaches 15, oldest entry is promoted to salientMemories', async () => {
+describe('applyRetention — no-loss legacy normalization', () => {
+  it('when recentMemories reaches 15, preserves every raw entry in allMemories instead of evicting', async () => {
     const { applyRetention } = await import('./memory-persistence');
 
     const record = makeRecord('npc_guard', 15, 0);
     const result = applyRetention(record);
 
-    expect(result.recentMemories.length).toBe(14);
-    expect(result.salientMemories.length).toBe(1);
-    expect(result.salientMemories[0]?.id).toBe('entry-0');
+    expect(result.allMemories.map(m => m.id)).toEqual(Array.from({ length: 15 }, (_, i) => `entry-${i}`));
+    expect(result.recentMemories.length).toBe(15);
+    expect(result.salientMemories.length).toBe(0);
+    expect(result.archiveSummary).toBe('');
   });
 
-  it('when recentMemories < 15, no promotion occurs', async () => {
+  it('when recentMemories < 15, preserves all raw entries', async () => {
     const { applyRetention } = await import('./memory-persistence');
 
     const record = makeRecord('npc_guard', 14, 0);
     const result = applyRetention(record);
 
+    expect(result.allMemories.length).toBe(14);
     expect(result.recentMemories.length).toBe(14);
     expect(result.salientMemories.length).toBe(0);
   });
 
-  it('when salientMemories reaches 50, oldest 25 are archived into archiveSummary', async () => {
+  it('when salientMemories reaches 50, keeps structured entries in allMemories instead of archiving them as the only copy', async () => {
     const { applyRetention } = await import('./memory-persistence');
 
     const record = makeRecord('npc_guard', 0, 50);
     const result = applyRetention(record);
 
-    expect(result.salientMemories.length).toBe(25);
-    expect(result.archiveSummary).toContain('event-100');
+    expect(result.allMemories.length).toBe(50);
+    expect(result.allMemories.some(m => m.id === 'entry-100' && m.event === 'event-100')).toBe(true);
+    expect(result.archiveSummary).toBe('');
+    expect(result.salientMemories.length).toBe(35);
+    expect(result.recentMemories.length).toBe(15);
   });
 
-  it('archive text is appended to existing archiveSummary', async () => {
+  it('does not append salient memory text to an existing archiveSummary during normalization', async () => {
     const { applyRetention } = await import('./memory-persistence');
 
     const record = makeRecord('npc_guard', 0, 50, 'existing archive');
     const result = applyRetention(record);
 
-    expect(result.archiveSummary).toContain('existing archive');
-    expect(result.archiveSummary).toContain('event-100');
+    expect(result.archiveSummary).toBe('existing archive');
+    expect(result.archiveSummary).not.toContain('event-100');
+    expect(result.allMemories.length).toBe(50);
   });
 
-  it('when salientMemories < 50, no archiving occurs', async () => {
+  it('when salientMemories < 50, preserves all raw salient entries', async () => {
     const { applyRetention } = await import('./memory-persistence');
 
     const record = makeRecord('npc_guard', 0, 49);
     const result = applyRetention(record);
 
-    expect(result.salientMemories.length).toBe(49);
+    expect(result.allMemories.length).toBe(49);
+    expect(result.salientMemories.length).toBe(34);
+    expect(result.recentMemories.length).toBe(15);
     expect(result.archiveSummary).toBe('');
   });
 
@@ -238,12 +278,14 @@ describe('applyRetention — three-layer logic', () => {
 
     const record = makeRecord('npc_guard', 15, 0);
     const originalRecentLength = record.recentMemories.length;
+    const originalAllLength = record.allMemories.length;
     applyRetention(record);
 
     expect(record.recentMemories.length).toBe(originalRecentLength);
+    expect(record.allMemories.length).toBe(originalAllLength);
   });
 
-  it('evicts the lowest-importance entry when mixed importances exist', async () => {
+  it('preserves mixed-importance entries instead of evicting the lowest-importance entry', async () => {
     const { applyRetention } = await import('./memory-persistence');
 
     const entries: NpcMemoryRecord['recentMemories'] = Array.from({ length: 15 }, (_, i) => ({
@@ -260,22 +302,25 @@ describe('applyRetention — three-layer logic', () => {
 
     const record: NpcMemoryRecord = {
       npcId: 'npc_guard',
+      allMemories: entries,
       recentMemories: entries,
       salientMemories: [],
       archiveSummary: '',
+      archiveSourceIds: [],
       lastUpdated: new Date().toISOString(),
       version: 0,
     };
 
     const result = applyRetention(record);
 
-    expect(result.recentMemories.length).toBe(14);
+    expect(result.allMemories.map(m => m.id)).toContain('entry-14');
+    expect(result.recentMemories.length).toBe(15);
     expect(result.recentMemories.some(m => m.id === 'entry-0')).toBe(true);
-    expect(result.salientMemories.length).toBe(1);
-    expect(result.salientMemories[0]?.id).toBe('entry-14');
+    expect(result.recentMemories.some(m => m.id === 'entry-14')).toBe(true);
+    expect(result.salientMemories.length).toBe(0);
   });
 
-  it('when all importance is equal, evicts oldest by turnNumber', async () => {
+  it('sorts the unified raw memories by turnNumber without dropping the oldest entry', async () => {
     const { applyRetention } = await import('./memory-persistence');
 
     const entries = Array.from({ length: 15 }, (_, i) => ({
@@ -291,17 +336,81 @@ describe('applyRetention — three-layer logic', () => {
 
     const record: NpcMemoryRecord = {
       npcId: 'npc_guard',
+      allMemories: entries,
       recentMemories: entries,
       salientMemories: [],
       archiveSummary: '',
+      archiveSourceIds: [],
       lastUpdated: new Date().toISOString(),
       version: 0,
     };
 
     const result = applyRetention(record);
 
-    expect(result.recentMemories.length).toBe(14);
-    expect(result.salientMemories.length).toBe(1);
-    expect(result.salientMemories[0]?.id).toBe('entry-7');
+    expect(result.allMemories[0]?.id).toBe('entry-7');
+    expect(result.allMemories).toHaveLength(15);
+    expect(result.recentMemories).toHaveLength(15);
+    expect(result.recentMemories.some(m => m.id === 'entry-7')).toBe(true);
+    expect(result.salientMemories).toHaveLength(0);
+  });
+
+  it('normalizes legacy records by unioning allMemories, recentMemories, and salientMemories by id', async () => {
+    const { applyRetention } = await import('./memory-persistence');
+
+    const record: NpcMemoryRecord = {
+      npcId: 'npc_guard',
+      allMemories: [
+        {
+          id: 'all-2',
+          npcId: 'npc_guard',
+          event: 'all memory',
+          turnNumber: 2,
+          importance: 'medium',
+          emotionalValence: 0,
+          participants: [],
+        },
+      ],
+      recentMemories: [
+        {
+          id: 'recent-3',
+          npcId: 'npc_guard',
+          event: 'recent memory',
+          turnNumber: 3,
+          importance: 'low',
+          emotionalValence: 0,
+          participants: [],
+        },
+      ],
+      salientMemories: [
+        {
+          id: 'salient-1',
+          npcId: 'npc_guard',
+          event: 'salient memory',
+          turnNumber: 1,
+          importance: 'high',
+          emotionalValence: 0,
+          participants: [],
+        },
+        {
+          id: 'recent-3',
+          npcId: 'npc_guard',
+          event: 'duplicate recent memory',
+          turnNumber: 99,
+          importance: 'high',
+          emotionalValence: 0,
+          participants: [],
+        },
+      ],
+      archiveSummary: 'legacy summary',
+      archiveSourceIds: ['already-archived'],
+      lastUpdated: new Date().toISOString(),
+      version: 0,
+    };
+
+    const result = applyRetention(record);
+
+    expect(result.allMemories.map(m => m.id)).toEqual(['salient-1', 'all-2', 'recent-3']);
+    expect(result.archiveSummary).toBe('legacy summary');
+    expect(result.archiveSourceIds).toEqual(['already-archived']);
   });
 });

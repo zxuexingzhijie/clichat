@@ -87,6 +87,74 @@ describe('assembleNarrativeContext (backward compatibility)', () => {
     expect(result.recentNarration).toHaveLength(3);
     expect(result.sceneContext).toBe(testSceneState.sceneDescription);
     expect(result.playerAction).toBe('look around');
+    expect(result.omittedContext).toEqual({ codexIds: [], memoryIds: [], narrationIndexes: [] });
+  });
+
+  it('under budget returns all codex, memory, narration and full descriptions', () => {
+    const codexMap = new Map<string, CodexEntry>();
+    const longDescription = '长'.repeat(250);
+    codexMap.set('c1', makeCodexEntry('c1', longDescription));
+    codexMap.set('c2', makeCodexEntry('c2', 'Second codex'));
+    codexMap.set('c3', makeCodexEntry('c3', 'Third codex'));
+    codexMap.set('c4', makeCodexEntry('c4', 'Fourth codex'));
+
+    const memories: NpcMemory[] = [
+      { npcId: 'npc_bartender', content: 'm1', timestamp: 1 },
+      { npcId: 'npc_bartender', content: 'm2', timestamp: 2 },
+      { npcId: 'npc_bartender', content: 'm3', timestamp: 3 },
+      { npcId: 'npc_bartender', content: 'm4', timestamp: 4 },
+    ];
+    const sceneState: SceneState = {
+      narrationLines: ['n1', 'n2', 'n3', 'n4'],
+      sceneDescription: 'scene',
+    };
+
+    const result = assembleNarrativeContext(
+      { codexIds: ['c1', 'c2', 'c3', 'c4'], npcIds: ['npc_bartender'] },
+      codexMap,
+      memories,
+      sceneState,
+      'look around',
+      undefined,
+      { maxBudget: 10_000 },
+    );
+
+    expect(result.codexEntries.map((entry) => entry.id)).toEqual(['c1', 'c2', 'c3', 'c4']);
+    expect(result.codexEntries[0]?.description).toBe(longDescription);
+    expect(result.npcMemories).toEqual(['m1', 'm2', 'm3', 'm4']);
+    expect(result.recentNarration).toEqual(['n1', 'n2', 'n3', 'n4']);
+    expect(result.omittedContext).toEqual({ codexIds: [], memoryIds: [], narrationIndexes: [] });
+  });
+
+  it('over budget fills omitted metadata', () => {
+    const codexMap = new Map<string, CodexEntry>();
+    codexMap.set('c1', makeCodexEntry('c1', 'codex-one'));
+    codexMap.set('c2', makeCodexEntry('c2', 'codex-two'));
+    const memories: NpcMemory[] = [
+      { npcId: 'npc_bartender', content: 'memory-one', timestamp: 1 },
+      { npcId: 'npc_bartender', content: 'memory-two', timestamp: 2 },
+    ];
+    const sceneState: SceneState = {
+      narrationLines: ['narration-one', 'narration-two'],
+      sceneDescription: 'scene',
+    };
+
+    const result = assembleNarrativeContext(
+      { codexIds: ['c1', 'c2'], npcIds: ['npc_bartender'] },
+      codexMap,
+      memories,
+      sceneState,
+      'look around',
+      undefined,
+      { maxBudget: 15 },
+    );
+
+    const omittedCount =
+      result.omittedContext.codexIds.length +
+      result.omittedContext.memoryIds.length +
+      result.omittedContext.narrationIndexes.length;
+    expect(omittedCount).toBeGreaterThan(0);
+    expect(result.codexEntries.length + result.npcMemories.length + result.recentNarration.length).toBeLessThan(6);
   });
 });
 

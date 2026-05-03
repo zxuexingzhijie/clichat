@@ -115,7 +115,7 @@ ${bulletList(recentEvents)}`;
 }
 
 export function buildNpcUserPrompt(context: NpcUserPromptContext): string {
-  const memoriesText = context.memories.slice(0, 8).join('\n') || '（无）';
+  const memoriesText = context.memories.join('\n') || '（无）';
 
   const archiveSection = context.archiveSummary
     ? `\n长期记忆摘要：${context.archiveSummary}`

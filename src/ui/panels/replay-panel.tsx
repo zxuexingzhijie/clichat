@@ -12,8 +12,12 @@ const PAGE_SIZE = 5;
 const VISIBLE_COUNT_WIDE = 8;
 const VISIBLE_COUNT_NARROW = 4;
 
-function formatTurnLabel(entry: TurnLogEntry): string {
-  return `[T${entry.turnNumber}] ${entry.action.slice(0, 45)}`;
+export function formatTurnLabel(entry: TurnLogEntry): string {
+  const actionCodePoints = Array.from(entry.action);
+  const actionPreview = actionCodePoints.length > 45
+    ? `${actionCodePoints.slice(0, 45).join('')}…`
+    : entry.action;
+  return `[T${entry.turnNumber}] ${actionPreview}`;
 }
 
 function TurnDetail({

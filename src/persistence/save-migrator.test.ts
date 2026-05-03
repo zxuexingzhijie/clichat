@@ -1,10 +1,17 @@
 import { describe, it, expect } from 'bun:test';
 import { migrateToLatest, migrateV1ToV2, migrateV2ToV3, migrateV4ToV5, migrateV5ToV6, migrateV6ToV7 } from './save-migrator';
+import { SaveDataV7Schema } from '../state/serializer';
 import { getDefaultQuestState } from '../state/quest-store';
 import { getDefaultRelationState } from '../state/relation-store';
 import { getDefaultNpcMemoryState } from '../state/npc-memory-store';
 import { getDefaultNarrativeState } from '../state/narrative-state';
 import { getDefaultWorldMemoryState } from '../state/world-memory-store';
+import { getDefaultPlayerState } from '../state/player-store';
+import { getDefaultSceneState } from '../state/scene-store';
+import { getDefaultCombatState } from '../state/combat-store';
+import { getDefaultGameState } from '../state/game-store';
+import { getDefaultExplorationState } from '../state/exploration-store';
+import { getDefaultPlayerKnowledgeState } from '../state/player-knowledge-store';
 
 const validV1 = {
   version: 1,
@@ -262,6 +269,18 @@ const validV6 = {
   narrativeState: getDefaultNarrativeState(),
 };
 
+function makeMemoryEntry(id: string, turnNumber: number) {
+  return {
+    id,
+    npcId: 'npc_guard',
+    event: `memory ${id}`,
+    turnNumber,
+    importance: 'medium' as const,
+    emotionalValence: 0,
+    participants: ['npc_guard'],
+  };
+}
+
 describe('migrateV6ToV7', () => {
   it('upgrades version 6 to 7 and adds empty worldMemory', () => {
     const result = migrateV6ToV7(validV6) as Record<string, unknown>;
@@ -286,5 +305,134 @@ describe('migrateToLatest', () => {
     expect(result.narrativeState).toEqual(getDefaultNarrativeState());
     expect(result.scene.droppedItems).toEqual([]);
     expect(result.worldMemory).toEqual(getDefaultWorldMemoryState());
+  });
+
+  it('rebuilds legacy npc allMemories from salient plus recent memories with id de-duplication', () => {
+    const salientOnly = makeMemoryEntry('salient-only', 1);
+    const sharedFromSalient = makeMemoryEntry('shared', 2);
+    const sharedFromRecent = { ...makeMemoryEntry('shared', 3), event: 'recent duplicate should be ignored' };
+    const recentOnly = makeMemoryEntry('recent-only', 4);
+    const bartenderSalient = makeMemoryEntry('bartender-salient', 5);
+    const bartenderRecent = makeMemoryEntry('bartender-recent', 6);
+
+    const legacyV5 = {
+      ...validV4,
+      version: 5,
+      narrativeState: getDefaultNarrativeState(),
+      npcMemorySnapshot: {
+        memories: {
+          npc_guard: {
+            npcId: 'npc_guard',
+            recentMemories: [sharedFromRecent, recentOnly],
+            salientMemories: [salientOnly, sharedFromSalient],
+            archiveSummary: 'old summary',
+            lastUpdated: '2026-01-01T00:00:00.000Z',
+          },
+          npc_bartender: {
+            npcId: 'npc_bartender',
+            allMemories: [],
+            recentMemories: [bartenderRecent],
+            salientMemories: [bartenderSalient],
+            archiveSummary: '',
+            lastUpdated: '2026-01-02T00:00:00.000Z',
+          },
+        },
+      },
+    };
+
+    const result = migrateToLatest(legacyV5) as Record<string, any>;
+
+    expect(result.npcMemorySnapshot.memories.npc_guard.allMemories.map((memory: { id: string }) => memory.id)).toEqual([
+      'salient-only',
+      'shared',
+      'recent-only',
+    ]);
+    expect(result.npcMemorySnapshot.memories.npc_guard.allMemories[1]).toEqual(sharedFromSalient);
+    expect(result.npcMemorySnapshot.memories.npc_guard.archiveSourceIds).toEqual([]);
+    expect(result.npcMemorySnapshot.memories.npc_bartender.allMemories.map((memory: { id: string }) => memory.id)).toEqual([
+      'bartender-salient',
+      'bartender-recent',
+    ]);
+    expect(result.npcMemorySnapshot.memories.npc_bartender.archiveSourceIds).toEqual([]);
+  });
+
+  it('preserves non-empty npc allMemories as the raw source during latest migration', () => {
+    const allOnly = makeMemoryEntry('all-only', 1);
+    const sharedFromAll = makeMemoryEntry('shared', 2);
+    const duplicateFromAll = { ...makeMemoryEntry('shared', 3), event: 'duplicate in allMemories should be ignored' };
+    const sharedFromSalient = { ...makeMemoryEntry('shared', 4), event: 'salient duplicate should not replace allMemories source' };
+    const salientOnly = makeMemoryEntry('salient-only', 5);
+    const recentOnly = makeMemoryEntry('recent-only', 6);
+
+    const legacyV5 = {
+      ...validV4,
+      version: 5,
+      narrativeState: getDefaultNarrativeState(),
+      npcMemorySnapshot: {
+        memories: {
+          npc_guard: {
+            npcId: 'npc_guard',
+            allMemories: [allOnly, sharedFromAll, duplicateFromAll],
+            recentMemories: [recentOnly],
+            salientMemories: [sharedFromSalient, salientOnly],
+            archiveSummary: 'old summary',
+            lastUpdated: '2026-01-01T00:00:00.000Z',
+          },
+        },
+      },
+    };
+
+    const result = migrateToLatest(legacyV5) as Record<string, any>;
+    const migratedAllMemories = result.npcMemorySnapshot.memories.npc_guard.allMemories;
+
+    expect(migratedAllMemories.map((memory: { id: string }) => memory.id)).toEqual(['all-only', 'shared']);
+    expect(migratedAllMemories).toEqual([allOnly, sharedFromAll]);
+    expect(migratedAllMemories).not.toContain(recentOnly);
+    expect(migratedAllMemories).not.toContain(salientOnly);
+    expect(migratedAllMemories[1]).not.toEqual(sharedFromSalient);
+  });
+
+  it('validates V7 saves whose npc memory exceeds the legacy recent and salient limits', () => {
+    const allMemories = Array.from({ length: 80 }, (_, index) => makeMemoryEntry(`memory-${index}`, index));
+    const v7 = migrateToLatest({
+      version: 5,
+      meta: {
+        saveName: 'Large Memory Save',
+        timestamp: '2026-01-01T00:00:00.000Z',
+        character: { name: 'Hero', race: 'Human', profession: 'Warrior' },
+        playtime: 0,
+        locationName: 'town',
+      },
+      branchId: 'main',
+      parentSaveId: null,
+      player: getDefaultPlayerState(),
+      scene: getDefaultSceneState(),
+      combat: getDefaultCombatState(),
+      game: getDefaultGameState(),
+      quest: getDefaultQuestState(),
+      relations: getDefaultRelationState(),
+      npcMemorySnapshot: {
+        memories: {
+          npc_guard: {
+            npcId: 'npc_guard',
+            allMemories,
+            recentMemories: allMemories.slice(-20),
+            salientMemories: allMemories.slice(0, 60),
+            archiveSummary: '',
+            archiveSourceIds: [],
+            lastUpdated: '2026-01-01T00:00:00.000Z',
+          },
+        },
+      },
+      questEventLog: [],
+      exploration: getDefaultExplorationState(),
+      playerKnowledge: getDefaultPlayerKnowledgeState(),
+      turnLog: [],
+      narrativeState: getDefaultNarrativeState(),
+    });
+
+    const parseResult = SaveDataV7Schema.safeParse(v7);
+
+    expect(parseResult.success).toBe(true);
   });
 });

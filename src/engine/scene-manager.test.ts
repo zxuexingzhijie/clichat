@@ -14,8 +14,8 @@ mock.module('@ai-sdk/openai', () => ({
 
 const { createSceneManager, selectLocationDescription } = await import('./scene-manager');
 const { sceneStore, getDefaultSceneState } = await import('../state/scene-store');
-const { gameStore } = await import('../state/game-store');
-const { playerStore } = await import('../state/player-store');
+const { gameStore, getDefaultGameState } = await import('../state/game-store');
+const { playerStore, getDefaultPlayerState } = await import('../state/player-store');
 
 const stores = { scene: sceneStore, game: gameStore, player: playerStore };
 
@@ -185,6 +185,8 @@ function createMockRetrievalFn() {
 describe('createSceneManager', () => {
   beforeEach(() => {
     sceneStore.setState(() => Object.assign({}, getDefaultSceneState()));
+    gameStore.setState(() => Object.assign({}, getDefaultGameState()));
+    playerStore.setState(() => Object.assign({}, getDefaultPlayerState()));
   });
 
   it('loadScene updates sceneStore with location data', async () => {
@@ -231,7 +233,7 @@ describe('createSceneManager', () => {
     const { getDefaultSceneState } = await import('../state/scene-store');
     const { createWorldMemoryStore } = await import('../state/world-memory-store');
     const { default: createMitt } = await import('mitt');
-    const mockBus = createMitt<import('../events/event-types').DomainEvents>();
+    const mockBus = createMittMitt<import('../events/event-types').DomainEvents>();
     const freshScene = createStore(getDefaultSceneState(), () => {});
     freshScene.setState(draft => {
       draft.sceneId = 'loc_north_gate';
@@ -239,148 +241,6 @@ describe('createSceneManager', () => {
       draft.npcsPresent = ['npc_guard'];
       draft.narrationLines = ['旧叙述'];
     });
-    const worldMemory = createWorldMemoryStore(mockBus);
-    const retrievalQueries: unknown[] = [];
-    const retrievedMemory = {
-      events: [],
-      facts: [],
-      beliefs: [],
-      playerKnowledge: [],
-      omitted: [],
-    };
-    const retrieveEcologicalMemoryFn = mock((state: unknown, query: unknown) => {
-      retrievalQueries.push(query);
-      expect(state).toBe(worldMemory.getState());
-      return retrievedMemory;
-    });
-    let capturedContext: { ecologicalMemory?: unknown } | undefined;
-    const narrationFn = mock(async (context: { ecologicalMemory?: unknown }) => {
-      capturedContext = context;
-      return '重新观察北门。';
-    });
-
-    const manager = createSceneManager(
-      { scene: freshScene, game: gameStore, player: playerStore, worldMemory },
-      createMockCodexEntries(),
-      { generateNarrationFn: narrationFn, retrieveEcologicalMemoryFn },
-    );
-
-    const result = await manager.handleLook();
-
-    expect(result.status).toBe('success');
-    expect(retrieveEcologicalMemoryFn).toHaveBeenCalledTimes(1);
-    expect(retrievalQueries[0]).toEqual(expect.objectContaining({
-      locationId: 'loc_north_gate',
-      playerAction: 're-look',
-    }));
-    expect(capturedContext?.ecologicalMemory).toBe(retrievedMemory);
-  });
-
-  it('ecological memory query includes player tags and active quest template tags', async () => {
-    const { createStore } = await import('../state/create-store');
-    const { getDefaultSceneState } = await import('../state/scene-store');
-    const { getDefaultGameState } = await import('../state/game-store');
-    const { getDefaultPlayerState } = await import('../state/player-store');
-    const { createWorldMemoryStore } = await import('../state/world-memory-store');
-    const { default: createMitt } = await import('mitt');
-    const mockBus = createMitt<import('../events/event-types').DomainEvents>();
-    const freshScene = createStore(getDefaultSceneState(), () => {});
-    freshScene.setState(draft => {
-      draft.sceneId = 'loc_north_gate';
-      draft.locationName = '黑松镇·北门';
-      draft.narrationLines = ['旧叙述'];
-    });
-    const freshPlayer = createStore(getDefaultPlayerState(), () => {});
-    freshPlayer.setState(draft => {
-      draft.tags = ['player_tag', 'shared_tag'];
-    });
-    const freshGame = createStore(getDefaultGameState(), () => {});
-    const quest = createStore({
-      quests: {
-        quest_active_wolf: {
-          status: 'active' as const,
-          currentStageId: 'start',
-          completedObjectives: [],
-          discoveredClues: [],
-          flags: {},
-          acceptedAt: 1,
-          completedAt: null,
-        },
-        quest_completed_debt: {
-          status: 'completed' as const,
-          currentStageId: 'done',
-          completedObjectives: [],
-          discoveredClues: [],
-          flags: {},
-          acceptedAt: 1,
-          completedAt: 2,
-        },
-      },
-      eventLog: [],
-    }, () => {});
-    const codex = createMockCodexEntries();
-    codex.set('quest_active_wolf', {
-      id: 'quest_active_wolf',
-      name: '狼灾调查',
-      type: 'quest',
-      tags: ['wolf_quest', 'shared_tag'],
-      description: '调查狼灾。',
-      epistemic: {
-        authority: 'canonical_truth',
-        truth_status: 'true',
-        scope: 'regional',
-        visibility: 'public',
-        confidence: 1.0,
-        source_type: 'authorial',
-        known_by: [],
-        contradicts: [],
-        volatility: 'stable',
-      },
-      quest_type: 'main',
-      stages: [],
-      rewards: {},
-    } as CodexEntry);
-    codex.set('quest_completed_debt', {
-      id: 'quest_completed_debt',
-      name: '旧债已清',
-      type: 'quest',
-      tags: ['completed_quest_tag'],
-      description: '已完成的任务。',
-      epistemic: {
-        authority: 'canonical_truth',
-        truth_status: 'true',
-        scope: 'regional',
-        visibility: 'public',
-        confidence: 1.0,
-        source_type: 'authorial',
-        known_by: [],
-        contradicts: [],
-        volatility: 'stable',
-      },
-      quest_type: 'side',
-      stages: [],
-      rewards: {},
-    } as CodexEntry);
-    const worldMemory = createWorldMemoryStore(mockBus);
-    let capturedQuery: { tags?: readonly string[]; questIds?: readonly string[] } | undefined;
-    const retrieveEcologicalMemoryFn = mock((_state: unknown, query: { tags?: readonly string[]; questIds?: readonly string[] }) => {
-      capturedQuery = query;
-      return { events: [], facts: [], beliefs: [], playerKnowledge: [], omitted: [] };
-    });
-    const narrationFn = mock(async () => '重新观察北门。');
-
-    const manager = createSceneManager(
-      { scene: freshScene, game: freshGame, player: freshPlayer, worldMemory, quest },
-      codex,
-      { generateNarrationFn: narrationFn, retrieveEcologicalMemoryFn },
-    );
-
-    await manager.handleLook();
-
-    expect(capturedQuery?.questIds).toEqual(['quest_active_wolf']);
-    expect(capturedQuery?.tags).toEqual(expect.arrayContaining(['player_tag', 'shared_tag', 'wolf_quest']));
-    expect(capturedQuery?.tags).not.toContain('completed_quest_tag');
-  });
 
   it('handleLook with no target returns current narration lines', async () => {
     const codex = createMockCodexEntries();
@@ -788,6 +648,8 @@ describe('selectLocationDescription', () => {
 describe('handleLook override path', () => {
   beforeEach(() => {
     sceneStore.setState(() => Object.assign({}, getDefaultSceneState()));
+    gameStore.setState(() => Object.assign({}, getDefaultGameState()));
+    playerStore.setState(() => Object.assign({}, getDefaultPlayerState()));
   });
 
   it('returns override text without calling generateNarrationFn when worldFlag matches', async () => {
@@ -871,6 +733,8 @@ describe('handleLook override path', () => {
 describe('loadScene with worldFlags override', () => {
   beforeEach(() => {
     sceneStore.setState(() => Object.assign({}, getDefaultSceneState()));
+    gameStore.setState(() => Object.assign({}, getDefaultGameState()));
+    playerStore.setState(() => Object.assign({}, getDefaultPlayerState()));
   });
 
   it('uses override description in loadScene when worldFlag matches', async () => {

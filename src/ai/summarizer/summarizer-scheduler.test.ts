@@ -128,14 +128,17 @@ describe('evaluateTriggers', () => {
   });
 
   describe('NPC memory threshold trigger', () => {
-    it('enqueues npc_memory_compress when recentMemories >= 10', () => {
+    it('enqueues npc_memory_compress from unsummarized allMemories when threshold is reached', () => {
+      const entries = makeMemoryEntries(12);
       mockGetMemoryState.mockReturnValue({
         memories: {
           npc_001: {
             npcId: 'npc_001',
-            recentMemories: makeMemoryEntries(10),
-            salientMemories: [],
+            allMemories: entries,
+            recentMemories: entries.slice(-5),
+            salientMemories: entries.slice(0, 7),
             archiveSummary: '',
+            archiveSourceIds: ['entry_0', 'entry_1'],
             lastUpdated: new Date().toISOString(),
             version: 2,
           },
@@ -150,21 +153,65 @@ describe('evaluateTriggers', () => {
         targetId: string;
         priority: number;
         baseVersion: number;
+        entryIds: string[];
       };
       expect(call.type).toBe('npc_memory_compress');
       expect(call.targetId).toBe('npc_001');
       expect(call.priority).toBe(2);
       expect(call.baseVersion).toBe(2);
+      expect(call.entryIds).toEqual(entries.slice(2).map((memory) => memory.id));
     });
 
-    it('does not enqueue when recentMemories < 10', () => {
+    it('falls back to legacy salientMemories + recentMemories and de-duplicates by id when allMemories is missing or empty', () => {
+      const entries = makeMemoryEntries(12);
+      const salientMemories = entries.slice(0, 6);
+      const recentMemories = [entries[5]!, ...entries.slice(6, 12)];
+      const expectedEntryIds = entries.slice(0, 12).map((memory) => memory.id);
+      mockGetMemoryState.mockReturnValue({
+        memories: {
+          npc_missing_all: {
+            npcId: 'npc_missing_all',
+            recentMemories,
+            salientMemories,
+            archiveSummary: '',
+            archiveSourceIds: [],
+            lastUpdated: new Date().toISOString(),
+            version: 1,
+          },
+          npc_empty_all: {
+            npcId: 'npc_empty_all',
+            allMemories: [],
+            recentMemories,
+            salientMemories,
+            archiveSummary: '',
+            archiveSourceIds: [],
+            lastUpdated: new Date().toISOString(),
+            version: 2,
+          },
+        },
+      });
+
+      evaluateTestTriggers('npc_memory_written', { npcId: 'npc_missing_all' });
+      evaluateTestTriggers('npc_memory_written', { npcId: 'npc_empty_all' });
+
+      expect(mockEnqueueTask).toHaveBeenCalledTimes(2);
+      expect((mockEnqueueTask.mock.calls[0]![0] as { targetId: string; entryIds: string[] }).targetId).toBe('npc_missing_all');
+      expect((mockEnqueueTask.mock.calls[0]![0] as { targetId: string; entryIds: string[] }).entryIds).toEqual(expectedEntryIds);
+      expect((mockEnqueueTask.mock.calls[1]![0] as { targetId: string; entryIds: string[] }).targetId).toBe('npc_empty_all');
+      expect((mockEnqueueTask.mock.calls[1]![0] as { targetId: string; entryIds: string[] }).entryIds).toEqual(expectedEntryIds);
+    });
+
+    it('does not enqueue when unsummarized source memories < 10', () => {
+      const entries = makeMemoryEntries(12);
       mockGetMemoryState.mockReturnValue({
         memories: {
           npc_001: {
             npcId: 'npc_001',
-            recentMemories: makeMemoryEntries(5),
-            salientMemories: [],
+            allMemories: entries,
+            recentMemories: entries.slice(-5),
+            salientMemories: entries.slice(0, 7),
             archiveSummary: '',
+            archiveSourceIds: entries.slice(0, 3).map((memory) => memory.id),
             lastUpdated: new Date().toISOString(),
             version: 0,
           },
@@ -174,6 +221,53 @@ describe('evaluateTriggers', () => {
       evaluateTestTriggers('npc_memory_written', { npcId: 'npc_001' });
 
       expect(mockEnqueueTask).not.toHaveBeenCalled();
+    });
+
+    it('interval falls back to legacy salientMemories + recentMemories and de-duplicates by id when allMemories is missing or empty', () => {
+      const originalDateNow = Date.now;
+      Date.now = mock(() => originalDateNow() + 10_000) as never;
+
+      try {
+        const entries = makeMemoryEntries(12);
+        const salientMemories = entries.slice(0, 6);
+        const recentMemories = [entries[5]!, ...entries.slice(6, 12)];
+        const expectedEntryIds = entries.slice(0, 12).map((memory) => memory.id);
+        mockGetMemoryState.mockReturnValue({
+          memories: {
+            npc_missing_all: {
+              npcId: 'npc_missing_all',
+              recentMemories,
+              salientMemories,
+              archiveSummary: '',
+              archiveSourceIds: [],
+              lastUpdated: new Date().toISOString(),
+              version: 1,
+            },
+            npc_empty_all: {
+              npcId: 'npc_empty_all',
+              allMemories: [],
+              recentMemories,
+              salientMemories,
+              archiveSummary: '',
+              archiveSourceIds: [],
+              lastUpdated: new Date().toISOString(),
+              version: 2,
+            },
+          },
+        });
+
+        evaluateTestTriggers('interval');
+
+        expect(mockEnqueueTask).toHaveBeenCalledTimes(2);
+        expect((mockEnqueueTask.mock.calls[0]![0] as { targetId: string; entryIds: string[]; priority: number }).targetId).toBe('npc_missing_all');
+        expect((mockEnqueueTask.mock.calls[0]![0] as { targetId: string; entryIds: string[]; priority: number }).entryIds).toEqual(expectedEntryIds);
+        expect((mockEnqueueTask.mock.calls[0]![0] as { targetId: string; entryIds: string[]; priority: number }).priority).toBe(3);
+        expect((mockEnqueueTask.mock.calls[1]![0] as { targetId: string; entryIds: string[]; priority: number }).targetId).toBe('npc_empty_all');
+        expect((mockEnqueueTask.mock.calls[1]![0] as { targetId: string; entryIds: string[]; priority: number }).entryIds).toEqual(expectedEntryIds);
+        expect((mockEnqueueTask.mock.calls[1]![0] as { targetId: string; entryIds: string[]; priority: number }).priority).toBe(3);
+      } finally {
+        Date.now = originalDateNow;
+      }
     });
 
     it('does not enqueue when npcId not found in store', () => {

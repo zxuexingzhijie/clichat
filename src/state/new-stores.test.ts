@@ -144,9 +144,11 @@ describe('NpcMemoryStore', () => {
       memories: {
         guard_01: {
           npcId: 'guard_01',
+          allMemories: [entry],
           recentMemories: [entry],
           salientMemories: [],
           archiveSummary: '',
+          archiveSourceIds: [],
       version: 0,
           lastUpdated: '2026-04-21T10:00:00Z',
         },
@@ -159,19 +161,22 @@ describe('NpcMemoryStore', () => {
 
   test('adds memory record for an NPC using three-layer shape', () => {
     npcMemoryStore.setState(draft => {
+      const memory = {
+        id: 'mem_001',
+        npcId: 'guard_01',
+        event: 'Player asked about missing persons',
+        turnNumber: 5,
+        importance: 'medium' as const,
+        emotionalValence: 0.2,
+        participants: ['player'],
+      };
       draft.memories['guard_01'] = {
         npcId: 'guard_01',
-        recentMemories: [{
-          id: 'mem_001',
-          npcId: 'guard_01',
-          event: 'Player asked about missing persons',
-          turnNumber: 5,
-          importance: 'medium',
-          emotionalValence: 0.2,
-          participants: ['player'],
-        }],
+        allMemories: [memory],
+        recentMemories: [memory],
         salientMemories: [],
         archiveSummary: '',
+        archiveSourceIds: [],
       version: 0,
         lastUpdated: '2026-04-21T10:00:00Z',
       };
@@ -185,9 +190,11 @@ describe('NpcMemoryStore', () => {
     npcMemoryStore.setState(draft => {
       draft.memories['guard_01'] = {
         npcId: 'guard_01',
+        allMemories: [],
         recentMemories: [],
         salientMemories: [],
         archiveSummary: '',
+        archiveSourceIds: [],
       version: 0,
         lastUpdated: '2026-04-21T10:00:00Z',
       };
@@ -220,35 +227,41 @@ describe('NpcMemoryStore', () => {
 
   test('handles multiple NPCs independently', () => {
     npcMemoryStore.setState(draft => {
+      const guardMemory = {
+        id: 'mem_001',
+        npcId: 'guard_01',
+        event: 'Met player',
+        turnNumber: 1,
+        importance: 'low' as const,
+        emotionalValence: 0,
+        participants: ['player'],
+      };
+      const merchantMemory = {
+        id: 'mem_002',
+        npcId: 'merchant_01',
+        event: 'Player bought supplies',
+        turnNumber: 2,
+        importance: 'low' as const,
+        emotionalValence: 0.1,
+        participants: ['player'],
+      };
       draft.memories['guard_01'] = {
         npcId: 'guard_01',
-        recentMemories: [{
-          id: 'mem_001',
-          npcId: 'guard_01',
-          event: 'Met player',
-          turnNumber: 1,
-          importance: 'low',
-          emotionalValence: 0,
-          participants: ['player'],
-        }],
+        allMemories: [guardMemory],
+        recentMemories: [guardMemory],
         salientMemories: [],
         archiveSummary: '',
+        archiveSourceIds: [],
       version: 0,
         lastUpdated: '2026-04-21T10:00:00Z',
       };
       draft.memories['merchant_01'] = {
         npcId: 'merchant_01',
-        recentMemories: [{
-          id: 'mem_002',
-          npcId: 'merchant_01',
-          event: 'Player bought supplies',
-          turnNumber: 2,
-          importance: 'low',
-          emotionalValence: 0.1,
-          participants: ['player'],
-        }],
+        allMemories: [merchantMemory],
+        recentMemories: [merchantMemory],
         salientMemories: [],
         archiveSummary: '',
+        archiveSourceIds: [],
       version: 0,
         lastUpdated: '2026-04-21T10:00:00Z',
       };

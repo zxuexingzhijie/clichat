@@ -1,4 +1,4 @@
-import { npcMemoryStore, type NpcMemoryState } from '../../state/npc-memory-store';
+import { npcMemoryStore, type NpcMemoryEntry, type NpcMemoryState } from '../../state/npc-memory-store';
 import { combatStore, type CombatState } from '../../state/combat-store';
 import { eventBus } from '../../events/event-bus';
 import type { EventBus } from '../../events/event-bus';
@@ -8,6 +8,22 @@ const NPC_MEMORY_THRESHOLD = 10;
 const DEBOUNCE_MS = 5000;
 
 let lastEvaluatedAt = 0;
+
+function getRawMemorySource(record: {
+  readonly allMemories?: readonly NpcMemoryEntry[];
+  readonly salientMemories?: readonly NpcMemoryEntry[];
+  readonly recentMemories?: readonly NpcMemoryEntry[];
+}): NpcMemoryEntry[] {
+  const source = record.allMemories && record.allMemories.length > 0
+    ? record.allMemories
+    : [...(record.salientMemories ?? []), ...(record.recentMemories ?? [])];
+  const seenIds = new Set<string>();
+  return source.filter((memory) => {
+    if (seenIds.has(memory.id)) return false;
+    seenIds.add(memory.id);
+    return true;
+  });
+}
 
 export type TriggerSource =
   | 'npc_memory_written'
@@ -60,14 +76,18 @@ export function evaluateTriggers(
     const record = stores.npcMemory.getState().memories[npcId];
     if (!record) return;
 
-    if (record.recentMemories.length >= NPC_MEMORY_THRESHOLD) {
+    const source = getRawMemorySource(record);
+    const archiveSourceIds = record.archiveSourceIds ?? [];
+    const unsummarized = source.filter((memory) => !archiveSourceIds.includes(memory.id));
+
+    if (unsummarized.length >= NPC_MEMORY_THRESHOLD) {
       const taskPriority = 2 as const;
       if (combatActive && taskPriority >= 2) return;
 
       enqueueTask({
         type: 'npc_memory_compress',
         targetId: npcId,
-        entryIds: record.recentMemories.map((memory) => memory.id),
+        entryIds: unsummarized.map((memory) => memory.id),
         baseVersion: record.version,
         priority: taskPriority,
         triggerReason: 'npc_memory_written',
@@ -80,14 +100,18 @@ export function evaluateTriggers(
     const memories = stores.npcMemory.getState().memories;
     for (const [npcId, record] of Object.entries(memories)) {
       if (!record) continue;
-      if (record.recentMemories.length >= NPC_MEMORY_THRESHOLD) {
+      const source = getRawMemorySource(record);
+      const archiveSourceIds = record.archiveSourceIds ?? [];
+      const unsummarized = source.filter((memory) => !archiveSourceIds.includes(memory.id));
+
+      if (unsummarized.length >= NPC_MEMORY_THRESHOLD) {
         const taskPriority = 3 as const;
         if (combatActive && taskPriority >= 3) continue;
 
         enqueueTask({
           type: 'npc_memory_compress',
           targetId: npcId,
-          entryIds: record.recentMemories.map((memory) => memory.id),
+          entryIds: unsummarized.map((memory) => memory.id),
           baseVersion: record.version,
           priority: taskPriority,
           triggerReason: 'interval',

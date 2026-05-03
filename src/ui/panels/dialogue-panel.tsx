@@ -16,6 +16,34 @@ type DialogueEntry = {
   readonly content: string;
 };
 
+const RECENT_HISTORY_COUNT = 4;
+
+export function getDialogueHistoryView(
+  dialogueHistory: readonly DialogueEntry[],
+  showFullHistory: boolean,
+): {
+  readonly visibleHistory: readonly DialogueEntry[];
+  readonly hiddenEarlierCount: number;
+  readonly hasMoreHistory: boolean;
+} {
+  const nonGreetHistory = dialogueHistory.filter((entry) => !(entry.role === 'user' && entry.content === 'greet'));
+
+  if (showFullHistory) {
+    return {
+      visibleHistory: nonGreetHistory,
+      hiddenEarlierCount: 0,
+      hasMoreHistory: false,
+    };
+  }
+
+  const hiddenEarlierCount = Math.max(0, nonGreetHistory.length - RECENT_HISTORY_COUNT);
+  return {
+    visibleHistory: nonGreetHistory.slice(-RECENT_HISTORY_COUNT),
+    hiddenEarlierCount,
+    hasMoreHistory: hiddenEarlierCount > 0,
+  };
+}
+
 type DialoguePanelProps = {
   readonly npcName: string;
   readonly dialogueHistory: readonly DialogueEntry[];
@@ -46,6 +74,7 @@ export function DialoguePanel({
   onFreeTextSubmit,
 }: DialoguePanelProps): React.ReactNode {
   const [isFreeTextMode, setIsFreeTextMode] = useState(false);
+  const [showFullHistory, setShowFullHistory] = useState(false);
   const isFreeTextModeRef = useRef(false);
 
   const setFreeTextMode = useCallback((value: boolean) => {
@@ -54,7 +83,7 @@ export function DialoguePanel({
   }, []);
 
   const handleInput = useCallback(
-    (input: string, key: { upArrow?: boolean; downArrow?: boolean; return?: boolean; escape?: boolean }) => {
+    (input: string, key: { upArrow?: boolean; downArrow?: boolean; return?: boolean; escape?: boolean; tab?: boolean }) => {
       if (key.escape) {
         if (isFreeTextModeRef.current) {
           setFreeTextMode(false);
@@ -63,7 +92,9 @@ export function DialoguePanel({
         onEscape();
         return;
       }
-      if (key.upArrow) {
+      if (input === '\t' || key.tab) {
+        setShowFullHistory((value) => !value);
+      } else if (key.upArrow) {
         const next = selectedIndex <= 0 ? responseOptions.length - 1 : selectedIndex - 1;
         onSelect(next);
       } else if (key.downArrow) {
@@ -85,8 +116,7 @@ export function DialoguePanel({
   useInput(handleInput, { isActive: isActive && !isFreeTextMode });
 
   const relLabel = getAttitudeLabel(relationshipValue);
-  const recentHistory = dialogueHistory.filter((e) => !(e.role === 'user' && e.content === 'greet')).slice(-4);
-  const hasMoreHistory = dialogueHistory.filter((e) => !(e.role === 'user' && e.content === 'greet')).length > 4;
+  const { visibleHistory, hiddenEarlierCount, hasMoreHistory } = getDialogueHistoryView(dialogueHistory, showFullHistory);
 
   return (
     <Box flexDirection="column" flexGrow={1} paddingX={1}>
@@ -96,12 +126,15 @@ export function DialoguePanel({
       </Box>
       <Text> </Text>
       {hasMoreHistory && (
-        <Text dimColor>  ↑ 还有 {dialogueHistory.length - 4} 条早期对话...</Text>
+        <Text dimColor>  ↑ 还有 {hiddenEarlierCount} 条早期对话...（按 Tab 查看全部）</Text>
       )}
-      {recentHistory.length === 0 && (
+      {showFullHistory && (
+        <Text dimColor>  已显示全部对话（按 Tab 返回最近）</Text>
+      )}
+      {visibleHistory.length === 0 && (
         <Text dimColor>......</Text>
       )}
-      {recentHistory.map((entry, i) => (
+      {visibleHistory.map((entry, i) => (
         <Text key={i} dimColor={entry.role !== 'assistant'}>
           {entry.role === 'assistant' ? `"${entry.content}"` : `你："${entry.content}"`}
         </Text>
@@ -164,7 +197,7 @@ export function DialoguePanel({
           }
         }}
       />
-      <Text dimColor>↑↓ 选择    Enter 确认    直接输入 与NPC对话    Esc {isFreeTextMode ? '退出输入' : '结束对话'}</Text>
+      <Text dimColor>↑↓ 选择    Enter 确认    Tab {showFullHistory ? '最近' : '全部'}对话    直接输入 与NPC对话    Esc {isFreeTextMode ? '退出输入' : '结束对话'}</Text>
     </Box>
   );
 }

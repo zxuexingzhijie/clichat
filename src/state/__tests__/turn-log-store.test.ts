@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'bun:test';
 import mitt from 'mitt';
 import type { DomainEvents } from '../../events/event-types';
-import { createTurnLogStore, MAX_TURN_LOG_SIZE } from '../turn-log-store';
+import { createTurnLogStore } from '../turn-log-store';
 
 describe('TurnLogStore', () => {
   it('appends entries to store state', () => {

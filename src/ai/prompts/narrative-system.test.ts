@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { buildNarrativeSystemPrompt } from './narrative-system';
+import { buildNarrativeSystemPrompt, buildNarrativeUserPrompt } from './narrative-system';
 import type { EcologicalMemoryContext } from '../utils/ecological-memory-retriever';
 
 describe('buildNarrativeSystemPrompt', () => {
@@ -155,13 +155,13 @@ describe('buildNarrativeSystemPrompt', () => {
     expect(result).not.toContain('最近叙述（保持语气');
   });
 
-  it('recentNarration keeps only the last 3 entries', () => {
+  it('recentNarration includes all entries instead of only the last 3', () => {
     const result = buildNarrativeSystemPrompt('exploration', {
       storyAct: 'act1',
       atmosphereTags: [],
       recentNarration: ['一', '二', '三', '四'],
     });
-    expect(result).not.toContain('\n一\n');
+    expect(result).toContain('一');
     expect(result).toContain('二');
     expect(result).toContain('三');
     expect(result).toContain('四');
@@ -175,5 +175,28 @@ describe('buildNarrativeSystemPrompt', () => {
     expect(result).toContain('第二幕');
     expect(result).toContain('dread');
     expect(result).toContain('urgency');
+  });
+});
+
+describe('buildNarrativeUserPrompt', () => {
+  it('includes all narration, all codex entries, and full descriptions', () => {
+    const longDescription = '很长的资料'.repeat(60);
+
+    const result = buildNarrativeUserPrompt({
+      sceneContext: '当前场景',
+      playerAction: '观察',
+      recentNarration: ['叙述一', '叙述二', '叙述三', '叙述四'],
+      codexEntries: [
+        { id: 'c1', description: longDescription },
+        { id: 'c2', description: '资料二' },
+        { id: 'c3', description: '资料三' },
+        { id: 'c4', description: '资料四' },
+      ],
+    });
+
+    expect(result).toContain('叙述一');
+    expect(result).toContain('叙述四');
+    expect(result).toContain('[c1] ' + longDescription);
+    expect(result).toContain('[c4] 资料四');
   });
 });

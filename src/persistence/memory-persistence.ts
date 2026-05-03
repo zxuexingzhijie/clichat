@@ -14,35 +14,28 @@ export const _fs = {
 const DEFAULT_REGION = 'blackpine_town';
 
 export function applyRetention(record: NpcMemoryRecord): NpcMemoryRecord {
-  let recent = [...record.recentMemories];
-  let salient = [...record.salientMemories];
-  let archive = record.archiveSummary;
-
-  if (recent.length >= 15) {
-    const importanceOrder = { low: 0, medium: 1, high: 2 };
-    const sorted = [...recent].sort((a, b) => {
-      const impDiff = importanceOrder[a.importance] - importanceOrder[b.importance];
-      if (impDiff !== 0) return impDiff;
-      return a.turnNumber - b.turnNumber;
-    });
-    const toEvict = sorted[0]!;
-    const evictIndex = recent.findIndex(m => m.id === toEvict.id);
-    recent = [...recent.slice(0, evictIndex), ...recent.slice(evictIndex + 1)];
-    salient = [...salient, toEvict];
-  }
-
-  if (salient.length >= 50) {
-    const archived = salient.slice(0, 25);
-    salient = salient.slice(25);
-    const archivedText = archived.map(m => m.event).join('；');
-    archive = archive ? `${archive}；${archivedText}` : archivedText;
-  }
+  const seenIds = new Set<string>();
+  const allMemories = [record.allMemories ?? [], record.recentMemories ?? [], record.salientMemories ?? []]
+    .flat()
+    .map((memory, index) => ({ memory, index }))
+    .filter(({ memory }) => {
+      if (seenIds.has(memory.id)) return false;
+      seenIds.add(memory.id);
+      return true;
+    })
+    .sort((a, b) => {
+      const turnDiff = a.memory.turnNumber - b.memory.turnNumber;
+      if (turnDiff !== 0) return turnDiff;
+      return a.index - b.index;
+    })
+    .map(({ memory }) => memory);
 
   return {
     ...record,
-    recentMemories: recent,
-    salientMemories: salient,
-    archiveSummary: archive,
+    allMemories,
+    recentMemories: allMemories.slice(-15),
+    salientMemories: allMemories.slice(0, Math.max(0, allMemories.length - 15)),
+    archiveSourceIds: record.archiveSourceIds ?? [],
     lastUpdated: new Date().toISOString(),
   };
 }
