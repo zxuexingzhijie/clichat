@@ -10,7 +10,7 @@
     truth_status: "true"
     scope: regional
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -23,7 +23,28 @@
     - patrol_perimeter
   rivals:
     - faction_shadow_guild
-
+  information_network:
+    hears_from:
+      - npc_guard
+      - npc_captain
+      - loc_north_gate
+    spreads_to:
+      - faction_guard
+      - npc_elder
+    rumor_threshold: verified_reports
+  reaction_policy:
+    player_helped_guard: reputation_up
+    player_obstructed_investigation: reputation_down
+    player_reveals_public_threat: coordinate_carefully
+  player_facing:
+    short_label: 黑松镇守卫
+  ai_grounding:
+    must_know:
+      - 维持黑松镇秩序的守卫队，由镇长直接管辖。人数不多但纪律严明。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: faction_shadow_guild
   name: 暗影行会
   type: faction
@@ -51,7 +72,26 @@
     - avoid_detection
   rivals:
     - faction_guard
-
+  information_network:
+    hears_from:
+      - npc_shadow_contact
+      - loc_tavern
+    spreads_to:
+      - faction_shadow_guild
+    rumor_threshold: leverage_or_profit
+  reaction_policy:
+    player_keeps_secrets: consider_contact
+    player_exposes_shadow_guild: withdraw_and_hide
+    player_accepts_shadow_route: offer_deal
+  player_facing:
+    short_label: 暗影行会
+  ai_grounding:
+    must_know:
+      - 活跃在黑松镇暗处的犯罪组织，涉及走私、盗窃和情报交易。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: gated_by_visibility_or_trust
 - id: faction_merchants
   name: 黑松商人协会
   type: faction
@@ -64,7 +104,7 @@
     truth_status: "true"
     scope: regional
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -77,7 +117,28 @@
     - maintain_market_order
   rivals:
     - faction_shadow_guild
-
+  information_network:
+    hears_from:
+      - loc_market
+      - npc_merchant_afu
+      - npc_beggar
+    spreads_to:
+      - faction_merchants
+      - npc_elder
+    rumor_threshold: trade_impact
+  reaction_policy:
+    player_protects_trade: reputation_up
+    player_disrupts_market: reputation_down
+    player_handles_debt_quietly: relationship_up
+  player_facing:
+    short_label: 黑松商人协会
+  ai_grounding:
+    must_know:
+      - 黑松镇商人自发组织的同业协会，以维护集市秩序、保护商路利益为宗旨。表面中立，实则在幕后影响镇上的贸易决策。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: faction_temple
   name: 神殿教团
   type: faction
@@ -90,7 +151,7 @@
     truth_status: "true"
     scope: local
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -102,3 +163,12 @@
     - heal_the_sick
     - guard_ancient_secrets
   rivals: []
+  player_facing:
+    short_label: 神殿教团
+  ai_grounding:
+    must_know:
+      - 驻守黑松镇神殿的宗教团体，奉行古老的秩序信仰。他们提供治愈和庇护，但也守护着某些不为外人所知的秘密。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only

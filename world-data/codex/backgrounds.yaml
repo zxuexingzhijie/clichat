@@ -10,7 +10,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -24,7 +24,15 @@
   world_state_effects:
     - knows_about_northern_threat
   narrative_hook: 你从北方战火中逃来，身上只剩最后一点盘缠。
-
+  player_facing:
+    short_label: 逃难者
+  ai_grounding:
+    must_know:
+      - 从北方战火中逃来的难民，经历过失去一切的痛苦，因此格外坚韧。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: bg_seeker
   name: 寻亲者
   type: background
@@ -37,7 +45,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -52,7 +60,15 @@
     - has_missing_relative
     - bartender_knows_clue
   narrative_hook: 你的兄长三个月前来此地后失踪，你追踪线索来到这里。
-
+  player_facing:
+    short_label: 寻亲者
+  ai_grounding:
+    must_know:
+      - 为了寻找失踪的亲人不远千里而来，执念和智慧是你最大的武器。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: bg_outlaw
   name: 流亡者
   type: background
@@ -65,7 +81,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -80,7 +96,15 @@
     - wanted_in_capital
     - shadow_guild_contact
   narrative_hook: 你因一桩不愿提起的事被通缉，黑松镇是你最后的藏身处。
-
+  player_facing:
+    short_label: 流亡者
+  ai_grounding:
+    must_know:
+      - 因一桩不愿提起的事被通缉，靠街头智慧和灵活身手在暗处求生。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: bg_merchant
   name: 行商
   type: background
@@ -93,7 +117,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -108,7 +132,15 @@
     - trade_network
     - knows_market_prices
   narrative_hook: 你本是途经此地的行商，但北林的封路让你滞留至今。
-
+  player_facing:
+    short_label: 行商
+  ai_grounding:
+    must_know:
+      - 走南闯北的行商，见多识广，善于察言观色和讨价还价。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: bg_secret_magic
   name: 隐藏天赋
   type: background
@@ -121,7 +153,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -135,7 +167,15 @@
   world_state_effects:
     - can_sense_magic_traces
   narrative_hook: 你偶尔能看到别人看不到的东西——光芒、影子、声音。你从不和人提起。
-
+  player_facing:
+    short_label: 隐藏天赋
+  ai_grounding:
+    must_know:
+      - 你偶尔能感知到常人看不到的魔力痕迹，这个秘密你从未告诉任何人。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: bg_secret_debt
   name: 血债
   type: background
@@ -148,7 +188,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -162,7 +202,15 @@
   world_state_effects:
     - bounty_hunter_tracking
   narrative_hook: 你欠了不该欠的人一条命。你知道他们迟早会来。
-
+  player_facing:
+    short_label: 血债
+  ai_grounding:
+    must_know:
+      - 你欠了不该欠的人一条命，那笔债如影随形，迟早会被追上。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: bg_secret_noble
   name: 落魄贵族
   type: background
@@ -175,7 +223,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -189,3 +237,12 @@
   world_state_effects:
     - recognized_by_faction_elder
   narrative_hook: 你的家族曾统治一方，如今只剩你和一枚褪色的家徽。
+  player_facing:
+    short_label: 落魄贵族
+  ai_grounding:
+    must_know:
+      - 你的家族曾统治一方，如今只剩你和一枚褪色的家徽，身份是你最大的秘密。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only

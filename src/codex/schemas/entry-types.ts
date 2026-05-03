@@ -1,5 +1,16 @@
 import { z } from "zod";
 import { EpistemicMetadataSchema } from "./epistemic.ts";
+import {
+  AiGroundingSchema,
+  EcologySchema,
+  InformationNetworkSchema,
+  LocationContextSchema,
+  PlayerFacingSchema,
+  ReactionPolicySchema,
+  SocialMemorySchema,
+  VoiceSchema,
+  WorldEffectsSchema,
+} from "./authoring-v2.ts";
 
 const baseFields = {
   id: z.string().min(1),
@@ -7,9 +18,12 @@ const baseFields = {
   tags: z.array(z.string()),
   description: z.string(),
   epistemic: EpistemicMetadataSchema,
+  player_facing: PlayerFacingSchema,
+  ai_grounding: AiGroundingSchema,
+  ecology: EcologySchema,
 };
 
-export const RaceSchema = z.object({
+export const RaceSchema = z.strictObject({
   ...baseFields,
   type: z.literal("race"),
   traits: z.array(z.string()),
@@ -17,7 +31,7 @@ export const RaceSchema = z.object({
   lore: z.string().optional(),
 });
 
-export const ProfessionSchema = z.object({
+export const ProfessionSchema = z.strictObject({
   ...baseFields,
   type: z.literal("profession"),
   abilities: z.array(z.string()),
@@ -32,7 +46,7 @@ export const SpatialExitSchema = z.object({
   label: z.string().optional(),
 });
 
-export const LocationSchema = z.object({
+export const LocationSchema = z.strictObject({
   ...baseFields,
   type: z.literal("location"),
   region: z.string(),
@@ -44,15 +58,18 @@ export const LocationSchema = z.object({
   map_icon: z.string().optional(),
   enemies: z.array(z.string()).optional(),
   description_overrides: z.record(z.string(), z.string()).optional(),
+  location_context: LocationContextSchema,
 });
 
-export const FactionSchema = z.object({
+export const FactionSchema = z.strictObject({
   ...baseFields,
   type: z.literal("faction"),
   territory: z.string(),
   alignment: z.string(),
   goals: z.array(z.string()),
   rivals: z.array(z.string()),
+  information_network: InformationNetworkSchema,
+  reaction_policy: ReactionPolicySchema,
 });
 
 export const NpcTrustGateSchema = z.object({
@@ -66,7 +83,7 @@ export const NpcKnowledgeProfileSchema = z.object({
   trust_gates: z.array(NpcTrustGateSchema).optional(),
 });
 
-export const NpcSchema = z.object({
+export const NpcSchema = z.strictObject({
   ...baseFields,
   type: z.literal("npc"),
   location_id: z.string(),
@@ -76,9 +93,11 @@ export const NpcSchema = z.object({
   initial_disposition: z.number().min(-1).max(1),
   faction: z.string().optional(),
   knowledge_profile: NpcKnowledgeProfileSchema.optional(),
+  voice: VoiceSchema,
+  social_memory: SocialMemorySchema,
 });
 
-export const SpellSchema = z.object({
+export const SpellSchema = z.strictObject({
   ...baseFields,
   type: z.literal("spell"),
   element: z.string(),
@@ -89,7 +108,7 @@ export const SpellSchema = z.object({
   base_value: z.number().optional(),
 });
 
-export const ItemSchema = z.object({
+export const ItemSchema = z.strictObject({
   ...baseFields,
   type: z.literal("item"),
   item_type: z.enum(["weapon", "armor", "consumable", "key_item", "misc"]),
@@ -101,7 +120,7 @@ export const ItemSchema = z.object({
   mp_restore: z.number().optional(),
 });
 
-export const HistoryEventSchema = z.object({
+export const HistoryEventSchema = z.strictObject({
   ...baseFields,
   type: z.literal("history_event"),
   date: z.string(),
@@ -110,7 +129,7 @@ export const HistoryEventSchema = z.object({
   era: z.string(),
 });
 
-export const EnemySchema = z.object({
+export const EnemySchema = z.strictObject({
   ...baseFields,
   type: z.literal("enemy"),
   hp: z.number().int().min(1),
@@ -127,7 +146,7 @@ export const EnemySchema = z.object({
   path: ["hp"],
 });
 
-export const BackgroundSchema = z.object({
+export const BackgroundSchema = z.strictObject({
   ...baseFields,
   type: z.literal("background"),
   question: z.string(),
@@ -174,7 +193,7 @@ export const QuestStageSchema = z.object({
   trigger: QuestTriggerSchema.optional(),
 });
 
-export const QuestTemplateSchema = z.object({
+export const QuestTemplateSchema = z.strictObject({
   ...baseFields,
   type: z.literal('quest'),
   quest_type: z.enum(['main', 'side', 'faction']),
@@ -189,6 +208,8 @@ export const QuestTemplateSchema = z.object({
     reputation_delta: z.record(z.string(), z.number()).optional(),
     relation_delta: z.record(z.string(), z.number()).optional(),
   }),
+  world_effects: WorldEffectsSchema,
+  world_effects_none: z.boolean().optional(),
 });
 
 export const CodexEntrySchema = z.discriminatedUnion("type", [

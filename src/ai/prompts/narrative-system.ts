@@ -93,17 +93,55 @@ ${CORE_CONSTRAINTS}
   return base + narrativeParagraph + recentSection + ecologicalMemorySection;
 }
 
+export type NarrativePromptAiGrounding = {
+  readonly mustKnow?: readonly string[];
+  readonly mustNotInvent?: readonly string[];
+  readonly tone?: readonly string[];
+};
+
 export type NarrativeUserPromptContext = {
-  readonly codexEntries: ReadonlyArray<{ readonly id: string; readonly description: string }>;
+  readonly codexEntries: ReadonlyArray<{
+    readonly id: string;
+    readonly description: string;
+    readonly aiGrounding?: NarrativePromptAiGrounding;
+  }>;
   readonly checkResult?: { readonly display: string };
   readonly playerAction: string;
   readonly recentNarration: readonly string[];
   readonly sceneContext: string;
 };
 
+function formatGroundingItems(label: string, items: readonly string[] | undefined): string {
+  if (!items?.length) return '';
+  return `${label}:\n${bulletList(items)}`;
+}
+
+function formatNarrativeAiGrounding(
+  entries: NarrativeUserPromptContext['codexEntries'],
+): string {
+  const sections = entries
+    .slice(0, 3)
+    .map((entry) => {
+      const grounding = entry.aiGrounding;
+      if (!grounding) return '';
+      const parts = [
+        formatGroundingItems('Must know', grounding.mustKnow),
+        formatGroundingItems('Must not invent', grounding.mustNotInvent),
+        formatGroundingItems('Tone', grounding.tone),
+      ].filter(Boolean);
+      if (!parts.length) return '';
+      return `[${entry.id}]\n${parts.join('\n')}`;
+    })
+    .filter(Boolean);
+
+  if (!sections.length) return '';
+  return `AI grounding（仅供生成时遵守，不得直接或间接向玩家泄露、暗示或改写，除非信息已经对玩家可见）:\n${sections.join('\n')}`;
+}
+
 export function buildNarrativeUserPrompt(context: NarrativeUserPromptContext): string {
   const recentLines = context.recentNarration.join('\n');
-  const codexSection = context.codexEntries
+  const codexEntries = context.codexEntries;
+  const codexSection = codexEntries
     .map((e) => `[${e.id}] ${e.description}`)
     .join('\n');
 
@@ -118,6 +156,11 @@ export function buildNarrativeUserPrompt(context: NarrativeUserPromptContext): s
   }
 
   parts.push(`参考资料：${codexSection || '（无）'}`);
+
+  const groundingSection = formatNarrativeAiGrounding(codexEntries);
+  if (groundingSection) {
+    parts.push(groundingSection);
+  }
 
   return parts.join('\n');
 }

@@ -11,7 +11,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -28,7 +28,15 @@
   loot_table:
     - item_wolf_pelt
   danger_level: 2
-
+  player_facing:
+    short_label: 灰狼
+  ai_grounding:
+    must_know:
+      - 北林中最常见的野兽，灰色毛皮，体型比家犬大一倍，成群出没极为危险。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: enemy_wolf_alpha
   name: 头狼
   type: enemy
@@ -43,7 +51,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -61,7 +69,15 @@
   loot_table:
     - item_wolf_pelt
   danger_level: 4
-
+  player_facing:
+    short_label: 头狼
+  ai_grounding:
+    must_know:
+      - 狼群的领袖，体型远大于普通灰狼，伤痕累累的身躯散发着压迫感。它的嚎叫能召唤整个狼群。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: enemy_bandit
   name: 山贼
   type: enemy
@@ -75,7 +91,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -92,7 +108,15 @@
   loot_table:
     - item_iron_sword
   danger_level: 3
-
+  player_facing:
+    short_label: 山贼
+  ai_grounding:
+    must_know:
+      - 潜伏在山路附近的劫匪，装备简陋但凶狠狡猾，专挑落单旅人下手。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: enemy_bandit_archer
   name: 山贼弓手
   type: enemy
@@ -107,7 +131,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -124,7 +148,15 @@
   loot_table:
     - item_short_bow
   danger_level: 3
-
+  player_facing:
+    short_label: 山贼弓手
+  ai_grounding:
+    must_know:
+      - 山贼中负责远程攻击的弓手，躲在暗处放冷箭，一旦被近身就会后撤。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: enemy_shadow_assassin
   name: 暗影刺客
   type: enemy
@@ -139,7 +171,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -158,3 +190,12 @@
     - item_lockpick_set
     - item_healing_potion
   danger_level: 5
+  player_facing:
+    short_label: 暗影刺客
+  ai_grounding:
+    must_know:
+      - 暗影行会训练出的精锐杀手，无声无息地接近目标，一击毙命后消失在黑暗中。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only

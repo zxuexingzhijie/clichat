@@ -1,3 +1,4 @@
+import type { Ecology, WorldEffects } from '../codex/schemas/authoring-v2';
 import type { CodexEntry } from '../codex/schemas/entry-types';
 import type { EventBus } from '../events/event-bus';
 import type { DomainEvents } from '../events/event-types';
@@ -51,12 +52,13 @@ export function initWorldEventRecorder(
   eventBus: EventBus,
   codexEntries: ReadonlyMap<string, CodexEntry>,
 ): () => void {
+  seedStaticWorldData(stores, codexEntries);
   const record = (event: WorldEvent): boolean => recordWorldEventWithDerivations(stores, event);
 
   const cleanups = [
     subscribe(eventBus, 'quest_stage_advanced', (payload) => {
       const questName = displayName(codexEntries, payload.questId);
-      record({
+      const event: WorldEvent = {
         id: eventId(`quest_stage_advanced:${payload.questId}:${payload.newStageId}:${payload.turnNumber}`),
         idempotencyKey: `quest_stage_advanced:${payload.questId}:${payload.newStageId}:${payload.turnNumber}`,
         turnNumber: payload.turnNumber,
@@ -73,7 +75,8 @@ export function initWorldEventRecorder(
         importance: 'high',
         tags: ['quest', payload.questId, payload.newStageId],
         source: 'quest_system',
-      });
+      };
+      if (record(event)) applyQuestStageWorldEffects(stores, codexEntries, event, payload.questId, payload.newStageId);
     }),
     subscribe(eventBus, 'item_acquired', (payload) => {
       const turnNumber = stores.game.getState().turnCount;
@@ -228,6 +231,135 @@ function applyDerivedMemory(
   }
 }
 
+type Present<T> = T extends null | undefined ? never : T;
+type EcologyFactSeed = Present<Present<Ecology>['facts_seeded']>[number];
+type EcologyRumorSeed = Present<Present<Ecology>['rumors_seeded']>[number];
+type WorldEffectsStage = Present<Present<WorldEffects>['on_stage_enter']>[string];
+type EcologyBeliefSeed = Present<WorldEffectsStage['beliefs_created']>[number];
+
+function seedStaticWorldData(
+  stores: WorldEventRecorderStores,
+  codexEntries: ReadonlyMap<string, CodexEntry>,
+): void {
+  for (const entry of codexEntries.values()) {
+    for (const seed of entry.ecology?.facts_seeded ?? []) {
+      seedWorldFact(stores, entry, seed, 'fact');
+    }
+
+    for (const seed of entry.ecology?.rumors_seeded ?? []) {
+      seedWorldFact(stores, entry, seed, 'rumor');
+    }
+  }
+}
+
+function seedWorldFact(
+  stores: WorldEventRecorderStores,
+  entry: CodexEntry,
+  seed: EcologyFactSeed | EcologyRumorSeed,
+  kind: 'fact' | 'rumor',
+): void {
+  const idempotencyKey = `world_data_seed:${entry.id}:${seed.id}`;
+  const timestamp = nowIso();
+  const event: WorldEvent = {
+    id: eventId(idempotencyKey),
+    idempotencyKey,
+    turnNumber: stores.game.getState().turnCount,
+    timestamp,
+    type: 'world_state',
+    actorIds: ['system'],
+    subjectIds: [entry.id, seed.id],
+    locationId: seed.scope === 'location' ? (seed.scope_id ?? entry.id) : null,
+    factionIds: seed.scope === 'faction' && seed.scope_id ? [seed.scope_id] : [],
+    summary: `Seeded ${kind} ${seed.id} from ${entry.id}.`,
+    rawPayload: { entryId: entry.id, seedId: seed.id, kind },
+    sourceDomainEvent: 'world_data_seed',
+    visibility: kind === 'rumor' ? 'same_location' : 'public',
+    importance: 'low',
+    tags: ['world_data_seed', entry.id, seed.id, kind],
+    source: 'system',
+  };
+
+  if (!appendWorldEvent(stores.worldMemory, event)) return;
+  upsertWorldFact(stores.worldMemory, mergeFactProvenance(stores.worldMemory, factFromSeed(seed, event, kind), event));
+}
+
+function applyQuestStageWorldEffects(
+  stores: WorldEventRecorderStores,
+  codexEntries: ReadonlyMap<string, CodexEntry>,
+  event: WorldEvent,
+  questId: string,
+  stageId: string,
+): void {
+  const quest = codexEntries.get(questId);
+  if (quest?.type !== 'quest') return;
+
+  const stageEffects = quest.world_effects?.on_stage_enter?.[stageId];
+  if (!stageEffects) return;
+
+  for (const seed of stageEffects.facts_created ?? []) {
+    if (typeof seed === 'string') continue;
+    upsertWorldFact(stores.worldMemory, mergeFactProvenance(stores.worldMemory, factFromSeed(seed, event, 'fact'), event));
+  }
+
+  for (const seed of stageEffects.rumors_created ?? []) {
+    if (typeof seed === 'string') continue;
+    upsertWorldFact(stores.worldMemory, mergeFactProvenance(stores.worldMemory, factFromSeed(seed, event, 'rumor'), event));
+  }
+
+  for (const seed of stageEffects.beliefs_created ?? []) {
+    upsertNpcBelief(stores.worldMemory, mergeBeliefProvenance(stores.worldMemory, beliefFromSeed(seed, event)));
+  }
+}
+
+function factFromSeed(
+  seed: EcologyFactSeed | EcologyRumorSeed,
+  event: WorldEvent,
+  kind: 'fact' | 'rumor',
+): WorldFact {
+  return {
+    id: seed.id,
+    statement: seed.statement,
+    scope: seed.scope,
+    scopeId: seed.scope_id ?? null,
+    truthStatus: kind === 'rumor' ? 'rumor' : (seed.truth_status ?? 'confirmed'),
+    confidence: seed.confidence,
+    sourceEventIds: [event.id],
+    tags: factSeedTags(seed, kind),
+    createdAt: event.timestamp,
+    updatedAt: event.timestamp,
+  };
+}
+
+function factSeedTags(seed: EcologyFactSeed | EcologyRumorSeed, kind: 'fact' | 'rumor'): string[] {
+  const tags = [...(seed.tags ?? [])];
+  if (kind === 'rumor' && 'spread' in seed) {
+    tags.push(...(seed.spread ?? []).map((locationId) => `spread:${locationId}`));
+  }
+  if (kind === 'rumor' && 'starts_at_stage' in seed && seed.starts_at_stage) {
+    tags.push(`starts_at_stage:${seed.starts_at_stage}`);
+  }
+  return tags;
+}
+
+function beliefFromSeed(seed: EcologyBeliefSeed, event: WorldEvent): NpcBelief {
+  const subjectId = seed.subject_id ?? null;
+  const factId = seed.fact_id ?? null;
+  return {
+    id: `belief:${seed.holder_type}:${seed.holder_id}:${subjectId ?? 'none'}:${factId ?? 'none'}`,
+    holderId: seed.holder_id,
+    holderType: seed.holder_type,
+    subjectId,
+    factId,
+    statement: seed.statement,
+    stance: seed.stance,
+    confidence: seed.confidence,
+    sourceEventIds: [event.id],
+    lastReinforcedTurn: event.turnNumber,
+    decay: seed.decay ?? 'normal',
+    tags: seed.tags ?? [],
+  };
+}
+
 function mergeFactProvenance(
   store: WorldMemoryStoreLike,
   fact: WorldFact,
@@ -241,6 +373,19 @@ function mergeFactProvenance(
     sourceEventIds: Array.from(new Set([...previous.sourceEventIds, ...fact.sourceEventIds])),
     createdAt: previous.createdAt,
     updatedAt: event.timestamp,
+  };
+}
+
+function mergeBeliefProvenance(
+  store: WorldMemoryStoreLike,
+  belief: NpcBelief,
+): NpcBelief {
+  const previous = store.getState().beliefs[belief.id];
+  if (!previous) return belief;
+
+  return {
+    ...belief,
+    sourceEventIds: Array.from(new Set([...previous.sourceEventIds, ...belief.sourceEventIds])),
   };
 }
 

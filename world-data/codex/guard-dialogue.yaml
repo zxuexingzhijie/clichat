@@ -1,141 +1,245 @@
 rounds:
   - round: 1
-    guardPromptHint: "询问旅人的来历和出身"
+    guardPromptHint: 询问旅人的来历和出身
     options:
       - id: origin_human_north
-        label: "北方雪原的子民"
-        description: "你在北方严寒中长大，人类的坚韧流淌在血脉中"
+        label: 北方雪原的子民
+        description: 你在北方严寒中长大，人类的坚韧流淌在血脉中
         effects:
           raceId: race_human
           professionWeights:
             prof_adventurer: 1
           backgroundWeights: {}
-          tags: [northern_origin]
+          tags:
+            - northern_origin
+        player_facing:
+          short_label: 北方雪原的子民
+        ai_grounding:
+          must_know:
+            - 你在北方严寒中长大，人类的坚韧流淌在血脉中
+          reveal_policy:
+            default: character_creation_only
       - id: origin_elf_forest
-        label: "精灵森林的漫游者"
-        description: "你来自古老的林地，精灵的血统赋予你敏锐的感知"
+        label: 精灵森林的漫游者
+        description: 你来自古老的林地，精灵的血统赋予你敏锐的感知
         effects:
           raceId: race_elf
           professionWeights:
             prof_mage: 1
           backgroundWeights: {}
-          tags: [forest_origin]
+          tags:
+            - forest_origin
+        player_facing:
+          short_label: 精灵森林的漫游者
+        ai_grounding:
+          must_know:
+            - 你来自古老的林地，精灵的血统赋予你敏锐的感知
+          reveal_policy:
+            default: character_creation_only
       - id: origin_dwarf_mountain
-        label: "矮人山脉的矿工后裔"
-        description: "你来自深山之中，矮人的力量和工艺传承于你"
+        label: 矮人山脉的矿工后裔
+        description: 你来自深山之中，矮人的力量和工艺传承于你
         effects:
           raceId: race_dwarf
           professionWeights:
             prof_adventurer: 1
           backgroundWeights: {}
-          tags: [mountain_origin]
-
+          tags:
+            - mountain_origin
+        player_facing:
+          short_label: 矮人山脉的矿工后裔
+        ai_grounding:
+          must_know:
+            - 你来自深山之中，矮人的力量和工艺传承于你
+          reveal_policy:
+            default: character_creation_only
   - round: 2
-    guardPromptHint: "询问旅人靠什么谋生"
+    guardPromptHint: 询问旅人靠什么谋生
     options:
       - id: life_fighter
-        label: "靠这把剑吃饭"
-        description: "你用武力保护自己和他人"
+        label: 靠这把剑吃饭
+        description: 你用武力保护自己和他人
         effects:
           professionWeights:
             prof_adventurer: 3
             prof_rogue: 1
           backgroundWeights:
             bg_refugee: 1
-          tags: [fighter]
+          tags:
+            - fighter
+        player_facing:
+          short_label: 靠这把剑吃饭
+        ai_grounding:
+          must_know:
+            - 你用武力保护自己和他人
+          reveal_policy:
+            default: character_creation_only
       - id: life_scholar
-        label: "研习古籍与法术"
-        description: "你将一生献给知识的追求"
+        label: 研习古籍与法术
+        description: 你将一生献给知识的追求
         effects:
           professionWeights:
             prof_mage: 3
             prof_adventurer: 1
           backgroundWeights:
             bg_seeker: 1
-          tags: [scholar]
+          tags:
+            - scholar
+        player_facing:
+          short_label: 研习古籍与法术
+        ai_grounding:
+          must_know:
+            - 你将一生献给知识的追求
+          reveal_policy:
+            default: character_creation_only
       - id: life_shadow
-        label: "在暗处讨生活"
-        description: "你学会了在阴影中生存"
+        label: 在暗处讨生活
+        description: 你学会了在阴影中生存
         effects:
           professionWeights:
             prof_rogue: 3
             prof_mage: 1
           backgroundWeights:
             bg_outlaw: 1
-          tags: [shadow_worker]
-
+          tags:
+            - shadow_worker
+        player_facing:
+          short_label: 在暗处讨生活
+        ai_grounding:
+          must_know:
+            - 你学会了在阴影中生存
+          reveal_policy:
+            default: character_creation_only
   - round: 3
-    guardPromptHint: "询问旅人为什么来黑松镇"
+    guardPromptHint: 询问旅人为什么来黑松镇
     options:
       - id: reason_refuge
-        label: "逃离北方的战火"
-        description: "家园被毁，你别无选择"
+        label: 逃离北方的战火
+        description: 家园被毁，你别无选择
         effects:
           professionWeights:
             prof_adventurer: 1
           backgroundWeights:
             bg_refugee: 3
             bg_seeker: 1
-          tags: [war_refugee]
+          tags:
+            - war_refugee
+        player_facing:
+          short_label: 逃离北方的战火
+        ai_grounding:
+          must_know:
+            - 家园被毁，你别无选择
+          reveal_policy:
+            default: character_creation_only
       - id: reason_search
-        label: "寻找失踪的亲人"
-        description: "你的至亲在此地失踪，你追踪线索而来"
+        label: 寻找失踪的亲人
+        description: 你的至亲在此地失踪，你追踪线索而来
         effects:
           professionWeights:
             prof_mage: 1
           backgroundWeights:
             bg_seeker: 3
             bg_merchant: 1
-          tags: [searching]
+          tags:
+            - searching
+        player_facing:
+          short_label: 寻找失踪的亲人
+        ai_grounding:
+          must_know:
+            - 你的至亲在此地失踪，你追踪线索而来
+          reveal_policy:
+            default: character_creation_only
       - id: reason_trade
-        label: "行商路过此地"
-        description: "你走南闹北做生意，本想过境却被困于此"
+        label: 行商路过此地
+        description: 你走南闯北做生意，本想过境却被困于此
         effects:
           professionWeights:
             prof_rogue: 1
           backgroundWeights:
             bg_merchant: 3
             bg_outlaw: 1
-          tags: [traveling_merchant]
-
+          tags:
+            - traveling_merchant
+        player_facing:
+          short_label: 行商路过此地
+        ai_grounding:
+          must_know:
+            - 你走南闯北做生意，本想过境却被困于此
+          reveal_policy:
+            default: character_creation_only
   - round: 4
-    guardPromptHint: "试探旅人是否隐藏了什么"
+    guardPromptHint: 试探旅人是否隐藏了什么
     options:
       - id: secret_magic
-        label: "有时候...能看到别人看不到的东西"
-        description: "你犹豫了一下，吐露了从未告人的秘密"
+        label: 有时候...能看到别人看不到的东西
+        description: 你犹豫了一下，吐露了从未告人的秘密
         effects:
           professionWeights:
             prof_mage: 2
           backgroundWeights:
             bg_secret_magic: 3
             bg_secret_noble: 1
-          tags: [latent_magic, secret_revealed]
+          tags:
+            - latent_magic
+            - secret_revealed
+        player_facing:
+          short_label: 有时候...能看到别人看不到的东西
+        ai_grounding:
+          must_know:
+            - 你犹豫了一下，吐露了从未告人的秘密
+          reveal_policy:
+            default: character_creation_only
       - id: secret_debt
-        label: "有些人...在找我"
-        description: "你的目光闪烁，似乎背负着沉重的过去"
+        label: 有些人...在找我
+        description: 你的目光闪烁，似乎背负着沉重的过去
         effects:
           professionWeights:
             prof_adventurer: 2
           backgroundWeights:
             bg_secret_debt: 3
             bg_secret_magic: 1
-          tags: [pursued, secret_revealed]
+          tags:
+            - pursued
+            - secret_revealed
+        player_facing:
+          short_label: 有些人...在找我
+        ai_grounding:
+          must_know:
+            - 你的目光闪烁，似乎背负着沉重的过去
+          reveal_policy:
+            default: character_creation_only
       - id: secret_noble
-        label: "我的家族...曾经很有名望"
-        description: "你下意识摸了摸怀中的家徽"
+        label: 我的家族...曾经很有名望
+        description: 你下意识摸了摸怀中的家徽
         effects:
           professionWeights:
             prof_rogue: 2
           backgroundWeights:
             bg_secret_noble: 3
             bg_secret_debt: 1
-          tags: [fallen_noble, secret_revealed]
-
+          tags:
+            - fallen_noble
+            - secret_revealed
+        player_facing:
+          short_label: 我的家族...曾经很有名望
+        ai_grounding:
+          must_know:
+            - 你下意识摸了摸怀中的家徽
+          reveal_policy:
+            default: character_creation_only
 archetypePriority:
-  profession: [prof_adventurer, prof_mage, prof_rogue]
-  background: [bg_refugee, bg_seeker, bg_outlaw, bg_merchant, bg_secret_magic, bg_secret_debt, bg_secret_noble]
-
+  profession:
+    - prof_adventurer
+    - prof_mage
+    - prof_rogue
+  background:
+    - bg_refugee
+    - bg_seeker
+    - bg_outlaw
+    - bg_merchant
+    - bg_secret_magic
+    - bg_secret_debt
+    - bg_secret_noble
 namePool:
   - 云霄
   - 寒江

@@ -2,6 +2,72 @@ import { describe, it, expect } from 'bun:test';
 import { buildNarrativeSystemPrompt, buildNarrativeUserPrompt } from './narrative-system';
 import type { EcologicalMemoryContext } from '../utils/ecological-memory-retriever';
 
+describe('buildNarrativeUserPrompt', () => {
+  it('renders ai grounding separately from codex description', () => {
+    const result = buildNarrativeUserPrompt({
+      sceneContext: '北门雨夜',
+      recentNarration: [],
+      playerAction: 'look around',
+      codexEntries: [
+        {
+          id: 'loc_gate',
+          description: '玩家可见的北门描述',
+          aiGrounding: {
+            mustKnow: ['守卫私下害怕北方森林。'],
+            mustNotInvent: ['不要发明龙袭击北门。'],
+            tone: ['克制', '潮湿寒冷'],
+          },
+        },
+      ],
+    });
+
+    expect(result).toContain('参考资料：');
+    expect(result).toContain('[loc_gate] 玩家可见的北门描述');
+    expect(result).toContain('AI grounding（仅供生成时遵守，不得直接或间接向玩家泄露、暗示或改写，除非信息已经对玩家可见）');
+    expect(result).toContain('Must know:');
+    expect(result).toContain('- 守卫私下害怕北方森林。');
+    expect(result).toContain('Must not invent:');
+    expect(result).toContain('- 不要发明龙袭击北门。');
+    expect(result).toContain('Tone:');
+    expect(result).toContain('- 克制');
+    expect(result).toContain('- 潮湿寒冷');
+  });
+
+  it('uses strong non-leak wording for ai grounding', () => {
+    const result = buildNarrativeUserPrompt({
+      sceneContext: '北门雨夜',
+      recentNarration: [],
+      playerAction: 'look around',
+      codexEntries: [
+        {
+          id: 'loc_gate',
+          description: '玩家可见的北门描述',
+          aiGrounding: {
+            mustKnow: ['守卫私下害怕北方森林。'],
+          },
+        },
+      ],
+    });
+
+    expect(result).toContain('不得直接或间接');
+    expect(result).toContain('泄露');
+    expect(result).toContain('暗示');
+    expect(result).toContain('改写');
+  });
+
+  it('keeps description as fallback when v2 ai grounding is absent', () => {
+    const result = buildNarrativeUserPrompt({
+      sceneContext: '北门雨夜',
+      recentNarration: [],
+      playerAction: 'look around',
+      codexEntries: [{ id: 'old_entry', description: '旧条目的描述仍可用' }],
+    });
+
+    expect(result).toContain('[old_entry] 旧条目的描述仍可用');
+    expect(result).not.toContain('AI grounding（仅供生成时遵守，不要直接向玩家复述）');
+  });
+});
+
 describe('buildNarrativeSystemPrompt', () => {
   it('renders ecological memory with epistemic labels and keeps rumors out of confirmed facts', () => {
     const ecologicalMemory: EcologicalMemoryContext = {

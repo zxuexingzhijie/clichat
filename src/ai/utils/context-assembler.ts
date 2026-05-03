@@ -30,8 +30,21 @@ export type OmittedNarrativeContext = {
   readonly narrationIndexes: readonly number[];
 };
 
+export type PromptAiGrounding = {
+  readonly mustKnow?: readonly string[];
+  readonly mustNotInvent?: readonly string[];
+  readonly tone?: readonly string[];
+  readonly revealPolicy?: Record<string, string | { readonly response: string }>;
+};
+
+export type AssembledCodexEntry = {
+  readonly id: string;
+  readonly description: string;
+  readonly aiGrounding?: PromptAiGrounding;
+};
+
 export type AssembledContext = {
-  readonly codexEntries: ReadonlyArray<{ readonly id: string; readonly description: string }>;
+  readonly codexEntries: ReadonlyArray<AssembledCodexEntry>;
   readonly npcMemories: readonly string[];
   readonly recentNarration: readonly string[];
   readonly sceneContext: string;
@@ -52,7 +65,12 @@ export type NpcContext = {
   readonly playerAction: string;
 };
 
-type CodexBudgetItem = { readonly kind: 'codex'; readonly id: string; readonly description: string };
+type CodexBudgetItem = {
+  readonly kind: 'codex';
+  readonly id: string;
+  readonly description: string;
+  readonly aiGrounding?: PromptAiGrounding;
+};
 type MemoryBudgetItem = { readonly kind: 'memory'; readonly id: string; readonly content: string };
 type NarrationBudgetItem = { readonly kind: 'narration'; readonly index: number; readonly content: string };
 
@@ -64,6 +82,16 @@ function estimateText(text: string): number {
 
 function getMemoryId(memory: NpcMemory, fallbackIndex: number): string {
   return memory.id ?? `${memory.npcId}@${memory.timestamp}@${fallbackIndex}`;
+}
+
+function mapAiGrounding(entry: CodexEntry): PromptAiGrounding | undefined {
+  if (!entry.ai_grounding) return undefined;
+  return {
+    mustKnow: entry.ai_grounding.must_know,
+    mustNotInvent: entry.ai_grounding.must_not_invent,
+    tone: entry.ai_grounding.tone,
+    revealPolicy: entry.ai_grounding.reveal_policy,
+  };
 }
 
 export function assembleNarrativeContext(
@@ -78,7 +106,12 @@ export function assembleNarrativeContext(
   const codexItems: CodexBudgetItem[] = retrievalPlan.codexIds
     .map((id) => codexEntries.get(id))
     .filter((entry): entry is CodexEntry => entry !== undefined)
-    .map((entry) => ({ kind: 'codex' as const, id: entry.id, description: entry.description }));
+    .map((entry) => ({
+      kind: 'codex' as const,
+      id: entry.id,
+      description: entry.description,
+      aiGrounding: mapAiGrounding(entry),
+    }));
 
   const memoryItems: MemoryBudgetItem[] = npcMemories
     .map((memory, index) => ({ memory, index }))
@@ -116,7 +149,7 @@ export function assembleNarrativeContext(
 
   const resolvedCodex = codexItems
     .filter((item) => selectedSet.has(item))
-    .map((entry) => ({ id: entry.id, description: entry.description }));
+    .map((entry) => ({ id: entry.id, description: entry.description, aiGrounding: entry.aiGrounding }));
 
   const resolvedMemories = memoryItems
     .filter((item) => selectedSet.has(item))

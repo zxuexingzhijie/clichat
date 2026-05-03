@@ -5,6 +5,43 @@
     - town_entrance
     - 黑松镇
   description: 黑松镇的北面入口，石砌的城门两侧各立一盏油灯。守卫日夜值守，偶有商队和旅人进出。
+  player_facing:
+    short_label: 北门
+    first_visit: 你来到黑松镇北门，石砌城门两侧的油灯在风里轻晃，守卫审视着来往的人。
+    revisit: 你回到黑松镇北门，守卫仍在门边值守，商队和旅人偶尔从这里经过。
+    sensory:
+      sights:
+        - 石砌城门与两盏油灯
+        - 守卫在门侧巡看
+      sounds:
+        - 甲片和长矛轻碰的声响
+        - 远处林道传来的风声
+      smells:
+        - 油灯烟味
+        - 城门石墙上的潮气
+    interactables:
+      - id: notice_board
+        visible_name: 北门告示牌
+        affordance: 阅读北门告示
+      - id: oil_lamp
+        visible_name: 门侧油灯
+        affordance: 查看油灯
+  ai_grounding:
+    must_know:
+      - 黑松镇北门连接主街与黑松林道。
+      - 这里有守卫日夜值守，是进入北林前的关口。
+    must_not_invent:
+      - 不要宣称北门已经失守或被军队封锁，除非世界状态明确改变。
+    reveal_policy:
+      default: public_surface_only
+  ecology:
+    facts_seeded:
+      - id: fact_loc_north_gate_watch
+        statement: 黑松镇北门由守卫日夜值守，连接镇内主街和镇外林道。
+        scope: location
+        scope_id: loc_north_gate
+        truth_status: confirmed
+        confidence: 1.0
   epistemic:
     authority: canonical_truth
     truth_status: "true"
@@ -31,6 +68,19 @@
     - oil_lamp
   coordinates: { x: 1, y: 2 }
   map_icon: "G"
+  location_context:
+    travel_role: town_gate
+    default_actions:
+      - talk
+      - inspect
+      - move
+    state_overrides:
+      act3_confrontation:
+        player_facing_override: 陈铁柱站在城门口，油灯把他的影子拉得很长。
+        ai_tone_override: tense_confrontation
+      ritual_site_active:
+        player_facing_override: 守卫比平时少，北林方向显得异常安静。
+        ai_tone_override: uneasy
   description_overrides:
     act3_confrontation: "黑松镇北门。陈铁柱站在城门口，背对着你，油灯的光把他的影子拉得很长。守卫们假装什么都没看见。"
     mayor_secret_known: "黑松镇北门。石砌的城门还是一样巍峨，但你现在知道，五年前的那场灾难里，有多少人从这里出去，再也没回来。"
@@ -44,6 +94,47 @@
     - social
     - 黑松镇
   description: 镇上唯一的酒馆，名为"松木桶"。温暖的炉火、嘈杂的人声，是冒险者歇脚和打听消息的好去处。
+  player_facing:
+    short_label: 松木桶酒馆
+    first_visit: 你推开松木桶酒馆的门，炉火、酒香和嘈杂人声一同涌来。
+    revisit: 你回到松木桶酒馆，炉火依旧暖着，闲谈声在木桌之间来回流动。
+    sensory:
+      sights:
+        - 温暖的炉火
+        - 挤在桌边的旅人与镇民
+      sounds:
+        - 杯盏碰撞声
+        - 压低的闲谈和笑声
+      smells:
+        - 麦酒香
+        - 炉火烟味
+    interactables:
+      - id: fireplace
+        visible_name: 炉火
+        affordance: 查看炉火
+      - id: notice_board_tavern
+        visible_name: 酒馆告示栏
+        affordance: 阅读酒馆告示
+      - id: barrel
+        visible_name: 酒桶
+        affordance: 检查酒桶
+  ai_grounding:
+    must_know:
+      - 松木桶是黑松镇唯一的酒馆，也是打听消息的社交场所。
+      - 老陈和旅店老板娘常在这里活动。
+    must_not_invent:
+      - 不要直接暴露隐藏身份或秘密交易，除非信任或剧情阶段允许。
+    reveal_policy:
+      default: public_surface_only
+      rumors: gated_by_trust_or_stage
+  ecology:
+    facts_seeded:
+      - id: fact_loc_tavern_social_hub
+        statement: 松木桶酒馆是黑松镇消息和旅人流动最集中的室内场所。
+        scope: location
+        scope_id: loc_tavern
+        truth_status: confirmed
+        confidence: 1.0
   epistemic:
     authority: canonical_truth
     truth_status: "true"
@@ -69,6 +160,20 @@
     - barrel
   coordinates: { x: 0, y: 4 }
   map_icon: "T"
+  location_context:
+    travel_role: social_hub
+    default_actions:
+      - talk
+      - listen
+      - rest
+      - inspect
+    state_overrides:
+      act3_confrontation:
+        player_facing_override: 炉火仍在燃烧，但每个人都像在等待未说出口的结局。
+        ai_tone_override: hushed
+      ritual_site_active:
+        player_facing_override: 酒馆人声稀少，老陈倒酒的手停了一瞬。
+        ai_tone_override: worried
   description_overrides:
     act3_confrontation: "松木桶酒馆。炉火还是一样地烧着，老陈擦着杯子，不看你。每个人都在等待那个没有人说出口的结局。"
     mayor_secret_known: "松木桶酒馆。炉火还是一样地燃着，但你知道这份暖意是用什么换来的。烟火气里有什么东西沉了下去。"
@@ -81,6 +186,43 @@
     - town_center
     - 黑松镇
   description: 黑松镇的中心大道，连接各处要地。行人熙攘，叫卖声此起彼伏，是镇上最热闹的地方。
+  player_facing:
+    short_label: 主街
+    first_visit: 你踏上黑松镇主街，叫卖声、人流和各处招牌把镇子的日常铺展开来。
+    revisit: 你回到黑松镇主街，通往各处的道路仍在熙攘人群中延伸。
+    sensory:
+      sights:
+        - 往来行人和摊贩
+        - 指向各处的路牌
+      sounds:
+        - 此起彼伏的叫卖声
+        - 人群交谈声
+      smells:
+        - 街边熟食气味
+        - 尘土和马匹气味
+    interactables:
+      - id: signpost
+        visible_name: 路牌
+        affordance: 查看路牌
+      - id: fountain
+        visible_name: 喷泉
+        affordance: 查看喷泉
+  ai_grounding:
+    must_know:
+      - 主街连接北门、酒馆、铁匠铺、神殿和集市广场。
+      - 镇长王德常在主街附近处理镇务。
+    must_not_invent:
+      - 不要把主街描写成荒废或无人，除非世界状态明确改变。
+    reveal_policy:
+      default: public_surface_only
+  ecology:
+    facts_seeded:
+      - id: fact_loc_main_street_crossroads
+        statement: 黑松镇主街是镇内主要通路，连接多个公共地点。
+        scope: location
+        scope_id: loc_main_street
+        truth_status: confirmed
+        confidence: 1.0
   epistemic:
     authority: canonical_truth
     truth_status: "true"
@@ -111,6 +253,19 @@
     - fountain
   coordinates: { x: 1, y: 3 }
   map_icon: "S"
+  location_context:
+    travel_role: town_crossroads
+    default_actions:
+      - move
+      - talk
+      - inspect
+    state_overrides:
+      act3_confrontation:
+        player_facing_override: 主街的热闹表面下藏着紧绷的视线。
+        ai_tone_override: suspicious
+      truth_suppressed:
+        player_facing_override: 一切如常，风声和笑声把发生过的事盖住。
+        ai_tone_override: subdued
   description_overrides:
     act3_confrontation: "黑松镇主街。叫卖声和人声一如往常，但有什么东西不对劲。没有人正眼看你——或者，每个人都在看你，只是你没有注意到。"
     mayor_secret_known: "黑松镇主街。熙攘的人群，热闹的集市。镇长的宅邸就在街的那一头，你知道里面坐着一个守了多少年秘密的老人。"
@@ -124,6 +279,46 @@
     - crafting
     - 黑松镇
   description: 烟火缭绕的铁匠铺，叮叮当当的锤击声日夜不停。炉膛中燃着橙红的炭火，空气中弥漫着铁锈和炭灰的气息。
+  player_facing:
+    short_label: 铁匠铺
+    first_visit: 你走进铁匠铺，炉膛的橙红火光映在铁砧和武器架上。
+    revisit: 你回到铁匠铺，锤击声仍伴着炭火热浪从屋内传出。
+    sensory:
+      sights:
+        - 橙红炉火
+        - 铁砧和武器架
+      sounds:
+        - 铁锤敲击声
+        - 风箱鼓动声
+      smells:
+        - 炭灰味
+        - 铁锈和热金属气味
+    interactables:
+      - id: anvil
+        visible_name: 铁砧
+        affordance: 查看铁砧
+      - id: forge
+        visible_name: 锻炉
+        affordance: 查看锻炉
+      - id: weapon_rack
+        visible_name: 武器架
+        affordance: 查看武器架
+  ai_grounding:
+    must_know:
+      - 铁匠铺由老赵经营，是镇上主要的锻造地点。
+      - 矿石短缺与北林道路和废弃矿洞线索有关。
+    must_not_invent:
+      - 不要让铁匠铺提供未定义的稀有神器或大型军械库。
+    reveal_policy:
+      default: public_surface_only
+  ecology:
+    facts_seeded:
+      - id: fact_loc_blacksmith_forge
+        statement: 黑松镇铁匠铺依赖矿石供给，近期好铁越来越难找。
+        scope: location
+        scope_id: loc_blacksmith
+        truth_status: confirmed
+        confidence: 1.0
   epistemic:
     authority: canonical_truth
     truth_status: "true"
@@ -147,6 +342,12 @@
     - weapon_rack
   coordinates: { x: 1, y: 4 }
   map_icon: "B"
+  location_context:
+    travel_role: crafting_stop
+    default_actions:
+      - talk
+      - trade
+      - inspect
 
 - id: loc_market
   name: 黑松镇·集市广场
@@ -156,6 +357,47 @@
     - social
     - 黑松镇
   description: 镇上的集市广场，各类摊贩云集，从食物到工具应有尽有。嘈杂热闹，也是消息流通最快的地方。
+  player_facing:
+    short_label: 集市广场
+    first_visit: 你来到集市广场，摊贩的招呼声和货物色彩在井边与公告板旁交织。
+    revisit: 你回到集市广场，买卖声依旧热闹，新的传闻也常在这里流动。
+    sensory:
+      sights:
+        - 密集的市场摊位
+        - 水井和公告板
+      sounds:
+        - 摊贩叫卖声
+        - 讨价还价声
+      smells:
+        - 食物香气
+        - 人群和牲口混杂的气味
+    interactables:
+      - id: market_stalls
+        visible_name: 市场摊位
+        affordance: 查看市场摊位
+      - id: water_well
+        visible_name: 水井
+        affordance: 查看水井
+      - id: bulletin_board
+        visible_name: 公告板
+        affordance: 阅读公告板
+  ai_grounding:
+    must_know:
+      - 集市广场是黑松镇贸易和公开传闻流通最快的地点。
+      - 阿福和瞎子孙常在这里活动。
+    must_not_invent:
+      - 不要让集市自动揭露隐藏交易真相，除非对应线索已被触发。
+    reveal_policy:
+      default: public_surface_only
+      rumors: public_rumors_only
+  ecology:
+    facts_seeded:
+      - id: fact_loc_market_rumor_flow
+        statement: 黑松镇集市广场是贸易与公开消息快速流通的地点。
+        scope: location
+        scope_id: loc_market
+        truth_status: confirmed
+        confidence: 1.0
   epistemic:
     authority: canonical_truth
     truth_status: "true"
@@ -180,6 +422,13 @@
     - bulletin_board
   coordinates: { x: 2, y: 4 }
   map_icon: "M"
+  location_context:
+    travel_role: market_square
+    default_actions:
+      - talk
+      - trade
+      - listen
+      - inspect
 
 - id: loc_temple
   name: 黑松镇·神殿
@@ -189,6 +438,47 @@
     - religious
     - 黑松镇
   description: 坐落在镇东角的古老神殿，石壁斑驳，却依然庄严肃穆。殿内常年燃着香火，是镇民祈福和寻求庇护的场所。
+  player_facing:
+    short_label: 神殿
+    first_visit: 你走进镇东角的古老神殿，斑驳石壁与常燃香火让这里显得安静而肃穆。
+    revisit: 你回到神殿，香烟仍在殿内缓缓上升，石壁上的痕迹静默如旧。
+    sensory:
+      sights:
+        - 斑驳石壁
+        - 祭坛和香炉
+      sounds:
+        - 香灰落下的细微声响
+        - 殿外远处的人声
+      smells:
+        - 香火气味
+        - 冷石气息
+    interactables:
+      - id: altar
+        visible_name: 祭坛
+        affordance: 查看祭坛
+      - id: incense_burner
+        visible_name: 香炉
+        affordance: 查看香炉
+      - id: ancient_relief
+        visible_name: 古代浮雕
+        affordance: 查看古代浮雕
+  ai_grounding:
+    must_know:
+      - 神殿是镇民祈福和寻求庇护的场所。
+      - 月华与林婆婆常在神殿附近，古代符文线索与这里相关。
+    must_not_invent:
+      - 不要把神殿设定为公开邪教据点或战斗场景，除非剧情明确改变。
+    reveal_policy:
+      default: public_surface_only
+      ancient_knowledge: gated_by_trust_or_stage
+  ecology:
+    facts_seeded:
+      - id: fact_loc_temple_sanctuary
+        statement: 黑松镇神殿是祈福、庇护和古代知识线索交汇的场所。
+        scope: location
+        scope_id: loc_temple
+        truth_status: confirmed
+        confidence: 1.0
   epistemic:
     authority: canonical_truth
     truth_status: "true"
@@ -213,6 +503,12 @@
     - ancient_relief
   coordinates: { x: 2, y: 3 }
   map_icon: "P"
+  location_context:
+    travel_role: sanctuary
+    default_actions:
+      - talk
+      - pray
+      - inspect
 
 - id: loc_forest_road
   name: 黑松林道
@@ -222,6 +518,44 @@
     - road
     - 黑松林
   description: 通往黑松林深处的蜿蜒小道，两侧高大的松树遮天蔽日，即便白天也阴暗幽深。偶有野兽出没，旅人须小心戒备。
+  player_facing:
+    short_label: 黑松林道
+    first_visit: 你踏上黑松林道，高大的松树遮住天光，北林的阴影从道路两侧压近。
+    revisit: 你回到黑松林道，树影依旧深重，远处偶尔传来野兽动静。
+    sensory:
+      sights:
+        - 遮天的黑松
+        - 路边旧路标和倒木
+      sounds:
+        - 林间风声
+        - 远处不明野兽声
+      smells:
+        - 松针和湿土气味
+        - 林中腐叶气味
+    interactables:
+      - id: trail_marker
+        visible_name: 旧路标
+        affordance: 查看旧路标
+      - id: fallen_tree
+        visible_name: 倒木
+        affordance: 查看倒木
+  ai_grounding:
+    must_know:
+      - 黑松林道连接北门与废弃营地，是进入北林的主要路径。
+      - 这里可能有狼群出没，危险等级高于镇内。
+    must_not_invent:
+      - 不要在未触发时直接展示洞穴核心秘密。
+    reveal_policy:
+      default: public_surface_only
+      deeper_forest_secrets: gated_by_exploration
+  ecology:
+    facts_seeded:
+      - id: fact_loc_forest_road_wilderness
+        statement: 黑松林道通向北林深处，狼群和失踪事件线索都与这条路相关。
+        scope: location
+        scope_id: loc_forest_road
+        truth_status: confirmed
+        confidence: 1.0
   epistemic:
     authority: canonical_truth
     truth_status: "true"
@@ -247,6 +581,12 @@
     - enemy_wolf
   coordinates: { x: 1, y: 1 }
   map_icon: "F"
+  location_context:
+    travel_role: wilderness_path
+    default_actions:
+      - move
+      - scout
+      - inspect
 
 - id: loc_abandoned_camp
   name: 废弃营地
@@ -256,6 +596,50 @@
     - ruins
     - 黑松林
   description: 深藏于黑松林中的废弃营地，残破的帐篷和熄灭的篝火诉说着某段不为人知的往事。空气中隐隐有腐朽的气息。
+  player_facing:
+    short_label: 废弃营地
+    first_visit: 你发现黑松林中的废弃营地，残破帐篷和冷掉的篝火像是匆忙离开后的遗迹。
+    revisit: 你回到废弃营地，腐朽气味仍停在破布和灰烬之间。
+    sensory:
+      sights:
+        - 残破帐篷
+        - 熄灭已久的篝火
+      sounds:
+        - 林中枝叶摩擦声
+        - 偶尔踩碎枯枝的脆响
+      smells:
+        - 腐朽气息
+        - 冷灰味
+    interactables:
+      - id: ruined_tent
+        visible_name: 残破帐篷
+        affordance: 查看残破帐篷
+      - id: cold_campfire
+        visible_name: 冷掉的篝火
+        affordance: 查看篝火灰烬
+      - id: abandoned_supplies
+        visible_name: 废弃补给
+        affordance: 搜查废弃补给
+      - id: item_iron_ore
+        visible_name: 铁矿石
+        affordance: 检查铁矿石
+  ai_grounding:
+    must_know:
+      - 废弃营地位于北林深处，连接黑暗洞穴。
+      - 这里有失踪事件和旧事线索，但真相应随阶段逐步揭露。
+    must_not_invent:
+      - 不要在营地直接给出所有幕后势力的完整答案。
+    reveal_policy:
+      default: public_surface_only
+      evidence: gated_by_inspection_or_stage
+  ecology:
+    facts_seeded:
+      - id: fact_loc_abandoned_camp_trace
+        statement: 废弃营地保留着与北林失踪事件相关的可疑痕迹。
+        scope: location
+        scope_id: loc_abandoned_camp
+        truth_status: confirmed
+        confidence: 1.0
   epistemic:
     authority: canonical_truth
     truth_status: "true"
@@ -283,6 +667,12 @@
     - enemy_bandit
   coordinates: { x: 3, y: 1 }
   map_icon: "R"
+  location_context:
+    travel_role: investigation_site
+    default_actions:
+      - inspect
+      - search
+      - move
 
 - id: loc_dark_cave
   name: 黑暗洞穴
@@ -292,6 +682,50 @@
     - dungeon
     - 黑松林
   description: 废弃营地深处的一个幽暗洞穴，入口被杂草和碎石掩盖。洞内黑暗彻底，偶尔传来奇异的回声，令人毛骨悚然。
+  player_facing:
+    short_label: 黑暗洞穴
+    first_visit: 你拨开洞口杂草，黑暗洞穴的冷气从碎石间涌出，奇异回声在深处游荡。
+    revisit: 你回到黑暗洞穴入口，洞内依旧幽黑，旧日回声似乎没有完全散去。
+    sensory:
+      sights:
+        - 被杂草和碎石遮掩的洞口
+        - 洞壁上的奇异痕迹
+      sounds:
+        - 洞内回声
+        - 水滴落在石面的声音
+      smells:
+        - 潮湿石壁气味
+        - 陈旧骨尘气味
+    interactables:
+      - id: cave_entrance
+        visible_name: 洞口
+        affordance: 查看洞口
+      - id: strange_markings
+        visible_name: 奇异刻痕
+        affordance: 查看奇异刻痕
+      - id: bone_fragments
+        visible_name: 骨片
+        affordance: 查看骨片
+      - id: item_evidence
+        visible_name: 可疑证物
+        affordance: 检查可疑证物
+  ai_grounding:
+    must_know:
+      - 黑暗洞穴位于废弃营地以北，是主线调查的重要地点。
+      - 洞内符文与五年前狼灾和后续真相有关，应按剧情阶段揭露。
+    must_not_invent:
+      - 不要提前确认幕后势力的全部动机或新增未定义古神设定。
+    reveal_policy:
+      default: public_surface_only
+      ritual_truth: gated_by_stage_truth_in_forest
+  ecology:
+    facts_seeded:
+      - id: fact_loc_dark_cave_runes
+        statement: 黑暗洞穴内存在与五年前狼灾相关的古代符文线索。
+        scope: location
+        scope_id: loc_dark_cave
+        truth_status: confirmed
+        confidence: 1.0
   epistemic:
     authority: canonical_truth
     truth_status: "true"
@@ -317,3 +751,9 @@
     - enemy_wolf_alpha
   coordinates: { x: 3, y: 0 }
   map_icon: "D"
+  location_context:
+    travel_role: dungeon_threshold
+    default_actions:
+      - inspect
+      - proceed
+      - retreat

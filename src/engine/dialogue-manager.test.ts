@@ -427,6 +427,51 @@ describe('createDialogueManager', () => {
     expect(result.npcName).toBe('北门守卫');
   });
 
+  it('startDialogue maps full npc ai_grounding into generateNpcDialogueFn npc profile', async () => {
+    let capturedNpcProfile: unknown;
+    const trackingDialogueFn = mock((...args: unknown[]) => {
+      capturedNpcProfile = args[0];
+      return Promise.resolve({
+        dialogue: '北门今晚不开放。',
+        emotionTag: 'neutral',
+        memoryNote: null,
+        sentiment: 'neutral',
+      });
+    });
+    const codexEntries = new Map<string, any>(mockCodexEntries);
+    codexEntries.set('npc_grounded_guard', {
+      ...mockCodexEntries.get('npc_guard')!,
+      id: 'npc_grounded_guard',
+      ai_grounding: {
+        must_know: ['守卫知道封锁来自队长口令。'],
+        must_not_invent: ['不要声称守卫见过真正凶手。'],
+        tone: ['戒备', '简短'],
+        reveal_policy: {
+          default: 'public_surface_only',
+          captain_order: { response: '只在信任后承认是队长口令。' },
+        },
+      },
+    });
+    const manager = createDialogueManager(stores, codexEntries, {
+      generateNpcDialogueFn: trackingDialogueFn as typeof import('../ai/roles/npc-actor').generateNpcDialogue,
+      adjudicateFn: mockAdjudicate,
+    });
+
+    await manager.startDialogue('npc_grounded_guard');
+
+    expect(capturedNpcProfile).toMatchObject({
+      aiGrounding: {
+        mustKnow: ['守卫知道封锁来自队长口令。'],
+        mustNotInvent: ['不要声称守卫见过真正凶手。'],
+        tone: ['戒备', '简短'],
+        revealPolicy: {
+          default: 'public_surface_only',
+          captain_order: { response: '只在信任后承认是队长口令。' },
+        },
+      },
+    });
+  });
+
   it('startDialogue passes only the active NPC belief and current-location fact as ecological memory', async () => {
     const eventBus = mitt() as EventBus;
     const worldMemory = createWorldMemoryStore(eventBus);

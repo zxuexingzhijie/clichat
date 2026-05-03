@@ -85,6 +85,25 @@ export function selectLocationDescription(
   return location.description;
 }
 
+function selectPlayerFacingLocationText(
+  location: Location,
+  worldFlags: Record<string, boolean>,
+  hasVisited: boolean,
+): string {
+  const override = selectLocationDescription(location, worldFlags);
+  if (override !== location.description) return override;
+
+  if (hasVisited) {
+    return location.player_facing?.revisit
+      ?? location.player_facing?.first_visit
+      ?? location.description;
+  }
+
+  return location.player_facing?.first_visit
+    ?? location.player_facing?.revisit
+    ?? location.description;
+}
+
 function formatObjectId(id: string): string {
   return id.replace(/_/g, ' ');
 }
@@ -108,10 +127,11 @@ function buildSuggestedActionsFromNpcs(npcIds: readonly string[], location: Loca
 
   for (const objId of location.objects) {
     const objEntry = queryById(codexEntries, objId);
-    const objName = objEntry?.name ?? formatObjectId(objId);
+    const interactable = location.player_facing?.interactables?.find(item => item.id === objId);
+    const objName = interactable?.visible_name ?? objEntry?.name ?? formatObjectId(objId);
     actions.push({
       id: `inspect_${objId}`,
-      label: `检查${objName}`,
+      label: interactable?.affordance ?? `检查${objName}`,
       type: 'inspect',
     });
   }
@@ -150,6 +170,7 @@ export function createSceneManager(
   const generateRetrievalPlanFn = options?.generateRetrievalPlanFn;
   const retrieveEcologicalMemoryFn = options?.retrieveEcologicalMemoryFn ?? retrieveEcologicalMemory;
   let currentSceneId: string | null = null;
+  const visitedLocationIds = new Set<string>();
 
 
   stores.eventBus?.on('state_restored', () => {
@@ -277,7 +298,9 @@ export function createSceneManager(
 
     if (shouldAppendNarration) {
       const worldFlags = options?.narrativeStore?.getState().worldFlags ?? {};
-      let narrationText = selectLocationDescription(entry, worldFlags);
+      const hasVisitedLocation = visitedLocationIds.has(locationId);
+      let narrationText = selectPlayerFacingLocationText(entry, worldFlags, hasVisitedLocation);
+      visitedLocationIds.add(locationId);
 
       if (generateRetrievalPlanFn && generateNarrationFn) {
         const retrievalPlan = await generateRetrievalPlanFn({
@@ -291,7 +314,7 @@ export function createSceneManager(
           retrievalPlan,
           codexEntries,
           [],
-          { narrationLines: stores.scene.getState().narrationLines, sceneDescription: entry.description },
+          { narrationLines: stores.scene.getState().narrationLines, sceneDescription: narrationText },
           'enter_scene',
         );
 
@@ -300,7 +323,7 @@ export function createSceneManager(
           codexEntries: assembled.codexEntries,
           playerAction: 'enter_scene',
           recentNarration: stores.scene.getState().narrationLines,
-          sceneContext: entry.description,
+          sceneContext: narrationText,
           narrativeContext: getNarrativeContext(options?.narrativeStore),
           ecologicalMemory: getEcologicalMemory('enter_scene', locationId),
         });

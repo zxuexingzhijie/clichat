@@ -28,7 +28,7 @@ function makeEpistemic(overrides: Partial<EpistemicMetadata> = {}): EpistemicMet
   };
 }
 
-function makeCodexEntry(id: string, description: string): CodexEntry {
+function makeCodexEntry(id: string, description: string, overrides: Partial<CodexEntry> = {}): CodexEntry {
   return {
     id,
     name: `Entry ${id}`,
@@ -38,7 +38,8 @@ function makeCodexEntry(id: string, description: string): CodexEntry {
     item_type: 'misc' as const,
     value: 0,
     epistemic: makeEpistemic(),
-  };
+    ...overrides,
+  } as CodexEntry;
 }
 
 const testNpcProfile: NpcProfile = {
@@ -155,6 +156,37 @@ describe('assembleNarrativeContext (backward compatibility)', () => {
       result.omittedContext.narrationIndexes.length;
     expect(omittedCount).toBeGreaterThan(0);
     expect(result.codexEntries.length + result.npcMemories.length + result.recentNarration.length).toBeLessThan(6);
+  });
+
+  it('assembles ai_grounding separately from description for v2 codex entries', () => {
+    const codexMap = new Map<string, CodexEntry>();
+    codexMap.set('loc_gate', makeCodexEntry('loc_gate', '玩家可见的北门描述', {
+      ai_grounding: {
+        must_know: ['守卫私下害怕北方森林。'],
+        must_not_invent: ['不要发明龙袭击北门。'],
+        tone: ['克制', '潮湿寒冷'],
+      },
+    }));
+
+    const result = assembleNarrativeContext(
+      { codexIds: ['loc_gate'], npcIds: [] },
+      codexMap,
+      [],
+      testSceneState,
+      'look around',
+    );
+
+    const entry = result.codexEntries[0] as typeof result.codexEntries[number] & {
+      readonly aiGrounding?: {
+        readonly mustKnow?: readonly string[];
+        readonly mustNotInvent?: readonly string[];
+        readonly tone?: readonly string[];
+      };
+    };
+    expect(entry.description).toBe('玩家可见的北门描述');
+    expect(entry.aiGrounding?.mustKnow).toEqual(['守卫私下害怕北方森林。']);
+    expect(entry.aiGrounding?.mustNotInvent).toEqual(['不要发明龙袭击北门。']);
+    expect(entry.aiGrounding?.tone).toEqual(['克制', '潮湿寒冷']);
   });
 });
 
