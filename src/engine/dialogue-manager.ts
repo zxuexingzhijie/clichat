@@ -282,12 +282,7 @@ export function createDialogueManager(
     encounterCount: number;
     conversationHistory: readonly { readonly role: 'user' | 'assistant'; readonly content: string }[];
   } {
-    const IMPORTANCE_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
-    const memoryStrings = [...getMemorySource(memoryRecord)]
-      .sort((a, b) => {
-        const imp = (IMPORTANCE_ORDER[a.importance] ?? 1) - (IMPORTANCE_ORDER[b.importance] ?? 1);
-        return imp !== 0 ? imp : b.turnNumber - a.turnNumber;
-      })
+    const memoryStrings = getMemorySource(memoryRecord)
       .filter((m) => !isEncounterMemory(m.event))
       .map((m) => m.event);
     const archiveSummary = memoryRecord?.archiveSummary || undefined;

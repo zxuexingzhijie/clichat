@@ -23,6 +23,7 @@ describe('createGameContext', () => {
     expect(ctx.stores.branch).toBeDefined();
     expect(ctx.stores.costSession).toBeDefined();
     expect(ctx.stores.turnLog).toBeDefined();
+    expect(ctx.stores.worldMemory).toBeDefined();
     expect(ctx.eventBus).toBeDefined();
   });
 
@@ -100,6 +101,7 @@ describe('createGameContext', () => {
       playerKnowledge: ctx1.stores.playerKnowledge,
       turnLog: ctx1.stores.turnLog,
       narrativeStore: ctx1.stores.narrative,
+      worldMemory: ctx1.stores.worldMemory,
     }, () => 'main', () => null);
     const serializer2 = createSerializer({
       player: ctx2.stores.player,
@@ -113,6 +115,7 @@ describe('createGameContext', () => {
       playerKnowledge: ctx2.stores.playerKnowledge,
       turnLog: ctx2.stores.turnLog,
       narrativeStore: ctx2.stores.narrative,
+      worldMemory: ctx2.stores.worldMemory,
     }, () => 'main', () => null);
 
     expect(JSON.parse(serializer1.snapshot()).turnLog).toHaveLength(1);
