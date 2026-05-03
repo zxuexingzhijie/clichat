@@ -13,7 +13,7 @@ import type { EcologicalMemoryContext } from '../utils/ecological-memory-retriev
 
 export type NarrativeContext = {
   readonly sceneType: SceneType;
-  readonly codexEntries: ReadonlyArray<{ readonly id: string; readonly description: string }>;
+  readonly codexEntries: NarrativeUserPromptContext['codexEntries'];
   readonly checkResult?: { readonly display: string };
   readonly playerAction: string;
   readonly recentNarration: readonly string[];
@@ -44,7 +44,7 @@ export async function* streamNarration(
 ): AsyncGenerator<string> {
   const config = getRoleConfig('narrative-director');
   const system = buildNarrativeSystemPrompt(context.sceneType, getNarrativePromptContext(context));
-  const prompt = buildNarrativeUserPrompt(context as NarrativeUserPromptContext);
+  const prompt = buildNarrativeUserPrompt(context);
 
   try {
     yield* callStreamText({
@@ -68,7 +68,7 @@ export async function generateNarration(
 ): Promise<string> {
   const config = getRoleConfig('narrative-director');
   const system = buildNarrativeSystemPrompt(context.sceneType, getNarrativePromptContext(context));
-  const prompt = buildNarrativeUserPrompt(context as NarrativeUserPromptContext);
+  const prompt = buildNarrativeUserPrompt(context);
 
   try {
     const { object } = await callGenerateObject<{ text: string }>({

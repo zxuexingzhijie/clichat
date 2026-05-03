@@ -98,13 +98,43 @@ describe('generateNarration', () => {
       },
     });
 
-    const calls = (mockGenerateObject as unknown as { mock: { calls: Array<[{ system?: string }]> } }).mock.calls;
+    const calls = (mockGenerateObject as unknown as { mock: { calls: [{ system?: string }][] } }).mock.calls;
     const call = calls[0]?.[0];
     expect(call?.system).toContain('Runtime world memory:');
     expect(call?.system).toContain('Confirmed world facts:');
     expect(call?.system).toContain('北门告示确实存在。');
     expect(call?.system).toContain('Local rumors:');
     expect(call?.system).toContain('传言北门外有幽灵。');
+  });
+
+  it('forwards codexEntries aiGrounding into the narrative prompt', async () => {
+    mockGenerateObject.mockResolvedValueOnce({ object: { text: '北门雨水顺着告示边缘滑落。' }, usage: mockUsage });
+
+    await generateNarration({
+      sceneType: 'exploration',
+      codexEntries: [
+        {
+          id: 'loc_north_gate',
+          description: '玩家可见的北门描述',
+          aiGrounding: {
+            mustKnow: ['守卫私下害怕北方森林。'],
+            mustNotInvent: ['不要发明龙袭击北门。'],
+            tone: ['克制', '潮湿寒冷'],
+          },
+        },
+      ],
+      playerAction: '查看北门',
+      recentNarration: [],
+      sceneContext: '北门雨夜',
+    });
+
+    const calls = (mockGenerateObject as unknown as { mock: { calls: [{ prompt?: string }][] } }).mock.calls;
+    const call = calls[0]?.[0];
+    expect(call?.prompt).toContain('AI grounding');
+    expect(call?.prompt).toContain('守卫私下害怕北方森林。');
+    expect(call?.prompt).toContain('不要发明龙袭击北门。');
+    expect(call?.prompt).toContain('克制');
+    expect(call?.prompt).toContain('潮湿寒冷');
   });
 
   it('returns fallback on failure after retries', async () => {

@@ -28,6 +28,7 @@ import type { NarrativeStore } from '../state/narrative-state';
 import type { WorldEvent, WorldMemoryState } from '../state/world-memory-store';
 import type { PlayerKnowledgeState } from '../state/player-knowledge-store';
 import type { NarrativePromptContext } from '../ai/prompts/narrative-system';
+import type { NpcProfile } from '../ai/prompts/npc-system';
 
 type DialogueResponseItem = {
   id: string;
@@ -83,6 +84,33 @@ function stableTextHash(text: string): string {
     hash = Math.imul(hash, 0x01000193);
   }
   return (hash >>> 0).toString(36);
+}
+
+function toNpcPromptProfile(npc: Npc): NpcProfile {
+  return {
+    id: npc.id,
+    name: npc.name,
+    personality_tags: npc.personality_tags,
+    goals: npc.goals,
+    backstory: npc.backstory,
+    knowledgeProfile: npc.knowledge_profile,
+    voice: npc.voice ? {
+      register: npc.voice.register,
+      sentenceStyle: npc.voice.sentence_style,
+      verbalTics: npc.voice.verbal_tics,
+    } : undefined,
+    socialMemory: npc.social_memory ? {
+      remembers: npc.social_memory.remembers,
+      sharesWith: npc.social_memory.shares_with,
+      secrecy: npc.social_memory.secrecy,
+    } : undefined,
+    aiGrounding: npc.ai_grounding ? {
+      mustKnow: npc.ai_grounding.must_know,
+      mustNotInvent: npc.ai_grounding.must_not_invent,
+      tone: npc.ai_grounding.tone,
+      revealPolicy: npc.ai_grounding.reveal_policy,
+    } : undefined,
+  };
 }
 
 function emotionTagToHint(npcName: string, emotionTag: string): string {
@@ -289,14 +317,7 @@ export function createDialogueManager(
     const scene = stores.scene.getState().narrationLines.join(' ');
     const { memoryStrings, archiveSummary, relevantCodex, encounterCount, conversationHistory } = buildNpcLlmContext(npc, memoryRecord, []);
 
-    const npcProfile = {
-      id: npc.id,
-      name: npc.name,
-      personality_tags: npc.personality_tags,
-      goals: npc.goals,
-      backstory: npc.backstory,
-      knowledgeProfile: npc.knowledge_profile,
-    };
+    const npcProfile = toNpcPromptProfile(npc);
 
     const npcDialogue: NpcDialogue = await doGenerateDialogue(
       npcProfile,
@@ -382,14 +403,7 @@ export function createDialogueManager(
     const scene = stores.scene.getState().narrationLines.join(' ');
     const { memoryStrings, archiveSummary, relevantCodex, encounterCount, conversationHistory } = buildNpcLlmContext(npc, memoryRecord, state.dialogueHistory);
 
-    const npcProfile = {
-      id: npc.id,
-      name: npc.name,
-      personality_tags: npc.personality_tags,
-      goals: npc.goals,
-      backstory: npc.backstory,
-      knowledgeProfile: npc.knowledge_profile,
-    };
+    const npcProfile = toNpcPromptProfile(npc);
 
     isProcessing = true;
     try {
@@ -559,14 +573,7 @@ export function createDialogueManager(
     const scene = stores.scene.getState().narrationLines.join(' ');
     const { memoryStrings, archiveSummary, relevantCodex, encounterCount, conversationHistory } = buildNpcLlmContext(npc, memoryRecord, state.dialogueHistory);
 
-    const npcProfile = {
-      id: npc.id,
-      name: npc.name,
-      personality_tags: npc.personality_tags,
-      goals: npc.goals,
-      backstory: npc.backstory,
-      knowledgeProfile: npc.knowledge_profile,
-    };
+    const npcProfile = toNpcPromptProfile(npc);
 
     isProcessing = true;
     try {

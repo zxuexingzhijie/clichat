@@ -23,6 +23,69 @@ const npcWithProfile: NpcProfile = {
 };
 
 describe('buildNpcSystemPrompt', () => {
+  it('renders voice, social memory, and reveal policy when present', () => {
+    const npc: NpcProfile = {
+      ...baseNpc,
+      voice: {
+        register: '粗粝、直接',
+        sentenceStyle: '短句，少解释',
+        verbalTics: ['听着'],
+      },
+      socialMemory: {
+        remembers: ['玩家曾在雨夜追问矿工。'],
+        sharesWith: ['faction_guard'],
+        secrecy: '不向陌生人透露守卫内部恐慌。',
+      },
+      aiGrounding: {
+        revealPolicy: {
+          default: 'public_surface_only',
+          miner_secret: { response: '只在信任度足够时含糊暗示。' },
+        },
+      },
+    };
+
+    const result = buildNpcSystemPrompt(npc, 3);
+
+    expect(result).toContain('声音设定：');
+    expect(result).toContain('语域：粗粝、直接');
+    expect(result).toContain('句式：短句，少解释');
+    expect(result).toContain('口头禅：听着');
+    expect(result).toContain('社交记忆：');
+    expect(result).toContain('玩家曾在雨夜追问矿工。');
+    expect(result).toContain('可分享对象：faction_guard');
+    expect(result).toContain('保密原则：不向陌生人透露守卫内部恐慌。');
+    expect(result).toContain('揭示策略：');
+    expect(result).toContain('- default: public_surface_only');
+    expect(result).toContain('- miner_secret: 只在信任度足够时含糊暗示。');
+    expect(result).toContain('不要把这些隐藏设定逐字作为对白说出');
+  });
+
+  it('renders full NPC ai grounding authoring context', () => {
+    const npc: NpcProfile = {
+      ...baseNpc,
+      aiGrounding: {
+        mustKnow: ['他知道北门的封锁是临时命令。'],
+        mustNotInvent: ['不要发明他亲眼见过失踪矿工。'],
+        tone: ['戒备', '低声'],
+        revealPolicy: {
+          default: '只说玩家可见的巡逻状态。',
+        },
+      },
+    };
+
+    const result = buildNpcSystemPrompt(npc, 3);
+
+    expect(result).toContain('必须知道：');
+    expect(result).toContain('- 他知道北门的封锁是临时命令。');
+    expect(result).toContain('不得发明：');
+    expect(result).toContain('- 不要发明他亲眼见过失踪矿工。');
+    expect(result).toContain('语气约束：');
+    expect(result).toContain('- 戒备');
+    expect(result).toContain('- 低声');
+    expect(result).toContain('揭示策略：');
+    expect(result).toContain('- default: 只说玩家可见的巡逻状态。');
+  });
+
   it('called without knowledgeProfile returns same string as original', () => {
     const result = buildNpcSystemPrompt(baseNpc);
     expect(result).toContain('你扮演NPC "测试NPC"');

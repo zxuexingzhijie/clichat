@@ -1,4 +1,6 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
+import { resolve } from 'path';
+import { loadAllCodex } from '../codex/loader';
 import type { CodexEntry, Location } from '../codex/schemas/entry-types';
 
 mock.module('ai', () => ({
@@ -465,6 +467,132 @@ describe('createSceneManager', () => {
     const moveAction = state.actions.find(a => a.id === 'go_loc_main_street');
     expect(moveAction).toBeDefined();
     expect(moveAction!.type).toBe('move');
+  });
+
+  it('loadScene uses player_facing interactable visible names and affordances for object actions', async () => {
+    const codex = createMockCodexEntries();
+    codex.set('loc_tavern', {
+      ...(codex.get('loc_tavern') as CodexEntry),
+      objects: ['notice_board_tavern', 'sealed_crate'],
+      player_facing: {
+        interactables: [
+          { id: 'notice_board_tavern', visible_name: '酒馆告示栏', affordance: '阅读酒馆告示' },
+          { id: 'sealed_crate', visible_name: '封蜡木箱' },
+        ],
+      },
+    } as CodexEntry);
+
+    const manager = createSceneManager(stores, codex);
+
+    await manager.loadScene('loc_tavern');
+
+    const labels = sceneStore.getState().actions.map(action => action.label);
+    expect(labels).toContain('阅读酒馆告示');
+    expect(labels).toContain('检查封蜡木箱');
+    expect(labels.join('\n')).not.toContain('notice board tavern');
+    expect(labels.join('\n')).not.toContain('notice_board_tavern');
+    expect(labels.join('\n')).not.toContain('sealed crate');
+  });
+
+  it('loadScene uses real v2 loc_tavern interactables instead of raw object labels', async () => {
+    const codex = await loadAllCodex(resolve(import.meta.dir, '../../world-data/codex'));
+    const manager = createSceneManager(stores, codex);
+
+    await manager.loadScene('loc_tavern');
+
+    const labels = sceneStore.getState().actions.map(action => action.label);
+    const allLabels = labels.join('\n');
+
+    expect(labels).toEqual(expect.arrayContaining([
+      '查看炉火',
+      '阅读酒馆告示',
+      '检查酒桶',
+    ]));
+    expect(allLabels).not.toContain('notice board tavern');
+    expect(allLabels).not.toContain('notice_board_tavern');
+    expect(allLabels).not.toContain('fireplace');
+    expect(allLabels).not.toContain('barrel');
+  });
+
+  it('loadScene falls back to object names for old data without player_facing interactables', async () => {
+    const codex = createMockCodexEntries();
+    const manager = createSceneManager(stores, codex);
+
+    await manager.loadScene('loc_north_gate');
+
+    const inspectAction = sceneStore.getState().actions.find(a => a.id === 'inspect_notice_board');
+    expect(inspectAction?.label).toBe('检查notice board');
+  });
+
+  it('loadScene uses player_facing first_visit then revisit text instead of raw descriptions', async () => {
+    const codex = createMockCodexEntries();
+    codex.set('loc_tavern', {
+      ...(codex.get('loc_tavern') as CodexEntry),
+      description: 'RAW_TAVERN_DESCRIPTION_SHOULD_NOT_SURFACE',
+      player_facing: {
+        first_visit: '你第一次推开酒馆的门，炉火映出低声交谈的人影。',
+        revisit: '你回到酒馆，炉火仍在原处低低燃烧。',
+      },
+    } as CodexEntry);
+
+    const manager = createSceneManager(stores, codex);
+
+    const first = await manager.loadScene('loc_tavern');
+    const second = await manager.loadScene('loc_tavern');
+
+    expect(first.status).toBe('success');
+    expect(second.status).toBe('success');
+    if (first.status === 'success' && second.status === 'success') {
+      expect(first.narration).toContain('你第一次推开酒馆的门，炉火映出低声交谈的人影。');
+      expect(second.narration).toContain('你回到酒馆，炉火仍在原处低低燃烧。');
+      expect(first.narration.join('\n')).not.toContain('RAW_TAVERN_DESCRIPTION_SHOULD_NOT_SURFACE');
+      expect(second.narration.join('\n')).not.toContain('RAW_TAVERN_DESCRIPTION_SHOULD_NOT_SURFACE');
+    }
+  });
+
+  it('loadScene passes player_facing narration text as AI scene context without exposing grounding or ecology text', async () => {
+    const codex = createMockCodexEntries();
+    codex.set('loc_tavern', {
+      ...(codex.get('loc_tavern') as CodexEntry),
+      description: 'RAW_TAVERN_DESCRIPTION_SHOULD_NOT_REACH_CONTEXT',
+      player_facing: {
+        first_visit: '酒馆前厅的炉光照着被雨水打湿的门槛。',
+      },
+      ai_grounding: {
+        must_know: ['SECRET_GROUNDING_DETAIL_SHOULD_NOT_SURFACE'],
+      },
+      ecology: {
+        facts_seeded: [{
+          id: 'fact_secret_cellar',
+          statement: 'SECRET_ECOLOGY_FACT_SHOULD_NOT_SURFACE',
+          scope: 'location',
+          scope_id: 'loc_tavern',
+          confidence: 1,
+        }],
+      },
+    } as CodexEntry);
+    let capturedContext: { sceneContext?: string } | undefined;
+    const narrationFn = mock(async (context: { sceneContext?: string }) => {
+      capturedContext = context;
+      return context.sceneContext ?? '';
+    });
+    const retrievalFn = createMockRetrievalFn();
+    const manager = createSceneManager(stores, codex, {
+      generateNarrationFn: narrationFn,
+      generateRetrievalPlanFn: retrievalFn,
+    });
+
+    const result = await manager.loadScene('loc_tavern');
+
+    expect(result.status).toBe('success');
+    expect(capturedContext?.sceneContext).toBe('酒馆前厅的炉光照着被雨水打湿的门槛。');
+    if (result.status === 'success') {
+      const uiText = result.narration.join('\n');
+      expect(uiText).toContain('酒馆前厅的炉光照着被雨水打湿的门槛。');
+      expect(uiText).not.toContain('RAW_TAVERN_DESCRIPTION_SHOULD_NOT_REACH_CONTEXT');
+      expect(uiText).not.toContain('SECRET_GROUNDING_DETAIL_SHOULD_NOT_SURFACE');
+      expect(uiText).not.toContain('SECRET_ECOLOGY_FACT_SHOULD_NOT_SURFACE');
+    }
   });
 
   it('handleInspect generates AI narration for a target', async () => {

@@ -13,7 +13,7 @@
     truth_status: "true"
     scope: local
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -120,10 +120,106 @@
           targetId: npc_shadow_contact
           description: 与阿鬼完成交易
       nextStageId: null
+  world_effects:
+    on_stage_enter:
+      stage_rumor:
+        rumors_created:
+          - id: rumor_black_pine_disappearances
+            statement: 黑松镇近来有人在北林方向失踪，镇民只敢私下议论。
+            scope: location
+            scope_id: loc_tavern
+            truth_status: rumor
+            confidence: 0.7
+            spread:
+              - loc_tavern
+              - loc_market
+            starts_at_stage: stage_rumor
+      stage_disappearances:
+        facts_created:
+          - id: fact_disappearances_share_forest_route
+            statement: 近期失踪者多数与北林道路、废弃营地或矿路传闻有关。
+            scope: quest
+            scope_id: quest_main_01
+            truth_status: confirmed
+            confidence: 0.8
+      stage_truth_in_forest:
+        facts_created:
+          - id: fact_cave_runes_match_old_disaster
+            statement: 黑暗洞穴中的古代符文与五年前狼灾有关的痕迹相似。
+            scope: quest
+            scope_id: quest_main_01
+            truth_status: confirmed
+            confidence: 0.9
+            tags:
+              - flag:ritual_site_active
+      stage_mayor_secret:
+        facts_created:
+          - id: fact_mayor_secret_old_bargain
+            statement: 王德知道五年前狼灾背后存在秘密协议。
+            scope: npc
+            scope_id: npc_elder
+            truth_status: confirmed
+            confidence: 0.9
+            tags:
+              - flag:mayor_secret_known
+      stage_allies_decision:
+        beliefs_created:
+          - holder_id: npc_captain
+            holder_type: npc
+            subject_id: quest_main_01
+            stance: knows
+            statement: 玩家必须在公开真相、压下秘密或借助暗线之间选择盟友。
+            confidence: 0.8
+      stage_consequence_justice:
+        facts_created:
+          - id: fact_mayor_arrested_public_truth
+            statement: 义之道结局中，王德被公开追责，黑松镇必须面对五年前的真相。
+            scope: quest
+            scope_id: quest_main_01
+            truth_status: confirmed
+            confidence: 1.0
+            tags:
+              - flag:mayor_arrested
+      stage_consequence_harmony:
+        facts_created:
+          - id: fact_truth_suppressed_harmony_path
+            statement: 和之道结局中，真相被压下，镇子的表面安稳被暂时保住。
+            scope: quest
+            scope_id: quest_main_01
+            truth_status: confirmed
+            confidence: 1.0
+            tags:
+              - flag:truth_suppressed
+      stage_consequence_shadow:
+        facts_created:
+          - id: fact_shadow_deal_made_underworld_rooted
+            statement: 暗之道结局中，阿鬼与玩家达成交易，地下势力在黑松镇扎下更深的根。
+            scope: quest
+            scope_id: quest_main_01
+            truth_status: confirmed
+            confidence: 1.0
+            tags:
+              - flag:shadow_deal_made
+    on_complete:
+      beliefs_created:
+        - holder_id: npc_elder
+          holder_type: npc
+          subject_id: quest_main_01
+          stance: knows
+          statement: 玩家已经触及黑松镇的核心秘密，后续选择会影响镇子的稳定。
+          confidence: 0.8
   rewards:
     reputation_delta:
       faction_guard: 20
-
+  player_facing:
+    short_label: 黑松镇的秘密
+  ai_grounding:
+    must_know:
+      - 黑松镇接连发生失踪事件，调查背后的真相。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: quest_side_missing_ore
   auto_accept: true
   name: 失踪的矿石
@@ -134,13 +230,13 @@
   tags:
     - side
     - 黑松镇
-  description: 铁匠老赵急需矿石，听说北林废弃矿洞里还有存货。（Stage 2后：矿路被故意封锁，阻止外人发现洞穴）
+  description: 铁匠老赵急需矿石，听说北林废弃矿洞里还有存货。
   epistemic:
     authority: canonical_truth
     truth_status: "true"
     scope: local
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -168,11 +264,21 @@
           targetId: npc_blacksmith
           description: 将矿石交给铁匠老赵
       nextStageId: null
+  world_effects_none: true
   rewards:
     gold: 80
     relation_delta:
       npc_blacksmith: 10
-
+  player_facing:
+    short_label: 失踪的矿石
+  ai_grounding:
+    must_know:
+      - 铁匠老赵急需矿石，听说北林废弃矿洞里还有存货。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
+      after_stage_disappearances: Stage 2后可揭示：矿路被故意封锁，阻止外人发现洞穴。
 - id: quest_side_overdue_debt
   auto_accept: true
   name: 拖欠的债务
@@ -184,13 +290,13 @@
   tags:
     - side
     - 黑松镇
-  description: 阿福被人欠着一笔旧账，他需要人帮忙讨回来。（Stage 4后：瞎子孙的"债"是封口费，他是关键证人）
+  description: 阿福被人欠着一笔旧账，他需要人帮忙讨回来。
   epistemic:
     authority: canonical_truth
     truth_status: "true"
     scope: local
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -218,11 +324,21 @@
           targetId: npc_beggar
           description: 与瞎子孙谈判收债
       nextStageId: null
+  world_effects_none: true
   rewards:
     gold: 120
     reputation_delta:
       faction_merchants: 15
-
+  player_facing:
+    short_label: 拖欠的债务
+  ai_grounding:
+    must_know:
+      - 阿福被人欠着一笔旧账，他需要人帮忙讨回来。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
+      after_stage_mayor_secret: Stage 4后可揭示：瞎子孙的"债"是封口费，他是关键证人。
 - id: quest_side_wolf_bounty
   auto_accept: true
   name: 狼群悬赏
@@ -233,13 +349,13 @@
   tags:
     - side
     - 黑松镇
-  description: 猎人阿虎请求帮忙清除北林中异常活跃的狼群。（Stage 3后：猎狼只是治标，狼群异常来自洞穴祭祀地）
+  description: 猎人阿虎请求帮忙清除北林中异常活跃的狼群。
   epistemic:
     authority: canonical_truth
     truth_status: "true"
     scope: local
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -267,7 +383,18 @@
           targetId: npc_hunter
           description: 向猎人阿虎汇报猎狼结果
       nextStageId: null
+  world_effects_none: true
   rewards:
     gold: 60
     relation_delta:
       npc_hunter: 15
+  player_facing:
+    short_label: 狼群悬赏
+  ai_grounding:
+    must_know:
+      - 猎人阿虎请求帮忙清除北林中异常活跃的狼群。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
+      after_stage_truth_in_forest: Stage 3后可揭示：猎狼只是治标，狼群异常来自洞穴祭祀地。

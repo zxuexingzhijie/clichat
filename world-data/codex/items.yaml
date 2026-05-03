@@ -11,7 +11,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -19,7 +19,15 @@
   item_type: weapon
   value: 10
   base_damage: 5
-
+  player_facing:
+    short_label: 铁剑
+  ai_grounding:
+    must_know:
+      - 普通的铁制长剑，锋利耐用，是冒险者的基本装备。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: item_leather_armor
   name: 皮甲
   type: item
@@ -33,7 +41,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -41,7 +49,15 @@
   item_type: armor
   value: 8
   armor_value: 3
-
+  player_facing:
+    short_label: 皮甲
+  ai_grounding:
+    must_know:
+      - 经过硬化处理的皮革制成的轻型护甲，兼顾防护和灵活性。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: item_wooden_staff
   name: 木杖
   type: item
@@ -56,7 +72,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -64,7 +80,15 @@
   item_type: weapon
   value: 6
   base_damage: 3
-
+  player_facing:
+    short_label: 木杖
+  ai_grounding:
+    must_know:
+      - 经过特殊处理的硬木杖，杖身刻有淡淡的符文，是法师入门的标配。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: item_cloth_robe
   name: 布袍
   type: item
@@ -79,7 +103,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -87,7 +111,15 @@
   item_type: armor
   value: 4
   armor_value: 1
-
+  player_facing:
+    short_label: 布袍
+  ai_grounding:
+    must_know:
+      - 柔软透气的棉布袍子，内衬有微弱的防护符文，聊胜于无。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: item_mana_potion
   name: 魔力药水
   type: item
@@ -101,7 +133,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -110,7 +142,15 @@
   value: 8
   effect: 恢复 15 MP
   mp_restore: 15
-
+  player_facing:
+    short_label: 魔力药水
+  ai_grounding:
+    must_know:
+      - 蓝色透明液体，散发着微弱的光芒，饮下后能恢复魔力。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: item_healing_potion
   name: 治疗药水
   type: item
@@ -123,7 +163,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -132,7 +172,15 @@
   value: 5
   effect: 恢复 10 HP
   heal_amount: 10
-
+  player_facing:
+    short_label: 治疗药水
+  ai_grounding:
+    must_know:
+      - 红色粘稠液体，味道苦涩但效果显著，是冒险者的救命之物。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: item_short_bow
   name: 短弓
   type: item
@@ -146,7 +194,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -154,7 +202,15 @@
   item_type: weapon
   value: 12
   base_damage: 4
-
+  player_facing:
+    short_label: 短弓
+  ai_grounding:
+    must_know:
+      - 轻便灵活的短弓，适合在林间使用，射程虽短但上弦迅速。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: item_lockpick_set
   name: 开锁工具
   type: item
@@ -167,7 +223,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -175,7 +231,15 @@
   item_type: misc
   value: 15
   effect: 可以尝试开锁
-
+  player_facing:
+    short_label: 开锁工具
+  ai_grounding:
+    must_know:
+      - 一套精巧的金属工具，包括各种形状的撬片和张力扳手，懂行的人能用它打开大多数锁。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: item_wolf_pelt
   name: 灰狼皮
   type: item
@@ -189,14 +253,22 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
     volatility: stable
   item_type: misc
   value: 3
-
+  player_facing:
+    short_label: 灰狼皮
+  ai_grounding:
+    must_know:
+      - 从灰狼身上剥下的毛皮，质地粗糙但保暖性好，可以卖给皮匠。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: item_iron_ore
   name: 铁矿石
   type: item
@@ -209,14 +281,22 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
     volatility: stable
   item_type: misc
   value: 5
-
+  player_facing:
+    short_label: 铁矿石
+  ai_grounding:
+    must_know:
+      - 品质不错的铁矿石，是铁匠所需的原材料。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: item_evidence
   name: 失踪者的遗物
   type: item
@@ -229,14 +309,22 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
     volatility: stable
   item_type: key_item
   value: 0
-
+  player_facing:
+    short_label: 失踪者的遗物
+  ai_grounding:
+    must_know:
+      - 在黑暗山洞深处找到的破旧布包，上面绣着镇里失踪者的名字缩写。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: item_herb_bundle
   name: 草药包
   type: item
@@ -250,7 +338,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -259,7 +347,15 @@
   value: 4
   effect: 恢复 5 HP
   heal_amount: 5
-
+  player_facing:
+    short_label: 草药包
+  ai_grounding:
+    must_know:
+      - 用布包裹的几味常见草药，嚼碎敷在伤口上能止血消炎。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: notice_board
   name: 公告栏
   type: item
@@ -272,14 +368,22 @@
     truth_status: "true"
     scope: local
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
     volatility: stable
   item_type: misc
   value: 0
-
+  player_facing:
+    short_label: 公告栏
+  ai_grounding:
+    must_know:
+      - 镇子入口处的木制公告栏，上面张贴着通缉令、失踪人口启事和悬赏任务。其中一张写着：「急寻：三日前失踪的矿工王二，知情者重赏。」
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: oil_lamp
   name: 油灯
   type: item
@@ -292,10 +396,19 @@
     truth_status: "true"
     scope: local
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
     volatility: stable
   item_type: misc
   value: 0
+  player_facing:
+    short_label: 油灯
+  ai_grounding:
+    must_know:
+      - 城门两侧各有一盏铁制油灯，火焰在夜风中摇曳。灯柱上刻有黑松镇的徽记——一株松树。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only

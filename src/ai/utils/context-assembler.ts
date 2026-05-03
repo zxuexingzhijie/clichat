@@ -22,8 +22,21 @@ export type SceneState = {
   readonly sceneDescription: string;
 };
 
+export type PromptAiGrounding = {
+  readonly mustKnow?: readonly string[];
+  readonly mustNotInvent?: readonly string[];
+  readonly tone?: readonly string[];
+  readonly revealPolicy?: Record<string, string | { readonly response: string }>;
+};
+
+export type AssembledCodexEntry = {
+  readonly id: string;
+  readonly description: string;
+  readonly aiGrounding?: PromptAiGrounding;
+};
+
 export type AssembledContext = {
-  readonly codexEntries: ReadonlyArray<{ readonly id: string; readonly description: string }>;
+  readonly codexEntries: ReadonlyArray<AssembledCodexEntry>;
   readonly npcMemories: readonly string[];
   readonly recentNarration: readonly string[];
   readonly sceneContext: string;
@@ -37,6 +50,16 @@ export type NpcContext = {
   readonly scene: string;
   readonly playerAction: string;
 };
+
+function mapAiGrounding(entry: CodexEntry): PromptAiGrounding | undefined {
+  if (!entry.ai_grounding) return undefined;
+  return {
+    mustKnow: entry.ai_grounding.must_know,
+    mustNotInvent: entry.ai_grounding.must_not_invent,
+    tone: entry.ai_grounding.tone,
+    revealPolicy: entry.ai_grounding.reveal_policy,
+  };
+}
 
 export function assembleNarrativeContext(
   retrievalPlan: { readonly codexIds: readonly string[]; readonly npcIds: readonly string[] },
@@ -53,6 +76,7 @@ export function assembleNarrativeContext(
     .map((entry) => ({
       id: entry.id,
       description: entry.description.slice(0, 200),
+      aiGrounding: mapAiGrounding(entry),
     }));
 
   const resolvedMemories = npcMemories

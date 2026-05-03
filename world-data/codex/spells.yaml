@@ -11,7 +11,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -23,7 +23,15 @@
   base_value: 4
   requirements:
     - mind >= 3
-
+  player_facing:
+    short_label: 火焰箭
+  ai_grounding:
+    must_know:
+      - 凝聚火元素形成一支燃烧的箭矢，射向目标造成火焰伤害。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: spell_healing_light
   name: 治愈之光
   type: spell
@@ -37,7 +45,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -49,3 +57,12 @@
   base_value: 3
   requirements:
     - mind >= 2
+  player_facing:
+    short_label: 治愈之光
+  ai_grounding:
+    must_know:
+      - 召唤神圣之光治愈伤口，恢复目标生命值。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only

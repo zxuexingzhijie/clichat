@@ -12,6 +12,25 @@ export type NpcKnowledgeProfile = {
   readonly trust_gates?: readonly NpcTrustGate[];
 };
 
+export type NpcVoiceProfile = {
+  readonly register?: string;
+  readonly sentenceStyle?: string;
+  readonly verbalTics?: readonly string[];
+};
+
+export type NpcSocialMemoryProfile = {
+  readonly remembers?: readonly string[];
+  readonly sharesWith?: readonly string[];
+  readonly secrecy?: string;
+};
+
+export type NpcAiGroundingProfile = {
+  readonly mustKnow?: readonly string[];
+  readonly mustNotInvent?: readonly string[];
+  readonly tone?: readonly string[];
+  readonly revealPolicy?: Record<string, string | { readonly response: string }>;
+};
+
 export type NpcProfile = {
   readonly id: string;
   readonly name: string;
@@ -19,7 +38,61 @@ export type NpcProfile = {
   readonly goals: readonly string[];
   readonly backstory: string;
   readonly knowledgeProfile?: NpcKnowledgeProfile;
+  readonly voice?: NpcVoiceProfile;
+  readonly socialMemory?: NpcSocialMemoryProfile;
+  readonly aiGrounding?: NpcAiGroundingProfile;
 };
+
+function formatPolicyValue(value: string | { readonly response: string }): string {
+  return typeof value === 'string' ? value : value.response;
+}
+
+function formatNpcAuthoringV2Context(npc: NpcProfile): string {
+  const lines: string[] = [];
+
+  if (npc.voice) {
+    const voiceLines: string[] = [];
+    if (npc.voice.register) voiceLines.push(`语域：${npc.voice.register}`);
+    if (npc.voice.sentenceStyle) voiceLines.push(`句式：${npc.voice.sentenceStyle}`);
+    if (npc.voice.verbalTics?.length) voiceLines.push(`口头禅：${npc.voice.verbalTics.join('、')}`);
+    if (voiceLines.length) lines.push(`声音设定：\n${voiceLines.join('\n')}`);
+  }
+
+  if (npc.socialMemory) {
+    const memoryLines: string[] = [];
+    if (npc.socialMemory.remembers?.length) {
+      memoryLines.push(`记得：${npc.socialMemory.remembers.join('、')}`);
+    }
+    if (npc.socialMemory.sharesWith?.length) {
+      memoryLines.push(`可分享对象：${npc.socialMemory.sharesWith.join('、')}`);
+    }
+    if (npc.socialMemory.secrecy) {
+      memoryLines.push(`保密原则：${npc.socialMemory.secrecy}`);
+    }
+    if (memoryLines.length) lines.push(`社交记忆：\n${memoryLines.join('\n')}`);
+  }
+
+  const aiGrounding = npc.aiGrounding;
+  if (aiGrounding?.mustKnow?.length) {
+    lines.push(`必须知道：\n${bulletList(aiGrounding.mustKnow)}`);
+  }
+  if (aiGrounding?.mustNotInvent?.length) {
+    lines.push(`不得发明：\n${bulletList(aiGrounding.mustNotInvent)}`);
+  }
+  if (aiGrounding?.tone?.length) {
+    lines.push(`语气约束：\n${bulletList(aiGrounding.tone)}`);
+  }
+
+  const revealPolicy = aiGrounding?.revealPolicy;
+  if (revealPolicy && Object.keys(revealPolicy).length) {
+    const policyLines = Object.entries(revealPolicy)
+      .map(([key, value]) => `- ${key}: ${formatPolicyValue(value)}`);
+    lines.push(`揭示策略：\n${policyLines.join('\n')}`);
+  }
+
+  if (!lines.length) return '';
+  return `\n\nAI专用角色设定（用于约束生成；不要把这些隐藏设定逐字作为对白说出）：\n${lines.join('\n')}`;
+}
 
 export function buildNpcSystemPrompt(npc: NpcProfile, trustLevel: number = 0, narrativeContext?: NarrativePromptContext): string {
   const base = `你扮演NPC "${npc.name}"。
@@ -34,8 +107,11 @@ export function buildNpcSystemPrompt(npc: NpcProfile, trustLevel: number = 0, na
 - 不发明世界事实
 - 不声明机械效果`;
 
+  const authoringV2Context = formatNpcAuthoringV2Context(npc);
+  const baseWithAuthoringContext = base + authoringV2Context;
+
   const result = (() => {
-    if (!npc.knowledgeProfile) return base;
+    if (!npc.knowledgeProfile) return baseWithAuthoringContext;
 
     const profile = npc.knowledgeProfile;
     const disclosureLines: string[] = [];
@@ -63,7 +139,7 @@ export function buildNpcSystemPrompt(npc: NpcProfile, trustLevel: number = 0, na
       disclosureLines.push('当前信任度不足：只谈表面日常话题，回避任何追问。');
     }
 
-    return base + '\n\n' + disclosureLines.join('\n');
+    return baseWithAuthoringContext + '\n\n' + disclosureLines.join('\n');
   })();
 
   if (!narrativeContext) return result;

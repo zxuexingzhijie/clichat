@@ -1,4 +1,5 @@
 import { describe, it, expect } from "bun:test";
+import { parse as parseYaml } from "yaml";
 import { resolve } from "path";
 
 const GUARD_DIALOGUE_PATH = resolve(
@@ -59,6 +60,30 @@ describe("guard-dialogue-loader", () => {
       const config = await loadGuardDialogue(GUARD_DIALOGUE_PATH);
       expect(config.archetypePriority.profession.length).toBeGreaterThan(0);
       expect(config.archetypePriority.background.length).toBeGreaterThan(0);
+    });
+
+    it("companion authoring data gives every option a player-facing label and grounding hint", async () => {
+      const text = await Bun.file(GUARD_DIALOGUE_PATH).text();
+      const raw = parseYaml(text) as {
+        rounds?: Array<{
+          options?: Array<{
+            id?: string;
+            player_facing?: { short_label?: string };
+            ai_grounding?: { must_know?: string[] };
+          }>;
+        }>;
+      };
+
+      const missingCompanionData = raw.rounds
+        ?.flatMap((round) => round.options ?? [])
+        .filter(
+          (option) =>
+            !option.player_facing?.short_label ||
+            !option.ai_grounding?.must_know?.length,
+        )
+        .map((option) => option.id ?? "(missing id)");
+
+      expect(missingCompanionData).toEqual([]);
     });
 
     it("throws on malformed YAML with missing rounds field", async () => {

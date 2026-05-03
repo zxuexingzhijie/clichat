@@ -463,4 +463,264 @@ describe('world-memory-recorder', () => {
     ]);
     cleanup();
   });
+
+  it('ecology.facts_seeded inserts a WorldFact with generated system WorldEvent provenance', () => {
+    const { eventBus, stores, codexEntries, worldMemory } = makeHarness();
+    codexEntries.set('loc_seeded_gate', {
+      id: 'loc_seeded_gate',
+      name: 'Seeded Gate',
+      type: 'location',
+      ecology: {
+        facts_seeded: [{
+          id: 'fact_seeded_gate_open',
+          statement: 'The seeded gate is open.',
+          scope: 'location',
+          scope_id: 'loc_seeded_gate',
+          truth_status: 'confirmed',
+          confidence: 0.95,
+          tags: ['gate', 'seeded'],
+        }],
+      },
+    } as CodexEntry);
+
+    const cleanup = initWorldEventRecorder(stores, eventBus, codexEntries);
+
+    const seedEvent = firstEvent(worldMemory);
+    expect(seedEvent).toMatchObject({
+      id: 'world-event:world_data_seed:loc_seeded_gate:fact_seeded_gate_open',
+      idempotencyKey: 'world_data_seed:loc_seeded_gate:fact_seeded_gate_open',
+      type: 'world_state',
+      sourceDomainEvent: 'world_data_seed',
+      source: 'system',
+      subjectIds: ['loc_seeded_gate', 'fact_seeded_gate_open'],
+    });
+    expect(worldMemory.getState().facts.fact_seeded_gate_open).toMatchObject({
+      id: 'fact_seeded_gate_open',
+      statement: 'The seeded gate is open.',
+      scope: 'location',
+      scopeId: 'loc_seeded_gate',
+      truthStatus: 'confirmed',
+      confidence: 0.95,
+      sourceEventIds: [seedEvent.id],
+      tags: ['gate', 'seeded'],
+    });
+    cleanup();
+  });
+
+  it('ecology.rumors_seeded inserts a rumor WorldFact with required confidence and seed provenance', () => {
+    const { eventBus, stores, codexEntries, worldMemory } = makeHarness();
+    codexEntries.set('loc_rumor_mill', {
+      id: 'loc_rumor_mill',
+      name: 'Rumor Mill',
+      type: 'location',
+      ecology: {
+        rumors_seeded: [{
+          id: 'rumor_hidden_cellar',
+          statement: 'A hidden cellar lies beneath the old inn.',
+          scope: 'location',
+          scope_id: 'loc_rumor_mill',
+          confidence: 0.42,
+          spread: ['loc_rumor_mill'],
+          tags: ['cellar'],
+        }],
+      },
+    } as CodexEntry);
+
+    const cleanup = initWorldEventRecorder(stores, eventBus, codexEntries);
+
+    const seedEvent = firstEvent(worldMemory);
+    expect(seedEvent.idempotencyKey).toBe('world_data_seed:loc_rumor_mill:rumor_hidden_cellar');
+    expect(worldMemory.getState().facts.rumor_hidden_cellar).toMatchObject({
+      id: 'rumor_hidden_cellar',
+      truthStatus: 'rumor',
+      confidence: 0.42,
+      sourceEventIds: [seedEvent.id],
+      tags: ['cellar', 'spread:loc_rumor_mill'],
+    });
+    cleanup();
+  });
+
+  it('static seed idempotency uses world_data_seed entry and fact ids', () => {
+    const { eventBus, stores, codexEntries, worldMemory } = makeHarness();
+    codexEntries.set('loc_idempotent_seed', {
+      id: 'loc_idempotent_seed',
+      name: 'Idempotent Seed',
+      type: 'location',
+      ecology: {
+        facts_seeded: [{
+          id: 'fact_once',
+          statement: 'This fact is seeded once.',
+          scope: 'location',
+          scope_id: 'loc_idempotent_seed',
+          truth_status: 'confirmed',
+          confidence: 1,
+        }],
+      },
+    } as CodexEntry);
+
+    const firstCleanup = initWorldEventRecorder(stores, eventBus, codexEntries);
+    const secondCleanup = initWorldEventRecorder(stores, eventBus, codexEntries);
+
+    expect(worldMemory.getState().events).toHaveLength(1);
+    expect(worldMemory.getState().events[0]!.idempotencyKey).toBe('world_data_seed:loc_idempotent_seed:fact_once');
+    expect(worldMemory.getState().processedIdempotencyKeys['world_data_seed:loc_idempotent_seed:fact_once']).toBe(
+      'world-event:world_data_seed:loc_idempotent_seed:fact_once',
+    );
+    firstCleanup();
+    secondCleanup();
+  });
+
+  it('multiple codex entries seeding the same fact id merge static fact provenance', () => {
+    const { eventBus, stores, codexEntries, worldMemory } = makeHarness();
+    codexEntries.set('loc_seed_origin', {
+      id: 'loc_seed_origin',
+      name: 'Seed Origin',
+      type: 'location',
+      ecology: {
+        facts_seeded: [{
+          id: 'fact_shared_seed',
+          statement: 'The shared seed fact is known from the origin.',
+          scope: 'global',
+          truth_status: 'confirmed',
+          confidence: 0.8,
+          tags: ['origin'],
+        }],
+      },
+    } as CodexEntry);
+    codexEntries.set('npc_seed_witness', {
+      id: 'npc_seed_witness',
+      name: 'Seed Witness',
+      type: 'npc',
+      ecology: {
+        facts_seeded: [{
+          id: 'fact_shared_seed',
+          statement: 'The shared seed fact is confirmed by the witness.',
+          scope: 'global',
+          truth_status: 'confirmed',
+          confidence: 0.9,
+          tags: ['witness'],
+        }],
+      },
+    } as CodexEntry);
+
+    const cleanup = initWorldEventRecorder(stores, eventBus, codexEntries);
+
+    const [firstSeedEvent, secondSeedEvent] = worldMemory.getState().events;
+    expect(firstSeedEvent).toBeDefined();
+    expect(secondSeedEvent).toBeDefined();
+    expect(worldMemory.getState().facts.fact_shared_seed).toMatchObject({
+      statement: 'The shared seed fact is confirmed by the witness.',
+      sourceEventIds: [firstSeedEvent!.id, secondSeedEvent!.id],
+      createdAt: firstSeedEvent!.timestamp,
+      updatedAt: secondSeedEvent!.timestamp,
+    });
+    cleanup();
+  });
+
+  it('quest.world_effects.on_stage_enter creates facts rumors and beliefs with triggering quest-stage event provenance', () => {
+    const { eventBus, stores, codexEntries, worldMemory } = makeHarness();
+    codexEntries.set('quest_effects', {
+      id: 'quest_effects',
+      name: 'Effects Quest',
+      type: 'quest',
+      world_effects: {
+        on_stage_enter: {
+          stage_signal: {
+            facts_created: [{
+              id: 'fact_stage_signal_lit',
+              statement: 'The signal fire has been lit.',
+              scope: 'quest',
+              scope_id: 'quest_effects',
+              truth_status: 'confirmed',
+              confidence: 1,
+              tags: ['signal'],
+            }],
+            rumors_created: [{
+              id: 'rumor_signal_seen',
+              statement: 'People say the signal fire was seen from town.',
+              scope: 'location',
+              scope_id: 'loc_town',
+              confidence: 0.6,
+              spread: ['loc_town'],
+            }],
+            beliefs_created: [{
+              holder_id: 'npc_watchman',
+              holder_type: 'npc',
+              subject_id: 'quest_effects',
+              fact_id: 'fact_stage_signal_lit',
+              stance: 'knows',
+              statement: 'The watchman knows the signal fire has been lit.',
+              confidence: 0.9,
+              decay: 'slow',
+              tags: ['signal'],
+            }],
+          },
+        },
+      },
+    } as unknown as CodexEntry);
+    const cleanup = initWorldEventRecorder(stores, eventBus, codexEntries);
+
+    eventBus.emit('quest_stage_advanced', { questId: 'quest_effects', newStageId: 'stage_signal', turnNumber: 30 });
+
+    const questEvent = firstEvent(worldMemory);
+    expect(questEvent).toMatchObject({
+      id: 'world-event:quest_stage_advanced:quest_effects:stage_signal:30',
+      sourceDomainEvent: 'quest_stage_advanced',
+    });
+    expect(worldMemory.getState().facts.fact_stage_signal_lit).toMatchObject({
+      truthStatus: 'confirmed',
+      sourceEventIds: [questEvent.id],
+    });
+    expect(worldMemory.getState().facts.rumor_signal_seen).toMatchObject({
+      truthStatus: 'rumor',
+      confidence: 0.6,
+      sourceEventIds: [questEvent.id],
+    });
+    expect(worldMemory.getState().beliefs['belief:npc:npc_watchman:quest_effects:fact_stage_signal_lit']).toMatchObject({
+      holderId: 'npc_watchman',
+      factId: 'fact_stage_signal_lit',
+      sourceEventIds: [questEvent.id],
+      lastReinforcedTurn: 30,
+    });
+    cleanup();
+  });
+
+  it('repeated quest stage world-effect beliefs merge provenance and refresh reinforcement turn', () => {
+    const { eventBus, stores, codexEntries, worldMemory } = makeHarness();
+    codexEntries.set('quest_effects_repeat', {
+      id: 'quest_effects_repeat',
+      name: 'Repeating Effects Quest',
+      type: 'quest',
+      world_effects: {
+        on_stage_enter: {
+          stage_signal: {
+            beliefs_created: [{
+              holder_id: 'npc_watchman',
+              holder_type: 'npc',
+              subject_id: 'quest_effects_repeat',
+              fact_id: 'fact_repeat_signal_lit',
+              stance: 'knows',
+              statement: 'The watchman knows the repeated signal has been lit.',
+              confidence: 0.9,
+              decay: 'slow',
+              tags: ['signal', 'repeat'],
+            }],
+          },
+        },
+      },
+    } as unknown as CodexEntry);
+    const cleanup = initWorldEventRecorder(stores, eventBus, codexEntries);
+
+    eventBus.emit('quest_stage_advanced', { questId: 'quest_effects_repeat', newStageId: 'stage_signal', turnNumber: 30 });
+    eventBus.emit('quest_stage_advanced', { questId: 'quest_effects_repeat', newStageId: 'stage_signal', turnNumber: 31 });
+
+    const [firstQuestEvent, secondQuestEvent] = worldMemory.getState().events;
+    expect(firstQuestEvent).toBeDefined();
+    expect(secondQuestEvent).toBeDefined();
+    expect(worldMemory.getState().beliefs['belief:npc:npc_watchman:quest_effects_repeat:fact_repeat_signal_lit']).toMatchObject({
+      sourceEventIds: [firstQuestEvent!.id, secondQuestEvent!.id],
+      lastReinforcedTurn: 31,
+    });
+    cleanup();
+  });
 });

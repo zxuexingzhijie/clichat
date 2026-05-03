@@ -6,22 +6,40 @@
   status: active
   evidence: wears guard uniform and badge
   note: loyal member since the wolf disaster
-
+  ai_grounding:
+    must_know:
+      - loyal member since the wolf disaster
+    must_not_invent:
+      - 不要扩展关系强度、公开性或秘密细节，除非剧情状态明确提供。
+    reveal_policy:
+      default: public_surface_only
 - source_id: npc_guard
   target_id: loc_north_gate
   relation_type: stationed_at
   visibility: public
-  strength: 1.0
+  strength: 1
   status: active
-
+  ai_grounding:
+    must_know:
+      - npc_guard 与 loc_north_gate 的关系类型是 stationed_at。
+    must_not_invent:
+      - 不要扩展关系强度、公开性或秘密细节，除非剧情状态明确提供。
+    reveal_policy:
+      default: public_surface_only
 - source_id: npc_bartender
   target_id: loc_tavern
   relation_type: owner_of
   visibility: public
-  strength: 1.0
+  strength: 1
   status: active
   note: inherited from father, running for 20 years
-
+  ai_grounding:
+    must_know:
+      - inherited from father, running for 20 years
+    must_not_invent:
+      - 不要扩展关系强度、公开性或秘密细节，除非剧情状态明确提供。
+    reveal_policy:
+      default: public_surface_only
 - source_id: npc_bartender
   target_id: faction_shadow_guild
   relation_type: informant_for
@@ -30,3 +48,10 @@
   status: active
   evidence: occasionally seen talking to shadowy figures after closing
   note: sells information to both sides
+  ai_grounding:
+    must_know:
+      - sells information to both sides
+    must_not_invent:
+      - 不要扩展关系强度、公开性或秘密细节，除非剧情状态明确提供。
+    reveal_policy:
+      default: gated_by_visibility_or_trust

@@ -10,7 +10,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -23,7 +23,15 @@
     - item_leather_armor
     - item_healing_potion
   primary_attribute: physique
-
+  player_facing:
+    short_label: 冒险者
+  ai_grounding:
+    must_know:
+      - 以冒险为生的人，擅长体能和战斗。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: prof_mage
   name: 法师
   type: profession
@@ -36,7 +44,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -49,7 +57,15 @@
     - item_cloth_robe
     - item_mana_potion
   primary_attribute: mind
-
+  player_facing:
+    short_label: 法师
+  ai_grounding:
+    must_know:
+      - 研习魔法的学者，以心智驾驭元素之力。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
 - id: prof_rogue
   name: 游侠
   type: profession
@@ -62,7 +78,7 @@
     truth_status: "true"
     scope: global
     visibility: public
-    confidence: 1.0
+    confidence: 1
     source_type: authorial
     known_by: []
     contradicts: []
@@ -75,3 +91,12 @@
     - item_leather_armor
     - item_lockpick_set
   primary_attribute: finesse
+  player_facing:
+    short_label: 游侠
+  ai_grounding:
+    must_know:
+      - 敏捷而狡猾的人，擅长潜行、开锁和远程射击。
+    must_not_invent:
+      - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
+    reveal_policy:
+      default: public_surface_only
