@@ -1,0 +1,132 @@
+{
+  "npcId": "npc_captain",
+  "allMemories": [
+    {
+      "id": "cfVEp9-NPdUD5VtBy4TLs",
+      "npcId": "npc_captain",
+      "event": "这个外乡人在雨夜出现在北门，还主动问我失踪的事。也许他能帮忙，或者他知道些什么。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    },
+    {
+      "id": "HVFFHn2nQe9a5wGDcHr5F",
+      "npcId": "npc_captain",
+      "event": "这个外乡人似乎对失踪案很上心，或许能成为帮手，至少让他去酒馆打听不会坏事。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    },
+    {
+      "id": "hcY0MitM_Y6TdHDkeVJUZ",
+      "npcId": "npc_captain",
+      "event": "这个外乡人追问失踪案的幕后阻碍，看来对案子很执着，或许真能帮忙查清线索。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    },
+    {
+      "id": "Vh9xC0XRqocFcNrKm52Vk",
+      "npcId": "npc_captain",
+      "event": "外乡人追问谁在阻挠调查，我警告他小心，让他去酒馆找老板娘。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    },
+    {
+      "id": "A4nWih6aLTdKsc6Op8Yh2",
+      "npcId": "npc_captain",
+      "event": "与玩家进行过对话（第1次）",
+      "turnNumber": 0,
+      "importance": "low",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    }
+  ],
+  "recentMemories": [
+    {
+      "id": "cfVEp9-NPdUD5VtBy4TLs",
+      "npcId": "npc_captain",
+      "event": "这个外乡人在雨夜出现在北门，还主动问我失踪的事。也许他能帮忙，或者他知道些什么。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    },
+    {
+      "id": "HVFFHn2nQe9a5wGDcHr5F",
+      "npcId": "npc_captain",
+      "event": "这个外乡人似乎对失踪案很上心，或许能成为帮手，至少让他去酒馆打听不会坏事。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    },
+    {
+      "id": "hcY0MitM_Y6TdHDkeVJUZ",
+      "npcId": "npc_captain",
+      "event": "这个外乡人追问失踪案的幕后阻碍，看来对案子很执着，或许真能帮忙查清线索。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    },
+    {
+      "id": "Vh9xC0XRqocFcNrKm52Vk",
+      "npcId": "npc_captain",
+      "event": "外乡人追问谁在阻挠调查，我警告他小心，让他去酒馆找老板娘。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    },
+    {
+      "id": "A4nWih6aLTdKsc6Op8Yh2",
+      "npcId": "npc_captain",
+      "event": "与玩家进行过对话（第1次）",
+      "turnNumber": 0,
+      "importance": "low",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_captain"
+      ]
+    }
+  ],
+  "salientMemories": [],
+  "archiveSummary": "",
+  "archiveSourceIds": [],
+  "lastUpdated": "2026-05-03T11:00:25.694Z",
+  "version": 0
+}

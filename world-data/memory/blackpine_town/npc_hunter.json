@@ -1,0 +1,156 @@
+{
+  "npcId": "npc_hunter",
+  "allMemories": [
+    {
+      "id": "VZHPRJ_7XHQUWJp-1-eQr",
+      "npcId": "npc_hunter",
+      "event": "玩家对狼群异常南下感兴趣，或许能帮上忙。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_hunter"
+      ]
+    },
+    {
+      "id": "eo5gOqZR7f4tQXQOZH2VS",
+      "npcId": "npc_hunter",
+      "event": "这个外地人对失踪和狼群的事问得仔细，也许能帮我探探北边的动静。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_hunter"
+      ]
+    },
+    {
+      "id": "gn6Hyfaw9p1OW4vXYDBgK",
+      "npcId": "npc_hunter",
+      "event": "这个外地人对失踪和狼群的事问得仔细，也许能帮我探探北边的动静。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_hunter"
+      ]
+    },
+    {
+      "id": "AFw0XkqfgRgFXCl-XGvjW",
+      "npcId": "npc_hunter",
+      "event": "这个外地人挺急，愿意冒险帮忙。天亮了可以带他进林子找狼群踪迹。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_hunter"
+      ]
+    },
+    {
+      "id": "OysR5bvS6-kOlLuLlPy1g",
+      "npcId": "npc_hunter",
+      "event": "这个外地人愿意跟我进北林找狼群踪迹，或许是个靠谱的帮手。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_hunter"
+      ]
+    },
+    {
+      "id": "Tthl2OBw9L9gykDlegi6O",
+      "npcId": "npc_hunter",
+      "event": "与玩家进行过对话（第1次）",
+      "turnNumber": 0,
+      "importance": "low",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_hunter"
+      ]
+    }
+  ],
+  "recentMemories": [
+    {
+      "id": "VZHPRJ_7XHQUWJp-1-eQr",
+      "npcId": "npc_hunter",
+      "event": "玩家对狼群异常南下感兴趣，或许能帮上忙。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_hunter"
+      ]
+    },
+    {
+      "id": "eo5gOqZR7f4tQXQOZH2VS",
+      "npcId": "npc_hunter",
+      "event": "这个外地人对失踪和狼群的事问得仔细，也许能帮我探探北边的动静。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_hunter"
+      ]
+    },
+    {
+      "id": "gn6Hyfaw9p1OW4vXYDBgK",
+      "npcId": "npc_hunter",
+      "event": "这个外地人对失踪和狼群的事问得仔细，也许能帮我探探北边的动静。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_hunter"
+      ]
+    },
+    {
+      "id": "AFw0XkqfgRgFXCl-XGvjW",
+      "npcId": "npc_hunter",
+      "event": "这个外地人挺急，愿意冒险帮忙。天亮了可以带他进林子找狼群踪迹。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_hunter"
+      ]
+    },
+    {
+      "id": "OysR5bvS6-kOlLuLlPy1g",
+      "npcId": "npc_hunter",
+      "event": "这个外地人愿意跟我进北林找狼群踪迹，或许是个靠谱的帮手。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_hunter"
+      ]
+    },
+    {
+      "id": "Tthl2OBw9L9gykDlegi6O",
+      "npcId": "npc_hunter",
+      "event": "与玩家进行过对话（第1次）",
+      "turnNumber": 0,
+      "importance": "low",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_hunter"
+      ]
+    }
+  ],
+  "salientMemories": [],
+  "archiveSummary": "",
+  "archiveSourceIds": [],
+  "lastUpdated": "2026-05-03T10:15:01.684Z",
+  "version": 0
+}

@@ -1,0 +1,132 @@
+{
+  "npcId": "npc_guard",
+  "allMemories": [
+    {
+      "id": "2C62nn9SiI52Hz5t6JpIe",
+      "npcId": "npc_guard",
+      "event": "有个陌生旅人试图套近乎，声称刚见过我，但我毫无印象。雨夜在北门盘问此人。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_guard"
+      ]
+    },
+    {
+      "id": "GzD3JiOsLPlJe_28P5ZqH",
+      "npcId": "npc_guard",
+      "event": "这个旅人声称只是看告示，但雨夜看悬赏令的举动有些刻意。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_guard"
+      ]
+    },
+    {
+      "id": "wN8I22vvGM1eo7ApUktmS",
+      "npcId": "npc_guard",
+      "event": "有个旅人声称从阿虎那里听说了狼群的事，雨夜在北门盘桓，目前没有可疑举动，但需留意。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_guard"
+      ]
+    },
+    {
+      "id": "pkPI-AWdib1F1Xz0InTMR",
+      "npcId": "npc_guard",
+      "event": "那个反复在雨夜出现的旅人刚才直盯着我的脸打量，举动越来越可疑，我得记清楚他的样子。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_guard"
+      ]
+    },
+    {
+      "id": "ifmHHoegOTYqp9lJNqHYX",
+      "npcId": "npc_guard",
+      "event": "与玩家进行过对话（第1次）",
+      "turnNumber": 0,
+      "importance": "low",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_guard"
+      ]
+    }
+  ],
+  "recentMemories": [
+    {
+      "id": "2C62nn9SiI52Hz5t6JpIe",
+      "npcId": "npc_guard",
+      "event": "有个陌生旅人试图套近乎，声称刚见过我，但我毫无印象。雨夜在北门盘问此人。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_guard"
+      ]
+    },
+    {
+      "id": "GzD3JiOsLPlJe_28P5ZqH",
+      "npcId": "npc_guard",
+      "event": "这个旅人声称只是看告示，但雨夜看悬赏令的举动有些刻意。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_guard"
+      ]
+    },
+    {
+      "id": "wN8I22vvGM1eo7ApUktmS",
+      "npcId": "npc_guard",
+      "event": "有个旅人声称从阿虎那里听说了狼群的事，雨夜在北门盘桓，目前没有可疑举动，但需留意。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_guard"
+      ]
+    },
+    {
+      "id": "pkPI-AWdib1F1Xz0InTMR",
+      "npcId": "npc_guard",
+      "event": "那个反复在雨夜出现的旅人刚才直盯着我的脸打量，举动越来越可疑，我得记清楚他的样子。",
+      "turnNumber": 0,
+      "importance": "medium",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_guard"
+      ]
+    },
+    {
+      "id": "ifmHHoegOTYqp9lJNqHYX",
+      "npcId": "npc_guard",
+      "event": "与玩家进行过对话（第1次）",
+      "turnNumber": 0,
+      "importance": "low",
+      "emotionalValence": 0,
+      "participants": [
+        "player",
+        "npc_guard"
+      ]
+    }
+  ],
+  "salientMemories": [],
+  "archiveSummary": "",
+  "archiveSourceIds": [],
+  "lastUpdated": "2026-05-03T10:20:09.573Z",
+  "version": 0
+}
