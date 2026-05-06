@@ -24,11 +24,17 @@ type RawEntry = { [key: string]: unknown };
 type RawQuest = RawEntry & {
   id: string;
   type: "quest";
-  stages?: { id: string }[];
+  description?: string;
+  stages?: QuestStage[];
   world_effects?: {
     on_stage_enter?: { [stageId: string]: WorldEffectStage };
   };
   world_effects_none?: boolean;
+};
+type QuestStage = {
+  id: string;
+  description?: string;
+  conditional_next_stages?: { condition_flag?: string; nextStageId?: string }[];
 };
 type WorldEffectStage = {
   facts_created?: (string | WorldEffectSeed)[];
@@ -48,6 +54,25 @@ type NarrativeTransition = {
 type NarrativeTransitions = {
   transitions: NarrativeTransition[];
 };
+
+const requiredMainStages = new Set([
+  "stage_rumor",
+  "stage_disappearances",
+  "stage_truth_in_forest",
+  "stage_mayor_secret",
+  "stage_allies_decision",
+  "stage_consequence_justice",
+  "stage_consequence_harmony",
+  "stage_consequence_shadow",
+]);
+
+const REQUIRED_BLACKPINE_UPGRADE_ANCHORS = ["名字", "名单", "逐名印", "灰契会", "静灯祭"];
+const FORBIDDEN_DIRECT_REVEAL_MARKERS = [
+  "逐名印原理是",
+  "灰契会真正目的",
+  "王德五年前签下债契",
+  "系统真相",
+];
 
 function collectPlayerFacingValues(value: unknown, path: string[] = []): { path: string; value: string }[] {
   if (typeof value === "string") {
@@ -242,6 +267,32 @@ describe("world-data authoring v2 audit helper guards", () => {
 });
 
 describe("world-data authoring v2 audit", () => {
+  it("presents Blackpine locations as distinct investigation nodes without player-facing backstage reveals", () => {
+    const locations = (readYaml("codex/locations.yaml") as RawEntry[]).filter((entry) => entry.type === "location");
+    const byId = new Map(locations.map((location) => [String(location.id), location]));
+    const requiredPlayerFacingAnchors: Record<string, string[]> = {
+      loc_north_gate: ["提前落闸", "夜巡记录", "车辙", "狼爪印"],
+      loc_tavern: ["猎人", "老陈", "传言", "访客登记"],
+      loc_market: ["矿路封锁", "货价", "税册", "维稳"],
+      loc_temple: ["裂钟", "祈名册", "不要回应全名"],
+      loc_abandoned_camp: ["姓名牌", "值夜名册", "烧残"],
+      loc_dark_cave: ["债印石", "黑银矿脉", "账目"],
+      loc_main_street: ["静灯祭", "证词", "公告痕迹"],
+    };
+
+    const missingAnchors = Object.entries(requiredPlayerFacingAnchors).flatMap(([locationId, anchors]) => {
+      const location = byId.get(locationId);
+      const playerFacingText = collectRuntimePlayerFacingValues(location ?? { id: locationId }, "locations.yaml")
+        .map(({ value }) => value)
+        .join("\n");
+      return anchors
+        .filter((anchor) => !playerFacingText.includes(anchor))
+        .map((anchor) => `${locationId}.${anchor}`);
+    });
+
+    expect(missingAnchors).toEqual([]);
+  });
+
   it("gives every location object a player-facing affordance or codex display fallback", async () => {
     const codex = await loadAllCodex(CODEX_DIR.pathname);
     const locations = [...codex.values()].filter((entry) => entry.type === "location");
@@ -310,6 +361,69 @@ describe("world-data authoring v2 audit", () => {
       collectRuntimePlayerFacingValuesFromYaml(readYaml(`codex/${file}`), file)
         .filter(({ value }) => marker.test(value))
         .map(({ path, value }) => `${path}: ${value}`)
+    );
+
+    expect(leaks).toEqual([]);
+  });
+
+  it("preserves runtime-safe main quest stage IDs and alliance lock transitions", () => {
+    const quests = questEntries(readYaml("codex/quests.yaml") as RawEntry[]);
+    const mainQuest = quests.find((quest) => quest.id === "quest_main_01");
+    if (!mainQuest) throw new Error("quest_main_01 is required for main quest stage audit");
+
+    const mainStageIds = new Set((mainQuest.stages ?? []).map((stage) => stage.id));
+    const missingRequiredStages = [...requiredMainStages].filter((stageId) => !mainStageIds.has(stageId));
+    expect(missingRequiredStages).toEqual([]);
+
+    const alliesDecisionStage = (mainQuest.stages ?? []).find((stage) => stage.id === "stage_allies_decision");
+    expect(alliesDecisionStage?.id).toBe("stage_allies_decision");
+
+    const allianceLockFlags = new Set(
+      (alliesDecisionStage?.conditional_next_stages ?? [])
+        .map((conditionalStage) => conditionalStage.condition_flag)
+        .filter((conditionFlag): conditionFlag is string => typeof conditionFlag === "string")
+    );
+    const missingAllianceLockFlags = [
+      "justice_score_locked",
+      "shadow_score_locked",
+      "pragmatism_score_locked",
+    ].filter((conditionFlag) => !allianceLockFlags.has(conditionFlag));
+    expect(missingAllianceLockFlags).toEqual([]);
+
+    const transitions = (readYaml("narrative-transitions.yaml") as NarrativeTransitions).transitions;
+    const transitionStagesMissingFromMainQuest = transitions
+      .map((transition) => transition.on_stage)
+      .filter((stageId) => !mainStageIds.has(stageId));
+    expect(transitionStagesMissingFromMainQuest).toEqual([]);
+  });
+
+  it("includes blackpine upgrade anchors in main quest descriptions or structured world effects", () => {
+    const quests = questEntries(readYaml("codex/quests.yaml") as RawEntry[]);
+    const mainQuest = quests.find((quest) => quest.id === "quest_main_01");
+    if (!mainQuest) throw new Error("quest_main_01 is required for main quest anchor audit");
+
+    const searchableMainQuestText = [
+      mainQuest.description,
+      ...(mainQuest.stages ?? []).map((stage) => stage.description),
+      ...collectPlayerFacingValues(mainQuest.world_effects, ["world_effects"]).map(({ value }) => value),
+    ]
+      .filter((value): value is string => typeof value === "string")
+      .join("\n");
+
+    const missingAnchors = REQUIRED_BLACKPINE_UPGRADE_ANCHORS.filter(
+      (anchor) => !searchableMainQuestText.includes(anchor)
+    );
+    expect(missingAnchors).toEqual([]);
+  });
+
+  it("keeps direct backstage reveal markers out of runtime-visible quest, location, and NPC text", () => {
+    const codexFiles = ["quests.yaml", "locations.yaml", "npcs.yaml"];
+    const leaks = codexFiles.flatMap((file) =>
+      collectRuntimePlayerFacingValuesFromYaml(readYaml(`codex/${file}`), file)
+        .flatMap(({ path, value }) => FORBIDDEN_DIRECT_REVEAL_MARKERS
+          .filter((marker) => value.includes(marker))
+          .map((marker) => `${path}: ${marker}: ${value}`)
+        )
     );
 
     expect(leaks).toEqual([]);

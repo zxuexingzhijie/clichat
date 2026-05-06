@@ -4,21 +4,21 @@
   tags:
     - town_entrance
     - 黑松镇
-  description: 黑松镇的北面入口，石砌的城门两侧各立一盏油灯。守卫日夜值守，偶有商队和旅人进出。
+  description: 黑松镇的北面入口，石砌城门两侧各立一盏油灯。铁闸今日比寻常提前落闸，夜巡记录、车辙和狼爪印让守卫的秩序感显出裂缝。
   player_facing:
     short_label: 北门
-    first_visit: 你来到黑松镇北门，石砌城门两侧的油灯在风里轻晃，守卫审视着来往的人。
-    revisit: 你回到黑松镇北门，守卫仍在门边值守，商队和旅人偶尔从这里经过。
+    first_visit: 你来到黑松镇北门，铁闸比寻常提前落下，守卫把夜巡记录压在臂弯里，门外泥地上有交错的车辙和狼爪印。
+    revisit: 你回到黑松镇北门，提前落闸的铁链仍垂在门侧，夜巡记录和门外痕迹让这里的秩序显得不再可靠。
     sensory:
       sights:
-        - 石砌城门与两盏油灯
-        - 守卫在门侧巡看
+        - 石砌城门与提前落下的铁闸
+        - 泥地上并行又交错的车辙和狼爪印
       sounds:
-        - 甲片和长矛轻碰的声响
-        - 远处林道传来的风声
+        - 铁链在风中轻撞门栓
+        - 守卫翻动夜巡记录时刻意压低的纸页声
       smells:
         - 油灯烟味
-        - 城门石墙上的潮气
+        - 门外泥土和湿兽毛混杂的气味
     interactables:
       - id: notice_board
         visible_name: 北门告示牌
@@ -26,18 +26,32 @@
       - id: oil_lamp
         visible_name: 门侧油灯
         affordance: 查看油灯
+      - id: gate_drop_mechanism
+        visible_name: 提前落闸的绞链
+        affordance: 检查落闸绞链
+      - id: night_patrol_log
+        visible_name: 夜巡记录
+        affordance: 翻看夜巡记录
+      - id: rutted_tracks
+        visible_name: 门外车辙
+        affordance: 比对车辙方向
+      - id: wolf_pawprints
+        visible_name: 狼爪印
+        affordance: 检查狼爪印
   ai_grounding:
     must_know:
-      - 黑松镇北门连接主街与黑松林道。
-      - 这里有守卫日夜值守，是进入北林前的关口。
+      - 调查节点：北门承担秩序异常功能，线索集中在提前落闸、夜巡记录、车辙和狼爪印。
+      - AI可以暗示落闸时间与记录不合、车辙和狼爪印方向矛盾，但只呈现可观察异常。
     must_not_invent:
+      - 不要提前确认谁操控落闸、狼群或守卫记录，除非剧情阶段或玩家调查明确触发。
       - 不要宣称北门已经失守或被军队封锁，除非世界状态明确改变。
     reveal_policy:
       default: public_surface_only
+      order_anomaly: gated_by_inspection_or_stage
   ecology:
     facts_seeded:
       - id: fact_loc_north_gate_watch
-        statement: 黑松镇北门由守卫日夜值守，连接镇内主街和镇外林道。
+        statement: 黑松镇北门由守卫日夜值守，但提前落闸、夜巡记录、车辙和狼爪印构成秩序异常调查节点。
         scope: location
         scope_id: loc_north_gate
         truth_status: confirmed
@@ -66,6 +80,10 @@
   objects:
     - notice_board
     - oil_lamp
+    - gate_drop_mechanism
+    - night_patrol_log
+    - rutted_tracks
+    - wolf_pawprints
   coordinates: { x: 1, y: 2 }
   map_icon: "G"
   location_context:
@@ -93,21 +111,21 @@
     - building
     - social
     - 黑松镇
-  description: 镇上唯一的酒馆，名为"松木桶"。温暖的炉火、嘈杂的人声，是冒险者歇脚和打听消息的好去处。
+  description: 镇上唯一的酒馆，名为"松木桶"。一名猎人的死亡把炉火边的闲谈压低，老陈留下的民间档案、访客登记和半真传言构成最早的开场钩子。
   player_facing:
     short_label: 松木桶酒馆
-    first_visit: 你推开松木桶酒馆的门，炉火、酒香和嘈杂人声一同涌来。
-    revisit: 你回到松木桶酒馆，炉火依旧暖着，闲谈声在木桌之间来回流动。
+    first_visit: 你推开松木桶酒馆的门，猎人死亡后的空桌仍被人避开，老陈把民间档案和访客登记收在柜台后，半真传言在杯盏间断断续续传来。
+    revisit: 你回到松木桶酒馆，炉火仍暖，关于猎人的传言、老陈的档案和访客登记让这里像一间不愿承认的证词室。
     sensory:
       sights:
-        - 温暖的炉火
-        - 挤在桌边的旅人与镇民
+        - 炉火旁无人落座的猎人旧桌
+        - 柜台后露出边角的老陈民间档案
       sounds:
-        - 杯盏碰撞声
-        - 压低的闲谈和笑声
+        - 杯盏碰撞后突然压低的闲谈
+        - 半真传言在人群中被迅速改口
       smells:
         - 麦酒香
-        - 炉火烟味
+        - 炉火烟味和未散尽的药酒气
     interactables:
       - id: fireplace
         visible_name: 炉火
@@ -118,19 +136,33 @@
       - id: barrel
         visible_name: 酒桶
         affordance: 检查酒桶
+      - id: guest_register
+        visible_name: 访客登记
+        affordance: 翻看访客登记
+      - id: hunter_death_table
+        visible_name: 猎人旧桌
+        affordance: 检查猎人死亡后空出的桌位
+      - id: old_chen_folk_archive
+        visible_name: 老陈的民间档案
+        affordance: 请求查看老陈的民间档案
+      - id: half_true_rumors
+        visible_name: 半真传言
+        affordance: 分辨酒客传言
   ai_grounding:
     must_know:
-      - 松木桶是黑松镇唯一的酒馆，也是打听消息的社交场所。
-      - 老陈和旅店老板娘常在这里活动。
+      - 调查节点：酒馆承担开场钩子功能，线索集中在猎人死亡、老陈的民间档案、访客登记和半真传言。
+      - AI可以暗示传言彼此矛盾、访客登记有异常停顿，但应把它们呈现为民间叙事和可查证细节。
     must_not_invent:
-      - 不要直接暴露隐藏身份或秘密交易，除非信任或剧情阶段允许。
+      - 不要提前确认猎人死亡的完整原因、幕后身份或秘密交易，除非信任或剧情阶段允许。
+      - 不要把半真传言当作全知旁白；传言必须保留误差和民间转述口吻。
     reveal_policy:
       default: public_surface_only
       rumors: gated_by_trust_or_stage
+      tavern_records: gated_by_inspection_or_trust
   ecology:
     facts_seeded:
       - id: fact_loc_tavern_social_hub
-        statement: 松木桶酒馆是黑松镇消息和旅人流动最集中的室内场所。
+        statement: 松木桶酒馆以猎人死亡、老陈民间档案、访客登记和半真传言承载主线开场钩子。
         scope: location
         scope_id: loc_tavern
         truth_status: confirmed
@@ -158,6 +190,10 @@
     - fireplace
     - notice_board_tavern
     - barrel
+    - guest_register
+    - hunter_death_table
+    - old_chen_folk_archive
+    - half_true_rumors
   coordinates: { x: 0, y: 4 }
   map_icon: "T"
   location_context:
@@ -185,21 +221,21 @@
   tags:
     - town_center
     - 黑松镇
-  description: 黑松镇的中心大道，连接各处要地。行人熙攘，叫卖声此起彼伏，是镇上最热闹的地方。
+  description: 黑松镇的中心大道，连接各处要地。静灯祭的灯架正在主街搭起，空出的证词位置和公告痕迹让街面热闹显得格外紧绷。
   player_facing:
     short_label: 主街
-    first_visit: 你踏上黑松镇主街，叫卖声、人流和各处招牌把镇子的日常铺展开来。
-    revisit: 你回到黑松镇主街，通往各处的道路仍在熙攘人群中延伸。
+    first_visit: 你踏上黑松镇主街，静灯祭的灯架沿街搭起，叫卖声与旁观视线交织，空出的证词位置让人群下意识绕开。
+    revisit: 你回到黑松镇主街，静灯祭的灯架、空出的证词位置和被抹平的公告痕迹让街面热闹显得格外紧绷。
     sensory:
       sights:
-        - 往来行人和摊贩
-        - 指向各处的路牌
+        - 静灯祭灯架和往来行人
+        - 喷泉旁被留出的公开证词空地
       sounds:
         - 此起彼伏的叫卖声
-        - 人群交谈声
+        - 人群在关键字眼前突然收住的交谈声
       smells:
         - 街边熟食气味
-        - 尘土和马匹气味
+        - 灯油、尘土和马匹气味
     interactables:
       - id: signpost
         visible_name: 路牌
@@ -207,18 +243,29 @@
       - id: fountain
         visible_name: 喷泉
         affordance: 查看喷泉
+      - id: quiet_lantern_stage
+        visible_name: 静灯祭灯架
+        affordance: 检查静灯祭灯架
+      - id: public_testimony_space
+        visible_name: 公开证词空地
+        affordance: 观察被留出的证词位置
+      - id: sealed_secret_notice
+        visible_name: 被抹平的公告痕迹
+        affordance: 检查被反复改写的公告痕迹
   ai_grounding:
     must_know:
-      - 主街连接北门、酒馆、铁匠铺、神殿和集市广场。
-      - 镇长王德常在主街附近处理镇务。
+      - 调查节点：主街承担静灯祭对峙功能，是镇民共同见证后果的公共舞台。
+      - AI可以暗示人群视线、灯架位置和公告痕迹会放大玩家选择的社会后果。
     must_not_invent:
+      - 不要提前替玩家决定静灯祭上的结局走向，除非对应剧情分支已确定。
       - 不要把主街描写成荒废或无人，除非世界状态明确改变。
     reveal_policy:
       default: public_surface_only
+      confrontation_outcome: gated_by_stage_or_player_choice
   ecology:
     facts_seeded:
       - id: fact_loc_main_street_crossroads
-        statement: 黑松镇主街是镇内主要通路，连接多个公共地点。
+        statement: 黑松镇主街在静灯祭期间成为镇民共同见证后果的公共对峙舞台。
         scope: location
         scope_id: loc_main_street
         truth_status: confirmed
@@ -251,6 +298,9 @@
   objects:
     - signpost
     - fountain
+    - quiet_lantern_stage
+    - public_testimony_space
+    - sealed_secret_notice
   coordinates: { x: 1, y: 3 }
   map_icon: "S"
   location_context:
@@ -356,21 +406,21 @@
     - trade
     - social
     - 黑松镇
-  description: 镇上的集市广场，各类摊贩云集，从食物到工具应有尽有。嘈杂热闹，也是消息流通最快的地方。
+  description: 镇上的集市广场，各类摊贩云集。矿路封锁让货价跳动，税册和维稳告示把失踪事件压成每个人都能算出的现实压力。
   player_facing:
     short_label: 集市广场
-    first_visit: 你来到集市广场，摊贩的招呼声和货物色彩在井边与公告板旁交织。
-    revisit: 你回到集市广场，买卖声依旧热闹，新的传闻也常在这里流动。
+    first_visit: 你来到集市广场，矿路封锁的告示贴在公告板旁，货价被反复改写，税册摊在商贩手边，维稳巡查穿过人群。
+    revisit: 你回到集市广场，货价还在涨，矿路封锁和税册争执让维稳现实比传言更难回避。
     sensory:
       sights:
-        - 密集的市场摊位
-        - 水井和公告板
+        - 被反复改写的货价牌
+        - 矿路封锁告示和税册旁聚起的人群
       sounds:
-        - 摊贩叫卖声
-        - 讨价还价声
+        - 摊贩压着火气的讨价还价声
+        - 维稳巡查靠近时骤然放轻的议论
       smells:
         - 食物香气
-        - 人群和牲口混杂的气味
+        - 人群、牲口和潮湿账册混杂的气味
     interactables:
       - id: market_stalls
         visible_name: 市场摊位
@@ -381,19 +431,33 @@
       - id: bulletin_board
         visible_name: 公告板
         affordance: 阅读公告板
+      - id: blocked_mine_route_notice
+        visible_name: 矿路封锁告示
+        affordance: 阅读矿路封锁告示
+      - id: price_board
+        visible_name: 货价牌
+        affordance: 比对货价变动
+      - id: tax_register
+        visible_name: 税册
+        affordance: 翻看税册记录
+      - id: stability_notice
+        visible_name: 维稳告示
+        affordance: 阅读维稳告示
   ai_grounding:
     must_know:
-      - 集市广场是黑松镇贸易和公开传闻流通最快的地点。
-      - 阿福和瞎子孙常在这里活动。
+      - 调查节点：集市承担社会压力功能，线索集中在矿路封锁、货价、税册和维稳现实。
+      - AI可以暗示物价、税负和巡查话术如何把北林事件转化为镇民压力。
     must_not_invent:
-      - 不要让集市自动揭露隐藏交易真相，除非对应线索已被触发。
+      - 不要提前揭露隐藏交易真相或后台操盘者，除非对应线索已被触发。
+      - 不要把集市群众描写成单一立场；这里应保留商贩、巡查与居民的利益冲突。
     reveal_policy:
       default: public_surface_only
       rumors: public_rumors_only
+      civic_pressure: gated_by_public_records_or_stage
   ecology:
     facts_seeded:
       - id: fact_loc_market_rumor_flow
-        statement: 黑松镇集市广场是贸易与公开消息快速流通的地点。
+        statement: 黑松镇集市广场通过矿路封锁、货价、税册和维稳告示呈现镇内社会压力。
         scope: location
         scope_id: loc_market
         truth_status: confirmed
@@ -420,6 +484,10 @@
     - market_stalls
     - water_well
     - bulletin_board
+    - blocked_mine_route_notice
+    - price_board
+    - tax_register
+    - stability_notice
   coordinates: { x: 2, y: 4 }
   map_icon: "M"
   location_context:
@@ -437,21 +505,21 @@
     - building
     - religious
     - 黑松镇
-  description: 坐落在镇东角的古老神殿，石壁斑驳，却依然庄严肃穆。殿内常年燃着香火，是镇民祈福和寻求庇护的场所。
+  description: 坐落在镇东角的古老神殿，石壁斑驳却依然肃穆。裂钟、祈名册和“不要回应全名”的旧告诫，让这里承担超自然规则的入口功能。
   player_facing:
     short_label: 神殿
-    first_visit: 你走进镇东角的古老神殿，斑驳石壁与常燃香火让这里显得安静而肃穆。
-    revisit: 你回到神殿，香烟仍在殿内缓缓上升，石壁上的痕迹静默如旧。
+    first_visit: 你走进镇东角的古老神殿，裂钟垂在梁下，祈名册摊在祭坛旁，石壁上刻着一句被香烟熏黑的告诫：不要回应全名。
+    revisit: 你回到神殿，裂钟仍无声悬着，祈名册上新添的墨迹让“不要回应全名”显得更像规矩而非迷信。
     sensory:
       sights:
-        - 斑驳石壁
-        - 祭坛和香炉
+        - 梁下裂开的旧钟
+        - 祭坛旁摊开的祈名册
       sounds:
         - 香灰落下的细微声响
-        - 殿外远处的人声
+        - 裂钟在风里发出的干涩轻颤
       smells:
         - 香火气味
-        - 冷石气息
+        - 冷石和旧纸气息
     interactables:
       - id: altar
         visible_name: 祭坛
@@ -462,19 +530,30 @@
       - id: ancient_relief
         visible_name: 古代浮雕
         affordance: 查看古代浮雕
+      - id: prayer_namebook
+        visible_name: 祈名册
+        affordance: 翻看祈名册
+      - id: cracked_bell
+        visible_name: 裂钟
+        affordance: 检查裂钟
+      - id: full_name_taboo_inscription
+        visible_name: 不要回应全名的刻文
+        affordance: 默读刻文告诫
   ai_grounding:
     must_know:
-      - 神殿是镇民祈福和寻求庇护的场所。
-      - 月华与林婆婆常在神殿附近，古代符文线索与这里相关。
+      - 调查节点：神殿承担超自然规则功能，线索集中在裂钟、祈名册和不要回应全名的禁忌。
+      - AI可以暗示名字、回应和钟声之间存在规则性联系，但应通过仪式痕迹和镇民避讳表达。
     must_not_invent:
+      - 不要提前解释完整超自然机制、姓名规则的全部代价或隐藏势力的术式。
       - 不要把神殿设定为公开邪教据点或战斗场景，除非剧情明确改变。
     reveal_policy:
       default: public_surface_only
       ancient_knowledge: gated_by_trust_or_stage
+      name_rule: gated_by_inspection_or_ritual_stage
   ecology:
     facts_seeded:
       - id: fact_loc_temple_sanctuary
-        statement: 黑松镇神殿是祈福、庇护和古代知识线索交汇的场所。
+        statement: 黑松镇神殿以裂钟、祈名册和不要回应全名的告诫承载超自然规则线索。
         scope: location
         scope_id: loc_temple
         truth_status: confirmed
@@ -501,6 +580,9 @@
     - altar
     - incense_burner
     - ancient_relief
+    - prayer_namebook
+    - cracked_bell
+    - full_name_taboo_inscription
   coordinates: { x: 2, y: 3 }
   map_icon: "P"
   location_context:
@@ -595,21 +677,21 @@
     - wilderness
     - ruins
     - 黑松林
-  description: 深藏于黑松林中的废弃营地，残破的帐篷和熄灭的篝火诉说着某段不为人知的往事。空气中隐隐有腐朽的气息。
+  description: 深藏于黑松林中的废弃营地，残破帐篷和熄灭篝火之外，还散落着被拔姓名牌、值夜名册与烧残记录，物证比传言更刺眼。
   player_facing:
     short_label: 废弃营地
-    first_visit: 你发现黑松林中的废弃营地，残破帐篷和冷掉的篝火像是匆忙离开后的遗迹。
-    revisit: 你回到废弃营地，腐朽气味仍停在破布和灰烬之间。
+    first_visit: 你发现黑松林中的废弃营地，残破帐篷旁的被拔姓名牌歪在泥里，值夜名册缺了几页，烧残记录在冷灰里卷曲发黑。
+    revisit: 你回到废弃营地，姓名牌、值夜名册和烧残记录仍停在原处，像一组没人愿意带回镇上的物证。
     sensory:
       sights:
-        - 残破帐篷
-        - 熄灭已久的篝火
+        - 残破帐篷和被拔下的姓名牌
+        - 冷灰中露出的烧残记录边角
       sounds:
         - 林中枝叶摩擦声
-        - 偶尔踩碎枯枝的脆响
+        - 翻动值夜名册时脆裂的纸声
       smells:
         - 腐朽气息
-        - 冷灰味
+        - 冷灰和焦纸味
     interactables:
       - id: ruined_tent
         visible_name: 残破帐篷
@@ -623,19 +705,33 @@
       - id: item_iron_ore
         visible_name: 铁矿石
         affordance: 检查铁矿石
+      - id: torn_nameplates
+        visible_name: 被拔姓名牌
+        affordance: 检查被拔下的姓名牌
+      - id: night_watch_roster
+        visible_name: 值夜名册
+        affordance: 翻看值夜名册
+      - id: burned_watchlist
+        visible_name: 烧残记录
+        affordance: 拼读烧残记录
+      - id: scorched_record_fragments
+        visible_name: 焦黑记录碎片
+        affordance: 收拢焦黑记录碎片
   ai_grounding:
     must_know:
-      - 废弃营地位于北林深处，连接黑暗洞穴。
-      - 这里有失踪事件和旧事线索，但真相应随阶段逐步揭露。
+      - 调查节点：废弃营地承担物证冲击功能，线索集中在被拔姓名牌、值夜名册和烧残记录。
+      - AI可以暗示名单被人为处理、值夜顺序异常和记录被烧毁，但应保持证据碎片化。
     must_not_invent:
-      - 不要在营地直接给出所有幕后势力的完整答案。
+      - 不要提前给出所有幕后势力、失踪者命运或完整名单真相。
+      - 不要让营地物证自动替玩家完成推理；证据需要检查、对照和剧情阶段支持。
     reveal_policy:
       default: public_surface_only
       evidence: gated_by_inspection_or_stage
+      camp_records: gated_by_close_search
   ecology:
     facts_seeded:
       - id: fact_loc_abandoned_camp_trace
-        statement: 废弃营地保留着与北林失踪事件相关的可疑痕迹。
+        statement: 废弃营地通过被拔姓名牌、值夜名册和烧残记录保留北林失踪事件的物证冲击。
         scope: location
         scope_id: loc_abandoned_camp
         truth_status: confirmed
@@ -663,6 +759,10 @@
     - cold_campfire
     - abandoned_supplies
     - item_iron_ore
+    - torn_nameplates
+    - night_watch_roster
+    - burned_watchlist
+    - scorched_record_fragments
   enemies:
     - enemy_bandit
   coordinates: { x: 3, y: 1 }
@@ -681,21 +781,21 @@
     - wilderness
     - dungeon
     - 黑松林
-  description: 废弃营地深处的一个幽暗洞穴，入口被杂草和碎石掩盖。洞内黑暗彻底，偶尔传来奇异的回声，令人毛骨悚然。
+  description: 废弃营地深处的幽暗洞穴，入口被杂草和碎石掩盖。债印石、黑银矿脉和账目残页藏在潮湿回声里，构成真相揭示前的最后证据层。
   player_facing:
     short_label: 黑暗洞穴
-    first_visit: 你拨开洞口杂草，黑暗洞穴的冷气从碎石间涌出，奇异回声在深处游荡。
-    revisit: 你回到黑暗洞穴入口，洞内依旧幽黑，旧日回声似乎没有完全散去。
+    first_visit: 你拨开洞口杂草，黑暗洞穴的冷气从碎石间涌出；债印石嵌在内壁，黑银矿脉在火光下泛暗，几页账目残页被压在石缝里。
+    revisit: 你回到黑暗洞穴入口，债印石、黑银矿脉和账目残页仍在幽黑中等待被拼合。
     sensory:
       sights:
         - 被杂草和碎石遮掩的洞口
-        - 洞壁上的奇异痕迹
+        - 黑银矿脉旁嵌着刻痕的债印石
       sounds:
         - 洞内回声
-        - 水滴落在石面的声音
+        - 水滴落在账目残页附近的声音
       smells:
         - 潮湿石壁气味
-        - 陈旧骨尘气味
+        - 金属矿尘和陈旧骨尘气味
     interactables:
       - id: cave_entrance
         visible_name: 洞口
@@ -709,19 +809,30 @@
       - id: item_evidence
         visible_name: 可疑证物
         affordance: 检查可疑证物
+      - id: debt_seal_stone
+        visible_name: 债印石
+        affordance: 检查债印石
+      - id: black_silver_vein
+        visible_name: 黑银矿脉
+        affordance: 查看黑银矿脉
+      - id: grey_covenant_accounts
+        visible_name: 账目残页
+        affordance: 拼读账目残页
   ai_grounding:
     must_know:
-      - 黑暗洞穴位于废弃营地以北，是主线调查的重要地点。
-      - 洞内符文与五年前狼灾和后续真相有关，应按剧情阶段揭露。
+      - 调查节点：黑暗洞穴承担真相揭示功能，线索集中在债印石、黑银矿脉和账目残页。
+      - AI可以暗示这些证据把债务、矿脉和组织性记录联系起来，但完整因果必须随剧情阶段揭露。
     must_not_invent:
-      - 不要提前确认幕后势力的全部动机或新增未定义古神设定。
+      - 不要提前确认幕后势力的全部动机、五年前交易全貌或新增未定义古神设定。
+      - 不要把账目残页直接解读成最终结论；玩家需要结合前置证据和阶段状态。
     reveal_policy:
       default: public_surface_only
       ritual_truth: gated_by_stage_truth_in_forest
+      cave_accounts: gated_by_evidence_chain
   ecology:
     facts_seeded:
       - id: fact_loc_dark_cave_runes
-        statement: 黑暗洞穴内存在与五年前狼灾相关的古代符文线索。
+        statement: 黑暗洞穴通过债印石、黑银矿脉和账目残页承载主线真相揭示证据。
         scope: location
         scope_id: loc_dark_cave
         truth_status: confirmed
@@ -747,6 +858,9 @@
     - strange_markings
     - bone_fragments
     - item_evidence
+    - debt_seal_stone
+    - black_silver_vein
+    - grey_covenant_accounts
   enemies:
     - enemy_wolf_alpha
   coordinates: { x: 3, y: 0 }

@@ -206,18 +206,19 @@ describe("loadAllCodex", () => {
     expect(leakedMustKnow).toEqual([]);
   });
 
+  const coreLocationIds = [
+    "loc_north_gate",
+    "loc_main_street",
+    "loc_tavern",
+    "loc_blacksmith",
+    "loc_market",
+    "loc_temple",
+    "loc_forest_road",
+    "loc_abandoned_camp",
+    "loc_dark_cave",
+  ];
+
   it("loads migrated core codex entries with authoring v2 fields", () => {
-    const coreLocationIds = [
-      "loc_north_gate",
-      "loc_main_street",
-      "loc_tavern",
-      "loc_blacksmith",
-      "loc_market",
-      "loc_temple",
-      "loc_forest_road",
-      "loc_abandoned_camp",
-      "loc_dark_cave",
-    ];
 
     for (const id of coreLocationIds) {
       const entry = codex.get(id);
@@ -286,6 +287,35 @@ describe("loadAllCodex", () => {
 
       expect(entry.information_network).toBeDefined();
       expect(entry.reaction_policy).toBeDefined();
+    }
+  });
+
+  it("loads Blackpine investigation locations with required clue objects and grounding", () => {
+    const requiredLocationClues: Record<string, string[]> = {
+      loc_north_gate: ["gate_drop_mechanism", "night_patrol_log", "rutted_tracks", "wolf_pawprints"],
+      loc_tavern: ["guest_register", "hunter_death_table", "old_chen_folk_archive", "half_true_rumors"],
+      loc_market: ["blocked_mine_route_notice", "price_board", "tax_register", "stability_notice"],
+      loc_temple: ["prayer_namebook", "cracked_bell", "full_name_taboo_inscription"],
+      loc_abandoned_camp: ["torn_nameplates", "night_watch_roster", "burned_watchlist", "scorched_record_fragments"],
+      loc_dark_cave: ["debt_seal_stone", "black_silver_vein", "grey_covenant_accounts"],
+      loc_main_street: ["quiet_lantern_stage", "public_testimony_space", "sealed_secret_notice"],
+    };
+
+    for (const [locationId, clueIds] of Object.entries(requiredLocationClues)) {
+      const location = codex.get(locationId);
+      expect(location?.type).toBe("location");
+      if (!location || location.type !== "location") {
+        throw new Error(`Expected ${locationId} to be a location entry`);
+      }
+
+      const interactableIds = new Set(location.player_facing?.interactables?.map((item) => item.id) ?? []);
+      for (const clueId of clueIds) {
+        expect(location.objects).toContain(clueId);
+        expect(interactableIds).toContain(clueId);
+      }
+
+      expect((location.ai_grounding?.must_know ?? []).join("\n")).toContain("调查节点");
+      expect((location.ai_grounding?.must_not_invent ?? []).join("\n")).toContain("不要提前");
     }
   });
 });

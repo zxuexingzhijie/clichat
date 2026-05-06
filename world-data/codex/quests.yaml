@@ -7,7 +7,7 @@
   tags:
     - main
     - 黑松镇
-  description: 黑松镇接连发生失踪事件，调查背后的真相。
+  description: 黑松镇的空棺葬礼、失踪名单与被夺走的名字彼此牵连，调查将把玩家带向北林、黑银矿旧道、旧账线索与静灯祭前夜的抉择。
   epistemic:
     authority: canonical_truth
     truth_status: "true"
@@ -20,112 +20,134 @@
     volatility: stable
   stages:
     - id: stage_rumor
-      description: 调查关于北林失踪事件的谣言
+      description: 雨夜入镇与酒馆命案——空棺葬礼、北门提前落闸，濒死猎人留下“它们在找名字”的遗言。
       trigger:
         event: dialogue_ended
         targetId: npc_bartender
       objectives:
-        - id: obj_talk_any_npc
+        - id: obj_talk_bartender_rain_night
           type: talk
-          description: 与任意NPC交谈，打听谣言
+          targetId: npc_bartender
+          description: 在酒馆询问雨夜命案、空棺葬礼和北门落闸的说法。
+        - id: obj_talk_hunter_last_words
+          type: talk
+          targetId: npc_hunter
+          description: 追问濒死猎人留下的“它们在找名字”。
       nextStageId: stage_disappearances
     - id: stage_disappearances
-      description: 深入调查——失踪者的共同点，矿路封锁的真相
+      description: 名单异常——住宿本、税册、祈名册和放行记录互有出入，旧账里有被涂改的名字。
       trigger:
         event: location_entered
-        targetId: loc_abandoned_camp
+        targetId: loc_tavern
       objectives:
-        - id: obj_visit_camp_or_beggar
+        - id: obj_check_tavern_records
           type: visit_location
-          targetId: loc_abandoned_camp
-          description: 前往废弃营地调查（或与瞎子孙交谈获得线索）
+          targetId: loc_tavern
+          description: 在酒馆核对住宿记录里被涂改的外乡人姓名。
+        - id: obj_ask_elder_about_records
+          type: talk
+          targetId: npc_elder
+          description: 向王德追问税册、祈名册和北门放行记录里的名单差异。
       nextStageId: stage_truth_in_forest
+
     - id: stage_truth_in_forest
-      description: 洞穴中的古代符文——与五年前的狼灾相同；月华认出了它们
+      description: 废弃营地与黑暗洞穴——被拔掉姓名牌的床位、烧残值夜记录和洞穴印痕指向同一批缺失的名字。
       trigger:
         event: location_entered
         targetId: loc_dark_cave
       objectives:
-        - id: obj_enter_cave
+        - id: obj_visit_abandoned_camp
+          type: visit_location
+          targetId: loc_abandoned_camp
+          description: 搜查废弃营地里被拔掉姓名牌的床位。
+        - id: obj_check_cave_marks
           type: visit_location
           targetId: loc_dark_cave
-          description: 进入黑暗洞穴
-        - id: obj_talk_priestess
-          type: talk
-          targetId: npc_priestess
-          description: 与月华交谈，了解符文含义
+          description: 检查黑暗洞穴里与逐名印有关的异常印痕。
       nextStageId: stage_mayor_secret
     - id: stage_mayor_secret
-      description: 镇长的秘密——五年前的交易，外来势力的回归
+      description: 镇长的旧账——线索汇向王德、黑银矿旧道和一桩不愿公开的镇务安排。
       trigger:
         event: dialogue_ended
         targetId: npc_elder
       objectives:
-        - id: obj_confront_elder
+        - id: obj_confront_elder_with_records
           type: talk
           targetId: npc_elder
-          description: 以证据质问王德（或通过阿鬼迂回接近）
+          description: 用名单矛盾、洞穴印痕和矿道证据质问王德。
+        - id: obj_check_mayor_secret_known
+          type: check_flag
+          targetId: mayor_secret_known
+          description: 确认镇长旧账线索已经被拼合。
       nextStageId: stage_allies_decision
     - id: stage_allies_decision
-      description: 三条路线：义之道（陈铁柱）/ 和之道（王德）/ 暗之道（阿鬼）
+      description: 静灯祭选择——先与所选路线的盟友达成选择，再回到陈铁柱主持的公开对峙处，让静灯祭上的最终走向落定。
       trigger:
         event: dialogue_ended
         targetId: npc_captain
       objectives:
-        - id: obj_talk_priestess_alliance
+        - id: obj_talk_priestess_festival_choice
           type: talk
           targetId: npc_priestess
-          description: 与月华商议对策
-        - id: obj_choose_alliance
+          description: 与月华确认静灯祭当夜哪些线索适合带到公开场合。
+        - id: obj_choose_blackpine_future
           type: talk
-          description: 选择盟友：陈铁柱（义）、王德（和）、或阿鬼（暗）
+          targetId: npc_captain
+          description: 若选择公开、暗线或维稳立场，先找对应盟友锁定选择；之后回到陈铁柱处推进静灯祭公开对峙。
       conditional_next_stages:
-        - condition_flag: justice_score_locked
-          nextStageId: stage_consequence_justice
         - condition_flag: shadow_score_locked
           nextStageId: stage_consequence_shadow
         - condition_flag: pragmatism_score_locked
           nextStageId: stage_consequence_harmony
+        - condition_flag: justice_score_locked
+          nextStageId: stage_consequence_justice
       nextStageId: stage_consequence_harmony
     - id: stage_consequence_justice
-      description: 义之道结局——真相公开，陈铁柱独自哭泣，镇子将面临震荡
+      description: 义之道结局——静灯祭上公开旧账线索，空棺补回名字，黑松镇在震荡中重新面对死者。
       trigger:
         event: dialogue_ended
         targetId: npc_captain
       objectives:
-        - id: obj_confront_captain
+        - id: obj_confront_captain_public_names
           type: talk
           targetId: npc_captain
-          description: 与陈铁柱完成对质对话
+          description: 与陈铁柱完成公开名单和补刻名字的对质。
       nextStageId: null
     - id: stage_consequence_harmony
-      description: 和之道结局——秘密被压制，月华沉默，瞎子孙消失
+      description: 和之道结局——静灯祭照常点亮，账册封存，黑松镇表面安稳却仍被旧账阴影牵扯。
       trigger:
         event: dialogue_ended
         targetId: npc_elder
       objectives:
-        - id: obj_agreement_elder
+        - id: obj_agreement_elder_keep_order
           type: talk
           targetId: npc_elder
-          description: 与王德完成压制协议
+          description: 与王德完成维持表面安稳的封存安排。
       nextStageId: null
     - id: stage_consequence_shadow
-      description: 暗之道结局——阿鬼请玩家喝酒，地下势力永久扎根黑松镇
+      description: 暗之道结局——阿鬼接管名单和账本，北门旧路改由暗线维持，黑松镇换一种方式活在阴影里。
       trigger:
         event: dialogue_ended
         targetId: npc_shadow_contact
       objectives:
-        - id: obj_deal_shadow
+        - id: obj_deal_shadow_books
           type: talk
           targetId: npc_shadow_contact
-          description: 与阿鬼完成交易
+          description: 与阿鬼完成名单、账本和北门旧路的暗线交接。
       nextStageId: null
   world_effects:
     on_stage_enter:
       stage_rumor:
+        facts_created:
+          - id: fact_rain_night_tavern_death
+            statement: 雨夜酒馆发生命案，空棺葬礼与北门提前落闸在同一晚被镇民记住。
+            scope: quest
+            scope_id: quest_main_01
+            truth_status: confirmed
+            confidence: 0.85
         rumors_created:
-          - id: rumor_black_pine_disappearances
-            statement: 黑松镇近来有人在北林方向失踪，镇民只敢私下议论。
+          - id: rumor_they_seek_names
+            statement: 酒客私下传说濒死猎人说过“它们在找名字”，但没人敢在白天复述。
             scope: location
             scope_id: loc_tavern
             truth_status: rumor
@@ -134,73 +156,249 @@
               - loc_tavern
               - loc_market
             starts_at_stage: stage_rumor
+        beliefs_created:
+          - holder_id: npc_bartender
+            holder_type: npc
+            subject_id: quest_main_01
+            stance: fears
+            statement: 酒馆老板害怕命案与空棺葬礼会把外人引向北门封锁的原因。
+            confidence: 0.75
       stage_disappearances:
         facts_created:
-          - id: fact_disappearances_share_forest_route
-            statement: 近期失踪者多数与北林道路、废弃营地或矿路传闻有关。
+          - id: fact_blackpine_lists_contradict_dead
+            statement: 住宿本、税册、祈名册和放行记录上的名单互相矛盾，五年前死者的记录无法同时成立。
             scope: quest
             scope_id: quest_main_01
             truth_status: confirmed
-            confidence: 0.8
+            confidence: 0.88
+          - id: fact_rain_night_tavern_death_confirmed_by_records
+            statement: 住宿本和放行记录确认雨夜酒馆命案、空棺葬礼与北门提前落闸属于同一串异常事件，而非孤立传闻。
+            scope: quest
+            scope_id: quest_main_01
+            truth_status: confirmed
+            confidence: 0.86
+          - id: fact_names_warning_reinforced_by_lists
+            statement: 濒死猎人关于“找名字”的遗言与名单异常相互印证，调查重点从单纯狼灾转向被记录、涂改和抹去的名字。
+            scope: quest
+            scope_id: quest_main_01
+            truth_status: confirmed
+            confidence: 0.82
+        rumors_created:
+          - id: rumor_they_seek_names_spreads_after_records
+            statement: 查过住宿本、税册和祈名册后，“它们在找名字”的说法从酒馆私语扩散到市集，镇民开始把失踪与被涂改的名字联系起来。
+            scope: location
+            scope_id: loc_tavern
+            truth_status: rumor
+            confidence: 0.68
+            spread:
+              - loc_tavern
+              - loc_market
+            starts_at_stage: stage_disappearances
+          - id: rumor_old_names_removed_from_books
+            statement: 有人说旧账册上的名字会自己淡掉，留下的人只能假装从未认识那些死者。
+            scope: location
+            scope_id: loc_tavern
+            truth_status: rumor
+            confidence: 0.55
+            spread:
+              - loc_tavern
+              - loc_market
+            starts_at_stage: stage_disappearances
+        beliefs_created:
+          - holder_id: npc_captain
+            holder_type: npc
+            subject_id: quest_main_01
+            stance: doubts
+            statement: 陈铁柱开始怀疑五年前狼灾的死亡名单被人刻意重写。
+            confidence: 0.7
       stage_truth_in_forest:
         facts_created:
-          - id: fact_cave_runes_match_old_disaster
-            statement: 黑暗洞穴中的古代符文与五年前狼灾有关的痕迹相似。
+          - id: fact_ritual_site_active_debt_mark_stone
+            statement: 废弃营地的空床位、烧残值夜记录和带有逐名印痕迹的债印石证明，北林狼灾是按名字筛选的猎杀。
             scope: quest
             scope_id: quest_main_01
             truth_status: confirmed
-            confidence: 0.9
+            confidence: 0.92
             tags:
               - flag:ritual_site_active
+        rumors_created:
+          - id: rumor_cave_calls_missing_names
+            statement: 北林行脚人说黑暗洞穴会在夜里喊出失踪者的名字。
+            scope: location
+            scope_id: loc_dark_cave
+            truth_status: rumor
+            confidence: 0.6
+            spread:
+              - loc_abandoned_camp
+              - loc_dark_cave
+            starts_at_stage: stage_truth_in_forest
+        beliefs_created:
+          - holder_id: npc_priestess
+            holder_type: npc
+            subject_id: quest_main_01
+            stance: knows
+            statement: 月华确认债印石与祈名册缺口相互对应，狼灾并非无差别袭击。
+            confidence: 0.85
       stage_mayor_secret:
         facts_created:
-          - id: fact_mayor_secret_old_bargain
-            statement: 王德知道五年前狼灾背后存在秘密协议。
+          - id: fact_mayor_secret_known_grey_contract
+            statement: 王德为保住黑松镇，与灰契会达成以黑银矿、旧通道和名字为代价的秘密协议。
             scope: npc
             scope_id: npc_elder
             truth_status: confirmed
             confidence: 0.9
             tags:
               - flag:mayor_secret_known
+        rumors_created:
+          - id: rumor_grey_contract_collectors_return
+            statement: 镇民听说灰契会的收账人已经回到黑松镇，只等静灯祭前后结清旧债。
+            scope: quest
+            scope_id: quest_main_01
+            truth_status: rumor
+            confidence: 0.65
+            spread:
+              - loc_market
+              - loc_tavern
+            starts_at_stage: stage_mayor_secret
+        beliefs_created:
+          - holder_id: npc_elder
+            holder_type: npc
+            subject_id: quest_main_01
+            stance: fears
+            statement: 王德害怕债契曝光后，黑松镇失去灰契会默许的矿道和生路。
+            confidence: 0.8
       stage_allies_decision:
+        facts_created:
+          - id: fact_lantern_festival_decision_pressure
+            statement: 静灯祭前夜，王德、陈铁柱、月华、阿鬼和灰契会的压力汇聚成公开、封存或接管名单的三条道路。
+            scope: quest
+            scope_id: quest_main_01
+            truth_status: confirmed
+            confidence: 0.9
+        rumors_created:
+          - id: rumor_lanterns_need_clean_names
+            statement: 静灯祭的灯若写上缺失的名字，北门外的影子就会跟着进镇。
+            scope: location
+            scope_id: loc_market
+            truth_status: rumor
+            confidence: 0.5
+            spread:
+              - loc_market
+              - loc_tavern
+            starts_at_stage: stage_allies_decision
         beliefs_created:
           - holder_id: npc_captain
             holder_type: npc
             subject_id: quest_main_01
-            stance: knows
-            statement: 玩家必须在公开真相、压下秘密或借助暗线之间选择盟友。
+            stance: wants
+            statement: 陈铁柱希望玩家在静灯祭上公开名单，让失去名字的人被重新承认。
             confidence: 0.8
+          - holder_id: npc_shadow_contact
+            holder_type: npc
+            subject_id: quest_main_01
+            stance: wants
+            statement: 阿鬼希望接管名单和账本，把灰契会压力变成自己的筹码。
+            confidence: 0.78
       stage_consequence_justice:
         facts_created:
-          - id: fact_mayor_arrested_public_truth
-            statement: 义之道结局中，王德被公开追责，黑松镇必须面对五年前的真相。
+          - id: fact_mayor_arrested_names_recarved
+            statement: 义之道结局中，王德被公开追责，空棺与祈名册补刻名字，黑松镇必须重新面对五年前的死者。
             scope: quest
             scope_id: quest_main_01
             truth_status: confirmed
             confidence: 1.0
             tags:
               - flag:mayor_arrested
+        rumors_created:
+          - id: rumor_recarved_names_keep_watch
+            statement: 有镇民说补刻的名字会在雨夜发亮，提醒活人别再把死者从名单里抹掉。
+            scope: location
+            scope_id: loc_market
+            truth_status: rumor
+            confidence: 0.55
+            spread:
+              - loc_market
+              - loc_tavern
+            starts_at_stage: stage_consequence_justice
+        beliefs_created:
+          - holder_id: npc_captain
+            holder_type: npc
+            subject_id: quest_main_01
+            stance: knows
+            statement: 陈铁柱知道公开真相会让镇子震荡，但被夺走名字的人终于得到交代。
+            confidence: 0.9
       stage_consequence_harmony:
         facts_created:
-          - id: fact_truth_suppressed_harmony_path
-            statement: 和之道结局中，真相被压下，镇子的表面安稳被暂时保住。
+          - id: fact_truth_suppressed_order_rots
+            statement: 和之道结局中，真相被压下，静灯祭照常点亮，黑松镇表面安稳却因封存的名单和债契继续腐烂。
             scope: quest
             scope_id: quest_main_01
             truth_status: confirmed
             confidence: 1.0
             tags:
               - flag:truth_suppressed
+        rumors_created:
+          - id: rumor_quiet_lanterns_hide_debt
+            statement: 镇民说今年静灯祭的灯很稳，稳到像替某些名字盖住了呼吸。
+            scope: location
+            scope_id: loc_market
+            truth_status: rumor
+            confidence: 0.5
+            spread:
+              - loc_market
+              - loc_tavern
+            starts_at_stage: stage_consequence_harmony
+        beliefs_created:
+          - holder_id: npc_elder
+            holder_type: npc
+            subject_id: quest_main_01
+            stance: believes
+            statement: 王德相信只要名单继续封存，黑松镇就能换来一段表面太平。
+            confidence: 0.82
       stage_consequence_shadow:
         facts_created:
-          - id: fact_shadow_deal_made_underworld_rooted
-            statement: 暗之道结局中，阿鬼与玩家达成交易，地下势力在黑松镇扎下更深的根。
+          - id: fact_shadow_deal_made_books_taken
+            statement: 暗之道结局中，阿鬼接管名单和账本，灰契会通道被暗线维持，黑松镇的旧债换了新的主人。
             scope: quest
             scope_id: quest_main_01
             truth_status: confirmed
             confidence: 1.0
             tags:
               - flag:shadow_deal_made
+        rumors_created:
+          - id: rumor_shadow_books_buy_safe_passage
+            statement: 有人说想平安过北门，先要让阿鬼在账本上看见你的名字。
+            scope: faction
+            scope_id: faction_shadow_guild
+            truth_status: rumor
+            confidence: 0.62
+            spread:
+              - loc_tavern
+              - loc_market
+            starts_at_stage: stage_consequence_shadow
+        beliefs_created:
+          - holder_id: npc_shadow_contact
+            holder_type: npc
+            subject_id: quest_main_01
+            stance: knows
+            statement: 阿鬼知道掌握名单和账本就能把灰契会的压力转成黑松镇地下秩序。
+            confidence: 0.9
     on_complete:
+      facts_created:
+        - id: fact_main_quest_blackpine_spine_resolved
+          statement: 黑松镇主线已在名字、名单、逐名印、灰契会债契和静灯祭选择之间形成结局。
+          scope: quest
+          scope_id: quest_main_01
+          truth_status: confirmed
+          confidence: 1.0
+      rumors_created:
+        - id: rumor_blackpine_ending_retold
+          statement: 主线结束后，镇民会按所选道路重新讲述黑松镇的名字与名单。
+          scope: quest
+          scope_id: quest_main_01
+          truth_status: rumor
+          confidence: 0.6
+          starts_at_stage: stage_allies_decision
       beliefs_created:
         - holder_id: npc_elder
           holder_type: npc
@@ -215,7 +413,7 @@
     short_label: 黑松镇的秘密
   ai_grounding:
     must_know:
-      - 黑松镇接连发生失踪事件，调查背后的真相。
+      - 黑松镇主线围绕名字、名单、逐名印、灰契会债契和静灯祭选择展开。
     must_not_invent:
       - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
     reveal_policy:

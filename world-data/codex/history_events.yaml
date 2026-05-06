@@ -68,3 +68,150 @@
       - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
     reveal_policy:
       default: gated_by_visibility_or_trust
+- id: event_wolf_disaster_named_hunt
+  name: 狼灾命名狩猎
+  type: history_event
+  tags:
+    - disaster
+    - named_hunt
+    - grey_covenant
+    - 黑松镇
+  description: 狼灾的隐秘核心并非单纯兽袭，而是一场以狼群为外壳的命名狩猎。袭击者借恐慌收割边境居民的真名线索，测试黑松镇旧名印的残余强度；守卫与民兵确实击退了狼群，却未触及背后的契约操盘者。
+  epistemic:
+    authority: established_canon
+    truth_status: "true"
+    scope: faction_internal
+    visibility: hidden
+    confidence: 0.85
+    source_type: npc_memory
+    known_by:
+      - npc_elder
+      - npc_hunter
+    contradicts: []
+    volatility: stable
+  date: 五年前
+  participants:
+    - wolves
+    - faction_grey_covenant
+    - faction_guard
+    - militia
+  impact: 公开记录保留为狼群灾害，幸存者梦魇与失名症状成为后续名字债契的暗线证据
+  era: 近代
+  player_facing:
+    short_label: 狼灾命名狩猎
+  ai_grounding:
+    must_know:
+      - 狼灾的公开事实仍是狼群袭击、守卫与民兵击退、镇子未完全恢复；此条目只补充隐藏操盘层。
+      - 灰契会利用狼群与恐慌测试黑松镇旧名印，并收集边境居民的真名线索。
+    must_not_invent:
+      - 不要把公开官方记录改写成阴谋公告；只有获得相应可见性或剧情阶段后才能揭露此层真相。
+    reveal_policy:
+      default: gated_by_visibility_or_stage
+  ecology:
+    belief_hooks:
+      - holder_id: npc_elder
+        holder_type: npc
+        subject_id: event_wolf_disaster_named_hunt
+        stance: fears
+        statement: 长老怀疑狼灾背后有人借狼群追索名字，但不愿在公开场合承认。
+        confidence: 0.65
+        when: after_private_trust_gate
+- id: event_nameward_seal_origin
+  name: 旧名印源起
+  type: history_event
+  tags:
+    - nameward
+    - seal
+    - border_magic
+    - 黑松镇
+  description: 黑松镇早期垦殖者曾在北门、神殿与林路之间立下旧名印，把居民的公开姓名与边境地权相互锚定。该印不是祝福，而是一种防止外部契约势力直接索取真名的边境法术。
+  epistemic:
+    authority: canonical_truth
+    truth_status: "true"
+    scope: forbidden
+    visibility: secret
+    confidence: 0.9
+    source_type: ancient_text
+    known_by:
+      - faction_temple
+      - npc_priestess
+      - faction_grey_covenant
+    contradicts: []
+    volatility: stable
+  date: 开镇初期
+  participants:
+    - faction_temple
+    - early_settlers
+    - loc_north_gate
+    - loc_temple
+    - loc_forest_road
+  impact: 旧名印解释了黑松镇为何能长期抵御名字债契，也解释了狼灾时袭击者为何选择先削弱边境节点
+  era: 开拓时代
+  player_facing:
+    short_label: 旧名印源起
+  ai_grounding:
+    must_know:
+      - 旧名印把居民公开姓名与边境地权锚定，用于阻止外部契约势力直接索取真名。
+      - 旧名印关联北门、神殿与林路三个边境节点。
+    must_not_invent:
+      - 不要把旧名印描述成万能护盾；它只是延缓和转移名字债契的侵入。
+    reveal_policy:
+      default: gated_by_visibility_or_stage
+  ecology:
+    belief_hooks:
+      - holder_id: faction_temple
+        holder_type: faction
+        subject_id: event_nameward_seal_origin
+        stance: knows
+        statement: 神殿教团知道旧名印的起源，但只把它作为禁忌仪轨保存。
+        confidence: 0.9
+        when: temple_archive_unsealed
+- id: event_grey_covenant_debt_contract
+  name: 灰契会名字债契
+  type: history_event
+  tags:
+    - grey_covenant
+    - debt_contract
+    - black_silver
+    - forbidden_truth
+  description: 灰契会曾向边境矿路、商栈与守备节点提供资金和黑银保供，条件是把欠债者的名字写入灰契。债契不立即夺命，而是让债务人在关键时刻被迫履约、让渡路线、矿权或证词。
+  epistemic:
+    authority: established_canon
+    truth_status: "true"
+    scope: faction_internal
+    visibility: forbidden
+    confidence: 0.88
+    source_type: faction_claim
+    source_bias: contractual_self-justification
+    known_by:
+      - faction_grey_covenant
+      - faction_merchants
+    contradicts: []
+    volatility: stable
+  date: 狼灾前后
+  participants:
+    - faction_grey_covenant
+    - faction_merchants
+    - loc_market
+    - loc_blacksmith
+  impact: 黑银供给与边境节点逐渐被债契绑定，黑松镇表面贸易复苏但自主权被持续抵押
+  era: 近代
+  player_facing:
+    short_label: 灰契会名字债契
+  ai_grounding:
+    must_know:
+      - 灰契会通过资金、黑银保供和债务契约控制边境节点，而不是依靠单纯暴力统治。
+      - 名字债契会迫使债务人在关键时刻让渡路线、矿权或证词。
+    must_not_invent:
+      - 不要把灰契会写成只会作恶的普通反派；他们冷酷、守约、会兑现合同字面利益。
+    reveal_policy:
+      default: gated_by_visibility_or_stage
+  ecology:
+    belief_hooks:
+      - holder_id: faction_grey_covenant
+        holder_type: faction
+        subject_id: event_grey_covenant_debt_contract
+        stance: knows
+        statement: 灰契会将名字债契视为合法、可执行且比暴力更稳定的边境治理工具。
+        confidence: 0.95
+        when: covenant_records_consulted

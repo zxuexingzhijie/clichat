@@ -17,21 +17,35 @@ describe('createNarrativeStateWatcher', () => {
     bus.emit('quest_stage_advanced', { questId: 'quest_main_01', newStageId: 'stage_truth_in_forest', turnNumber: 10 });
 
     expect(store.getState().currentAct).toBe('act2');
-    expect(store.getState().atmosphereTags).toEqual(['dread', 'mystery', 'urgency']);
+    expect(store.getState().atmosphereTags).toEqual(['dread', 'evidence', 'hunted_by_name']);
     expect(store.getState().worldFlags['ritual_site_active']).toBe(true);
     expect(store.getState().playerKnowledgeLevel).toBe(2);
   });
 
-  it('emitting quest_stage_advanced with stage_disappearances sets act1 and knowledgeLevel 1', () => {
-    const store = createNarrativeStore();
-    const bus = freshBus();
-    createNarrativeStateWatcher(store, bus);
+  it('emitting quest_stage_advanced applies upgraded atmosphere tags while preserving stage IDs', () => {
+    const expectedTransitions = [
+      { stageId: 'stage_rumor', act: 'act1', atmosphereTags: ['rain', 'mundane', 'unnamed_dread'], knowledgeLevel: 0 },
+      { stageId: 'stage_disappearances', act: 'act1', atmosphereTags: ['records', 'suspicion', 'peeling_order'], knowledgeLevel: 1 },
+      { stageId: 'stage_truth_in_forest', act: 'act2', atmosphereTags: ['dread', 'evidence', 'hunted_by_name'], knowledgeLevel: 2 },
+      { stageId: 'stage_mayor_secret', act: 'act2', atmosphereTags: ['revelation', 'debt', 'fractured_trust'], knowledgeLevel: 3 },
+      { stageId: 'stage_allies_decision', act: 'act3', atmosphereTags: ['confrontation', 'public_truth', 'weight_of_choice'], knowledgeLevel: 4 },
+    ] as const;
 
-    bus.emit('quest_stage_advanced', { questId: 'quest_main_01', newStageId: 'stage_disappearances', turnNumber: 5 });
+    for (const expectedTransition of expectedTransitions) {
+      const store = createNarrativeStore();
+      const bus = freshBus();
+      createNarrativeStateWatcher(store, bus);
 
-    expect(store.getState().currentAct).toBe('act1');
-    expect(store.getState().atmosphereTags).toEqual(['mundane', 'curious', 'unsettled']);
-    expect(store.getState().playerKnowledgeLevel).toBe(1);
+      bus.emit('quest_stage_advanced', {
+        questId: 'quest_main_01',
+        newStageId: expectedTransition.stageId,
+        turnNumber: expectedTransition.knowledgeLevel + 1,
+      });
+
+      expect(store.getState().currentAct).toBe(expectedTransition.act);
+      expect(store.getState().atmosphereTags).toEqual([...expectedTransition.atmosphereTags]);
+      expect(store.getState().playerKnowledgeLevel).toBe(expectedTransition.knowledgeLevel);
+    }
   });
 
   it('unknown stage IDs are ignored — store remains unchanged', () => {

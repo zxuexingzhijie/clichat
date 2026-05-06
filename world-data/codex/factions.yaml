@@ -45,6 +45,92 @@
       - 不要扩展此条目的设定，除非世界状态或剧情明确提供。
     reveal_policy:
       default: public_surface_only
+- id: faction_grey_covenant
+  name: 灰契会
+  type: faction
+  tags:
+    - covenant
+    - debt_contract
+    - black_silver
+    - border_power
+  description: 灰契会是活跃于边境商路与矿权背后的冷酷契约型势力。他们不以混乱或屠杀为目标，而是通过资金、黑银保供、名字债契和节点仲裁，把边境城镇逐步纳入可执行的义务网络。
+  epistemic:
+    authority: established_canon
+    truth_status: "true"
+    scope: faction_internal
+    visibility: hidden
+    confidence: 0.82
+    source_type: faction_claim
+    source_bias: contractual_self-justification
+    known_by:
+      - faction_merchants
+      - faction_temple
+      - npc_elder
+    contradicts: []
+    volatility: stable
+  territory: 边境商路、黑银矿路与债契登记点
+  alignment: lawful_neutral
+  goals:
+    - control_border_nodes
+    - secure_black_silver_supply
+    - expand_name_debt_contracts
+    - arbitrate_frontier_obligations
+  rivals:
+    - faction_guard
+    - faction_shadow_guild
+    - faction_temple
+  information_network:
+    hears_from:
+      - faction_merchants
+      - npc_merchant_afu
+      - npc_blacksmith
+      - loc_market
+      - loc_north_gate
+    spreads_to:
+      - faction_grey_covenant
+      - faction_merchants
+    rumor_threshold: contractual_leverage_or_supply_risk
+  reaction_policy:
+    player_honors_contract: offer_precise_terms
+    player_breaks_contract: invoke_collateral_clause
+    player_disrupts_black_silver_supply: escalate_with_legal_pressure
+    player_exposes_name_debt: deny_malice_and_reframe_as_obligation
+    player_secures_border_node: negotiate_controlled_access
+  player_facing:
+    short_label: 灰契会
+  ai_grounding:
+    must_know:
+      - 灰契会是冷酷契约型势力，不是普通反派；他们会履行合同字面承诺，也会毫不留情执行代价条款。
+      - 灰契会的核心目标是控制边境节点、稳定黑银矿供给，并扩大以真名和义务为抵押的名字债契。
+      - 灰契会偏好通过仲裁、债务、供应链和法律化威胁达成目标，而非公开暴力。
+    must_not_invent:
+      - 不要把灰契会写成无纪律的盗匪、邪教或只为作恶而作恶的势力。
+      - 不要在公开可见层直接揭露名字债契，除非剧情阶段或可见性门槛允许。
+    reveal_policy:
+      default: gated_by_visibility_or_stage
+  ecology:
+    rumors_seeded:
+      - id: rumor_grey_covenant_fair_terms
+        statement: 有商人声称灰契会的条款公平，因为他们至少会兑现每一个写下的承诺。
+        scope: faction
+        scope_id: faction_grey_covenant
+        truth_status: contested
+        confidence: 0.45
+        spread:
+          - loc_market
+          - faction_merchants
+        tags:
+          - grey_covenant
+          - contract_rumor
+    belief_hooks:
+      - holder_id: faction_merchants
+        holder_type: faction
+        subject_id: faction_grey_covenant
+        stance: fears
+        statement: 商人协会明白灰契会能保障黑银供给，也害怕名字债契最终吞掉商路自主权。
+        confidence: 0.7
+        when: supply_contract_reviewed
+
 - id: faction_shadow_guild
   name: 暗影行会
   type: faction

@@ -1,33 +1,33 @@
 transitions:
   - on_stage: stage_rumor
     set_act: act1
-    set_atmosphere: [mundane, curious, unsettled]
+    set_atmosphere: [rain, mundane, unnamed_dread]
     set_knowledge_level: 0
     set_world_flags: {}
 
   - on_stage: stage_disappearances
     set_act: act1
-    set_atmosphere: [mundane, curious, unsettled]
+    set_atmosphere: [records, suspicion, peeling_order]
     set_knowledge_level: 1
     set_world_flags: {}
 
   - on_stage: stage_truth_in_forest
     set_act: act2
-    set_atmosphere: [dread, mystery, urgency]
+    set_atmosphere: [dread, evidence, hunted_by_name]
     set_knowledge_level: 2
     set_world_flags:
       ritual_site_active: true
 
   - on_stage: stage_mayor_secret
     set_act: act2
-    set_atmosphere: [dread, fractured_trust, urgency]
+    set_atmosphere: [revelation, debt, fractured_trust]
     set_knowledge_level: 3
     set_world_flags:
       mayor_secret_known: true
 
   - on_stage: stage_allies_decision
     set_act: act3
-    set_atmosphere: [confrontation, grief, weight_of_truth]
+    set_atmosphere: [confrontation, public_truth, weight_of_choice]
     set_knowledge_level: 4
     set_world_flags: {}
 
