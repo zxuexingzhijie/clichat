@@ -53,7 +53,7 @@ function makeQuestTemplate(id: string, name: string, tags: readonly string[]): Q
       active: false,
       effects: [],
     },
-  } as QuestTemplate;
+  } as unknown as QuestTemplate;
 }
 
 describe('AtmosphereProvider quest derivation', () => {
