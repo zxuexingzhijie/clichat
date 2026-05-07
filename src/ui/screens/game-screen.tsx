@@ -5,7 +5,6 @@ import { useScreenSize } from 'fullscreen-ink';
 import { Divider } from '../components/divider';
 import { TitleBar } from '../panels/title-bar';
 import { PanelRouter } from '../panels/panel-router';
-import { type QuestDisplayEntry } from '../panels/journal-panel';
 import { StatusBar } from '../panels/status-bar';
 import { CombatStatusBar } from '../panels/combat-status-bar';
 import { ActionsPanel } from '../panels/actions-panel';
@@ -13,13 +12,11 @@ import { CombatActionsPanel } from '../panels/combat-actions-panel';
 import { InputArea } from '../panels/input-area';
 import { InlineConfirm } from '../components/inline-confirm';
 import { useGameInput, getPanelActionForKey } from '../hooks/use-game-input';
-import { useGameEventToasts } from '../hooks/use-game-event-toasts';
-import { useTimedEffect } from '../hooks/use-timed-effect';
-import { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx, DialogueStoreCtx, CombatStoreCtx, QuestStoreCtx } from '../../app';
+import { useActiveQuests, useAtmosphere, useAtmosphereProcessing, useToast } from '../providers/atmosphere-provider';
+import { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx, DialogueStoreCtx, CombatStoreCtx } from '../../app';
 import { eventBus as defaultEventBus } from '../../events/event-bus';
 import type { EventBus } from '../../events/event-bus';
 import { getRecentChapterSummaries } from '../../ai/summarizer/summarizer-worker';
-import { TIME_OF_DAY_LABELS } from '../../types/common';
 import type { GameState } from '../../state/game-store';
 import { costSessionStore } from '../../state/cost-session-store';
 import { getLastReplayEntries } from '../../game-loop';
@@ -29,7 +26,6 @@ import { createGameScreenController } from '../../engine/game-screen-controller'
 import type { GameLoop } from '../../game-loop';
 import type { DialogueManager } from '../../engine/dialogue-manager';
 import type { CombatLoop } from '../../engine/combat-loop';
-import type { QuestTemplate } from '../../codex/schemas/entry-types';
 import type { LocationMapData } from '../panels/map-panel';
 import type { CodexDisplayEntry } from '../panels/codex-panel';
 import type { BranchDisplayNode } from '../panels/branch-tree-panel';
@@ -42,7 +38,6 @@ const OVERLAY_PHASES = new Set(['journal', 'map', 'codex', 'inventory', 'branch_
 const WIDE_ACTIONS_WIDTH = 36;
 
 type GameScreenProps = {
-  readonly questTemplates: ReadonlyMap<string, QuestTemplate>;
   readonly dialogueManager?: DialogueManager;
   readonly combatLoop?: CombatLoop;
   readonly gameLoop?: GameLoop;
@@ -62,7 +57,6 @@ type GameScreenProps = {
 };
 
 export function GameScreen({
-  questTemplates,
   dialogueManager,
   combatLoop,
   gameLoop,
@@ -87,7 +81,6 @@ export function GameScreen({
   const sceneState = SceneStoreCtx.useStoreState((s) => s);
   const dialogueState = DialogueStoreCtx.useStoreState((s) => s);
   const combatState = CombatStoreCtx.useStoreState((s) => s);
-  const questState = QuestStoreCtx.useStoreState((s) => s);
 
   const { width, height } = useScreenSize();
   const { exit } = useApp();
@@ -118,31 +111,24 @@ export function GameScreen({
 
   const isAnyStreaming = isNarrationStreaming || isNpcStreaming;
 
-  const { toast } = useGameEventToasts();
-
-  const { active: isSpinnerDimming, trigger: triggerSpinnerDimout } = useTimedEffect(300);
-  const [spinnerDimoutComplete, setSpinnerDimoutComplete] = useState(false);
-  const wasProcessingRef = useRef(false);
+  const { toast } = useToast();
+  const {
+    timeLabel,
+    isSceneDimmed,
+    isSpinnerDimming,
+    spinnerDimoutComplete,
+  } = useAtmosphere();
+  const {
+    activeQuests,
+    completedQuests,
+    failedQuests,
+    activeQuestIds,
+    activeQuestTags,
+    activeQuestName,
+  } = useActiveQuests();
+  const setAtmosphereProcessingState = useAtmosphereProcessing();
   const wasNarrationStreamingRef = useRef(false);
 
-  const allQuestEntries = useMemo<QuestDisplayEntry[]>(() =>
-    Object.entries(questState.quests)
-      .map(([questId, progress]) => {
-        const template = questTemplates.get(questId);
-        return template ? { progress, template } : null;
-      })
-      .filter((e): e is QuestDisplayEntry => e !== null),
-    [questState.quests, questTemplates],
-  );
-
-  const activeQuests = useMemo(() => allQuestEntries.filter(e => e.progress.status === 'active'), [allQuestEntries]);
-  const completedQuests = useMemo(() => allQuestEntries.filter(e => e.progress.status === 'completed'), [allQuestEntries]);
-  const failedQuests = useMemo(() => allQuestEntries.filter(e => e.progress.status === 'failed'), [allQuestEntries]);
-
-  const activeQuestEcologicalContext = useMemo(() => ({
-    activeQuestIds: activeQuests.map(({ template }) => template.id),
-    activeQuestTags: [...new Set(activeQuests.flatMap(({ template }) => template.tags))],
-  }), [activeQuests]);
 
   const controller = useMemo(
     () => createGameScreenController(
@@ -156,14 +142,12 @@ export function GameScreen({
         startNarration,
         resetNarration,
         resetNpcDialogue,
-        activeQuestIds: activeQuestEcologicalContext.activeQuestIds,
-        activeQuestTags: activeQuestEcologicalContext.activeQuestTags,
+        activeQuestIds,
+        activeQuestTags,
       },
     ),
-    [gameContextStore, sceneContextStore, worldMemoryStore, eventBus, gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue, activeQuestEcologicalContext],
+    [gameContextStore, sceneContextStore, worldMemoryStore, eventBus, gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue, activeQuestIds, activeQuestTags],
   );
-
-  const activeQuestName = activeQuests[0]?.template.name ?? null;
 
   const replayEntries = useMemo(() => getLastReplayEntries(), [gameState.phase]);
 
@@ -173,33 +157,8 @@ export function GameScreen({
   const [chapterSummaries, setChapterSummaries] = useState(() => getRecentChapterSummaries());
 
   useEffect(() => {
-    const isProcessing = inputMode === 'processing' && !isAnyStreaming;
-
-    if (wasProcessingRef.current && isAnyStreaming) {
-      triggerSpinnerDimout();
-      setSpinnerDimoutComplete(false);
-    }
-
-    if (!isAnyStreaming && !isProcessing) {
-      setSpinnerDimoutComplete(false);
-    }
-
-    wasProcessingRef.current = isProcessing;
-  }, [inputMode, isAnyStreaming, triggerSpinnerDimout]);
-
-  useEffect(() => {
-    if (!isSpinnerDimming && wasProcessingRef.current === false && isAnyStreaming) {
-      setSpinnerDimoutComplete(true);
-    }
-  }, [isSpinnerDimming, isAnyStreaming]);
-
-  const { active: isSceneDimmed, trigger: triggerSceneFade } = useTimedEffect(500);
-
-  useEffect(() => {
-    const handler = () => { triggerSceneFade(); };
-    eventBus.on('scene_changed', handler);
-    return () => { eventBus.off('scene_changed', handler); };
-  }, [eventBus, triggerSceneFade]);
+    setAtmosphereProcessingState({ inputMode, isAnyStreaming });
+  }, [inputMode, isAnyStreaming, setAtmosphereProcessingState]);
 
   useEffect(() => {
     const handler = (p: { taskId: string; type: string }) => {
@@ -235,7 +194,6 @@ export function GameScreen({
   }, [narrationError, controller]);
 
   const innerWidth = width - 2;
-  const timeLabel = TIME_OF_DAY_LABELS[gameState.timeOfDay] ?? gameState.timeOfDay;
 
   const isInCombat = combatState.active;
   const isInDialogueMode = dialogueState.active && dialogueState.mode === 'full';

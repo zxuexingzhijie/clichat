@@ -58,20 +58,20 @@ describe('Task 8: ecological memory production wiring', () => {
     expect(controllerCall).toContain('worldMemory: worldMemoryStore');
   });
 
-  it('GameScreen derives active quest ecological context and passes it into createGameScreenController', () => {
+  it('GameScreen receives active quest ecological context from AtmosphereProvider and passes it into createGameScreenController', () => {
     const source = readFileSync(new URL('./game-screen.tsx', import.meta.url), 'utf8');
     const controllerCall = source.slice(
       source.indexOf('const controller = useMemo'),
       source.indexOf('useEffect', source.indexOf('const controller = useMemo')),
     );
 
-    expect(source).toContain('activeQuestEcologicalContext');
-    expect(source).toContain('questState.quests');
-    expect(source).toContain('questTemplates');
-    expect(source).toContain("progress.status === 'active'");
-    expect(source).toContain('template.tags');
-    expect(controllerCall).toContain('activeQuestIds: activeQuestEcologicalContext.activeQuestIds');
-    expect(controllerCall).toContain('activeQuestTags: activeQuestEcologicalContext.activeQuestTags');
+    expect(source).toContain('useActiveQuests');
+    expect(source).toContain('activeQuestIds');
+    expect(source).toContain('activeQuestTags');
+    expect(source).not.toContain('questState.quests');
+    expect(source).not.toContain('activeQuestEcologicalContext');
+    expect(controllerCall).toContain('activeQuestIds');
+    expect(controllerCall).toContain('activeQuestTags');
   });
 });
 
