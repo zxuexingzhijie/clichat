@@ -1,4 +1,5 @@
 import { describe, it, expect, mock } from 'bun:test';
+import { readFileSync } from 'node:fs';
 import mitt from 'mitt';
 
 import { createManualClock } from '../../time/manual-clock';
@@ -159,5 +160,57 @@ describe('AtmosphereProvider event state', () => {
   it('reads weather only when scene state already exposes a weather field', () => {
     expect(getWeatherFromSceneState({ weather: '暴雨' })).toBe('暴雨');
     expect(getWeatherFromSceneState({})).toBeNull();
+  });
+});
+
+describe('AtmosphereProvider integration wiring', () => {
+  it('App provider nesting includes AtmosphereProvider inside stores and above GameScreen', () => {
+    const source = readFileSync(new URL('../../app.tsx', import.meta.url), 'utf8');
+    const gameScreenRegion = source.slice(
+      source.indexOf('<AtmosphereProvider'),
+      source.indexOf('</AtmosphereProvider>'),
+    );
+
+    expect(source).toContain("import { AtmosphereProvider } from './ui/providers/atmosphere-provider'");
+    expect(gameScreenRegion).toContain('<AtmosphereProvider');
+    expect(gameScreenRegion).toContain('<GameScreen');
+    expect(gameScreenRegion.indexOf('<AtmosphereProvider')).toBeLessThan(gameScreenRegion.indexOf('<GameScreen'));
+    expect(gameScreenRegion).toContain('questTemplates={questTemplates}');
+    expect(gameScreenRegion).toContain('eventBus={ctx.eventBus}');
+  });
+
+  it('GameScreen consumes Atmosphere hooks instead of toast/timed hooks or local quest calculations', () => {
+    const source = readFileSync(new URL('../screens/game-screen.tsx', import.meta.url), 'utf8');
+
+    expect(source).toContain('useAtmosphere');
+    expect(source).toContain('useToast');
+    expect(source).toContain('useActiveQuests');
+    expect(source).not.toContain('useGameEventToasts');
+    expect(source).not.toContain('useTimedEffect');
+    expect(source).not.toContain('QuestStoreCtx');
+    expect(source).not.toContain('questState.quests');
+    expect(source).not.toContain('activeQuestEcologicalContext');
+  });
+
+  it('GameScreen passes provider quest, toast, dimout, and ecological state to consumers', () => {
+    const source = readFileSync(new URL('../screens/game-screen.tsx', import.meta.url), 'utf8');
+    const controllerCall = source.slice(
+      source.indexOf('const controller = useMemo'),
+      source.indexOf('useEffect', source.indexOf('const controller = useMemo')),
+    );
+    const panelRouterCall = source.slice(
+      source.indexOf('<PanelRouter'),
+      source.indexOf('/>', source.indexOf('<PanelRouter')),
+    );
+
+    expect(controllerCall).toContain('activeQuestIds');
+    expect(controllerCall).toContain('activeQuestTags');
+    expect(source).toContain('activeQuests');
+    expect(source).toContain('completedQuests');
+    expect(source).toContain('failedQuests');
+    expect(source).toContain('activeQuestName');
+    expect(panelRouterCall).toContain('toast={toast}');
+    expect(panelRouterCall).toContain('isDimmed={isSceneDimmed}');
+    expect(panelRouterCall).toContain('isSpinnerDimming={isSpinnerDimming}');
   });
 });
