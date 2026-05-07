@@ -70,4 +70,17 @@ describe('InputProvider source structure', () => {
     expect(source).toContain("eventBus.on('dialogue_ended'");
     expect(source).toContain("eventBus.on('game_phase_changed'");
   });
+
+  it('owns controller dispatch dependencies from AtmosphereProvider and NarrativeProvider', () => {
+    const providerSource = readFileSync(new URL('./input-provider.tsx', import.meta.url), 'utf8');
+    const gameScreenSource = readFileSync(new URL('../screens/game-screen.tsx', import.meta.url), 'utf8');
+    expect(providerSource).toContain('createGameScreenController');
+    expect(providerSource).toContain('activeQuestIds');
+    expect(providerSource).toContain('activeQuestTags');
+    expect(providerSource).toContain('startNarration');
+    expect(providerSource).toContain('resetNarration');
+    expect(providerSource).toContain('resetNpcDialogue');
+    expect(providerSource).toContain('worldMemory: worldMemoryStore');
+    expect(gameScreenSource).not.toContain('createGameScreenController');
+  });
 });
