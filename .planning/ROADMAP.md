@@ -82,7 +82,13 @@
   3. NarrativeRenderer replaces ScenePanel entirely; switching to dialogue mode happens internally without parent re-mount
   4. Input state machine handles all 7 states (EXPLORATION, DIALOGUE, COMBAT, MENU, CODEX, MAP, BRANCH) with correct keyboard context per state
   5. All timing-dependent tests use injectable Clock; no flaky setTimeout-based assertions remain
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 22-01-PLAN.md — Clock abstraction for deterministic timing tests
+- [ ] 22-02-PLAN.md — AtmosphereProvider wide world-perception state
+- [ ] 22-03-PLAN.md — NarrativeProvider single streaming source of truth
+- [ ] 22-04-PLAN.md — NarrativeRenderer in-place rewrite with embedded dialogue
+- [ ] 22-05-PLAN.md — InputProvider 7-state machine and GameScreen slim-down
 **UI hint**: yes
 
 ### Phase 23: World Pack Platform
