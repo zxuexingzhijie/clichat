@@ -15,6 +15,15 @@ location descriptions driven by world flags.
 The player must feel they are in a **persistent, consistent world that remembers them** — not
 a chatbot that reinvents the universe every turn.
 
+## Current Milestone: v1.5 Ecosystem Engine
+
+**Goal:** Evolve from "one game" to "CLI-native world simulation ecosystem" — UX architecture refactor + World Pack platform + Delight Layer visual system.
+
+**Target features:**
+- UX Architecture Refactor: Context Providers, NarrativeRenderer, GameScreen slim-down, 7-state input state machine
+- World Pack Platform: pack spec, namespace prefix, composable interfaces, SDK CLI, cached loader, save migration
+- Delight Layer: 墨韵呼吸 design system implementation (World Heartbeat BPM, 墨分五色, sine-curve typing, NPC glyphs, weather, faction meter, story export)
+
 ## Current State (v1.4)
 
 - **Shipped:** 2026-04-30
