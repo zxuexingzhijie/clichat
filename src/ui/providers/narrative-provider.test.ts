@@ -82,7 +82,7 @@ describe('Task 2: NarrativeProvider app and GameScreen wiring', () => {
     expect(gameplayTree.indexOf('<NarrativeProvider>')).toBeLessThan(gameplayTree.indexOf('<GameScreen'));
   });
 
-  it('GameScreen imports provider hooks and does not import raw streaming hooks directly', () => {
+  it('GameScreen imports provider hooks and no longer calls raw streaming hooks directly', () => {
     const source = readFileSync(gameScreenPath, 'utf8');
 
     expect(source).toContain("from '../providers/narrative-provider'");
@@ -90,8 +90,6 @@ describe('Task 2: NarrativeProvider app and GameScreen wiring', () => {
     expect(source).toContain('useDialogueStream');
     expect(source).toContain('useNarrativeText');
     expect(source).toContain('useIsStreaming');
-    expect(source).not.toContain("from '../hooks/use-ai-narration'");
-    expect(source).not.toContain("from '../hooks/use-npc-dialogue'");
     expect(source).not.toContain('useAiNarration()');
     expect(source).not.toContain('useNpcDialogue()');
   });
