@@ -13,6 +13,7 @@ import { InputArea } from '../panels/input-area';
 import { InlineConfirm } from '../components/inline-confirm';
 import { useGameInput, getPanelActionForKey } from '../hooks/use-game-input';
 import { useActiveQuests, useAtmosphere, useAtmosphereProcessing, useToast } from '../providers/atmosphere-provider';
+import { useDialogueStream, useIsStreaming, useNarrationStream, useNarrativeText } from '../providers/narrative-provider';
 import { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx, DialogueStoreCtx, CombatStoreCtx } from '../../app';
 import { eventBus as defaultEventBus } from '../../events/event-bus';
 import type { EventBus } from '../../events/event-bus';
@@ -20,8 +21,6 @@ import { getRecentChapterSummaries } from '../../ai/summarizer/summarizer-worker
 import type { GameState } from '../../state/game-store';
 import { costSessionStore } from '../../state/cost-session-store';
 import { getLastReplayEntries } from '../../game-loop';
-import { useAiNarration } from '../hooks/use-ai-narration';
-import { useNpcDialogue } from '../hooks/use-npc-dialogue';
 import { createGameScreenController } from '../../engine/game-screen-controller';
 import type { GameLoop } from '../../game-loop';
 import type { DialogueManager } from '../../engine/dialogue-manager';
@@ -95,21 +94,24 @@ export function GameScreen({
   } = useGameInput();
 
   const {
-    streamingText,
     isStreaming: isNarrationStreaming,
-    error: narrationError,
     startNarration,
     skipToEnd: skipNarration,
     reset: resetNarration,
-  } = useAiNarration();
+  } = useNarrationStream();
+  const {
+    sceneLines: baseSceneLines,
+    streamingText,
+    narrationError,
+  } = useNarrativeText();
 
   const {
     isStreaming: isNpcStreaming,
     skipToEnd: skipNpcDialogue,
     reset: resetNpcDialogue,
-  } = useNpcDialogue();
+  } = useDialogueStream();
 
-  const isAnyStreaming = isNarrationStreaming || isNpcStreaming;
+  const isAnyStreaming = useIsStreaming();
 
   const { toast } = useToast();
   const {
@@ -297,12 +299,12 @@ export function GameScreen({
 
   const sceneLines = dialogueState.active && dialogueState.mode === 'inline'
     ? [
-        ...sceneState.narrationLines,
+        ...baseSceneLines,
         ...dialogueState.dialogueHistory
           .filter((e) => e.role === 'assistant')
           .map((e) => `${dialogueState.npcName}："${e.content}"`),
       ]
-    : [...sceneState.narrationLines];
+    : [...baseSceneLines];
 
   const statusBarNode = isInCombat ? (
     <CombatStatusBar

@@ -40,6 +40,7 @@ import type { PlayerKnowledgeState } from './state/player-knowledge-store';
 import { initSummarizerScheduler } from './ai/summarizer/summarizer-scheduler';
 import { configureSummarizerWorkerStores, runSummarizerLoop } from './ai/summarizer/summarizer-worker';
 import { AtmosphereProvider } from './ui/providers/atmosphere-provider';
+import { NarrativeProvider } from './ui/providers/narrative-provider';
 import { initExplorationTracker } from './engine/exploration-tracker';
 import { initKnowledgeTracker } from './engine/knowledge-tracker';
 import { initWorldEventRecorder, recordWorldEventWithDerivations } from './engine/world-memory-recorder';
@@ -403,20 +404,22 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
     <GameErrorBoundary>
       <SizeGuard>
         <AtmosphereProvider questTemplates={questTemplates} eventBus={ctx.eventBus}>
-          <GameScreen
-            gameLoop={gameLoop}
-            dialogueManager={dialogueManager}
-            combatLoop={combatLoop}
-            codexEntries={codexDisplayEntries}
-            mapData={mapData}
-            branchTree={branchTree}
-            currentBranchId={branchState.currentBranchId}
-            branches={branchState.branches}
-            readSaveData={readSaveData}
-            saveDir={saveDir}
-            eventBus={ctx.eventBus}
-            worldMemoryStore={ctx.stores.worldMemory}
-          />
+          <NarrativeProvider>
+            <GameScreen
+              gameLoop={gameLoop}
+              dialogueManager={dialogueManager}
+              combatLoop={combatLoop}
+              codexEntries={codexDisplayEntries}
+              mapData={mapData}
+              branchTree={branchTree}
+              currentBranchId={branchState.currentBranchId}
+              branches={branchState.branches}
+              readSaveData={readSaveData}
+              saveDir={saveDir}
+              eventBus={ctx.eventBus}
+              worldMemoryStore={ctx.stores.worldMemory}
+            />
+          </NarrativeProvider>
         </AtmosphereProvider>
       </SizeGuard>
     </GameErrorBoundary>

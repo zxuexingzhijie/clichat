@@ -90,9 +90,9 @@ describe('BUG-01: GameScreen accepts gameLoop prop', () => {
     expect(source).toContain('handleActionExecute');
   });
 
-  it('GameScreen function source references useAiNarration and startNarration', () => {
+  it('GameScreen function source references NarrativeProvider hooks and startNarration', () => {
     const source = GameScreen.toString();
-    expect(source).toContain('useAiNarration');
+    expect(source).toContain('useNarrationStream');
     expect(source).toContain('startNarration');
   });
 

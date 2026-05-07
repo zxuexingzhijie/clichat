@@ -48,20 +48,15 @@ describe('Task 1: NarrativeProvider hook contract', () => {
   it('passes through narration stream start, skip, and reset from the provider-owned hook', () => {
     const source = readProviderSource();
 
+    expect(source).toContain('UseAiNarrationReturn');
     expect(source).toContain('return useNarrativeContext().narration');
-    expect(source).toContain('startNarration');
-    expect(source).toContain('skipToEnd');
-    expect(source).toContain('reset');
   });
 
   it('passes through dialogue stream start, skip, reset, resetMessages, and metadata from the provider-owned hook', () => {
     const source = readProviderSource();
 
+    expect(source).toContain('UseNpcDialogueReturn');
     expect(source).toContain('return useNarrativeContext().dialogue');
-    expect(source).toContain('startDialogue');
-    expect(source).toContain('skipToEnd');
-    expect(source).toContain('resetMessages');
-    expect(source).toContain('metadata');
   });
 
   it('selector hooks fail fast outside NarrativeProvider', () => {
