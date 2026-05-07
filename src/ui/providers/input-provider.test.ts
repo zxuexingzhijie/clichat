@@ -46,6 +46,14 @@ describe('InputProvider state machine helpers', () => {
 });
 
 describe('InputProvider source structure', () => {
+  it('App nesting is AtmosphereProvider to NarrativeProvider to InputProvider to GameScreen', () => {
+    const source = readFileSync(new URL('../../app.tsx', import.meta.url), 'utf8');
+    const nesting = source.slice(source.indexOf('<AtmosphereProvider'), source.indexOf('</AtmosphereProvider>'));
+    expect(nesting.indexOf('<AtmosphereProvider')).toBeLessThan(nesting.indexOf('<NarrativeProvider'));
+    expect(nesting.indexOf('<NarrativeProvider')).toBeLessThan(nesting.indexOf('<InputProvider'));
+    expect(nesting.indexOf('<InputProvider')).toBeLessThan(nesting.indexOf('<GameScreen'));
+  });
+
   it('exports provider selector hooks', () => {
     const source = readFileSync(new URL('./input-provider.tsx', import.meta.url), 'utf8');
     expect(source).toContain('export function InputProvider');

@@ -5,10 +5,36 @@ import { sceneStore, getDefaultSceneState } from '../../state/scene-store';
 import { GameScreen } from './game-screen';
 import type { GameLoop, ProcessResult } from '../../game-loop';
 
-describe('Scheme A: fixed action column layout', () => {
-  it('GameScreen source uses a fixed wide action column width', () => {
+const PLAN_22_FORBIDDEN_GAMESCREEN_OWNERSHIP = [
+  'useInput(',
+  'useGameInput',
+  'useAiNarration',
+  'useNpcDialogue',
+  'useGameEventToasts',
+  'createGameScreenController',
+];
+
+describe('Phase 22-05 GameScreen slim orchestrator', () => {
+  it('GameScreen source is under 100 physical lines', () => {
+    const source = readFileSync(new URL('./game-screen.tsx', import.meta.url), 'utf8');
+    expect(source.split('\n').length).toBeLessThan(100);
+  });
+
+  it('GameScreen contains no direct input, streaming, toast, or controller ownership', () => {
+    const source = readFileSync(new URL('./game-screen.tsx', import.meta.url), 'utf8');
+    for (const forbidden of PLAN_22_FORBIDDEN_GAMESCREEN_OWNERSHIP) {
+      expect(source).not.toContain(forbidden);
+    }
+  });
+
+  it('GameScreen still renders the gameplay layout stack', () => {
     const source = GameScreen.toString();
-    expect(source).toContain('WIDE_ACTIONS_WIDTH');
+    expect(source).toContain('TitleBar');
+    expect(source).toContain('PanelRouter');
+    expect(source).toContain('StatusBar');
+    expect(source).toContain('ActionsPanel');
+    expect(source).toContain('InputArea');
+    expect(source).toContain('InlineConfirm');
   });
 });
 
