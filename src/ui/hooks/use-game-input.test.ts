@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'bun:test';
-import { getPanelActionForKey, useGameInput } from './use-game-input';
+import {
+  consumeGlobalInput,
+  getPanelActionForKey,
+  inputStateFromGamePhase,
+  useGameInput,
+} from './use-game-input';
 
 describe('useGameInput', () => {
   it('is a function', () => {
@@ -50,5 +55,20 @@ describe('getPanelActionForKey', () => {
     expect(getPanelActionForKey('i', true)).toBeNull();
     expect(getPanelActionForKey('b', true)).toBeNull();
     expect(getPanelActionForKey('?', true)).toBeNull();
+  });
+});
+
+describe('input state helpers', () => {
+  it('maps overlay phases to menu-specific input states', () => {
+    expect(inputStateFromGamePhase('map')).toBe('MAP');
+    expect(inputStateFromGamePhase('codex')).toBe('CODEX');
+    expect(inputStateFromGamePhase('branch_tree')).toBe('BRANCH');
+    expect(inputStateFromGamePhase('compare')).toBe('BRANCH');
+    expect(inputStateFromGamePhase('journal')).toBe('MENU');
+  });
+
+  it('global input helper reports whether a key was consumed', () => {
+    expect(consumeGlobalInput({ input: 'x', key: {}, isStreaming: false, inputMode: 'action_select', isTyping: false })).toEqual({ consumed: false, action: null });
+    expect(consumeGlobalInput({ input: '?', key: {}, isStreaming: false, inputMode: 'action_select', isTyping: false })).toEqual({ consumed: true, action: 'help' });
   });
 });
