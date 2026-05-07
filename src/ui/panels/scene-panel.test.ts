@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { parseSceneLine } from './scene-panel';
 
 const source = readFileSync(new URL('./scene-panel.tsx', import.meta.url), 'utf8');
+const panelRouterSource = readFileSync(new URL('./panel-router.tsx', import.meta.url), 'utf8');
 const repoRoot = join(import.meta.dir, '../../..');
 
 describe('Plan 22-04 Task 1: NarrativeRenderer in-place rewrite', () => {
@@ -55,5 +56,21 @@ describe('Plan 22-04 Task 1: NarrativeRenderer in-place rewrite', () => {
     expect(renderOrder.indexOf('visibleLines.map')).toBeLessThan(renderOrder.lastIndexOf('streamingText'));
     expect(source).toContain('还没有新的叙述。输入行动，或按 ? 查看可用快捷键。');
     expect(source).toContain('dimColor={isDimmed}');
+  });
+});
+
+describe('Plan 22-04 Task 2: PanelRouter routes through NarrativeRenderer', () => {
+  it('imports NarrativeRenderer from ./scene-panel and no longer imports DialoguePanel', () => {
+    expect(panelRouterSource).toContain("import { NarrativeRenderer } from './scene-panel'");
+    expect(panelRouterSource).not.toContain("import { DialoguePanel } from './dialogue-panel'");
+    expect(panelRouterSource).not.toContain('<DialoguePanel');
+  });
+
+  it('renders dialogue, combat, and exploration modes through NarrativeRenderer', () => {
+    expect(panelRouterSource).toContain('mode="dialogue"');
+    expect(panelRouterSource).toContain('mode="combat"');
+    expect(panelRouterSource).toContain('mode="exploration"');
+    expect(panelRouterSource).toContain('dialogue={{');
+    expect(panelRouterSource).toContain('combat={{');
   });
 });
