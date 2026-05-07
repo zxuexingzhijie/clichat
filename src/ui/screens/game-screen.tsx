@@ -14,6 +14,7 @@ import { InlineConfirm } from '../components/inline-confirm';
 import { useGameInput, getPanelActionForKey } from '../hooks/use-game-input';
 import { useActiveQuests, useAtmosphere, useAtmosphereProcessing, useToast } from '../providers/atmosphere-provider';
 import { useDialogueStream, useIsStreaming, useNarrationStream, useNarrativeText } from '../providers/narrative-provider';
+import { useCommandInput, useInputActions } from '../providers/input-provider';
 import { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx, DialogueStoreCtx, CombatStoreCtx } from '../../app';
 import { eventBus as defaultEventBus } from '../../events/event-bus';
 import type { EventBus } from '../../events/event-bus';
@@ -21,7 +22,6 @@ import { getRecentChapterSummaries } from '../../ai/summarizer/summarizer-worker
 import type { GameState } from '../../state/game-store';
 import { costSessionStore } from '../../state/cost-session-store';
 import { getLastReplayEntries } from '../../game-loop';
-import { createGameScreenController } from '../../engine/game-screen-controller';
 import type { GameLoop } from '../../game-loop';
 import type { DialogueManager } from '../../engine/dialogue-manager';
 import type { CombatLoop } from '../../engine/combat-loop';
@@ -132,24 +132,8 @@ export function GameScreen({
   const wasNarrationStreamingRef = useRef(false);
 
 
-  const controller = useMemo(
-    () => createGameScreenController(
-      { game: gameContextStore, scene: sceneContextStore, worldMemory: worldMemoryStore },
-      eventBus,
-      {
-        gameLoop,
-        dialogueManager,
-        combatLoop,
-        setInputMode,
-        startNarration,
-        resetNarration,
-        resetNpcDialogue,
-        activeQuestIds,
-        activeQuestTags,
-      },
-    ),
-    [gameContextStore, sceneContextStore, worldMemoryStore, eventBus, gameLoop, dialogueManager, combatLoop, setInputMode, startNarration, resetNarration, resetNpcDialogue, activeQuestIds, activeQuestTags],
-  );
+  const controller = useInputActions();
+  const { submit } = useCommandInput();
 
   const replayEntries = useMemo(() => getLastReplayEntries(), [gameState.phase]);
 
@@ -178,22 +162,6 @@ export function GameScreen({
     });
   }, []);
 
-  useEffect(() => {
-    if (isNarrationStreaming) {
-      wasNarrationStreamingRef.current = true;
-      return;
-    }
-    if (wasNarrationStreamingRef.current) {
-      wasNarrationStreamingRef.current = false;
-      controller.handleNarrationComplete(streamingText);
-    }
-  }, [isNarrationStreaming, streamingText, controller]);
-
-  useEffect(() => {
-    if (narrationError) {
-      controller.handleNarrationError(narrationError);
-    }
-  }, [narrationError, controller]);
 
   const innerWidth = width - 2;
 
@@ -208,11 +176,6 @@ export function GameScreen({
 
   const handleActionExecute = useCallback(
     (index: number) => { void controller.handleActionExecute(index); },
-    [controller],
-  );
-
-  const handleInputSubmit = useCallback(
-    (text: string) => { controller.handleInputSubmit(text); },
     [controller],
   );
 
@@ -451,7 +414,7 @@ export function GameScreen({
         {statusBarNode}
         <Divider width={innerWidth} />
         <InputArea
-          onSubmit={handleInputSubmit}
+          onSubmit={submit}
           isActive={isTyping && !isInDialogueMode}
           mode={isTyping ? 'nl' : 'action'}
           value={inputValue}
@@ -494,7 +457,7 @@ export function GameScreen({
       {actionsNode}
       <Divider width={innerWidth} />
       <InputArea
-        onSubmit={handleInputSubmit}
+        onSubmit={submit}
         isActive={isTyping && !isInDialogueMode}
         mode={isTyping ? 'nl' : 'action'}
         value={inputValue}
