@@ -2,9 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Ecosystem Engine
-status: roadmapped
-last_updated: "2026-05-07T12:00:00.000Z"
-last_activity: 2026-05-07
+status: planning
+stopped_at: Phase 22 context gathered
+last_updated: "2026-05-07T16:04:01.725Z"
+last_activity: 2026-05-07 — Roadmap created for v1.5 (3 phases, 25 requirements)
 progress:
   total_phases: 3
   completed_phases: 0
@@ -58,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 Decisions are logged in PROJECT.md Key Decisions table.
 
 Recent decisions affecting v1.5 work:
+
 - D9: Namespace prefix `@pack/entity_id` for collision-free composition
 - D10: Selector hooks (Context Providers expose named hooks)
 - D11: Pre-React WorldPackLoader (pure function in engine layer)
@@ -89,6 +91,6 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-05-07T12:00:00.000Z
-Stopped at: Roadmap created for v1.5; ready for /gsd-plan-phase 22
-Resume file: None
+Last session: 2026-05-07T16:04:01.708Z
+Stopped at: Phase 22 context gathered
+Resume file: .planning/phases/22-ux-architecture-refactor/22-CONTEXT.md
