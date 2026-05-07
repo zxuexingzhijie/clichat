@@ -1,8 +1,7 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { Box, Text } from 'ink';
 import { GameErrorBoundary } from '../components/error-boundary';
-import { ScenePanel } from './scene-panel';
-import { DialoguePanel } from './dialogue-panel';
+import { NarrativeRenderer } from './scene-panel';
 import { JournalPanel, type QuestDisplayEntry } from './journal-panel';
 import { MapPanel } from './map-panel';
 import { CodexPanel } from './codex-panel';
@@ -12,7 +11,6 @@ import { ShortcutHelpPanel } from './shortcut-help-panel';
 import { ReplayPanel } from './replay-panel';
 import { ChapterSummaryPanel } from './chapter-summary-panel';
 import { InventoryPanel } from './inventory-panel';
-import { CheckResultLine } from './check-result-line';
 import { switchBranch } from '../../persistence/branch-manager';
 import type { GameState } from '../../state/game-store';
 import type { DialogueState } from '../../state/dialogue-store';
@@ -184,16 +182,21 @@ export function PanelRouter({
   if (isInCombat) {
     return (
       <GameErrorBoundary>
-        <Box flexDirection="column" paddingX={1}>
-          {combatLastCheckResult && (
-            <CheckResultLine checkResult={combatLastCheckResult} />
-          )}
-          {combatLastNarration ? (
-            <Text>{combatLastNarration}</Text>
-          ) : (
-            <Text bold color="cyan">⚔ 战斗！</Text>
-          )}
-        </Box>
+        <NarrativeRenderer
+          mode="combat"
+          lines={sceneLines}
+          streamingText={streamingText}
+          isStreaming={isStreaming}
+          showSpinner={showSpinner}
+          spinnerContext={spinnerContext}
+          toast={toast}
+          isDimmed={isDimmed}
+          isSpinnerDimming={isSpinnerDimming}
+          combat={{
+            lastCheckResult: combatLastCheckResult,
+            lastNarration: combatLastNarration,
+          }}
+        />
       </GameErrorBoundary>
     );
   }
@@ -201,19 +204,29 @@ export function PanelRouter({
   if (isInDialogueMode) {
     return (
       <GameErrorBoundary>
-        <DialoguePanel
-          npcName={dialogueState.npcName}
-          dialogueHistory={dialogueState.dialogueHistory}
-          relationshipValue={dialogueState.relationshipValue}
-          emotionHint={dialogueState.emotionHint}
-          responseOptions={dialogueState.availableResponses}
-          selectedIndex={dialogueSelectedIndex}
-          onSelect={onDialogueSelect}
-          onExecute={onDialogueExecute}
-          isActive={true}
-          onEscape={onDialogueEscape}
-          onFreeTextSubmit={onDialogueFreeText}
-          isNpcThinking={showSpinner}
+        <NarrativeRenderer
+          mode="dialogue"
+          lines={sceneLines}
+          streamingText={streamingText}
+          isStreaming={isStreaming}
+          showSpinner={showSpinner}
+          spinnerContext={spinnerContext}
+          toast={toast}
+          isDimmed={isDimmed}
+          isSpinnerDimming={isSpinnerDimming}
+          dialogue={{
+            npcName: dialogueState.npcName,
+            dialogueHistory: dialogueState.dialogueHistory,
+            relationshipValue: dialogueState.relationshipValue,
+            emotionHint: dialogueState.emotionHint,
+            responseOptions: dialogueState.availableResponses,
+            selectedIndex: dialogueSelectedIndex,
+            onSelect: onDialogueSelect,
+            onExecute: onDialogueExecute,
+            onEscape: onDialogueEscape,
+            onFreeTextSubmit: onDialogueFreeText,
+            isNpcThinking: showSpinner,
+          }}
         />
       </GameErrorBoundary>
     );
@@ -226,7 +239,8 @@ export function PanelRouter({
 
   return (
     <GameErrorBoundary>
-      <ScenePanel
+      <NarrativeRenderer
+        mode="exploration"
         lines={sceneLines}
         streamingText={streamingText}
         isStreaming={isStreaming}
