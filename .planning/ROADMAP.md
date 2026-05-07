@@ -7,6 +7,7 @@
 - ✅ **v1.2 Game System Integrity & Playability** — Phases 11–15 (shipped 2026-04-29) — [archive](.planning/milestones/v1.2-ROADMAP.md)
 - ✅ **v1.3 Story Mainline & Narrative System** — Phase 16 (shipped 2026-04-29) — [archive](.planning/milestones/v1.3-ROADMAP.md)
 - ✅ **v1.4 AI Quality & Game Completeness** — Phases 17–21 (shipped 2026-04-30) — [archive](.planning/milestones/v1.4-ROADMAP.md)
+- 🚧 **v1.5 Ecosystem Engine** — Phases 22–24 (in progress)
 
 ## Phases
 
@@ -61,7 +62,58 @@
 
 </details>
 
+### 🚧 v1.5 Ecosystem Engine (In Progress)
+
+**Milestone Goal:** Evolve from "one game" to "CLI-native world simulation ecosystem" — UX architecture refactor + World Pack platform + Delight Layer visual system.
+
+- [ ] **Phase 22: UX Architecture Refactor** - Context Providers, NarrativeRenderer, GameScreen slim-down, 7-state input state machine, injectable Clock
+- [ ] **Phase 23: World Pack Platform** - Pack spec, namespace prefix, composable interfaces, SDK CLI, cached loader, save migration
+- [ ] **Phase 24: Delight Layer** - 墨韵呼吸 design system: BPM timing, 墨分五色, sine-curve typing, NPC glyphs, weather, faction meter, story export, entry animation
+
+## Phase Details
+
+### Phase 22: UX Architecture Refactor
+**Goal**: GameScreen becomes a thin orchestrator; all state access flows through Context Providers with selector hooks; input handling covers all 7 game states cleanly
+**Depends on**: Phase 21 (v1.4 complete)
+**Requirements**: UXA-01, UXA-02, UXA-03, UXA-04, UXA-05
+**Success Criteria** (what must be TRUE):
+  1. GameScreen component is under 100 lines; all domain logic delegated to Context Providers
+  2. AtmosphereProvider, NarrativeProvider, and InputProvider each testable in isolation (unit tests pass without rendering GameScreen)
+  3. NarrativeRenderer replaces ScenePanel entirely; switching to dialogue mode happens internally without parent re-mount
+  4. Input state machine handles all 7 states (EXPLORATION, DIALOGUE, COMBAT, MENU, CODEX, MAP, BRANCH) with correct keyboard context per state
+  5. All timing-dependent tests use injectable Clock; no flaky setTimeout-based assertions remain
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 23: World Pack Platform
+**Goal**: A second world pack can be loaded alongside Classic Fantasy; content authors have SDK tooling to scaffold, validate, and diff packs; saves migrate cleanly to namespaced format
+**Depends on**: Phase 22 (decoupled architecture enables pack-driven content injection)
+**Requirements**: WPK-01, WPK-02, WPK-03, WPK-04, WPK-05, WPK-06, WPK-07, WPK-08
+**Success Criteria** (what must be TRUE):
+  1. `chronicle validate` passes on Classic Fantasy pack restructured under pack spec (manifest.yaml + directory convention)
+  2. Two packs loaded simultaneously without entity ID collision (namespace prefix `@pack/entity_id` resolves all references)
+  3. `chronicle init` scaffolds a valid pack structure; `chronicle diff` shows meaningful entity-level changes
+  4. WorldPackLoader is a pure function called from cli.ts (pre-React); cached WorldState cold start < 5ms with warm cache
+  5. Existing v1.4 saves auto-migrate to V7 namespaced format on load; no data loss
+**Plans**: TBD
+
+### Phase 24: Delight Layer
+**Goal**: DESIGN.md fully implemented in code; the terminal world breathes with rhythm, ink-hierarchy colors, and meaningful silence — players notice the world is alive in every interaction
+**Depends on**: Phase 22 (NarrativeRenderer provides the rendering surface for typing effects, silence system, and atmosphere integration)
+**Requirements**: DLT-01, DLT-02, DLT-03, DLT-04, DLT-05, DLT-06, DLT-07, DLT-08, DLT-09, DLT-10, DLT-11, DLT-12
+**Success Criteria** (what must be TRUE):
+  1. All animation timing derives from global BPM; changing scene mood (calm/tension/combat/dreamlike) visibly changes typing speed, cursor blink, and dot cycling in unison
+  2. Text color hierarchy follows 墨分五色 exclusively (bold white / white / gray / dim / faint); 朱砂红 appears ONLY on HP<20%, betrayal, or death
+  3. NPC dialogue displays with sine-curve typing rhythm (sentence-start fast, sentence-end slow) and Chinese punctuation pauses (。= long, ！= zero, ……= 3x slower)
+  4. `chronicle export --story` produces a readable markdown document of the player's narrative journey
+  5. 入墨序列 plays on startup: 7.5s gradual emergence from void to title following the breathing curve
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
+
+**Execution Order:**
+Phases execute in numeric order: 22 → 23 → 24
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -86,3 +138,6 @@
 | 19. AI Output Quality | v1.4 | 3/3 | Complete | 2026-04-30 |
 | 20. Enemy Loot System | v1.4 | 3/3 | Complete | 2026-04-30 |
 | 21. Distribution & Live Validation | v1.4 | 3/3 | Complete | 2026-04-30 |
+| 22. UX Architecture Refactor | v1.5 | 0/? | Not started | - |
+| 23. World Pack Platform | v1.5 | 0/? | Not started | - |
+| 24. Delight Layer | v1.5 | 0/? | Not started | - |
