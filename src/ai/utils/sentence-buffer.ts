@@ -1,6 +1,9 @@
+import { systemClock, type Clock, type TimeoutId } from '../../time/clock';
+
 export type SentenceBufferOptions = {
   readonly onFlush: (text: string) => void;
   readonly timeoutMs?: number;
+  readonly clock?: Clock;
 };
 
 export type SentenceBuffer = {
@@ -15,12 +18,13 @@ const DEFAULT_TIMEOUT_MS = 500;
 
 export function createSentenceBuffer(options: SentenceBufferOptions): SentenceBuffer {
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const clock = options.clock ?? systemClock;
   let buffer = '';
-  let timerId: ReturnType<typeof setTimeout> | null = null;
+  let timerId: TimeoutId | null = null;
 
   const clearTimer = (): void => {
     if (timerId !== null) {
-      clearTimeout(timerId);
+      clock.clearTimeout(timerId);
       timerId = null;
     }
   };
@@ -36,7 +40,7 @@ export function createSentenceBuffer(options: SentenceBufferOptions): SentenceBu
 
   const resetTimer = (): void => {
     clearTimer();
-    timerId = setTimeout(doFlush, timeoutMs);
+    timerId = clock.setTimeout(doFlush, timeoutMs);
   };
 
   return {

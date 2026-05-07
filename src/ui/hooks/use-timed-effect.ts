@@ -1,32 +1,34 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 
+import { systemClock, type Clock, type TimeoutId } from '../../time/clock';
+
 export type UseTimedEffectReturn = {
   readonly active: boolean;
   readonly trigger: () => void;
 };
 
-export function useTimedEffect(durationMs: number): UseTimedEffectReturn {
+export function useTimedEffect(durationMs: number, clock: Clock = systemClock): UseTimedEffectReturn {
   const [active, setActive] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timerRef = useRef<TimeoutId | null>(null);
 
   const trigger = useCallback(() => {
     if (timerRef.current !== null) {
-      clearTimeout(timerRef.current);
+      clock.clearTimeout(timerRef.current);
     }
     setActive(true);
-    timerRef.current = setTimeout(() => {
+    timerRef.current = clock.setTimeout(() => {
       setActive(false);
       timerRef.current = null;
     }, durationMs);
-  }, [durationMs]);
+  }, [clock, durationMs]);
 
   useEffect(() => {
     return () => {
       if (timerRef.current !== null) {
-        clearTimeout(timerRef.current);
+        clock.clearTimeout(timerRef.current);
       }
     };
-  }, []);
+  }, [clock]);
 
   return { active, trigger };
 }
@@ -37,16 +39,16 @@ export type TimedEffectInstance = {
   readonly cleanup: () => void;
 };
 
-export function createTimedEffect(durationMs: number): TimedEffectInstance {
+export function createTimedEffect(durationMs: number, clock: Clock = systemClock): TimedEffectInstance {
   let active = false;
-  let timer: ReturnType<typeof setTimeout> | null = null;
+  let timer: TimeoutId | null = null;
 
   const trigger = (): void => {
     if (timer !== null) {
-      clearTimeout(timer);
+      clock.clearTimeout(timer);
     }
     active = true;
-    timer = setTimeout(() => {
+    timer = clock.setTimeout(() => {
       active = false;
       timer = null;
     }, durationMs);
@@ -54,7 +56,7 @@ export function createTimedEffect(durationMs: number): TimedEffectInstance {
 
   const cleanup = (): void => {
     if (timer !== null) {
-      clearTimeout(timer);
+      clock.clearTimeout(timer);
       timer = null;
     }
     active = false;
