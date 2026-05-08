@@ -192,25 +192,18 @@ describe('AtmosphereProvider integration wiring', () => {
     expect(source).not.toContain('activeQuestEcologicalContext');
   });
 
-  it('GameScreen passes provider quest, toast, dimout, and ecological state to consumers', () => {
-    const source = readFileSync(new URL('../screens/game-screen.tsx', import.meta.url), 'utf8');
-    const controllerCall = source.slice(
-      source.indexOf('const controller = useMemo'),
-      source.indexOf('useEffect', source.indexOf('const controller = useMemo')),
-    );
-    const panelRouterCall = source.slice(
-      source.indexOf('<PanelRouter'),
-      source.indexOf('/>', source.indexOf('<PanelRouter')),
-    );
+  it('providers pass quest, toast, dimout, and ecological state to consumers', () => {
+    const gameScreenSource = readFileSync(new URL('../screens/game-screen.tsx', import.meta.url), 'utf8');
+    const inputProviderSource = readFileSync(new URL('./input-provider.tsx', import.meta.url), 'utf8');
 
-    expect(controllerCall).toContain('activeQuestIds');
-    expect(controllerCall).toContain('activeQuestTags');
-    expect(source).toContain('activeQuests');
-    expect(source).toContain('completedQuests');
-    expect(source).toContain('failedQuests');
-    expect(source).toContain('activeQuestName');
-    expect(panelRouterCall).toContain('toast={toast}');
-    expect(panelRouterCall).toContain('isDimmed={isSceneDimmed}');
-    expect(panelRouterCall).toContain('isSpinnerDimming={isSpinnerDimming}');
+    expect(inputProviderSource).toContain('activeQuestIds');
+    expect(inputProviderSource).toContain('activeQuestTags');
+    expect(gameScreenSource).toContain('quests.activeQuests');
+    expect(gameScreenSource).toContain('quests.completedQuests');
+    expect(gameScreenSource).toContain('quests.failedQuests');
+    expect(gameScreenSource).toContain('quests.activeQuestName');
+    expect(gameScreenSource).toContain('toast={toast}');
+    expect(gameScreenSource).toContain('isDimmed={isSceneDimmed}');
+    expect(gameScreenSource).toContain('isSpinnerDimming={isSpinnerDimming}');
   });
 });

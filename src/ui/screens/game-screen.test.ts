@@ -62,33 +62,32 @@ describe('Task 8: ecological memory production wiring', () => {
     expect(createSceneManagerCall).toContain('quest: ctx.stores.quest');
   });
 
-  it('AppInner passes worldMemoryStore into production GameScreen', () => {
+  it('AppInner passes worldMemoryStore into production InputProvider', () => {
     const source = readFileSync(new URL('../../app.tsx', import.meta.url), 'utf8');
-    const gameScreenCall = source.slice(
-      source.indexOf('<GameScreen'),
-      source.indexOf('/>', source.indexOf('<GameScreen')),
+    const inputProviderCall = source.slice(
+      source.indexOf('<InputProvider'),
+      source.indexOf('>', source.indexOf('<InputProvider')),
     );
 
-    expect(gameScreenCall).toContain('worldMemoryStore={ctx.stores.worldMemory}');
+    expect(inputProviderCall).toContain('worldMemoryStore={ctx.stores.worldMemory}');
   });
 
-  it('GameScreen passes worldMemoryStore into createGameScreenController as worldMemory', () => {
-    const source = readFileSync(new URL('./game-screen.tsx', import.meta.url), 'utf8');
+  it('InputProvider passes worldMemoryStore into createGameScreenController as worldMemory', () => {
+    const source = readFileSync(new URL('../providers/input-provider.tsx', import.meta.url), 'utf8');
     const controllerCall = source.slice(
-      source.indexOf('const controller = useMemo'),
-      source.indexOf('useEffect', source.indexOf('const controller = useMemo')),
+      source.indexOf('createGameScreenController'),
+      source.indexOf('),', source.indexOf('createGameScreenController')),
     );
 
     expect(source).toContain('worldMemoryStore');
-    expect(controllerCall).toContain('createGameScreenController');
     expect(controllerCall).toContain('worldMemory: worldMemoryStore');
   });
 
-  it('GameScreen receives active quest ecological context from AtmosphereProvider and passes it into createGameScreenController', () => {
-    const source = readFileSync(new URL('./game-screen.tsx', import.meta.url), 'utf8');
+  it('InputProvider receives active quest ecological context from AtmosphereProvider and passes it into createGameScreenController', () => {
+    const source = readFileSync(new URL('../providers/input-provider.tsx', import.meta.url), 'utf8');
     const controllerCall = source.slice(
-      source.indexOf('const controller = useMemo'),
-      source.indexOf('useEffect', source.indexOf('const controller = useMemo')),
+      source.indexOf('createGameScreenController'),
+      source.indexOf('),', source.indexOf('createGameScreenController')),
     );
 
     expect(source).toContain('useActiveQuests');
@@ -101,34 +100,34 @@ describe('Task 8: ecological memory production wiring', () => {
   });
 });
 
-describe('BUG-01: GameScreen accepts gameLoop prop', () => {
-  it('GameScreen source uses context stores for controller actions and panel close', () => {
-    const source = GameScreen.toString();
+describe('BUG-01: InputProvider owns gameLoop dispatch', () => {
+  it('InputProvider source uses context stores for controller actions and panel close', () => {
+    const source = readFileSync(new URL('../providers/input-provider.tsx', import.meta.url), 'utf8');
     expect(source).toContain('GameStoreCtx.Context');
     expect(source).toContain('SceneStoreCtx.Context');
     expect(source).toContain('gameContextStore');
     expect(source).toContain('sceneContextStore');
   });
 
-  it('GameScreen function source delegates to controller.handleActionExecute', () => {
-    const source = GameScreen.toString();
+  it('InputProvider delegates to controller.handleActionExecute', () => {
+    const source = readFileSync(new URL('../providers/input-provider.tsx', import.meta.url), 'utf8');
     expect(source).toContain('gameLoop');
     expect(source).toContain('handleActionExecute');
   });
 
-  it('GameScreen function source references NarrativeProvider hooks and startNarration', () => {
-    const source = GameScreen.toString();
+  it('InputProvider references NarrativeProvider hooks and startNarration', () => {
+    const source = readFileSync(new URL('../providers/input-provider.tsx', import.meta.url), 'utf8');
     expect(source).toContain('useNarrationStream');
     expect(source).toContain('startNarration');
   });
 
-  it('GameScreen function source sets processing mode before async work (D-03)', () => {
-    const source = GameScreen.toString();
+  it('InputProvider sets processing mode before async work (D-03)', () => {
+    const source = readFileSync(new URL('../providers/input-provider.tsx', import.meta.url), 'utf8');
     expect(source).toContain('processing');
   });
 
-  it('GameScreen function source delegates error handling to controller (D-04)', () => {
-    const source = GameScreen.toString();
+  it('InputProvider delegates error handling to controller (D-04)', () => {
+    const source = readFileSync(new URL('../providers/input-provider.tsx', import.meta.url), 'utf8');
     expect(source).toContain('handleNarrationError');
     expect(source).toContain('handleNarrationComplete');
   });
@@ -296,66 +295,52 @@ describe('BUG-01: handleActionExecute guard paths', () => {
 });
 
 describe('BUG-02: / and Tab activate input mode, Escape clears/deactivates', () => {
-  it('useInput handler contains / key activation branch', () => {
-    const source = GameScreen.toString();
-    expect(source).toContain('input === "/"');
+  const inputProviderSource = () => readFileSync(new URL('../providers/input-provider.tsx', import.meta.url), 'utf8');
+
+  it('InputProvider useInput handler contains / key activation branch', () => {
+    expect(inputProviderSource()).toContain("input === '/'");
   });
 
-  it('useInput handler contains tab key activation branch', () => {
-    const source = GameScreen.toString();
-    expect(source).toContain('tab');
+  it('InputProvider useInput handler contains tab key activation branch', () => {
+    expect(inputProviderSource()).toContain('tab');
   });
 
-  it('useInput handler calls setInputMode with input_active on / or Tab', () => {
-    const source = GameScreen.toString();
-    expect(source).toContain('input_active');
+  it('InputProvider useInput handler calls setInputMode with input_active on / or Tab', () => {
+    expect(inputProviderSource()).toContain('input_active');
   });
 
-  it('useInput handler has Escape branch that checks inputMode === input_active', () => {
-    const source = GameScreen.toString();
-    // Bun toString compiles to escaped strings — check for the structural pattern
-    expect(source).toMatch(/escape.*input_active|input_active.*escape/);
+  it('InputProvider useInput handler has Escape branch that checks inputMode === input_active', () => {
+    expect(inputProviderSource()).toMatch(/escape[\s\S]*input_active|input_active[\s\S]*escape/);
   });
 
-  it('useInput handler calls setInputValue empty string on Escape with non-empty input', () => {
-    const source = GameScreen.toString();
-    // The Escape branch should call setInputValue('') to clear input
-    expect(source).toContain('setInputValue');
+  it('InputProvider useInput handler calls setInputValue empty string on Escape with non-empty input', () => {
+    expect(inputProviderSource()).toContain('setInputValue');
   });
 
-  it('useInput handler calls setInputMode action_select on Escape with empty input', () => {
-    const source = GameScreen.toString();
-    expect(source).toContain('action_select');
+  it('InputProvider useInput handler calls setInputMode action_select on Escape with empty input', () => {
+    expect(inputProviderSource()).toContain('action_select');
   });
 
-  it('useInput handler guards / and Tab with !isTyping && !isInCombat && !isInDialogueMode && !isInOverlayPanel', () => {
-    const source = GameScreen.toString();
-    // All four guards must be present in the activation branch
+  it('InputProvider useInput handler uses typing/combat/dialogue state guards', () => {
+    const source = inputProviderSource();
     expect(source).toContain('isTyping');
-    expect(source).toContain('isInCombat');
-    expect(source).toContain('isInDialogueMode');
-    expect(source).toContain('isInOverlayPanel');
+    expect(source).toContain('COMBAT');
+    expect(source).toContain('DIALOGUE');
   });
 
-  it('useInput handler Escape branch guards against overlay panel interference', () => {
-    const source = GameScreen.toString();
-    // The Escape+input_active branch must also check !isInOverlayPanel
-    // to prevent double-firing with the existing overlay escape handler
-    expect(source).toMatch(/escape.*isInOverlayPanel/);
+  it('InputProvider handles Escape before state handlers through global layer', () => {
+    expect(inputProviderSource()).toContain("global.action === 'escape'");
   });
 
-  it('useInput dependency array includes inputMode, inputValue, setInputValue', () => {
-    const source = GameScreen.toString();
-    // These must be in the useCallback dependency array for correctness
+  it('InputProvider dependency structure includes inputMode, inputValue, setInputValue', () => {
+    const source = inputProviderSource();
     expect(source).toContain('inputMode');
     expect(source).toContain('inputValue');
     expect(source).toContain('setInputValue');
   });
 
   it('key type annotation includes tab field', () => {
-    const source = GameScreen.toString();
-    // The key parameter should reference .tab for Tab key detection
-    expect(source).toContain('tab');
+    expect(inputProviderSource()).toContain('readonly tab?');
   });
 });
 
@@ -390,8 +375,8 @@ describe('DIAL-04: onFreeTextSubmit wired to dialogueManager.processPlayerFreeTe
     expect(source).toContain('onDialogueFreeText');
   });
 
-  it('GameScreen function source calls processPlayerFreeText', () => {
-    const source = GameScreen.toString();
+  it('InputProvider function source calls processPlayerFreeText', () => {
+    const source = readFileSync(new URL('../providers/input-provider.tsx', import.meta.url), 'utf8');
     expect(source).toContain('processPlayerFreeText');
   });
 });

@@ -41,6 +41,7 @@ import { initSummarizerScheduler } from './ai/summarizer/summarizer-scheduler';
 import { configureSummarizerWorkerStores, runSummarizerLoop } from './ai/summarizer/summarizer-worker';
 import { AtmosphereProvider } from './ui/providers/atmosphere-provider';
 import { NarrativeProvider } from './ui/providers/narrative-provider';
+import { InputProvider } from './ui/providers/input-provider';
 import { initExplorationTracker } from './engine/exploration-tracker';
 import { initKnowledgeTracker } from './engine/knowledge-tracker';
 import { initWorldEventRecorder, recordWorldEventWithDerivations } from './engine/world-memory-recorder';
@@ -405,7 +406,7 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
       <SizeGuard>
         <AtmosphereProvider questTemplates={questTemplates} eventBus={ctx.eventBus}>
           <NarrativeProvider>
-            <GameScreen
+            <InputProvider
               gameLoop={gameLoop}
               dialogueManager={dialogueManager}
               combatLoop={combatLoop}
@@ -418,7 +419,9 @@ function AppInner({ ctx }: AppInnerProps): React.ReactNode {
               saveDir={saveDir}
               eventBus={ctx.eventBus}
               worldMemoryStore={ctx.stores.worldMemory}
-            />
+            >
+              <GameScreen />
+            </InputProvider>
           </NarrativeProvider>
         </AtmosphereProvider>
       </SizeGuard>

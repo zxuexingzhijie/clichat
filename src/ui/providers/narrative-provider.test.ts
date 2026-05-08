@@ -77,23 +77,25 @@ describe('Task 2: NarrativeProvider app and GameScreen wiring', () => {
     expect(gameplayTree.indexOf('<NarrativeProvider>')).toBeLessThan(gameplayTree.indexOf('<GameScreen'));
   });
 
-  it('GameScreen imports provider hooks and no longer calls raw streaming hooks directly', () => {
-    const source = readFileSync(gameScreenPath, 'utf8');
+  it('Provider consumers import narrative hooks and no longer call raw streaming hooks directly from GameScreen', () => {
+    const gameScreenSource = readFileSync(gameScreenPath, 'utf8');
+    const inputProviderSource = readFileSync(new URL('./input-provider.tsx', import.meta.url), 'utf8');
 
-    expect(source).toContain("from '../providers/narrative-provider'");
-    expect(source).toContain('useNarrationStream');
-    expect(source).toContain('useDialogueStream');
-    expect(source).toContain('useNarrativeText');
-    expect(source).toContain('useIsStreaming');
-    expect(source).not.toContain('useAiNarration()');
-    expect(source).not.toContain('useNpcDialogue()');
+    expect(gameScreenSource).toContain("from '../providers/narrative-provider'");
+    expect(inputProviderSource).toContain("from './narrative-provider'");
+    expect(inputProviderSource).toContain('useNarrationStream');
+    expect(inputProviderSource).toContain('useDialogueStream');
+    expect(gameScreenSource).toContain('useNarrativeText');
+    expect(gameScreenSource).toContain('useIsStreaming');
+    expect(gameScreenSource).not.toContain('useAiNarration()');
+    expect(gameScreenSource).not.toContain('useNpcDialogue()');
   });
 
-  it('GameScreen still passes provider-owned start/reset hooks into createGameScreenController', () => {
-    const source = readFileSync(gameScreenPath, 'utf8');
+  it('InputProvider passes provider-owned start/reset hooks into createGameScreenController', () => {
+    const source = readFileSync(new URL('./input-provider.tsx', import.meta.url), 'utf8');
     const controllerCall = source.slice(
-      source.indexOf('const controller = useMemo'),
-      source.indexOf('useEffect', source.indexOf('const controller = useMemo')),
+      source.indexOf('createGameScreenController'),
+      source.indexOf('),', source.indexOf('createGameScreenController')),
     );
 
     expect(controllerCall).toContain('startNarration');

@@ -1,8 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Text, useInput, useApp } from 'ink';
-
+import React, { useMemo, useState } from 'react';
+import { Box, Text, useApp } from 'ink';
 import { useScreenSize } from 'fullscreen-ink';
+
+import { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx, DialogueStoreCtx, CombatStoreCtx } from '../../app';
+import { costSessionStore } from '../../state/cost-session-store';
+import { getLastReplayEntries } from '../../game-loop';
+import { getRecentChapterSummaries } from '../../ai/summarizer/summarizer-worker';
 import { Divider } from '../components/divider';
+import { InlineConfirm } from '../components/inline-confirm';
 import { TitleBar } from '../panels/title-bar';
 import { PanelRouter } from '../panels/panel-router';
 import { StatusBar } from '../panels/status-bar';
@@ -10,472 +15,55 @@ import { CombatStatusBar } from '../panels/combat-status-bar';
 import { ActionsPanel } from '../panels/actions-panel';
 import { CombatActionsPanel } from '../panels/combat-actions-panel';
 import { InputArea } from '../panels/input-area';
-import { InlineConfirm } from '../components/inline-confirm';
-import { useGameInput, getPanelActionForKey } from '../hooks/use-game-input';
-import { useActiveQuests, useAtmosphere, useAtmosphereProcessing, useToast } from '../providers/atmosphere-provider';
-import { useDialogueStream, useIsStreaming, useNarrationStream, useNarrativeText } from '../providers/narrative-provider';
-import { useCommandInput, useInputActions } from '../providers/input-provider';
-import { GameStoreCtx, PlayerStoreCtx, SceneStoreCtx, DialogueStoreCtx, CombatStoreCtx } from '../../app';
-import { eventBus as defaultEventBus } from '../../events/event-bus';
-import type { EventBus } from '../../events/event-bus';
-import { getRecentChapterSummaries } from '../../ai/summarizer/summarizer-worker';
-import type { GameState } from '../../state/game-store';
-import { costSessionStore } from '../../state/cost-session-store';
-import { getLastReplayEntries } from '../../game-loop';
-import type { GameLoop } from '../../game-loop';
-import type { DialogueManager } from '../../engine/dialogue-manager';
-import type { CombatLoop } from '../../engine/combat-loop';
-import type { LocationMapData } from '../panels/map-panel';
-import type { CodexDisplayEntry } from '../panels/codex-panel';
-import type { BranchDisplayNode } from '../panels/branch-tree-panel';
-import type { BranchMeta } from '../../state/branch-store';
-import type { SaveDataV7 } from '../../state/serializer';
-import type { Store } from '../../state/create-store';
-import type { WorldMemoryState } from '../../state/world-memory-store';
+import { useActiveQuests, useAtmosphere, useToast } from '../providers/atmosphere-provider';
+import { useIsStreaming, useNarrativeText } from '../providers/narrative-provider';
+import { useCommandInput, useInputActions, useInputState, useSelectedAction } from '../providers/input-provider';
+import type { InputProviderProps } from '../providers/input-provider';
 
-const OVERLAY_PHASES = new Set(['journal', 'map', 'codex', 'inventory', 'branch_tree', 'compare', 'shortcuts', 'replay', 'chapter_summary']);
 const WIDE_ACTIONS_WIDTH = 36;
 
-type GameScreenProps = {
-  readonly dialogueManager?: DialogueManager;
-  readonly combatLoop?: CombatLoop;
-  readonly gameLoop?: GameLoop;
-  readonly mapData?: {
-    readonly locations: readonly LocationMapData[];
-    readonly currentLocationId: string;
-    readonly regionName: string;
-  };
-  readonly codexEntries?: readonly CodexDisplayEntry[];
-  readonly branchTree?: readonly BranchDisplayNode[];
-  readonly currentBranchId?: string;
-  readonly branches?: Record<string, BranchMeta>;
-  readonly readSaveData?: (fileName: string, saveDir: string) => Promise<SaveDataV7>;
-  readonly saveDir?: string;
-  readonly eventBus?: EventBus;
-  readonly worldMemoryStore?: Store<WorldMemoryState>;
-};
+export type GameScreenProps = Omit<InputProviderProps, 'children'>;
 
-export function GameScreen({
-  dialogueManager,
-  combatLoop,
-  gameLoop,
-  mapData,
-  codexEntries,
-  branchTree,
-  currentBranchId,
-  branches,
-  readSaveData,
-  saveDir,
-  eventBus = defaultEventBus,
-  worldMemoryStore,
-}: GameScreenProps): React.ReactNode {
-  const gameContextStore = React.useContext(GameStoreCtx.Context);
-  const sceneContextStore = React.useContext(SceneStoreCtx.Context);
-  if (!gameContextStore || !sceneContextStore) {
-    throw new ReferenceError('GameScreen must be used within game and scene store providers');
-  }
-
+export function GameScreen(_props: GameScreenProps): React.ReactNode {
+  const gameStore = React.useContext(GameStoreCtx.Context);
+  if (!gameStore) throw new ReferenceError('GameScreen must be used within game store providers');
   const gameState = GameStoreCtx.useStoreState((s) => s);
-  const playerState = PlayerStoreCtx.useStoreState((s) => s);
-  const sceneState = SceneStoreCtx.useStoreState((s) => s);
-  const dialogueState = DialogueStoreCtx.useStoreState((s) => s);
-  const combatState = CombatStoreCtx.useStoreState((s) => s);
-
+  const player = PlayerStoreCtx.useStoreState((s) => s);
+  const scene = SceneStoreCtx.useStoreState((s) => s);
+  const dialogue = DialogueStoreCtx.useStoreState((s) => s);
+  const combat = CombatStoreCtx.useStoreState((s) => s);
   const { width, height } = useScreenSize();
   const { exit } = useApp();
-  const {
-    inputMode,
-    setInputMode,
-    selectedActionIndex,
-    setSelectedActionIndex,
-    isTyping,
-    inputValue,
-    setInputValue,
-  } = useGameInput();
-
-  const {
-    isStreaming: isNarrationStreaming,
-    startNarration,
-    skipToEnd: skipNarration,
-    reset: resetNarration,
-  } = useNarrationStream();
-  const {
-    sceneLines: baseSceneLines,
-    streamingText,
-    narrationError,
-  } = useNarrativeText();
-
-  const {
-    isStreaming: isNpcStreaming,
-    skipToEnd: skipNpcDialogue,
-    reset: resetNpcDialogue,
-  } = useDialogueStream();
-
-  const isAnyStreaming = useIsStreaming();
-
+  const { timeLabel, isSceneDimmed, isSpinnerDimming, spinnerDimoutComplete } = useAtmosphere();
   const { toast } = useToast();
-  const {
-    timeLabel,
-    isSceneDimmed,
-    isSpinnerDimming,
-    spinnerDimoutComplete,
-  } = useAtmosphere();
-  const {
-    activeQuests,
-    completedQuests,
-    failedQuests,
-    activeQuestIds,
-    activeQuestTags,
-    activeQuestName,
-  } = useActiveQuests();
-  const setAtmosphereProcessingState = useAtmosphereProcessing();
-  const wasNarrationStreamingRef = useRef(false);
-
-
-  const controller = useInputActions();
-  const { submit } = useCommandInput();
-
+  const quests = useActiveQuests();
+  const narrative = useNarrativeText();
+  const isStreaming = useIsStreaming();
+  const { inputMode, isTyping } = useInputState();
+  const actions = useInputActions();
+  const selected = useSelectedAction();
+  const command = useCommandInput();
+  const [lastTurnTokens] = useState(() => costSessionStore.getState().lastTurnTokens);
+  const [chapterSummaries] = useState(() => getRecentChapterSummaries());
   const replayEntries = useMemo(() => getLastReplayEntries(), [gameState.phase]);
-
-  const [dialogueSelectedIndex, setDialogueSelectedIndex] = useState(0);
-  const [combatSelectedIndex, setCombatSelectedIndex] = useState(0);
-  const [lastTurnTokens, setLastTurnTokens] = useState(0);
-  const [chapterSummaries, setChapterSummaries] = useState(() => getRecentChapterSummaries());
-
-  useEffect(() => {
-    setAtmosphereProcessingState({ inputMode, isAnyStreaming });
-  }, [inputMode, isAnyStreaming, setAtmosphereProcessingState]);
-
-  useEffect(() => {
-    const handler = (p: { taskId: string; type: string }) => {
-      if (p.type === 'chapter_summary') {
-        setChapterSummaries(getRecentChapterSummaries().slice());
-      }
-    };
-    eventBus.on('summarizer_task_completed', handler);
-    return () => { eventBus.off('summarizer_task_completed', handler); };
-  }, [eventBus]);
-
-  useEffect(() => {
-    return costSessionStore.subscribe(() => {
-      setLastTurnTokens(costSessionStore.getState().lastTurnTokens);
-    });
-  }, []);
-
-
+  const isCombat = combat.active;
+  const isDialogue = dialogue.active && dialogue.mode === 'full';
   const innerWidth = width - 2;
+  const spinnerContext = isCombat ? 'combat' : dialogue.active ? 'npc_dialogue' : 'narration';
+  const showSpinner = inputMode === 'processing' && !isStreaming && !spinnerDimoutComplete;
+  const sceneLines = dialogue.active && dialogue.mode === 'inline' ? [...narrative.sceneLines, ...dialogue.dialogueHistory.filter(e => e.role === 'assistant').map(e => `${dialogue.npcName}："${e.content}"`)] : [...narrative.sceneLines];
+  const status = isCombat ? <CombatStatusBar playerHp={player.hp} playerMaxHp={player.maxHp} playerMp={player.mp} playerMaxMp={player.maxMp} enemies={combat.enemies} roundNumber={combat.roundNumber} isPlayerTurn={combat.phase === 'player_turn'} width={innerWidth} /> : <StatusBar hp={player.hp} maxHp={player.maxHp} mp={player.mp} maxMp={player.maxMp} gold={player.gold} location={scene.locationName} quest={quests.activeQuestName} width={innerWidth} lastTurnTokens={lastTurnTokens} />;
+  const actionPanel = isCombat ? <CombatActionsPanel playerMp={player.mp} canFlee={combat.active && combat.outcome === null} selectedIndex={selected.combatSelectedIndex} onSelect={selected.setCombatSelectedIndex} onExecute={actions.handleCombatExecute} isActive={!isTyping && combat.phase === 'player_turn'} combatPhase={combat.phase} /> : <ActionsPanel actions={[...scene.actions]} selectedIndex={selected.selectedActionIndex} onSelect={selected.setSelectedActionIndex} onExecute={actions.handleActionExecute} isActive={!isTyping && !isDialogue && !isStreaming} isStreaming={isStreaming} />;
+  const panel = <PanelRouter phase={gameState.phase} onClose={actions.handlePanelClose} onPhaseSwitch={actions.handlePhaseSwitch} isInCombat={isCombat} isInDialogueMode={isDialogue} combatLastCheckResult={combat.lastCheckResult} combatLastNarration={combat.lastNarration} dialogueState={dialogue} dialogueSelectedIndex={selected.dialogueSelectedIndex} onDialogueSelect={selected.setDialogueSelectedIndex} onDialogueExecute={actions.handleDialogueExecute} onDialogueEscape={actions.handleDialogueEscape} onDialogueFreeText={actions.handleDialogueFreeText} activeQuests={quests.activeQuests} completedQuests={quests.completedQuests} failedQuests={quests.failedQuests} replayEntries={replayEntries} chapterSummaries={chapterSummaries} width={width} sceneLines={sceneLines} streamingText={narrative.streamingText || undefined} isStreaming={isStreaming} showSpinner={showSpinner || (isSpinnerDimming && isStreaming)} spinnerContext={spinnerContext} toast={toast} isDimmed={isSceneDimmed} isSpinnerDimming={isSpinnerDimming} />;
+  const input = <InputArea onSubmit={command.submit} isActive={isTyping && !isDialogue} mode={isTyping ? 'nl' : 'action'} value={command.inputValue} onChange={command.setInputValue} />;
+  const confirm = gameState.pendingQuit && <InlineConfirm message="确定要退出吗？" defaultOption="n" onConfirm={(confirmed) => { if (confirmed) exit(); else gameStore.setState(d => { d.pendingQuit = false; }); }} />;
 
-  const isInCombat = combatState.active;
-  const isInDialogueMode = dialogueState.active && dialogueState.mode === 'full';
-  const spinnerContext = isInCombat ? 'combat' as const
-    : (isInDialogueMode || dialogueState.active) ? 'npc_dialogue' as const
-    : 'narration' as const;
-  const isWide = width >= 100;
-  const showSpinner = inputMode === 'processing' && !isAnyStreaming && !spinnerDimoutComplete;
-  const showSpinnerWithDim = showSpinner || (isSpinnerDimming && isAnyStreaming);
+  if (gameState.phase === 'game_over') return <Box flexDirection="column" width={width} height={height} borderStyle="single" justifyContent="center" alignItems="center"><Text bold color="red">── 旅途终结 ──</Text><Text> </Text><Text>{combat.lastNarration || '你倒下了，生命就此走到了尽头。'}</Text><Text> </Text><Text dimColor>[R] 载入最近存档  [Q] 返回标题</Text></Box>;
+  if (gameState.phase === 'victory') return <Box flexDirection="column" width={width} height={height} borderStyle="single" justifyContent="center" alignItems="center"><Text bold color="yellow">★ 黑松镇的秘密 ★</Text><Text> </Text><Text bold color="green">— 故事终章 —</Text><Text> </Text><Text>你揭露了黑松镇背后隐藏已久的真相，狼灾的根源终于大白于天下。</Text><Text dimColor>[任意键] 返回标题</Text></Box>;
 
-  const handleActionExecute = useCallback(
-    (index: number) => { void controller.handleActionExecute(index); },
-    [controller],
-  );
-
-  const handleDialogueExecute = useCallback(
-    (index: number) => {
-      controller.handleDialogueExecute(index);
-      setDialogueSelectedIndex(0);
-    },
-    [controller],
-  );
-
-  const handleDialogueEscape = useCallback(() => {
-    controller.handleDialogueEscape();
-    setDialogueSelectedIndex(0);
-  }, [controller]);
-
-  const handleDialogueFreeText = useCallback(
-    (text: string) => {
-      dialogueManager?.processPlayerFreeText(text).catch((err: unknown) => {
-        const msg = err instanceof Error ? err.message : String(err);
-        sceneContextStore.setState(draft => {
-          draft.narrationLines = [...draft.narrationLines, `[对话错误] ${msg}`];
-        });
-      });
-    },
-    [dialogueManager, sceneContextStore],
-  );
-
-  const handleCombatExecute = useCallback(
-    (index: number) => {
-      controller.handleCombatExecute(index);
-      setCombatSelectedIndex(0);
-    },
-    [controller],
-  );
-
-  const isInOverlayPanel = OVERLAY_PHASES.has(gameState.phase);
-
-  useInput(useCallback((input: string, key: { escape: boolean; tab?: boolean; return?: boolean }) => {
-    if (gameState.pendingQuit) return;
-    if (inputMode === 'processing' && isAnyStreaming && (key.return || input === ' ')) {
-      if (isNarrationStreaming) skipNarration();
-      if (isNpcStreaming) skipNpcDialogue();
-      return;
-    }
-    if ((input === '/' || key.tab) && !isTyping && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
-      setInputMode('input_active');
-      return;
-    }
-    if (key.escape && inputMode === 'input_active' && !isInOverlayPanel) {
-      if (inputValue.trim().length === 0) {
-        setInputMode('action_select');
-      } else {
-        setInputValue('');
-      }
-      return;
-    }
-    if (key.escape && isInOverlayPanel) {
-      controller.handlePanelClose();
-      return;
-    }
-    const panelAction = getPanelActionForKey(input, isTyping);
-    const validPhases = new Set<string>(['map', 'journal', 'codex', 'inventory', 'branch_tree', 'compare', 'shortcuts']);
-    if (panelAction && validPhases.has(panelAction) && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
-      controller.handlePhaseSwitch(panelAction as GameState['phase']);
-    }
-    if (input === 'S' && !isTyping && !isInCombat && !isInDialogueMode && !isInOverlayPanel) {
-      controller.handlePhaseSwitch('chapter_summary');
-      return;
-    }
-  }, [gameState.pendingQuit, isTyping, isInCombat, isInDialogueMode, isInOverlayPanel, inputMode, inputValue, setInputValue, setInputMode, isNarrationStreaming, skipNarration, isNpcStreaming, skipNpcDialogue, isAnyStreaming]));
-
-  useInput(useCallback((input: string, _key: unknown) => {
-    if (input === 'r' || input === 'l') {
-      void gameLoop?.loadLastSave();
-    } else {
-      gameContextStore.setState(draft => { draft.phase = 'title'; draft.pendingQuit = false; });
-    }
-  }, [gameContextStore, gameLoop]), { isActive: gameState.phase === 'game_over' });
-
-  useInput(useCallback((_input: string, _key: unknown) => {
-    gameContextStore.setState(draft => { draft.phase = 'title'; draft.pendingQuit = false; });
-  }, [gameContextStore]), { isActive: gameState.phase === 'victory' });
-
-  const sceneLines = dialogueState.active && dialogueState.mode === 'inline'
-    ? [
-        ...baseSceneLines,
-        ...dialogueState.dialogueHistory
-          .filter((e) => e.role === 'assistant')
-          .map((e) => `${dialogueState.npcName}："${e.content}"`),
-      ]
-    : [...baseSceneLines];
-
-  const statusBarNode = isInCombat ? (
-    <CombatStatusBar
-      playerHp={playerState.hp}
-      playerMaxHp={playerState.maxHp}
-      playerMp={playerState.mp}
-      playerMaxMp={playerState.maxMp}
-      enemies={combatState.enemies}
-      roundNumber={combatState.roundNumber}
-      isPlayerTurn={combatState.phase === 'player_turn'}
-      width={innerWidth}
-    />
-  ) : (
-    <StatusBar
-      hp={playerState.hp}
-      maxHp={playerState.maxHp}
-      mp={playerState.mp}
-      maxMp={playerState.maxMp}
-      gold={playerState.gold}
-      location={sceneState.locationName}
-      quest={activeQuestName}
-      width={innerWidth}
-      lastTurnTokens={lastTurnTokens}
-    />
-  );
-
-  const actionsNode = isInCombat ? (
-    <CombatActionsPanel
-      playerMp={playerState.mp}
-      canFlee={combatState.active && combatState.outcome === null}
-      selectedIndex={combatSelectedIndex}
-      onSelect={setCombatSelectedIndex}
-      onExecute={handleCombatExecute}
-      isActive={!isTyping && combatState.phase === 'player_turn'}
-      combatPhase={combatState.phase}
-    />
-  ) : (
-    <ActionsPanel
-      actions={[...sceneState.actions]}
-      selectedIndex={selectedActionIndex}
-      onSelect={setSelectedActionIndex}
-      onExecute={handleActionExecute}
-      isActive={!isTyping && !isInDialogueMode && !isAnyStreaming}
-      isStreaming={isAnyStreaming}
-    />
-  );
-
-  const scenePanelNode = (
-    <PanelRouter
-      phase={gameState.phase}
-      onClose={controller.handlePanelClose}
-      onPhaseSwitch={controller.handlePhaseSwitch}
-      isInCombat={isInCombat}
-      isInDialogueMode={isInDialogueMode}
-      combatLastCheckResult={combatState.lastCheckResult}
-      combatLastNarration={combatState.lastNarration}
-      dialogueState={dialogueState}
-      dialogueSelectedIndex={dialogueSelectedIndex}
-      onDialogueSelect={setDialogueSelectedIndex}
-      onDialogueExecute={handleDialogueExecute}
-      onDialogueEscape={handleDialogueEscape}
-      onDialogueFreeText={handleDialogueFreeText}
-      activeQuests={activeQuests}
-      completedQuests={completedQuests}
-      failedQuests={failedQuests}
-      mapData={mapData}
-      codexEntries={codexEntries}
-      branchTree={branchTree}
-      currentBranchId={currentBranchId}
-      branches={branches}
-      readSaveData={readSaveData}
-      saveDir={saveDir}
-      replayEntries={replayEntries}
-      chapterSummaries={chapterSummaries}
-      width={width}
-      sceneLines={sceneLines}
-      streamingText={isNarrationStreaming ? streamingText : undefined}
-      isStreaming={isAnyStreaming}
-      showSpinner={showSpinnerWithDim}
-      spinnerContext={spinnerContext}
-      toast={toast}
-      isDimmed={isSceneDimmed}
-      isSpinnerDimming={isSpinnerDimming}
-    />
-  );
-
-  if (gameState.phase === 'game_over') {
-    return (
-      <Box flexDirection="column" width={width} height={height} borderStyle="single" justifyContent="center" alignItems="center">
-        <Text bold color="red">── 旅途终结 ──</Text>
-        <Text> </Text>
-        <Text>{combatState.lastNarration.length > 0 ? combatState.lastNarration : '你倒下了，生命就此走到了尽头。'}</Text>
-        <Text> </Text>
-        <Text bold>{playerState.name} 的旅程就此终止。</Text>
-        <Text> </Text>
-        <Text dimColor>[R] 载入最近存档  [Q] 返回标题</Text>
-      </Box>
-    );
-  }
-
-  if (gameState.phase === 'victory') {
-    return (
-      <Box flexDirection="column" width={width} height={height} borderStyle="single" justifyContent="center" alignItems="center">
-        <Text bold color="yellow">★ 黑松镇的秘密 ★</Text>
-        <Text> </Text>
-        <Text bold color="green">— 故事终章 —</Text>
-        <Text> </Text>
-        <Text>你揭露了黑松镇背后隐藏已久的真相，</Text>
-        <Text>狼灾的根源终于大白于天下。</Text>
-        <Text>镇民们将永远记得这位勇敢的旅人。</Text>
-        <Text> </Text>
-        <Text dimColor>[任意键] 返回标题</Text>
-      </Box>
-    );
-  }
-
-  if (isWide) {
+  if (width >= 100) {
     const actionsWidth = Math.min(WIDE_ACTIONS_WIDTH, Math.max(28, innerWidth - 48));
-    const sceneWidth = innerWidth - actionsWidth - 1;
-
-    return (
-      <Box
-        flexDirection="column"
-        width={width}
-        height={height}
-        borderStyle="single"
-      >
-        <TitleBar
-          gameName="Chronicle CLI"
-          day={gameState.day}
-          timeOfDay={timeLabel}
-        />
-        <Divider width={innerWidth} />
-        <Box flexGrow={1}>
-          <Box width={sceneWidth} flexDirection="column">
-            {scenePanelNode}
-          </Box>
-          <Text>{'│'}</Text>
-          <Box width={actionsWidth} flexDirection="column">
-            {actionsNode}
-          </Box>
-        </Box>
-        <Divider width={innerWidth} />
-        {statusBarNode}
-        <Divider width={innerWidth} />
-        <InputArea
-          onSubmit={submit}
-          isActive={isTyping && !isInDialogueMode}
-          mode={isTyping ? 'nl' : 'action'}
-          value={inputValue}
-          onChange={setInputValue}
-        />
-        {gameState.pendingQuit && (
-          <InlineConfirm
-            message="确定要退出吗？"
-            defaultOption="n"
-            onConfirm={(confirmed) => {
-              if (confirmed) {
-                exit();
-              } else {
-                gameContextStore.setState(draft => { draft.pendingQuit = false; });
-              }
-            }}
-          />
-        )}
-      </Box>
-    );
+    return <Box flexDirection="column" width={width} height={height} borderStyle="single"><TitleBar gameName="Chronicle CLI" day={gameState.day} timeOfDay={timeLabel} /><Divider width={innerWidth} /><Box flexGrow={1}><Box width={innerWidth - actionsWidth - 1} flexDirection="column">{panel}</Box><Text>{'│'}</Text><Box width={actionsWidth} flexDirection="column">{actionPanel}</Box></Box><Divider width={innerWidth} />{status}<Divider width={innerWidth} />{input}{confirm}</Box>;
   }
-
-  return (
-    <Box
-      flexDirection="column"
-      width={width}
-      height={height}
-      borderStyle="single"
-    >
-      <TitleBar
-        gameName="Chronicle CLI"
-        day={gameState.day}
-        timeOfDay={timeLabel}
-      />
-      <Divider width={innerWidth} />
-      {scenePanelNode}
-      <Divider width={innerWidth} />
-      {statusBarNode}
-      <Divider width={innerWidth} />
-      {actionsNode}
-      <Divider width={innerWidth} />
-      <InputArea
-        onSubmit={submit}
-        isActive={isTyping && !isInDialogueMode}
-        mode={isTyping ? 'nl' : 'action'}
-        value={inputValue}
-        onChange={setInputValue}
-      />
-      {gameState.pendingQuit && (
-        <InlineConfirm
-          message="确定要退出吗？"
-          defaultOption="n"
-          onConfirm={(confirmed) => {
-            if (confirmed) {
-              exit();
-            } else {
-              gameContextStore.setState(draft => { draft.pendingQuit = false; });
-            }
-          }}
-        />
-      )}
-    </Box>
-  );
+  return <Box flexDirection="column" width={width} height={height} borderStyle="single"><TitleBar gameName="Chronicle CLI" day={gameState.day} timeOfDay={timeLabel} /><Divider width={innerWidth} />{panel}<Divider width={innerWidth} />{status}<Divider width={innerWidth} />{actionPanel}<Divider width={innerWidth} />{input}{confirm}</Box>;
 }
