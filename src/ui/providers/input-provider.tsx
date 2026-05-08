@@ -282,7 +282,10 @@ export function InputProvider({
   useInput(handleMapInput, { isActive: currentState === 'MAP' });
   useInput(handleBranchInput, { isActive: currentState === 'BRANCH' });
 
-  const handleActionExecute = useCallback((index: number): void => { void controller.handleActionExecute(index); }, [controller]);
+  const handleActionExecute = useCallback((index: number): void => {
+    setInputMode('processing');
+    void controller.handleActionExecute(index);
+  }, [controller]);
   const handleDialogueExecute = useCallback((index: number): void => {
     controller.handleDialogueExecute(index);
     setDialogueSelectedIndex(0);
