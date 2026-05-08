@@ -66,7 +66,7 @@
 
 **Milestone Goal:** Evolve from "one game" to "CLI-native world simulation ecosystem" — UX architecture refactor + World Pack platform + Delight Layer visual system.
 
-- [ ] **Phase 22: UX Architecture Refactor** - Context Providers, NarrativeRenderer, GameScreen slim-down, 7-state input state machine, injectable Clock
+- [x] **Phase 22: UX Architecture Refactor** - Context Providers, NarrativeRenderer, GameScreen slim-down, 7-state input state machine, injectable Clock — completed 2026-05-08
 - [ ] **Phase 23: World Pack Platform** - Pack spec, namespace prefix, composable interfaces, SDK CLI, cached loader, save migration
 - [ ] **Phase 24: Delight Layer** - 墨韵呼吸 design system: BPM timing, 墨分五色, sine-curve typing, NPC glyphs, weather, faction meter, story export, entry animation
 
@@ -82,13 +82,16 @@
   3. NarrativeRenderer replaces ScenePanel entirely; switching to dialogue mode happens internally without parent re-mount
   4. Input state machine handles all 7 states (EXPLORATION, DIALOGUE, COMBAT, MENU, CODEX, MAP, BRANCH) with correct keyboard context per state
   5. All timing-dependent tests use injectable Clock; no flaky setTimeout-based assertions remain
-**Plans**: 5 plans
+**Plans**: 7/7 complete
 Plans:
-- [ ] 22-01-PLAN.md — Clock abstraction for deterministic timing tests
-- [ ] 22-02-PLAN.md — AtmosphereProvider wide world-perception state
-- [ ] 22-03-PLAN.md — NarrativeProvider single streaming source of truth
-- [ ] 22-04-PLAN.md — NarrativeRenderer in-place rewrite with embedded dialogue
-- [ ] 22-05-PLAN.md — InputProvider 7-state machine and GameScreen slim-down
+- [x] 22-01-PLAN.md — Clock abstraction for deterministic timing tests
+- [x] 22-02-PLAN.md — AtmosphereProvider wide world-perception state
+- [x] 22-03-PLAN.md — NarrativeProvider single streaming source of truth
+- [x] 22-04-PLAN.md — NarrativeRenderer in-place rewrite with embedded dialogue
+- [x] 22-05-PLAN.md — InputProvider 7-state machine and GameScreen slim-down
+- [x] 22-06-PLAN.md — Overlay panel data and keyboard gap closure
+- [x] 22-07-PLAN.md — Deterministic timing test gap closure
+**Completed**: 2026-05-08
 **UI hint**: yes
 
 ### Phase 23: World Pack Platform
@@ -144,6 +147,6 @@ Phases execute in numeric order: 22 → 23 → 24
 | 19. AI Output Quality | v1.4 | 3/3 | Complete | 2026-04-30 |
 | 20. Enemy Loot System | v1.4 | 3/3 | Complete | 2026-04-30 |
 | 21. Distribution & Live Validation | v1.4 | 3/3 | Complete | 2026-04-30 |
-| 22. UX Architecture Refactor | v1.5 | 0/? | Not started | - |
+| 22. UX Architecture Refactor | v1.5 | 7/7 | Complete | 2026-05-08 |
 | 23. World Pack Platform | v1.5 | 0/? | Not started | - |
 | 24. Delight Layer | v1.5 | 0/? | Not started | - |

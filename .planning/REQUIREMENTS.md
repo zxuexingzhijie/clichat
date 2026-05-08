@@ -9,11 +9,11 @@ Requirements for Ecosystem Engine milestone. Each maps to roadmap phases.
 
 ### UX Architecture
 
-- [ ] **UXA-01**: 3 Context Providers (Atmosphere, Narrative, Input) wrap GameScreen with selector hooks
-- [ ] **UXA-02**: NarrativeRenderer replaces ScenePanel entirely; DialogueRenderer as internal mode within NarrativeRenderer
-- [ ] **UXA-03**: GameScreen reduced from ~559 to ~80 lines via Provider delegation and component extraction
-- [ ] **UXA-04**: 7-state input state machine with DIALOGUE state, visual cues, and keyboard context switching
-- [ ] **UXA-05**: Injectable Clock abstraction for deterministic timing tests (D18)
+- [x] **UXA-01**: 3 Context Providers (Atmosphere, Narrative, Input) wrap GameScreen with selector hooks
+- [x] **UXA-02**: NarrativeRenderer replaces ScenePanel entirely; DialogueRenderer as internal mode within NarrativeRenderer
+- [x] **UXA-03**: GameScreen reduced from ~559 to ~80 lines via Provider delegation and component extraction
+- [x] **UXA-04**: 7-state input state machine with DIALOGUE state, visual cues, and keyboard context switching
+- [x] **UXA-05**: Injectable Clock abstraction for deterministic timing tests (D18)
 
 ### World Pack Platform
 
@@ -65,11 +65,11 @@ Deferred to v2.0+:
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UXA-01 | Phase 22 | Pending |
-| UXA-02 | Phase 22 | Pending |
-| UXA-03 | Phase 22 | Pending |
-| UXA-04 | Phase 22 | Pending |
-| UXA-05 | Phase 22 | Pending |
+| UXA-01 | Phase 22 | Complete |
+| UXA-02 | Phase 22 | Complete |
+| UXA-03 | Phase 22 | Complete |
+| UXA-04 | Phase 22 | Complete |
+| UXA-05 | Phase 22 | Complete |
 | WPK-01 | Phase 23 | Pending |
 | WPK-02 | Phase 23 | Pending |
 | WPK-03 | Phase 23 | Pending |
