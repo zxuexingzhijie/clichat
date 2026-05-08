@@ -74,7 +74,7 @@ describe('InputProvider source structure', () => {
 
   it('useOverlayPanelData returns exactly the provider overlay dependencies', () => {
     const source = readFileSync(new URL('./input-provider.tsx', import.meta.url), 'utf8');
-    expect(source).toContain('export type OverlayPanelData = Pick Pick<');
+    expect(source).toContain('export type OverlayPanelData = Pick<');
     const hook = source.slice(source.indexOf('export function useOverlayPanelData'), source.indexOf('export function useInputState'));
     for (const prop of ['mapData', 'codexEntries', 'branchTree', 'currentBranchId', 'branches', 'readSaveData', 'saveDir']) {
       expect(hook).toContain(`${prop}: context.${prop}`);

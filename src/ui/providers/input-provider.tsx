@@ -40,14 +40,14 @@ export type InputProviderProps = {
   readonly branchTree?: readonly BranchDisplayNode[];
   readonly currentBranchId?: string;
   readonly branches?: Record<string, BranchMeta>;
-  readonly readSaveData?: (fileName: string, saveDir: string) => Promise Promise<SaveDataV7>;
+  readonly readSaveData?: (fileName: string, saveDir: string) => Promise<SaveDataV7>;
   readonly saveDir?: string;
   readonly eventBus?: EventBus;
-  readonly worldMemoryStore?: Store Store<WorldMemoryState>;
+  readonly worldMemoryStore?: Store<WorldMemoryState>;
   readonly children: React.ReactNode;
 };
 
-export type OverlayPanelData = Pick Pick<
+export type OverlayPanelData = Pick<
   InputProviderProps,
   'mapData' | 'codexEntries' | 'branchTree' | 'currentBranchId' | 'branches' | 'readSaveData' | 'saveDir'
 >;

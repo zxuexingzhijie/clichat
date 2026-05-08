@@ -27,6 +27,20 @@ describe('Phase 22-05 GameScreen slim orchestrator', () => {
     }
   });
 
+  it('GameScreen consumes overlay data through the compact InputProvider selector exactly once', () => {
+    const source = readFileSync(new URL('./game-screen.tsx', import.meta.url), 'utf8');
+    expect(source).toContain('useOverlayPanelData');
+    expect((source.match(/useOverlayPanelData\(/g) ?? []).length).toBe(1);
+  });
+
+  it('GameScreen passes provider overlay data through to PanelRouter', () => {
+    const source = readFileSync(new URL('./game-screen.tsx', import.meta.url), 'utf8');
+    const panelRouterCall = source.slice(source.indexOf('<PanelRouter'), source.indexOf('/>;', source.indexOf('<PanelRouter')));
+    for (const prop of ['mapData', 'codexEntries', 'branchTree', 'currentBranchId', 'branches', 'readSaveData', 'saveDir']) {
+      expect(panelRouterCall).toContain(`${prop}={overlay.${prop}}`);
+    }
+  });
+
   it('GameScreen still renders the gameplay layout stack', () => {
     const source = GameScreen.toString();
     expect(source).toContain('TitleBar');
