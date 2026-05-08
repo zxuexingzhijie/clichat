@@ -24,6 +24,7 @@ type BranchTreePanelProps = {
   readonly onSwitch: (branchId: string) => void;
   readonly width?: number;
   readonly switchMessage?: string;
+  readonly isActive?: boolean;
 };
 
 export type { BranchSaveInfo, BranchDisplayNode, BranchTreePanelProps };
@@ -156,6 +157,7 @@ export function BranchTreePanel({
   onSwitch,
   width = 80,
   switchMessage,
+  isActive = true,
 }: BranchTreePanelProps): React.ReactNode {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [confirmPending, setConfirmPending] = useState(false);
@@ -216,7 +218,7 @@ export function BranchTreePanel({
         onSwitch(selectedLine.branchId);
       }
     }
-  }, [onClose, onCompare, onSwitch, flatLines.length, selectedLine, confirmPending]));
+  }, [onClose, onCompare, onSwitch, flatLines.length, selectedLine, confirmPending]), { isActive });
 
   return (
     <Box flexDirection="column" flexGrow={1} paddingX={1}>

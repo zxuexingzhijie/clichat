@@ -22,6 +22,7 @@ type CodexDisplayEntry = {
 type CodexPanelProps = {
   readonly entries: readonly CodexDisplayEntry[];
   readonly onClose: () => void;
+  readonly isActive?: boolean;
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -137,7 +138,7 @@ function EntryDetail({ entry, entries }: { readonly entry: CodexDisplayEntry; re
   );
 }
 
-export function CodexPanel({ entries, onClose }: CodexPanelProps): React.ReactNode {
+export function CodexPanel({ entries, onClose, isActive = true }: CodexPanelProps): React.ReactNode {
   const { width } = useScreenSize();
   const isWide = width >= 100;
 
@@ -263,7 +264,7 @@ export function CodexPanel({ entries, onClose }: CodexPanelProps): React.ReactNo
   }, [
     onClose, isSearchFocused, filteredEntries, selectedEntry,
     isWide, showDetailNarrow, categories.length,
-  ]));
+  ]), { isActive });
 
   if (visibleEntries.length === 0) {
     return (

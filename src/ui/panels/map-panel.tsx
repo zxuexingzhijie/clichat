@@ -21,6 +21,7 @@ type MapPanelProps = {
   readonly currentLocationId: string;
   readonly regionName: string;
   readonly onClose: () => void;
+  readonly isActive?: boolean;
 };
 
 const DANGER_LABELS: Record<number, string> = {
@@ -196,6 +197,7 @@ export function MapPanel({
   currentLocationId,
   regionName,
   onClose,
+  isActive = true,
 }: MapPanelProps): React.ReactNode {
   const { width } = useScreenSize();
   const isWide = width >= 100;
@@ -249,7 +251,7 @@ export function MapPanel({
     } else if (key.downArrow || key.rightArrow) {
       setSelectedIndex(prev => (prev + 1) % visibleIds.length);
     }
-  }, [onClose, visibleIds]));
+  }, [onClose, visibleIds]), { isActive });
 
   if (visibleIds.length === 0) {
     return (

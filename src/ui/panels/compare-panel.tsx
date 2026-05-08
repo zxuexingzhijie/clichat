@@ -35,6 +35,7 @@ export type ComparePanelProps = {
   readonly saveDir: string;
   readonly onClose: () => void;
   readonly width?: number;
+  readonly isActive?: boolean;
 };
 
 type SelectingState = { stage: 'selecting'; leftFocus: boolean; leftIdx: number; rightIdx: number; confirmedSource: string | null; confirmedTarget: string | null };
@@ -156,6 +157,7 @@ export function ComparePanel({
   saveDir,
   onClose,
   width = 80,
+  isActive = true,
 }: ComparePanelProps): React.ReactNode {
   const compareSpec = GameStoreCtx.useStoreState(s => s.compareSpec);
   const isWide = width >= 100;
@@ -295,7 +297,7 @@ export function ComparePanel({
         }
       }
     }
-  });
+  }, { isActive });
 
   if (state.stage === 'selecting') {
     const { leftFocus, leftIdx, rightIdx, confirmedSource } = state;

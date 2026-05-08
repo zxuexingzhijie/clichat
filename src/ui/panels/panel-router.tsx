@@ -23,6 +23,7 @@ import type { SaveDataV7 } from '../../state/serializer';
 import type { ToastData } from '../hooks/use-toast';
 import type { SpinnerContext } from '../components/scene-spinner';
 import type { TurnLogEntry } from '../../state/serializer';
+import { useInputState } from '../providers/input-provider';
 
 type PanelRouterProps = {
   readonly phase: GameState['phase'];
@@ -112,6 +113,7 @@ export function PanelRouter({
   isDimmed,
   isSpinnerDimming,
 }: PanelRouterProps): React.ReactNode {
+  const { currentState } = useInputState();
   const [switchMessage, setSwitchMessage] = useState<string | null>(null);
 
   const handleSwitchBranch = useCallback((branchId: string) => {
@@ -138,12 +140,14 @@ export function PanelRouter({
         currentLocationId={mapData.currentLocationId}
         regionName={mapData.regionName}
         onClose={onClose}
+        isActive={currentState === 'MAP'}
       />
     ) : null,
     codex: codexEntries ? (
       <CodexPanel
         entries={codexEntries}
         onClose={onClose}
+        isActive={currentState === 'CODEX'}
       />
     ) : null,
     branch_tree: branchTree ? (
@@ -155,6 +159,7 @@ export function PanelRouter({
         onSwitch={handleSwitchBranch}
         width={width}
         switchMessage={switchMessage ?? undefined}
+        isActive={currentState === 'BRANCH'}
       />
     ) : null,
     compare: branches && readSaveData && saveDir ? (
@@ -164,6 +169,7 @@ export function PanelRouter({
         saveDir={saveDir}
         onClose={onClose}
         width={width}
+        isActive={currentState === 'BRANCH'}
       />
     ) : <Box><Text dimColor>正在初始化...</Text></Box>,
     inventory: <InventoryPanel onClose={onClose} />,
@@ -176,7 +182,7 @@ export function PanelRouter({
     branchTree, currentBranchId, onPhaseSwitch,
     branches, readSaveData, saveDir,
     replayEntries, chapterSummaries,
-    width, handleSwitchBranch, switchMessage,
+    width, handleSwitchBranch, switchMessage, currentState,
   ]);
 
   if (isInCombat) {

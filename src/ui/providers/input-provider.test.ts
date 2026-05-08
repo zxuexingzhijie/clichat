@@ -88,6 +88,27 @@ describe('InputProvider source structure', () => {
     }
   });
 
+  it('PanelRouter gates overlay panels with provider currentState', () => {
+    const source = readFileSync(new URL('../panels/panel-router.tsx', import.meta.url), 'utf8');
+    expect(source).toContain('useInputState');
+    expect(source).toContain("currentState === 'MAP'");
+    expect(source).toContain("currentState === 'CODEX'");
+    expect(source).toContain("currentState === 'BRANCH'");
+    expect(source).toContain('isActive={currentState === \'MAP\'}');
+    expect(source).toContain('isActive={currentState === \'CODEX\'}');
+    expect(source).toContain('isActive={currentState === \'BRANCH\'}');
+  });
+
+  it('overlay panels default isActive to true and pass it into useInput', () => {
+    for (const file of ['map-panel.tsx', 'codex-panel.tsx', 'branch-tree-panel.tsx', 'compare-panel.tsx']) {
+      const source = readFileSync(new URL(`../panels/${file}`, import.meta.url), 'utf8');
+      expect(source).toContain('readonly isActive?: boolean');
+      expect(source).toContain('isActive = true');
+      expect(source).toContain('useInput(');
+      expect(source).toContain('{ isActive }');
+    }
+  });
+
   it('registers EventBus transitions without importing input internals into emitters', () => {
     const source = readFileSync(new URL('./input-provider.tsx', import.meta.url), 'utf8');
     expect(source).toContain("eventBus.on('combat_started'");
