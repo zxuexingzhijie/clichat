@@ -40,14 +40,20 @@ export type InputProviderProps = {
   readonly branchTree?: readonly BranchDisplayNode[];
   readonly currentBranchId?: string;
   readonly branches?: Record<string, BranchMeta>;
-  readonly readSaveData?: (fileName: string, saveDir: string) => Promise<SaveDataV7>;
+  readonly readSaveData?: (fileName: string, saveDir: string) => Promise Promise<SaveDataV7>;
   readonly saveDir?: string;
   readonly eventBus?: EventBus;
-  readonly worldMemoryStore?: Store<WorldMemoryState>;
+  readonly worldMemoryStore?: Store Store<WorldMemoryState>;
   readonly children: React.ReactNode;
 };
 
-type InputProviderContextValue = {
+export type OverlayPanelData = Pick Pick<
+  InputProviderProps,
+  'mapData' | 'codexEntries' | 'branchTree' | 'currentBranchId' | 'branches' | 'readSaveData' | 'saveDir'
+>;
+
+type InputProviderContextValue = OverlayPanelData & {
+
   readonly currentState: InputStateName;
   readonly setCurrentState: (state: InputStateName) => void;
   readonly inputMode: InputMode;
@@ -88,6 +94,13 @@ export function InputProvider({
   gameLoop,
   dialogueManager,
   combatLoop,
+  mapData,
+  codexEntries,
+  branchTree,
+  currentBranchId,
+  branches,
+  readSaveData,
+  saveDir,
   eventBus = defaultEventBus,
   worldMemoryStore,
   children,
@@ -308,6 +321,13 @@ export function InputProvider({
   }, [controller]);
 
   const value = useMemo<InputProviderContextValue>(() => ({
+    mapData,
+    codexEntries,
+    branchTree,
+    currentBranchId,
+    branches,
+    readSaveData,
+    saveDir,
     currentState,
     setCurrentState,
     inputMode,
@@ -330,9 +350,22 @@ export function InputProvider({
     handleDialogueEscape,
     handleDialogueFreeText,
     handleCombatExecute,
-  }), [combatSelectedIndex, currentState, dialogueSelectedIndex, exit, handleActionExecute, handleCombatExecute, handleDialogueEscape, handleDialogueExecute, handleDialogueFreeText, handlePanelClose, handlePhaseSwitch, inputMode, inputValue, isTyping, selectedActionIndex, submit]);
+  }), [branches, branchTree, codexEntries, combatSelectedIndex, currentBranchId, currentState, dialogueSelectedIndex, exit, handleActionExecute, handleCombatExecute, handleDialogueEscape, handleDialogueExecute, handleDialogueFreeText, handlePanelClose, handlePhaseSwitch, inputMode, inputValue, isTyping, mapData, readSaveData, saveDir, selectedActionIndex, submit]);
 
   return React.createElement(InputContext.Provider, { value }, children);
+}
+
+export function useOverlayPanelData(): OverlayPanelData {
+  const context = useInputContext();
+  return {
+    mapData: context.mapData,
+    codexEntries: context.codexEntries,
+    branchTree: context.branchTree,
+    currentBranchId: context.currentBranchId,
+    branches: context.branches,
+    readSaveData: context.readSaveData,
+    saveDir: context.saveDir,
+  };
 }
 
 export function useInputState(): { readonly currentState: InputStateName; readonly inputMode: InputMode; readonly isTyping: boolean } {

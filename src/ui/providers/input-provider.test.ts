@@ -61,6 +61,24 @@ describe('InputProvider source structure', () => {
     expect(source).toContain('export function useInputActions');
     expect(source).toContain('export function useSelectedAction');
     expect(source).toContain('export function useCommandInput');
+    expect(source).toContain('export function useOverlayPanelData');
+  });
+
+  it('destructures App-provided overlay data props in InputProvider', () => {
+    const source = readFileSync(new URL('./input-provider.tsx', import.meta.url), 'utf8');
+    const signature = source.slice(source.indexOf('export function InputProvider({'), source.indexOf('}: InputProviderProps)'));
+    for (const prop of ['mapData', 'codexEntries', 'branchTree', 'currentBranchId', 'branches', 'readSaveData', 'saveDir']) {
+      expect(signature).toContain(prop);
+    }
+  });
+
+  it('useOverlayPanelData returns exactly the provider overlay dependencies', () => {
+    const source = readFileSync(new URL('./input-provider.tsx', import.meta.url), 'utf8');
+    expect(source).toContain('export type OverlayPanelData = Pick Pick<');
+    const hook = source.slice(source.indexOf('export function useOverlayPanelData'), source.indexOf('export function useInputState'));
+    for (const prop of ['mapData', 'codexEntries', 'branchTree', 'currentBranchId', 'branches', 'readSaveData', 'saveDir']) {
+      expect(hook).toContain(`${prop}: context.${prop}`);
+    }
   });
 
   it('has seven independent state-level useInput handlers guarded by currentState', () => {
