@@ -1,5 +1,19 @@
-import { describe, it, expect, mock, beforeEach } from 'bun:test';
+import { describe, it, expect, mock } from 'bun:test';
 import { createStreamingText } from './use-streaming-text';
+
+function deferred<T = void>(): {
+  readonly promise: Promise<T>;
+  readonly resolve: (value: T | PromiseLike<T>) => void;
+  readonly reject: (reason?: unknown) => void;
+} {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+  return { promise, resolve, reject };
+}
 
 describe('createStreamingText', () => {
   it('collects chunks from an async generator', async () => {
@@ -26,30 +40,36 @@ describe('createStreamingText', () => {
     expect(onDone.mock.calls[0]![0]).toBe('hello world');
   });
 
-  it('cancel stops chunk delivery', async () => {
-    let yieldControl: (() => void) | null = null;
-    async function* slowStream() {
+  it('cancel stops chunk delivery after deterministic first-chunk signal', async () => {
+    const releaseSecondChunk = deferred();
+    const firstChunkDelivered = deferred();
+
+    async function* controlledStream() {
       yield 'first';
-      await new Promise<void>(r => { yieldControl = r; });
+      await releaseSecondChunk.promise;
       yield 'second';
     }
 
-    const onChunk = mock((_c: string) => {});
+    const onChunk = mock((chunk: string) => {
+      if (chunk === 'first') {
+        firstChunkDelivered.resolve();
+      }
+    });
     const onDone = mock((_t: string) => {});
 
     const controller = createStreamingText({
-      stream: slowStream(),
+      stream: controlledStream(),
       onChunk,
       onDone,
     });
 
-    // Wait for first chunk to be delivered
-    await new Promise(r => setTimeout(r, 10));
+    await firstChunkDelivered.promise;
     controller.cancel();
-    if (yieldControl) (yieldControl as () => void)();
+    releaseSecondChunk.resolve();
     await controller.promise;
 
     expect(onChunk).toHaveBeenCalledTimes(1);
+    expect(onChunk.mock.calls[0]![0]).toBe('first');
     expect(onDone).not.toHaveBeenCalled();
   });
 

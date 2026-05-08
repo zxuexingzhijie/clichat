@@ -3,6 +3,7 @@ import { useTimedEffect, createTimedEffect } from './use-timed-effect';
 import { eventBus } from '../../events/event-bus';
 import type { EventBus } from '../../events/event-bus';
 import type { DomainEvents } from '../../events/event-types';
+import type { Clock } from '../../time/clock';
 
 export function useEventFlash(eventName: keyof DomainEvents, durationMs: number = 300): boolean {
   const { active, trigger } = useTimedEffect(durationMs);
@@ -26,8 +27,9 @@ export function createEventFlash(
   eventName: keyof DomainEvents,
   durationMs: number = 300,
   bus: EventBus = eventBus,
+  clock?: Clock,
 ): EventFlashInstance {
-  const effect = createTimedEffect(durationMs);
+  const effect = createTimedEffect(durationMs, clock);
 
   const handler = () => {
     effect.trigger();
