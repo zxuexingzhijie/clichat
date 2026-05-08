@@ -1,4 +1,6 @@
 import { describe, it, expect, mock } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { createStreamingText } from './use-streaming-text';
 
 function deferred<T = void>(): {
@@ -14,6 +16,23 @@ function deferred<T = void>(): {
   });
   return { promise, resolve, reject };
 }
+
+describe('remaining timing hook tests source guard', () => {
+  it('contains no real delay patterns in verifier-reported test files', () => {
+    const files = [
+      'src/ui/hooks/use-streaming-text.test.ts',
+      'src/ui/hooks/use-typewriter.test.ts',
+      'src/ui/hooks/use-event-flash.test.ts',
+    ];
+
+    for (const file of files) {
+      const source = readFileSync(join(process.cwd(), file), 'utf8');
+      expect(source).not.toContain('set' + 'Timeout');
+      expect(source).not.toContain('await new ' + 'Promise');
+      expect(source).not.toContain('sl' + 'eep');
+    }
+  });
+});
 
 describe('createStreamingText', () => {
   it('collects chunks from an async generator', async () => {
