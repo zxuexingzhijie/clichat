@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 
+import { systemClock, type Clock, type TimeoutId } from '../../time/clock';
+
 export type UseTypewriterReturn = {
   readonly displayText: string;
   readonly isComplete: boolean;
@@ -9,6 +11,7 @@ export type UseTypewriterReturn = {
 export function useTypewriter(fullText: string, charIntervalMs: number): UseTypewriterReturn {
   const [charCount, setCharCount] = useState(0);
   const fullTextRef = useRef(fullText);
+  const typewriterRef = useRef<TypewriterInstance | null>(null);
 
   fullTextRef.current = fullText;
 
@@ -16,24 +19,25 @@ export function useTypewriter(fullText: string, charIntervalMs: number): UseType
   const displayText = fullText.slice(0, charCount);
 
   useEffect(() => {
-    if (isComplete || fullText.length === 0) return;
-
-    const interval = setInterval(() => {
-      setCharCount(prev => {
-        const next = prev + 1;
-        if (next >= fullTextRef.current.length) {
-          clearInterval(interval);
-        }
-        return next;
-      });
-    }, charIntervalMs);
+    const typewriter = createTypewriter(fullText, charIntervalMs, systemClock, setCharCount);
+    typewriterRef.current = typewriter;
+    typewriter.start();
 
     return () => {
-      clearInterval(interval);
+      typewriter.cleanup();
+      if (typewriterRef.current === typewriter) {
+        typewriterRef.current = null;
+      }
     };
-  }, [charIntervalMs, fullText, isComplete]);
+  }, [charIntervalMs, fullText]);
 
   const skip = useCallback(() => {
+    const typewriter = typewriterRef.current;
+    if (typewriter) {
+      typewriter.skip();
+      setCharCount(fullTextRef.current.length);
+      return;
+    }
     setCharCount(fullTextRef.current.length);
   }, []);
 
@@ -48,39 +52,58 @@ export type TypewriterInstance = {
   readonly cleanup: () => void;
 };
 
-export function createTypewriter(fullText: string, charIntervalMs: number): TypewriterInstance {
+export function createTypewriter(
+  fullText: string,
+  charIntervalMs: number,
+  clock: Clock = systemClock,
+  onCharCountChange?: (charCount: number) => void,
+): TypewriterInstance {
   let charCount = 0;
-  let interval: ReturnType<typeof setInterval> | null = null;
+  let timer: TimeoutId | null = null;
 
   const getDisplayText = (): string => fullText.slice(0, charCount);
   const getIsComplete = (): boolean => charCount >= fullText.length;
 
-  const start = (): void => {
-    if (interval !== null) return;
-    interval = setInterval(() => {
-      charCount += 1;
-      if (charCount >= fullText.length) {
-        if (interval !== null) {
-          clearInterval(interval);
-          interval = null;
-        }
-      }
+  const clearTimer = (): void => {
+    if (timer !== null) {
+      clock.clearTimeout(timer);
+      timer = null;
+    }
+  };
+
+  const notify = (): void => {
+    onCharCountChange?.(charCount);
+  };
+
+  const scheduleNext = (): void => {
+    clearTimer();
+    if (getIsComplete() || fullText.length === 0) {
+      return;
+    }
+
+    timer = clock.setTimeout(() => {
+      timer = null;
+      charCount = Math.min(charCount + 1, fullText.length);
+      notify();
+      scheduleNext();
     }, charIntervalMs);
   };
 
-  const skip = (): void => {
-    if (interval !== null) {
-      clearInterval(interval);
-      interval = null;
+  const start = (): void => {
+    if (timer !== null || getIsComplete() || fullText.length === 0) {
+      return;
     }
+    scheduleNext();
+  };
+
+  const skip = (): void => {
+    clearTimer();
     charCount = fullText.length;
+    notify();
   };
 
   const cleanup = (): void => {
-    if (interval !== null) {
-      clearInterval(interval);
-      interval = null;
-    }
+    clearTimer();
   };
 
   return { getDisplayText, getIsComplete, skip, start, cleanup };
